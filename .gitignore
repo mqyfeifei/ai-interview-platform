@@ -1,0 +1,60 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+backend/venv/
+backend/__pycache__/
+backend/*.pyc
+backend/.pytest_cache/
+backend/.coverage
+backend/htmlcov/
+
+# Flask
+instance/
+.webassets-cache
+.env
+.flaskenv
+*.db
+*.sqlite3
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+frontend/*.log
+frontend/.env.local
+frontend/.env.*.local
+frontend/package-lock.json
+frontend/yarn.lock
+frontend/.cache
+
+# Logs
+logs/
+*.log
+
+# Uploads
+uploads/
+*.zip
+*.tar
+*.gz
+
+# Testing
+tests/.pytest_cache/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
