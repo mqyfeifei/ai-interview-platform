@@ -1,0 +1,114 @@
+// =============================================
+// 全局 SCSS 变量 - 所有组件通过 vue.config.js 自动注入
+// =============================================
+
+// --- 主色系 ---
+$primary: #4338CA;          // 深靛蓝 - 主品牌色
+$primary-light: #6366F1;    // 亮靛蓝
+$primary-dark: #312E81;     // 深靛蓝（深色）
+$primary-bg: #EEF2FF;       // 极淡靛蓝（背景用）
+
+$secondary: #7C3AED;        // 紫色
+$accent: #F59E0B;           // 琥珀色 - 强调/高亮
+
+// --- 功能色 ---
+$success: #10B981;
+$success-bg: #D1FAE5;
+$warning: #F59E0B;
+$warning-bg: #FEF3C7;
+$danger: #EF4444;
+$danger-bg: #FEE2E2;
+$info: #3B82F6;
+$info-bg: #DBEAFE;
+
+// --- 中性色 ---
+$gray-50: #F8FAFC;
+$gray-100: #F1F5F9;
+$gray-200: #E2E8F0;
+$gray-300: #CBD5E1;
+$gray-400: #94A3B8;
+$gray-500: #64748B;
+$gray-600: #475569;
+$gray-700: #334155;
+$gray-800: #1E293B;
+$gray-900: #0F172A;
+
+// --- 文本色 ---
+$text-primary: #0F172A;
+$text-secondary: #475569;
+$text-muted: #94A3B8;
+$text-white: #FFFFFF;
+
+// --- 背景色 ---
+$bg-page: #F1F5F9;
+$bg-card: #FFFFFF;
+$bg-overlay: rgba(15, 23, 42, 0.5);
+
+// --- 边框 ---
+$border-color: #E2E8F0;
+$border-radius-sm: 8px;
+$border-radius: 12px;
+$border-radius-lg: 16px;
+$border-radius-xl: 24px;
+$border-radius-full: 9999px;
+
+// --- 阴影 ---
+$shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+$shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
+$shadow-md: 0 8px 24px rgba(0, 0, 0, 0.1), 0 4px 8px rgba(0, 0, 0, 0.06);
+$shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.12), 0 8px 16px rgba(0, 0, 0, 0.08);
+$shadow-primary: 0 8px 24px rgba(67, 56, 202, 0.3);
+
+// --- 排版 ---
+$font-family-base: 'Noto Sans SC', 'PingFang SC', 'Helvetica Neue', sans-serif;
+$font-family-display: 'Sora', 'Noto Sans SC', sans-serif;
+$font-family-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+$font-size-xs: 11px;
+$font-size-sm: 12px;
+$font-size-base: 14px;
+$font-size-md: 15px;
+$font-size-lg: 16px;
+$font-size-xl: 18px;
+$font-size-2xl: 20px;
+$font-size-3xl: 24px;
+$font-size-4xl: 30px;
+
+$font-weight-regular: 400;
+$font-weight-medium: 500;
+$font-weight-semibold: 600;
+$font-weight-bold: 700;
+$font-weight-extrabold: 800;
+
+$line-height-tight: 1.25;
+$line-height-normal: 1.5;
+$line-height-relaxed: 1.75;
+
+// --- 间距 ---
+$spacing-xs: 4px;
+$spacing-sm: 8px;
+$spacing-md: 12px;
+$spacing-base: 16px;
+$spacing-lg: 20px;
+$spacing-xl: 24px;
+$spacing-2xl: 32px;
+$spacing-3xl: 40px;
+$spacing-4xl: 48px;
+
+// --- 布局 ---
+$bottom-nav-height: 64px;
+$top-nav-height: 56px;
+$max-content-width: 480px;
+
+// --- 过渡动画 ---
+$transition-fast: 0.15s ease;
+$transition-base: 0.25s ease;
+$transition-slow: 0.35s ease;
+$transition-spring: 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+// --- 渐变 ---
+$gradient-primary: linear-gradient(135deg, #4338CA 0%, #7C3AED 100%);
+$gradient-primary-soft: linear-gradient(135deg, #EEF2FF 0%, #F5F3FF 100%);
+$gradient-accent: linear-gradient(135deg, #F59E0B 0%, #EF4444 100%);
+$gradient-success: linear-gradient(135deg, #10B981 0%, #059669 100%);
+$gradient-dark: linear-gradient(135deg, #1E293B 0%, #0F172A 100%);
