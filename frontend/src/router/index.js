@@ -88,23 +88,23 @@ const routes = [
   },
 
   // ---- 其他功能路由 ----
-
+{
+    path: '/learning',
+    name: 'LearningCenter',
+    component: () => import('@/views/system/LearningCenter.vue'),
+    meta: { requiresAuth: false, title: '学习中心', showBottomNav: true }
+  },
+  {
+    path: '/history',
+    name: 'HistoryRecords',
+    component: () => import('@/views/system/HistoryRecords.vue'),
+    meta: { requiresAuth: false, title: '历史记录', showBottomNav: true }
+  },
 
   // ---- 404 ----
   {
     path: '/:pathMatch(.*)*',
-    redirect: '/'  // {
-  //   path: '/learning',
-  //   name: 'LearningCenter',
-  //   component: () => import('@/views/system/LearningCenter.vue'),
-  //   meta: { requiresAuth: true, title: '学习中心', showBottomNav: true }
-  // },
-  // {
-  //   path: '/history',
-  //   name: 'HistoryRecords',
-  //   component: () => import('@/views/system/HistoryRecords.vue'),
-  //   meta: { requiresAuth: true, title: '历史记录', showBottomNav: true }
-  // },
+    redirect: '/'  
   }
 ]
 
