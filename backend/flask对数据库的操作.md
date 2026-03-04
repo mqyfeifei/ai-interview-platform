@@ -1,4 +1,4 @@
-
+## A.初始化数据库
 #### 1. 确保在正确的目录下
 
 打开终端，确保你所在的路径是 `backend` 文件夹（能看到 `run.py` 的那个目录）。
@@ -71,3 +71,22 @@ docker logs interview_db
 * **密码错了**：检查 `config.py` 里的密码和 `docker-compose.yml` 是否一致。
 * **数据库没启动**：运行 `docker ps` 看看容器是不是在运行。
 * **没装库**：忘记 `pip install psycopg2-binary`。
+
+
+
+## B.初始化表
+确保 Docker 容器正在运行（特别是数据库容器）。
+进入后端环境（如果你是在本地开发环境）
+
+```Bash
+# 假设你在 backend 目录下，且已激活虚拟环境
+python init_data.py
+```
+或者在 Docker 容器内运行（如果后端也是容器化的）：
+
+```Bash
+# 进入后端容器
+docker exec -it <后端容器ID> /bin/bash
+# 执行脚本
+python init_data.py
+```
