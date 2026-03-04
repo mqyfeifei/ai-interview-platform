@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  db:
+    # 使用预装了 pgvector 插件的官方镜像
+    # 这样你就不用自己去编译安装插件了，非常方便
+    image: pgvector/pgvector:pg16
+    container_name: interview_db
+    restart: always
+
+    # 数据库的账号密码配置
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: mysecretpassword  # 这里的密码可以自己改，记得代码里也要对应修改
+      POSTGRES_DB: ai_interview_db         # 容器启动时会自动创建这个数据库
+
+    # 端口映射：把容器里的 5432 端口暴露给你的电脑
+    ports:
+      - "5432:5432"
+
+    # 数据卷挂载
+    volumes:
+      # 1. 确保数据持久化，即使删了容器数据还在
+      - postgres_data:/var/lib/postgresql/data
+      # 2. 自动执行初始化脚本（开启 vector 插件）
+      - ./init_db:/docker-entrypoint-initdb.d
+
+volumes:
+  postgres_data:
