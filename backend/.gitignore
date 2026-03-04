@@ -1,0 +1,61 @@
+# 虚拟环境
+venv/
+env/
+ENV/
+.venv/
+
+# Python 缓存文件
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+
+# 环境变量文件
+.env
+.env.local
+.env.*.local
+
+# 数据库文件
+*.db
+*.sqlite3
+
+# 日志文件
+*.log
+
+# 本地开发配置
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 测试覆盖率文件
+htmlcov/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+
+# 构建产物
+dist/
+build/
+*.egg-info/
+*.egg
+MANIFEST
+
+# Jupyter Notebook 临时文件
+.ipynb_checkpoints/
+
+# PyInstaller 打包文件
+*.spec
+*.exe
+*.msi
+
+# 操作系统生成的文件
+.DS_Store
+Thumbs.db
