@@ -27,7 +27,7 @@ class TestingConfig(Config):
 class ProductionConfig(Config):
     """生产环境配置"""
     DEBUG = False
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')  # 必须从环境变量获取，不留默认值
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DEV_DATABASE_URL')  # 必须从环境变量获取，不留默认值
     SQLALCHEMY_ECHO = False  # 关闭SQL打印
 
 # 提供一个字典映射，方便根据环境名获取配置类
