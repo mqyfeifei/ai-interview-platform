@@ -68,24 +68,24 @@ const routes = [
   },
 
   // ---- 面试相关路由 ----
-  // {
-  //   path: '/interview/select',
-  //   name: 'JobSelection',
-  //   component: () => import('@/views/interview/JobSelection.vue'),
-  //   meta: { requiresAuth: true, title: '选择岗位' }
-  // },
-  // {
-  //   path: '/interview/session',
-  //   name: 'InterviewSession',
-  //   component: () => import('@/views/interview/InterviewSession.vue'),
-  //   meta: { requiresAuth: true, title: '模拟面试', hideNav: true }
-  // },
-  // {
-  //   path: '/interview/report/:reportId',
-  //   name: 'InterviewReport',
-  //   component: () => import('@/views/interview/InterviewReport.vue'),
-  //   meta: { requiresAuth: true, title: '面试报告' }
-  // },
+  {
+    path: '/interview/select',
+    name: 'JobSelection',
+    component: () => import('@/views/interview/JobSelection.vue'),
+    meta: { requiresAuth: false, title: '选择岗位' }
+  },
+  {
+    path: '/interview/session',
+    name: 'InterviewSession',
+    component: () => import('@/views/interview/InterviewSession.vue'),
+    meta: { requiresAuth: false, title: '模拟面试', hideNav: true }
+  },
+  {
+    path: '/interview/report/:reportId',
+    name: 'InterviewReport',
+    component: () => import('@/views/interview/InterviewReport.vue'),
+    meta: { requiresAuth: false, title: '面试报告' }
+  },
 
   // ---- 其他功能路由 ----
 
