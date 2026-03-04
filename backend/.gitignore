@@ -59,3 +59,6 @@ MANIFEST
 # 操作系统生成的文件
 .DS_Store
 Thumbs.db
+
+# 数据库迁移文件
+migrations/
