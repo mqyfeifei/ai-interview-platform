@@ -17,6 +17,7 @@ module.exports = defineConfig({
         // pathRewrite: { '^/api': '' }
       }
     }
+    
   },
   css: {
     loaderOptions: {
