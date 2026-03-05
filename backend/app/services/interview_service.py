@@ -1,4 +1,17 @@
 # backend/app/services/interview_service.py
+import os
+
+# 强制 Hugging Face 离线模式（仅使用本地缓存）
+os.environ["HF_HUB_OFFLINE"] = "1"
+os.environ["TRANSFORMERS_OFFLINE"] = "1"
+os.environ["HF_DATASETS_OFFLINE"] = "1"
+
+try:
+    import huggingface_hub.constants as hf_constants
+    hf_constants.HF_HUB_OFFLINE = True
+except Exception:
+    pass
+
 from app.extensions import db
 from app.models.interview import Interview, InterviewChat
 from app.models.prompt import AiPrompt
@@ -14,7 +27,7 @@ from datetime import datetime
 
 # 推荐在类外部进行全局加载，避免每次调用时重复加载模型进内存
 # 'BAAI/bge-small-zh-v1.5' 首次运行会自动下载
-local_embedding_model = SentenceTransformer('BAAI/bge-small-zh-v1.5')
+local_embedding_model = SentenceTransformer('BAAI/bge-small-zh-v1.5', local_files_only=True)
 class InterviewService:
     # @staticmethod
     # def get_embedding(text):
@@ -112,7 +125,7 @@ class InterviewService:
         """结束面试并生成详尽评价写入数据库"""
         interview = Interview.query.get(interview_id)
         if interview.status == 'completed':
-            return {"msg": "面试已出具报告"}
+            return {"msg": "面试已出具报告", "reportId": interview.id}
 
         # 1. 提取所有对话记录
         chats = InterviewChat.query.filter_by(interview_id=interview_id).order_by(InterviewChat.timestamp).all()
@@ -173,4 +186,9 @@ class InterviewService:
                 db.session.add(score_record)
 
         db.session.commit()
-        return report_data
+        result = {
+            "reportId": interview.id,
+            "jobName": interview.job.name if hasattr(interview, 'job') and interview.job else None
+        }
+        result.update(report_data)
+        return result
