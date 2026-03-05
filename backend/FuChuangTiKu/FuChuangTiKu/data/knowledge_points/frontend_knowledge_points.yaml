@@ -1,0 +1,106 @@
+type: frontend_technical_knowledge_points
+source:
+  - MDN
+  - 官方文档
+modules:
+  - name: JavaScript 核心基础
+    points:
+      - point: 作用域与闭包
+        resources:
+          - name: MDN - 闭包
+            type: 官方文档
+            url: https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Closures
+          - name: 《JavaScript 高级程序设计 (红宝书)》
+            type: 书籍
+            url: (经典书籍)
+      - point: 原型与原型链
+        resources:
+          - name: MDN - 继承与原型链
+            type: 官方文档
+            url: https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Inheritance_and_the_prototype_chain
+      - point: 异步编程 (Promise, async/await, Event Loop)
+        resources:
+          - name: JavaScript.info - 宏任务和微任务
+            type: 官方文档
+            url: https://zh.javascript.info/microtask-queue
+          - name: MDN - 使用 Promise
+            type: 官方文档
+            url: https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Guide/Using_promises
+
+  - name: HTML & CSS 进阶
+    points:
+      - point: BFC 及布局解析
+        resources:
+          - name: MDN - 块格式化上下文
+            type: 官方文档
+            url: https://developer.mozilla.org/zh-CN/docs/Web/Guide/CSS/Block_formatting_context
+      - point: Flexbox 与 Grid 布局系统
+        resources:
+          - name: CSS-Tricks - A Complete Guide to Flexbox
+            type: 技术博客
+            url: https://css-tricks.com/snippets/css/a-guide-to-flexbox/
+      - point: 浏览器渲染原理与重绘重排
+        resources:
+          - name: Google Web Updates - Rendering Performance
+            type: 官方文档
+            url: https://developers.google.com/web/fundamentals/performance/rendering
+
+  - name: 现代前端框架 (Vue/React)
+    points:
+      - point: 响应式原理与状态管理
+        resources:
+          - name: Vue 官方文档 - 深入响应式系统
+            type: 官方文档
+            url: https://cn.vuejs.org/guide/extras/reactivity-in-depth.html
+          - name: React 官方文档 - 状态管理
+            type: 官方文档
+            url: https://react.dev/learn/managing-state
+      - point: 虚拟 DOM 与 Diff 算法
+        resources:
+          - name: 掘金 - 深入浅出虚拟 DOM 和 Diff 算法
+            type: 技术博客
+            url: (通过掘金搜索)
+      - point: 组件通信与复用逻辑 (Hooks, Composable)
+        resources:
+          - name: Vue 官方文档 - 组合式函数
+            type: 官方文档
+            url: https://cn.vuejs.org/guide/reusability/composables.html
+
+  - name: 前端工程化
+    points:
+      - point: Webpack / Vite 构建原理
+        resources:
+          - name: Webpack 官方文档
+            type: 官方文档
+            url: https://webpack.docschina.org/concepts/
+          - name: Vite 官方文档 - 为什么选 Vite
+            type: 官方文档
+            url: https://cn.vitejs.dev/guide/why.html
+      - point: 模块化规范 (ESM, CJS)
+        resources:
+          - name: MDN - JavaScript modules
+            type: 官方文档
+            url: https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Guide/Modules
+      - point: CI/CD 与前端自动化测试
+        resources:
+          - name: Jest 官方文档
+            type: 官方文档
+            url: https://jestjs.io/zh-Hans/
+
+  - name: 计算机网络与安全
+    points:
+      - point: HTTP/1.x, 2.0, 3.0 演进
+        resources:
+          - name: 《图解 HTTP》
+            type: 书籍
+            url: (经典书籍)
+      - point: 跨域机制 (CORS, 代理)
+        resources:
+          - name: MDN - CORS
+            type: 官方文档
+            url: https://developer.mozilla.org/zh-CN/docs/Web/HTTP/CORS
+      - point: 常见 Web 安全 (XSS, CSRF) 及防御
+        resources:
+          - name: 美团技术团队 - 前端安全系列之二：XSS 攻击与防御
+            type: 技术博客
+            url: https://tech.meituan.com/2018/09/27/fe-security-xss.html

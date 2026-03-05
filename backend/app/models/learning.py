@@ -32,7 +32,7 @@ class Resource(db.Model):
     thumbnail = db.Column(db.Text)
     difficulty = db.Column(db.String(10))  # easy, medium, hard
     tags = db.Column(JSONB)  # JSON 形式的标签备份或扩展
-    embedding = db.Column(Vector(1536))
+    embedding = db.Column(Vector(512))
 
     # 关系
     knowledge_tags = db.relationship('KnowledgeTag', secondary=resource_tags, backref='resources')
