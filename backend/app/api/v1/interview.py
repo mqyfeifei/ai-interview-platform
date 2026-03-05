@@ -18,16 +18,16 @@ def start_interview():
         return jsonify({"code": 500, "msg": str(e)}), 500
 
 
-@interview_bp.route('/<int:interview_id>/chat', methods=['POST'])
-def chat(interview_id):
-    data = request.get_json()
-    user_answer = data.get('answer')
-
-    try:
-        result = InterviewService.process_chat_round(interview_id, user_answer)
-        return jsonify({"code": 200, "data": result, "msg": "success"}), 200
-    except Exception as e:
-        return jsonify({"code": 500, "msg": str(e)}), 500
+# @interview_bp.route('/<int:interview_id>/chat', methods=['POST'])
+# def chat(interview_id):
+#     data = request.get_json()
+#     user_answer = data.get('answer')
+#
+#     try:
+#         result = InterviewService.process_chat_round(interview_id, user_answer)
+#         return jsonify({"code": 200, "data": result, "msg": "success"}), 200
+#     except Exception as e:
+#         return jsonify({"code": 500, "msg": str(e)}), 500
 
 
 @interview_bp.route('/<int:interview_id>/chat/stream', methods=['POST'])
@@ -51,5 +51,13 @@ def upload_audio():
     try:
         text = ASRService.transcribe_audio(audio_file)
         return jsonify({"code": 200, "data": {"text": text}, "msg": "success"}), 200
+    except Exception as e:
+        return jsonify({"code": 500, "msg": str(e)}), 500
+
+@interview_bp.route('/<int:interview_id>/finish', methods=['POST'])
+def finish_interview(interview_id):
+    try:
+        result = InterviewService.finish_interview(interview_id)
+        return jsonify({"code": 200, "data": result, "msg": "success"}), 200
     except Exception as e:
         return jsonify({"code": 500, "msg": str(e)}), 500
