@@ -1,6 +1,12 @@
 from flask import Flask
 from flask import send_from_directory
 import os
+
+# 强制 Hugging Face 离线模式（整个应用生效）
+os.environ["HF_HUB_OFFLINE"] = "1"
+os.environ["TRANSFORMERS_OFFLINE"] = "1"
+os.environ["HF_DATASETS_OFFLINE"] = "1"
+
 from app.extensions import db, migrate
 from app.config import config   # 导入配置字典，而不是单个类
 
@@ -19,10 +25,12 @@ def create_app(config_name=None):
     from app.api.v1.auth import auth_bp
     from app.api.v1.interview import interview_bp
     from app.api.v1.job import job_bp
+    from app.api.v1.report import report_bp
     from app.api.v1.user import user_bp
     app.register_blueprint(auth_bp, url_prefix='/api/v1/auth')
     app.register_blueprint(interview_bp, url_prefix='/api/v1/interviews')
     app.register_blueprint(job_bp, url_prefix='/api/v1/jobs')
+    app.register_blueprint(report_bp, url_prefix='/api/v1/reports')
     app.register_blueprint(user_bp, url_prefix='/api/v1/users')
 
     upload_root = os.path.join(app.root_path, 'uploads')
