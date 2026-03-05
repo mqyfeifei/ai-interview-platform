@@ -24,6 +24,7 @@ from app.models.interview import InterviewScore, Dimension
 import json
 from sentence_transformers import SentenceTransformer
 from datetime import datetime
+from app.models.learning import KnowledgeTag, UserKnowledgeMastery
 
 # 推荐在类外部进行全局加载，避免每次调用时重复加载模型进内存
 # 'BAAI/bge-small-zh-v1.5' 首次运行会自动下载
@@ -130,6 +131,19 @@ class InterviewService:
         # 1. 提取所有对话记录
         chats = InterviewChat.query.filter_by(interview_id=interview_id).order_by(InterviewChat.timestamp).all()
         chat_history = "\n".join([f"{c.role}: {c.content}" for c in chats])
+        # ================= 优化点 1: 动态查出现有的标准知识点 =================
+        # 从数据库中拉取所有已知的标签，并按 category 分类组装
+        existing_tags = KnowledgeTag.query.all()
+        tag_catalog = {}
+        for t in existing_tags:
+            cat = t.category or "通用技能"
+            if cat not in tag_catalog:
+                tag_catalog[cat] = []
+            tag_catalog[cat].append(t.name)
+
+        # 将字典转为易读的 JSON 字符串供大模型阅读
+        valid_tags_str = json.dumps(tag_catalog, ensure_ascii=False)
+        # ======================================================================
 
         # 2. 强化系统提示词，强制输出详尽的 JSON 结构
         system_prompt = """
@@ -147,7 +161,16 @@ class InterviewService:
                 "highlights": "列出面试中表现突出的至少2个亮点",
                 "improvements": "指出回答中的主要不足与知识盲区",
                 "suggestions": "针对不足给出3条具体、可操作的学习改进建议"
+                "knowledge_tags_eval": {
+                    "具体的知识点名称(如:Redis持久化,JVM内存模型)": 20
+                }
             }
+            【绝对指令】：对于 knowledge_tags_eval 字段，你**只能**从下面的“标准知识点库”中挑选你在对话中考察到的知识点进行 0-100 的打分。
+        如果候选人回答完全错误或不会，给20分以下。
+        **禁止自己捏造、改写或发明新的知识点名称！如果对话涉及的知识不在下表中，请忽略它。**
+        
+        标准知识点库（按类别分类）：
+        {valid_tags_str}
             """
         llm = DeepSeekClient()
         response_text = llm.generate_reply([
@@ -184,6 +207,22 @@ class InterviewService:
                     comment=dim_data.get("comment", "")
                 )
                 db.session.add(score_record)
+                # ================= 优化点 2: 严格校验，切断自动生成逻辑 =================
+                tags_eval = report_data.get("knowledge_tags_eval", {})
+                for tag_name, score in tags_eval.items():
+                    # 严格去数据库匹配已有的标签，找不到就直接丢弃（防大模型幻觉）
+                    tag = KnowledgeTag.query.filter_by(name=tag_name).first()
+                    if tag:
+                        mastery = UserKnowledgeMastery.query.filter_by(user_id=interview.user_id, tag_id=tag.id).first()
+                        if not mastery:
+                            # 用户第一次接触这个标签，直接存入分数
+                            mastery = UserKnowledgeMastery(user_id=interview.user_id, tag_id=tag.id,
+                                                           mastery_level=score)
+                            db.session.add(mastery)
+                        else:
+                            # 已有记录，将历史分数与本次分数取平均（模拟平滑的成长或遗忘）
+                            mastery.mastery_level = int((mastery.mastery_level + score) / 2)
+                # ========================================================================
 
         db.session.commit()
         result = {
