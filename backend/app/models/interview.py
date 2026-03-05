@@ -13,6 +13,10 @@ class Interview(db.Model):
     end_time = db.Column(db.DateTime)
     total_score = db.Column(db.Integer)
     status = db.Column(db.String(20), default='in_progress')  # in_progress, completed
+    # --- 新增报告详情字段 ---
+    evaluation_highlights = db.Column(db.Text)  # 亮点分析
+    evaluation_improvements = db.Column(db.Text)  # 待改进点
+    evaluation_suggestions = db.Column(db.Text)  # 改进建议
 
     # --- 新增设计文档中要求的字段 ---
     question_count = db.Column(db.Integer, default=0)  # 总题数

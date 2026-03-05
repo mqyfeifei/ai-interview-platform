@@ -92,41 +92,64 @@ class InterviewService:
             content = chunk.choices[0].delta.content
             if content:
                 full_reply += content
-                # 按照 Server-Sent Events (SSE) 格式 yielded
+                # 直接将内容流式发给前端，前端需通过正则检测到 [INTERVIEW_OVER] 后自动调用 /finish 接口
                 yield f"data: {json.dumps({'chunk': content})}\n\n"
 
-        # 5. 流式输出结束后，异步或在此处将 AI 回复存入数据库
-        ai_chat = InterviewChat(interview_id=interview.id, role='ai', content=full_reply)
+        # 5. 清理标识符并存入数据库
+        # 将特殊标记从存入数据库的真实对话中剔除，保持聊天记录干净
+        clean_reply = full_reply.replace("[INTERVIEW_OVER]", "").strip()
+        ai_chat = InterviewChat(interview_id=interview.id, role='ai', content=clean_reply)
         db.session.add(ai_chat)
+
+        # 可选：如果后端检测到结束，可将状态更为待评价
+        if "[INTERVIEW_OVER]" in full_reply:
+            interview.status = 'evaluating'
         db.session.commit()
 
     @staticmethod
     def finish_interview(interview_id):
-        """结束面试并生成评价写入数据库"""
+        """结束面试并生成详尽评价写入数据库"""
         interview = Interview.query.get(interview_id)
         if interview.status == 'completed':
-            return
+            return {"msg": "面试已出具报告"}
 
         # 1. 提取所有对话记录
         chats = InterviewChat.query.filter_by(interview_id=interview_id).order_by(InterviewChat.timestamp).all()
         chat_history = "\n".join([f"{c.role}: {c.content}" for c in chats])
 
-        # 2. 调用大模型生成 JSON 格式的评价
+        # 2. 强化系统提示词，强制输出详尽的 JSON 结构
         system_prompt = """
-            请作为资深面试官对以下面试记录进行评分。
-            必须严格返回 JSON 格式，包含：total_score(总分0-100), dimensions(包含: 技术正确性, 逻辑严谨性, 岗位匹配度, 表达沟通, 应变能力。每个维度提供 score 0-100 和 comment 评语)。
+            请作为资深面试官对以下面试记录进行综合评估。
+            必须严格返回 JSON 格式，不要输出任何额外的 markdown 标记或解释说明。结构如下：
+            {
+                "total_score": 85,
+                "dimensions": {
+                    "技术正确性": {"score": 80, "comment": "对技术概念理解准确度评价"},
+                    "逻辑严谨性": {"score": 90, "comment": "表达结构与条理评价"},
+                    "岗位匹配度": {"score": 85, "comment": "与目标岗位的契合度"},
+                    "表达沟通": {"score": 80, "comment": "语言流畅性与自信度"},
+                    "应变能力": {"score": 75, "comment": "面对追问的应对表现"}
+                },
+                "highlights": "列出面试中表现突出的至少2个亮点",
+                "improvements": "指出回答中的主要不足与知识盲区",
+                "suggestions": "针对不足给出3条具体、可操作的学习改进建议"
+            }
             """
         llm = DeepSeekClient()
         response_text = llm.generate_reply([
             {"role": "system", "content": system_prompt},
-            {"role": "user", "content": chat_history}
+            {"role": "user", "content": f"面试记录如下：\n{chat_history}"}
         ])
 
-        # 解析 JSON（实际应用需增加 JSON 提取正则表达式及异常重试机制）
-        report_data = json.loads(response_text)
+        # 清理可能附带的 markdown 格式以确保 JSON 解析成功
+        cleaned_json_text = response_text.replace("```json", "").replace("```", "").strip()
+        report_data = json.loads(cleaned_json_text)
 
-        # 3. 更新面试总表
+        # 3. 写入总表详细评价字段
         interview.total_score = report_data.get("total_score", 0)
+        interview.evaluation_highlights = report_data.get("highlights", "")
+        interview.evaluation_improvements = report_data.get("improvements", "")
+        interview.evaluation_suggestions = report_data.get("suggestions", "")
         interview.status = 'completed'
 
         # 4. 写入维度评分表
@@ -136,8 +159,8 @@ class InterviewService:
                 score_record = InterviewScore(
                     interview_id=interview.id,
                     dimension_id=dimension.id,
-                    score=dim_data.get("score"),
-                    comment=dim_data.get("comment")
+                    score=dim_data.get("score", 0),
+                    comment=dim_data.get("comment", "")
                 )
                 db.session.add(score_record)
 
