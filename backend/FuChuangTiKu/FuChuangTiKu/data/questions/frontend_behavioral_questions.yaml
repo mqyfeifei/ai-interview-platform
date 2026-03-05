@@ -1,0 +1,58 @@
+type: frontend_behavioral_questions
+source:
+  - 面经库
+items:
+  - id: FE-BQ-001
+    type: behavioral
+    question: 讲一次你为了引入新技术（如 TypeScript/Vue3）去说服团队或 Leader 的经历。
+    tags: [推动力, 沟通]
+    difficulty: medium
+    source: 面经库
+    status: draft
+    key_points:
+      - 准确拿捏旧痛点并输出颠覆技术的显著正收益拉平团队期盼
+      - 做小盘打样以跑通Demo打破抗拒迷雾与风险警惕展现极强说服驱动力
+      - 主打温水煮蛙的无缝过渡切换而不是蛮硬革命展现沉着老练全团队换血手段
+  - id: FE-BQ-002
+    type: behavioral
+    question: 在前后端分离开发中，如果后端接口迟迟不到位，你会如何推进项目进度？
+    tags: [团队协作, 进度推进]
+    difficulty: medium
+    source: 面经库
+    status: draft
+    key_points:
+      - 破除干等呆坐主动抛出API契据合同确立两边研发数据口径线
+      - 主打Mock流造假水军脱链实现独行快步不延期护盘绝技
+      - 风险雷达提前打高在汇报层敲响进度受阻挡箭牌强促跨壁强控推进线保障进展态势
+  - id: FE-BQ-003
+    type: behavioral
+    question: 讲一次前端引发严重线上 Bug 的事故，你采取的补救措施和后续复盘。
+    tags: [应急响应, 担责]
+    difficulty: hard
+    source: 面经库
+    status: draft
+    key_points:
+      - 急诊室级先断血止损绝招（一键发旧版或灰度撤流掐死扩散）
+      - 剖开根基挖掘弱防空查、错位赋值或兼容雷区定损复查深层全盘通报彻省
+      - 铁律强化用更变态TS严控、全面化测试补网结合代码强行规约把坑位炸平堵死未来再犯
+  - id: FE-BQ-004
+    type: behavioral
+    question: 当 UI 设计师给出的设计稿在实现上性能极差或难以完成时，你如何沟通？
+    tags: [跨部门沟通, 妥协]
+    difficulty: easy
+    source: 面经库
+    status: draft
+    key_points:
+      - 高维度同理感知挖掘花哨设计背后的核心商业祈愿，不做单一反驳机器
+      - 拿测算强理打脸重耗卡顿实症以及可实现难度倒逼业务体验共识
+      - 给替补平替极简顺滑效果兜包或者拿走更大资源去吃这种魔王级重效需求
+  - id: FE-BQ-005
+    type: behavioral
+    question: 分享一个你主导编写项目文档或构建前端开发规范的经历。
+    tags: [工程规范, 团队建设]
+    difficulty: medium
+    source: 面经库
+    status: draft    key_points:
+      - 强格局跳脱自我本份转攻惠全军拔升大家战斗力层段的共建统辖心感
+      - 输出全员公测可落地高标准规范如统一代码提交流式卡口防尘防污制导系统流
+      - 造福小白或梯队开坛宣讲沉淀打赢队伍向上的教头号号令加持自身重核心级分量影响
