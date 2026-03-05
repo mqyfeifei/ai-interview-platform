@@ -1,0 +1,57 @@
+type: frontend_project_deep_dive_questions
+source:
+  - 面经库
+items:
+  - id: FE-PQ-001
+    type: project_deep_dive
+    question: 这个前端项目的整体架构是如何设计的？你在其中承担了什么角色？
+    tags: [项目架构, 职责]
+    difficulty: easy
+    source: 面经库
+    status: draft
+    key_points:
+      - 全面透析工程宏大选型及项目组织建构脉络与层次分隔艺术(基础组件/网络层/核心逻辑等)
+      - 突出自己在浩大多人协同场内发散的核心向导或者破局者的独立高亮角色感
+  - id: FE-PQ-002
+    type: project_deep_dive
+    question: 项目中的状态管理（如 Redux/Pinia）是如何划分的？遇到过什么痛点？
+    tags: [状态管理, 架构]
+    difficulty: medium
+    source: 面经库
+    status: draft
+    key_points:
+      - 严苛区分局部私需与全域通告状态流不乱搅和泥巴
+      - 利用强力状态管理中枢化解超深渊多层无用传导以及异族组件孤岛联动痛击
+      - 吐诉并拆解过多黑盒嵌套模板毒瘤的恶心及其抽象钩子化轻量封装救赎路线
+  - id: FE-PQ-003
+    type: project_deep_dive
+    question: 你们项目中针对首屏或者长列表等特定场景做过哪些性能优化？效果如何？
+    tags: [性能优化, 真实数据]
+    difficulty: hard
+    source: 面经库
+    status: draft
+    key_points:
+      - 抛弃空口套白狼必亮量化利器打底表成绩(如FP/LCP由某到某)
+      - 重型列表必交的虚拟长卷滚动按需绘制渲染减少万节点负担的标准答卷
+      - 精通使用Lighthouse等探查监控雷达寻热热点卡顿源或图体优化的实际工程手腕
+  - id: FE-PQ-004
+    type: project_deep_dive
+    question: 前后端接口联调时遇到过哪些沟通或数据格式上的问题，是如何解决的？
+    tags: [联调, 协作]
+    difficulty: medium
+    source: 面经库
+    status: draft
+    key_points:
+      - 展示因格式断代/超长字段撕裂崩坏等高频现实惨剧的处理嗅觉
+      - 主打前浪基建破局法（引出Swagger协议契约/ApiFox等打通屏障阻滞）
+      - 运用Mock隔离护城河构建并行加速不受后端落后步调干涉之自主强效把控节奏
+  - id: FE-PQ-005
+    type: project_deep_dive
+    question: 项目中是否有自研或二次封装的组件库？讲讲你封装的最复杂的组件。
+    tags: [组件封装, 复用性]
+    difficulty: medium
+    source: 面经库
+    status: draft    key_points:
+      - 打出复用生态体系、低耦合高包容且健造参数多端下放的标准工业级思维王牌
+      - 深虑配置入参、事件分层反射、插槽包容化的高级抽象形态结构规划
+      - 外拓边界兜底完善防雷以及全量组件维护体系与测试规约建构闭环沉淀展现

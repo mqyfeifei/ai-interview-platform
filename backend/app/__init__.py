@@ -27,6 +27,8 @@ def create_app(config_name=None):
     from app.api.v1.job import job_bp
     from app.api.v1.report import report_bp
     from app.api.v1.user import user_bp
+    from app.api.v1.learning import learning_bp
+    app.register_blueprint(learning_bp, url_prefix='/api/v1/learning')
     app.register_blueprint(auth_bp, url_prefix='/api/v1/auth')
     app.register_blueprint(interview_bp, url_prefix='/api/v1/interviews')
     app.register_blueprint(job_bp, url_prefix='/api/v1/jobs')

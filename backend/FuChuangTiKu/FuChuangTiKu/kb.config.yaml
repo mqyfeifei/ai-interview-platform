@@ -1,0 +1,37 @@
+version: 1
+project: FuChuangTiKu
+locale: zh-CN
+domain: java-backend-interview
+maintainer: owner
+updated_at: 2026-03-03
+
+storage:
+  format: yaml
+  root: data
+  question_path: data/questions
+  examples_path: data/examples
+  knowledge_points_path: data/knowledge_points
+
+workflow:
+  default_status: draft
+  review_states:
+    - draft
+    - reviewed
+    - archived
+
+fields:
+  question:
+    - id
+    - type
+    - question
+    - tags
+    - difficulty
+    - source
+    - status
+  example:
+    - id
+    - type
+    - question
+    - answer
+    - framework
+    - status
