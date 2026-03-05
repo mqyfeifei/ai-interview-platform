@@ -127,3 +127,6 @@ ALTER TABLE interviews ADD COLUMN evaluation_suggestions TEXT;
 
 ## D.初始化知识库
 运行`backend/import_kb.py`来导入数据库里面知识内容
+
+## E.通用面试官
+修改job_id=1
