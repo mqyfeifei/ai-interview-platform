@@ -25,6 +25,15 @@ const mutations = {
     state.isFinished = true
     state.reportId = reportId
   },
+
+  APPEND_AI_CHUNK(state, chunk) {
+  const last = state.messages[state.messages.length - 1]
+  if (last && last.role === 'ai') last.content += chunk
+},
+MARK_STREAM_DONE(state) {
+  const last = state.messages[state.messages.length - 1]
+  if (last) last.streaming = false
+},
   SET_LOADING(state, v) { state.isLoading = v },
   SET_ELAPSED(state, v) { state.elapsedSeconds = v },
   RESET_INTERVIEW(state) {
@@ -53,7 +62,7 @@ const actions = {
         questionCount: options.questionCount || 10,
         timeLimit: options.timeLimit || 120
       })
-      commit('SET_SESSION', { sessionId: res.sessionId, totalQuestions: res.totalQuestions || 10 })
+      commit('SET_SESSION', { sessionId: res.sessionId, totalQuestions: 10 })
       // 推入AI第一个问题
       commit('ADD_MESSAGE', {
         id: Date.now(),
@@ -69,44 +78,34 @@ const actions = {
   },
 
   // 用户提交回答
-  async submitAnswer({ commit, state }, answerText) {
-    if (!state.currentSession) return
+async submitAnswer({ commit, state }, answerText) {
+  // 推入用户消息（保持不变）
+  commit('ADD_MESSAGE', { role: 'user', content: answerText, timestamp: Date.now() })
+  commit('SET_LOADING', true)
 
-    // 先推入用户消息
-    commit('ADD_MESSAGE', {
-      id: Date.now(),
-      role: 'user',
-      content: answerText,
-      timestamp: new Date()
-    })
+  // 推入 AI 占位消息，后续流式追加内容
+  const aiMsgIndex = state.messages.length
+  commit('ADD_MESSAGE', { role: 'ai', content: '', timestamp: Date.now(), streaming: true })
 
-    commit('SET_LOADING', true)
-    try {
-      const res = await sendAnswer(state.currentSession.sessionId, answerText)
-
-      // 推入 AI 下一个问题或结束语
-      commit('ADD_MESSAGE', {
-        id: Date.now() + 1,
-        role: 'ai',
-        content: res.nextQuestion,
-        timestamp: new Date(),
-        isFollowUp: res.isFollowUp || false
-      })
-
-      if (res.isFinished) {
-        // 自动结束时生成报告
-        const finishRes = await finishInterview(state.currentSession.sessionId)
-        commit('SET_FINISHED', finishRes.reportId)
-      } else {
-        commit('SET_QUESTION_INDEX', (res.questionIndex || state.questionIndex) + 1)
-      }
-
-      return res
-    } finally {
+  const { sendAnswerStream } = await import('@/api/interview')
+  sendAnswerStream(state.currentSession.sessionId, answerText, {
+    onChunk(chunk) {
+      // 追加到最后一条 AI 消息
+      commit('APPEND_AI_CHUNK', chunk)
+    },
+    onFinish() {
       commit('SET_LOADING', false)
+      commit('MARK_STREAM_DONE')
+      commit('SET_FINISHED', true)
+      // 调用 endInterview 生成报告
+      dispatch('endInterview')
+    },
+    onError(err) {
+      commit('SET_LOADING', false)
+      console.error('SSE error', err)
     }
-  },
-
+  })
+},
   // 手动结束面试
   async endInterview({ commit, state }) {
     if (!state.currentSession) return
