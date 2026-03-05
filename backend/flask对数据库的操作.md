@@ -124,3 +124,6 @@ ALTER TABLE interviews ADD COLUMN evaluation_highlights TEXT;
 ALTER TABLE interviews ADD COLUMN evaluation_improvements TEXT;
 ALTER TABLE interviews ADD COLUMN evaluation_suggestions TEXT;
 ```
+
+## D.初始化知识库
+运行`backend/import_kb.py`来导入数据库里面知识内容
