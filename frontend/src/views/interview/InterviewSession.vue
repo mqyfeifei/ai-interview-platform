@@ -77,7 +77,9 @@
             </div>
 
             <div :class="['message-bubble', 'message-bubble--' + msg.role]">
-              <p class="message-text">{{ msg.content }}</p>
+              <p class="message-text">
+                {{ msg.content }}<span v-if="msg.streaming" class="typing-cursor">▌</span>
+              </p>
             </div>
 
             <span class="message-time">{{ formatTime(msg.timestamp) }}</span>
@@ -127,7 +129,9 @@
           <span class="recording-bar__time">{{ recordingTime }}s</span>
         </div>
       </transition>
-
+      <div v-if="isTranscribing" class="transcribing-tip">
+        🎤 语音转写中...
+      </div>
       <div class="input-row">
         <!-- 语音按钮 -->
         <button
@@ -146,6 +150,8 @@
             <rect x="6" y="6" width="12" height="12" rx="2"/>
           </svg>
         </button>
+
+
 
         <!-- 文本输入框 -->
         <div class="textarea-wrapper">
@@ -220,7 +226,9 @@ export default {
       recordingInterval: null,
       // 语音识别
       mediaRecorder: null,
-      audioChunks: []
+      audioChunks: [],
+      // ✅ 新增：语音转写状态（用于显示加载中）
+      isTranscribing: false
     }
   },
   computed: {
@@ -297,7 +305,7 @@ export default {
     // ---- 发送回答 ----
     async handleSend() {
       const text = this.inputText.trim()
-      if (!text || this.isLoading || this.isFinished) return
+      if (!text || this.isLoading || this.isFinished || this.isTranscribing) return // ✅ 新增：转写中禁止发送
       this.inputText = ''
       this.resetTextarea()
       // 重置题目计时
@@ -330,7 +338,7 @@ export default {
     },
 
     autoSubmitOnTimeout() {
-      if (!this.isLoading && !this.isFinished) {
+      if (!this.isLoading && !this.isFinished && !this.isTranscribing) { // ✅ 新增：转写中禁止自动提交
         const text = this.inputText.trim() || '（超时，跳过此题）'
         this.inputText = ''
         this.submitAnswer(text)
@@ -352,12 +360,43 @@ export default {
     },
 
     async startRecording() {
+      // ✅ 新增：转写中禁止开始录音
+      if (this.isTranscribing) {
+        alert('正在处理语音，请稍等...')
+        return
+      }
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
         this.audioChunks = []
         this.mediaRecorder = new MediaRecorder(stream)
         this.mediaRecorder.ondataavailable = e => this.audioChunks.push(e.data)
-        this.mediaRecorder.onstop = () => this.handleRecordingStop(stream)
+        
+        // ✅ 核心修改：替换原有 onstop 逻辑，整合语音转文字
+        this.mediaRecorder.onstop = async () => {
+          // 先停止音轨
+          stream.getTracks().forEach(t => t.stop())
+          // 构建音频 Blob
+          const audioBlob = new Blob(this.audioChunks, { type: 'audio/wav' })
+          this.isTranscribing = true
+          try {
+            // 动态导入上传音频API
+            const { uploadAudio } = await import('@/api/interview')
+            // 上传音频并获取转文字结果
+            const { text } = await uploadAudio(audioBlob)
+            // ✅ 适配现有变量：把转写结果赋值给 inputText（原有代码用 inputText 而非 userInput）
+            this.inputText = text || '（语音识别失败，请手动输入）'
+          } catch (err) {
+            console.error('语音转文字失败：', err)
+            this.inputText = '（语音识别失败，请手动输入）'
+          } finally {
+            this.isTranscribing = false
+            // 转写完成后聚焦输入框
+            this.$nextTick(() => {
+              if (this.$refs.inputRef) this.$refs.inputRef.focus()
+            })
+          }
+        }
+
         this.mediaRecorder.start()
         this.isRecording = true
         this.recordingTime = 0
@@ -377,18 +416,7 @@ export default {
       if (this.recordingInterval) { clearInterval(this.recordingInterval); this.recordingInterval = null }
     },
 
-    handleRecordingStop(stream) {
-      // 停止所有音轨
-      stream.getTracks().forEach(t => t.stop())
-      // TODO: 将 audioChunks 上传至后端 ASR 服务，回写到 inputText
-      // 目前 Mock：直接提示用户文字已就绪
-      if (this.inputText.trim() === '') {
-        this.inputText = '（语音识别内容将在此显示，对接ASR服务后自动填充）'
-      }
-      this.$nextTick(() => {
-        if (this.$refs.inputRef) this.$refs.inputRef.focus()
-      })
-    },
+    // ✅ 移除原有空的 handleRecordingStop 方法（已整合到 onstop 中）
 
     // ---- 工具方法 ----
     scrollToBottom() {
