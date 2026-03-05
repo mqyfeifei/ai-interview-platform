@@ -1,0 +1,116 @@
+type: scenario_design_questions
+source:
+  - 技术博客
+items:
+  - id: SQ-001
+    type: scenario_design
+    question: 设计一个高并发秒杀系统，重点说明削峰、限流、库存一致性。
+    tags: [高并发, 秒杀, 分布式]
+    difficulty: hard
+    source: 技术博客
+    status: draft
+    key_points:
+      - CDN动静资源分离
+      - 风控网关限流/验证码防刷
+      - 引入MQ异步削峰
+      - Redis预扣库存避免击穿DB
+      - 最终一致兜底策略
+  - id: SQ-002
+    type: scenario_design
+    question: 设计一个短链接系统，如何保证唯一性、跳转性能与统计准确性？
+    tags: [系统设计, 短链接]
+    difficulty: medium
+    source: 技术博客
+    status: draft
+    key_points:
+      - 核心算法：使用自增ID配合Base62进制转换解决短链长度
+      - 冲突处理方案(布隆过滤器)
+      - 高并发下如何跳转(利用302临时重定向加Cache预热)
+  - id: SQ-003
+    type: scenario_design
+    question: 设计一个分布式 ID 生成服务，如何保证全局唯一与趋势递增？
+    tags: [分布式, ID生成]
+    difficulty: medium
+    source: 技术博客
+    status: draft
+    key_points:
+      - 选用雪花算法(Snowflake)生成趋势递增的长整形数
+      - 处理时钟回拨漏洞补偿(等待重试、采用历史时间戳)
+      - 利用发号器或号段模式(如美团Leaf)减少DB寻址压力
+  - id: SQ-004
+    type: scenario_design
+    question: 设计一个订单系统的状态机，如何处理超时取消与补偿？
+    tags: [订单系统, 状态机]
+    difficulty: medium
+    source: 技术博客
+    status: draft
+    key_points:
+      - 状态机的设计与订单状态单向扭转约束防并发修改
+      - 使用RocketMQ延迟消息或持久化定时任务处理超期自动取消
+      - 防重复支付及逆向操作补偿流水机制
+  - id: SQ-005
+    type: scenario_design
+    question: 设计一个日志采集与检索平台，如何平衡写入吞吐与查询延迟？
+    tags: [日志系统, 检索]
+    difficulty: hard
+    source: 技术博客
+    status: draft
+    key_points:
+      - 端侧采集代理(如Filebeat)低开销无侵入式的设计
+      - 使用Kafka集群作为缓冲避免因ES毛刺或瞬间高并发导致采集端阻塞
+      - 基于Elasticsearch的倒排索引支撑及设置冷热分层提升性能
+  - id: SQ-006
+    type: scenario_design
+    question: 设计一个消息重试系统，如何避免重复消费和消息风暴？
+    tags: [MQ, 重试机制]
+    difficulty: hard
+    source: 技术博客
+    status: draft
+    key_points:
+      - 使用阶梯递增的时间配置重试间隔
+      - 超过最大次数投递进入死信队列(DLQ)落表报警等待人工干预
+      - 重试消费的接收端必须实现防重复的强幂等逻辑约束
+  - id: SQ-007
+    type: scenario_design
+    question: 设计一个多级缓存架构（本地缓存+Redis+DB），如何保障一致性？
+    tags: [缓存, 架构设计]
+    difficulty: hard
+    source: 技术博客
+    status: draft
+    key_points:
+      - 本地缓存(Caffeine)处理极热点读取抗共性峰流量
+      - 分布式Redis作为二级共享核心缓存应对高扇出查找
+      - 利用监听DB Binlog(如Canal做变更广播)来保障各节点缓存强一致刷新
+  - id: SQ-008
+    type: scenario_design
+    question: 设计一个支持租户隔离的 SaaS 后端，如何做数据权限控制？
+    tags: [SaaS, 多租户, 权限]
+    difficulty: hard
+    source: 技术博客
+    status: draft
+    key_points:
+      - 采取合理的物理隔离级别(单库分租户字段 vs 分库隔离)
+      - 利用AOP切面织入，通过拦截层(如Mybatis-Plus的TenantLine)自动组装租户限制
+      - RBAC模型管理与严防越权水平读取及串数据问题
+  - id: SQ-009
+    type: scenario_design
+    question: 设计一个文件上传服务，如何实现断点续传与防刷策略？
+    tags: [文件服务, 安全]
+    difficulty: medium
+    source: 技术博客
+    status: draft
+    key_points:
+      - 前端文件分片和基于Web Worker隔离的MD5哈希生成
+      - 提供并发控制且具备秒传校验与断点偏移续传能力
+      - 服务端对于断点片段的完整性拼接与针对单一会话防大量恶意切片刷库的防护治理
+  - id: SQ-010
+    type: scenario_design
+    question: 设计一个灰度发布与回滚方案，如何降低发布风险？
+    tags: [发布系统, 灰度]
+    difficulty: medium
+    source: 技术博客
+    status: draft
+    key_points:
+      - 全链路透传流量标识(灰度标/UID等)及策略制定下发
+      - 流量接入层(Nginx+Lua)实现分流分流与配比递增(1%->全量)
+      - 配套监控数据盘分析对照与支持突发异常能做到秒级一键秒回滚的心智意识

@@ -51,6 +51,7 @@ def init_db():
             default_prompt = AiPrompt(
                 name='通用面试官',
                 role_description='你是一位专业、客观的面试官。',
+                job_id='1',
                 system_prompt='请根据候选人的简历和回答进行专业面试。【核心指令】：当你觉得已经问了足够多的问题（例如超过5题），或者你认为已经充分评估了该候选人的能力时，请主动结束面试。结束时，请务必在你的回复文本的最后面加上特殊标记 [INTERVIEW_OVER]。',
                 greeting_message='你好，我是你的面试官。请先做一个简单的自我介绍。',
                 questioning_style='专业严谨'

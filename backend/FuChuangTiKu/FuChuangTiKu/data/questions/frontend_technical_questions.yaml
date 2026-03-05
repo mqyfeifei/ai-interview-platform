@@ -1,0 +1,114 @@
+type: frontend_technical_interview_questions
+source:
+  - 牛客网
+  - 掘金
+items:
+  - id: FE-TQ-001
+    type: technical
+    question: 解释一下浏览器的事件循环（Event Loop）机制，宏任务与微任务的区别是什么？
+    tags: [JavaScript, 浏览器原理, 异步编程]
+    difficulty: medium
+    source: 掘金
+    status: draft
+    key_points:
+      - 主线程跑完同步代码发派异步流
+      - 微任务(Promise/MutationObserver)优先级永远压制宏任务(setTimeout等)
+      - Event Loop每次循环必把微任务栈连同新产生的微任务吃干抹净后再开宏任务盲盒
+  - id: FE-TQ-002
+    type: technical
+    question: Vue3 中响应式原理 Proxy 与 Vue2 中 Object.defineProperty 有什么区别和优势？
+    tags: [Vue, 响应式原理]
+    difficulty: medium
+    source: 牛客网
+    status: draft
+    key_points:
+      - Proxy天然加持整个对象和新增删除的侦测以及原生感知数组索引增减
+      - defineProperty陷于遍历深陷缺乏全量观察视角的盲区且难响应数组及新生属性变数
+      - Proxy作为引擎特性性能高但放弃古董浏览器兼容
+  - id: FE-TQ-003
+    type: technical
+    question: React Fiber 架构解决了什么问题？它的工作原理是怎样的？
+    tags: [React, 架构, 性能优化]
+    difficulty: hard
+    source: 掘金
+    status: draft
+    key_points:
+      - 直击超庞大DOM树递归阻塞主进程引起页面僵死及动画卡顿的顽疾
+      - 任务切片化(Fiber片层结构)，化整为零留出空档给更高优级用户交互输入
+      - 一阶段Reconcile随用随停查变更，二阶段Commit大一统快速同频改DOM防撕裂
+  - id: FE-TQ-004
+    type: technical
+    question: 详细说一下 BFC (Block Formatting Context) 以及它的应用场景。
+    tags: [CSS, 布局]
+    difficulty: medium
+    source: 牛客网
+    status: draft
+    key_points:
+      - 建立无依赖干扰的自留地沙盒格式化空间
+      - 秒解边距内卷坍塌的视觉顽症
+      - 包裹浮动逃逸元素杜绝高度内爆或被外物遮挡掩盖的尴尬
+  - id: FE-TQ-005
+    type: technical
+    question: 闭包（Closure）是什么？有哪些真实应用场景？会带来什么问题？
+    tags: [JavaScript, 闭包]
+    difficulty: medium
+    source: 掘金
+    status: draft
+    key_points:
+      - 函数与包容自身声明周遭的隐秘时空组成的捆绑生态
+      - 成就私有状态封锁的利器与造就防抖防爆等高阶函数的灵魂基石
+      - 一不留神未切断宿主留存链引发的系统内存毒瘤泄漏泄漏隐患
+  - id: FE-TQ-006
+    type: technical
+    question: Webpack 的构建流程是怎样的？Loader 和 Plugin 有什么区别？
+    tags: [工程化, Webpack]
+    difficulty: medium
+    source: 牛客网
+    status: draft
+    key_points:
+      - 入口生发至AST树图状摸底建立模块牵引网络
+      - Loader如同编译漏斗强力榨取翻译异构档案为标准JS
+      - Plugin作为事件拦截刺客纵贯生命全链赋予各类压缩分包瘦身强化魔力
+  - id: FE-TQ-007
+    type: technical
+    question: 浏览器首屏优化有哪些常见方案？（SSR、预加载、拆包等）
+    tags: [性能优化, 首屏优化]
+    difficulty: hard
+    source: 掘金
+    status: draft
+    key_points:
+      - 工程压缩极限分包（Tree-shaking及模块分离懒加载流）
+      - 强力突围SSR服务端生成快出流或者静态预烘焙消除首屏白脸尴尬
+      - 外力借驻CDN高低空输送+全量网络包Gzip压缩护航+强骨架屏保体验
+  - id: FE-TQ-008
+    type: technical
+    question: 跨域问题是如何产生的？有哪些常见的解决方式（CORS、JSONP、Nginx代理）？
+    tags: [网络, 跨域]
+    difficulty: easy
+    source: 牛客网
+    status: draft
+    key_points:
+      - 安防机制同源铁律导致三元素（域口协）必一造就排异围栏
+      - 单薄不争的古董JSONP仅且单GET的苍白与淘汰定局
+      - 标准官方CORS与后端深情协商协议，及主流前端以服务器代理骗取同源的高频实践闭环方案
+  - id: FE-TQ-009
+    type: technical
+    question: Vite 为什么比 Webpack 在开发环境下快那么多？
+    tags: [工程化, Vite]
+    difficulty: medium
+    source: 掘金
+    status: draft
+    key_points:
+      - 弃用Webpack全量依赖抓取编译捆绑后上服务器的臃肿传统包袱
+      - 极度吃透原生ESM浏览器底层模块特使实现纯粹懒汉按需抛投模块源
+      - 模块隔离免重捆绑彻底刷新史诗般0损耗极速HMR瞬刻热换装震撼体验
+  - id: FE-TQ-010
+    type: technical
+    question: ES6 模块（import/export）与 CommonJS 模块有什么本质区别？
+    tags: [JavaScript, 模块化]
+    difficulty: medium
+    source: 牛客网
+    status: draft    key_points:
+      - ESM主打静态远征探针与树摇无死角排查，所牵输出全为活性原身同脉链接
+      - CommonJs走随走随看的运行态读取拉取，输出深复制绝情抛投
+      - 一个前处理统筹长远(构建时)，一个吃实时状态应付急需反应各霸一方

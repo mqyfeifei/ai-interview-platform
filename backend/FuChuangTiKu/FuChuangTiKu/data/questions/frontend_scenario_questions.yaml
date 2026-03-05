@@ -1,0 +1,58 @@
+type: frontend_scenario_design_questions
+source:
+  - 技术博客
+items:
+  - id: FE-SQ-001
+    type: scenario_design
+    question: 设计一个前端埋点与监控SDK，如何保证不上报脏数据、防串报、并降低性能消耗？
+    tags: [工程设计, 监控 SDK]
+    difficulty: hard
+    source: 技术博客
+    status: draft
+    key_points:
+      - 无感埋藏流与强制手动全包裹体系互补交错捕捉全盘图景
+      - 核心借助Navigator.sendBeacon/fetch keepalive坚固护航关闭页面终局发送不丢失不截断
+      - 使用本地全缓存与闲置帧（requestIdleCallback）的柔性排队补发打赢不卡UI无卡死消耗狙击战
+  - id: FE-SQ-002
+    type: scenario_design
+    question: 设计一个高可用的大文件分片上传组件，需要支持断点续传、并发控制及错误重试。
+    tags: [文件上传, 并发控制]
+    difficulty: hard
+    source: 技术博客
+    status: draft
+    key_points:
+      - 巧用WebWorker另起灶台开动分片大哈希规避主脑阻塞定格
+      - 严控并发高并发水闸（Promise机制节流并发量）打赢全频塞死僵局痛点
+      - 断点续传历史缓存查验以及拼图聚合失败大超重构及重试防崩溃铁链式双保险设计
+  - id: FE-SQ-003
+    type: scenario_design
+    question: 设计方案实现单点登录 (SSO)，如果是跨主域的情况，前端应该如何配合？
+    tags: [安全设计, SSO, 跨域]
+    difficulty: medium
+    source: 技术博客
+    status: draft
+    key_points:
+      - 单中心CAS登录全域核发强信行流枢纽中心建立
+      - 运用跨界票据传递术（携卷URL跳转或内嵌信道连通认证法）打破同源墙城
+      - 熟练管控浏览器cookie异地传发令牌认证特性以及JWT授权护照凭据防泄漏机制网
+  - id: FE-SQ-004
+    type: scenario_design
+    question: 如果让你开发一个基于 Web IDE 的代码高亮编辑器，你会如何选型和架构？
+    tags: [组件架构, Web IDE]
+    difficulty: hard
+    source: 技术博客
+    status: draft
+    key_points:
+      - 极道基床核心强硬依托Monaco Editor引擎支撑等霸主生态压顶降维化解重任
+      - 主架构全依托AST剖心剥离辅以Worker强行渲染隔离计算实现长段重排毒打抵抗
+      - 视口虚拟化DOM和极致canvas绘板加速防死拉跨的抗重型渲染能力护城河展现
+  - id: FE-SQ-005
+    type: scenario_design
+    question: 针对复杂表单（例如近 100 项带联动的配置项），如何设计能避免卡顿并具有良好可维护性？
+    tags: [性能优化, 复杂表单]
+    difficulty: medium
+    source: 技术博客
+    status: draft    key_points:
+      - 杜绝大水漫灌重排渲染采用极致颗粒响应分拆只点阵渲染防爆
+      - 抽取元级强引擎联动Schema外挂控制取代杂乱盘布于原身面条级无脑控制代码
+      - 强加消隐懒化加载视觉及重重交叠下的复杂事件单流响应提速设计解耦
