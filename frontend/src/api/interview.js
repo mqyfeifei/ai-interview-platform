@@ -76,20 +76,19 @@ const FOLLOW_UP_TRIGGERS = [
  * @returns {Promise<{ sessionId, firstQuestion, totalQuestions }>}
  */
 export const startInterview = async (data) => {
-  if (USE_MOCK) {
-    await mockDelay()
-    const questions = MOCK_QUESTION_BANKS[data.jobId] || MOCK_QUESTION_BANKS['default']
-    const sessionId = 'mock_session_' + Date.now()
-    // 把题目列表存进 sessionStorage 供后续 mock 使用
-    sessionStorage.setItem(sessionId, JSON.stringify({ questions, index: 0, jobId: data.jobId }))
-    return {
-      sessionId,
-      firstQuestion: questions[0],
-      totalQuestions: data.questionCount || 10
-    }
+  if (USE_MOCK) { /* 原mock代码不变 */ }
+  const res = await request.post('/interviews/start', {
+    user_id: data.userId,   // 暂时从 data 传入，待JWT完善后从拦截器注入
+    job_id: data.jobId
+  })
+  // 统一适配为前端期望的格式
+  return {
+    sessionId: String(res.data.interview_id),
+    firstQuestion: res.data.question,
+    isFinished: false
   }
-  return request.post('/v1/interviews/start', data)
 }
+
 
 /**
  * 发送回答，获取下一题或追问
@@ -130,20 +129,67 @@ export const sendAnswer = async (sessionId, answer) => {
   return request.post(`/v1/interviews/${sessionId}/answer`, { answer })
 }
 
+
+// ---- 新增：SSE 流式聊天（替换原 sendAnswer）----
+// 原 sendAnswer 返回 { reply, nextQuestion, isFinished }
+// 后端是 SSE 流，通过 fetch 手动处理，检测 [INTERVIEW_OVER] 标记
+export const sendAnswerStream = (sessionId, answer, { onChunk, onFinish, onError }) => {
+  const API_BASE = process.env.VUE_APP_API_BASE_URL || '/api/v1'
+  const token = localStorage.getItem('ai_interview_token')
+
+  fetch(`${API_BASE}/interviews/${sessionId}/chat/stream`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {})
+    },
+    body: JSON.stringify({ answer })
+  }).then(async (response) => {
+    const reader = response.body.getReader()
+    const decoder = new TextDecoder()
+    let fullText = ''
+
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+
+      const rawChunk = decoder.decode(value, { stream: true })
+      // SSE 格式: "data: {...}\n\n"
+      const lines = rawChunk.split('\n').filter(l => l.startsWith('data: '))
+      for (const line of lines) {
+        try {
+          const json = JSON.parse(line.slice(6))
+          const chunk = json.chunk || ''
+          fullText += chunk
+
+          if (chunk.includes('[INTERVIEW_OVER]')) {
+            // 检测到结束标记，通知组件
+            onChunk(chunk.replace('[INTERVIEW_OVER]', ''))
+            onFinish()
+            return
+          } else {
+            onChunk(chunk)
+          }
+        } catch {}
+      }
+    }
+    // 流正常结束但没有 [INTERVIEW_OVER]（继续追问）
+    // 不调用 onFinish，等下一轮
+  }).catch(onError)
+}
+
 /**
  * 主动结束面试
  * @param {string} sessionId
  * @returns {Promise<{ reportId }>}
  */
 export const finishInterview = async (sessionId) => {
-  if (USE_MOCK) {
-    await mockDelay(2000)
-    sessionStorage.removeItem(sessionId)
-    return { reportId: 'mock_report_' + Date.now() }
-  }
-  return request.post(`/v1/interviews/${sessionId}/finish`)
+  if (USE_MOCK) { /* 原mock代码不变 */ }
+  const res = await request.post(`/interviews/${sessionId}/finish`)
+  // 把后端报告存到 sessionStorage，供报告页读取（后端暂无 GET /report/:id 接口）
+  sessionStorage.setItem(`report_${sessionId}`, JSON.stringify(res.data))
+  return { reportId: sessionId }
 }
-
 /**
  * 获取面试历史列表（用于历史记录页）
  * @param {Object} params - { page, pageSize, jobId }
@@ -161,4 +207,19 @@ export const getInterviewList = async (params = {}) => {
     }
   }
   return request.get('/v1/interviews', { params })
+}
+
+
+// ---- uploadAudio（新增，对接 ASR）----
+export const uploadAudio = async (audioBlob) => {
+  if (USE_MOCK) {
+    await mockDelay(800)
+    return { text: '（语音识别暂时不可用，请使用文字输入）' }
+  }
+  const formData = new FormData()
+  formData.append('audio', audioBlob, 'recording.wav')
+  const res = await request.post('/interviews/upload-audio', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  })
+  return res.data
 }
