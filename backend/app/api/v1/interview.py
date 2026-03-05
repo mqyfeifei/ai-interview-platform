@@ -30,6 +30,8 @@ def start_interview():
 #         return jsonify({"code": 500, "msg": str(e)}), 500
 
 
+
+#注：前端开发人员需配合，在接收 SSE 流的过程中监听 [INTERVIEW_OVER]，一旦匹配到，立刻终止录音/输入，并请求 /finish 接口生成报告。
 @interview_bp.route('/<int:interview_id>/chat/stream', methods=['POST'])
 def chat_stream(interview_id):
     data = request.get_json()
@@ -53,6 +55,7 @@ def upload_audio():
         return jsonify({"code": 200, "data": {"text": text}, "msg": "success"}), 200
     except Exception as e:
         return jsonify({"code": 500, "msg": str(e)}), 500
+
 
 @interview_bp.route('/<int:interview_id>/finish', methods=['POST'])
 def finish_interview(interview_id):

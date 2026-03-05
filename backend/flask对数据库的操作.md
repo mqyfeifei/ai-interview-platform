@@ -103,3 +103,17 @@ TRUNCATE TABLE knowledge_items CASCADE;
 ALTER TABLE questions ALTER COLUMN embedding TYPE vector(512);
 ALTER TABLE knowledge_items ALTER COLUMN embedding TYPE vector(512);
 ```
+
+提示词修改，如果数据库里面提示词没有结束语，请执行以下sql语句
+```Bash
+UPDATE ai_prompts 
+SET system_prompt = system_prompt || '
+【核心指令】：当你觉得已经问了足够多的问题（例如超过5题），或者你认为已经充分评估了该候选人的能力时，请主动结束面试。结束时，请务必在你的回复文本的最后面加上特殊标记 [INTERVIEW_OVER]。'
+WHERE is_active = true;
+```
+检查interview是否具有以下三个字段，没有执行以下sql语句
+```Bash
+ALTER TABLE interviews ADD COLUMN evaluation_highlights TEXT;
+ALTER TABLE interviews ADD COLUMN evaluation_improvements TEXT;
+ALTER TABLE interviews ADD COLUMN evaluation_suggestions TEXT;
+```
