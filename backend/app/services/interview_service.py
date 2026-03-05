@@ -100,46 +100,46 @@ class InterviewService:
         db.session.add(ai_chat)
         db.session.commit()
 
-        @staticmethod
-        def finish_interview(interview_id):
-            """结束面试并生成评价写入数据库"""
-            interview = Interview.query.get(interview_id)
-            if interview.status == 'completed':
-                return
+    @staticmethod
+    def finish_interview(interview_id):
+        """结束面试并生成评价写入数据库"""
+        interview = Interview.query.get(interview_id)
+        if interview.status == 'completed':
+            return
 
-            # 1. 提取所有对话记录
-            chats = InterviewChat.query.filter_by(interview_id=interview_id).order_by(InterviewChat.timestamp).all()
-            chat_history = "\n".join([f"{c.role}: {c.content}" for c in chats])
+        # 1. 提取所有对话记录
+        chats = InterviewChat.query.filter_by(interview_id=interview_id).order_by(InterviewChat.timestamp).all()
+        chat_history = "\n".join([f"{c.role}: {c.content}" for c in chats])
 
-            # 2. 调用大模型生成 JSON 格式的评价
-            system_prompt = """
-                请作为资深面试官对以下面试记录进行评分。
-                必须严格返回 JSON 格式，包含：total_score(总分0-100), dimensions(包含: 技术正确性, 逻辑严谨性, 岗位匹配度, 表达沟通, 应变能力。每个维度提供 score 0-100 和 comment 评语)。
-                """
-            llm = DeepSeekClient()
-            response_text = llm.generate_reply([
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": chat_history}
-            ])
+        # 2. 调用大模型生成 JSON 格式的评价
+        system_prompt = """
+            请作为资深面试官对以下面试记录进行评分。
+            必须严格返回 JSON 格式，包含：total_score(总分0-100), dimensions(包含: 技术正确性, 逻辑严谨性, 岗位匹配度, 表达沟通, 应变能力。每个维度提供 score 0-100 和 comment 评语)。
+            """
+        llm = DeepSeekClient()
+        response_text = llm.generate_reply([
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": chat_history}
+        ])
 
-            # 解析 JSON（实际应用需增加 JSON 提取正则表达式及异常重试机制）
-            report_data = json.loads(response_text)
+        # 解析 JSON（实际应用需增加 JSON 提取正则表达式及异常重试机制）
+        report_data = json.loads(response_text)
 
-            # 3. 更新面试总表
-            interview.total_score = report_data.get("total_score", 0)
-            interview.status = 'completed'
+        # 3. 更新面试总表
+        interview.total_score = report_data.get("total_score", 0)
+        interview.status = 'completed'
 
-            # 4. 写入维度评分表
-            for dim_name, dim_data in report_data.get("dimensions", {}).items():
-                dimension = Dimension.query.filter_by(name=dim_name).first()
-                if dimension:
-                    score_record = InterviewScore(
-                        interview_id=interview.id,
-                        dimension_id=dimension.id,
-                        score=dim_data.get("score"),
-                        comment=dim_data.get("comment")
-                    )
-                    db.session.add(score_record)
+        # 4. 写入维度评分表
+        for dim_name, dim_data in report_data.get("dimensions", {}).items():
+            dimension = Dimension.query.filter_by(name=dim_name).first()
+            if dimension:
+                score_record = InterviewScore(
+                    interview_id=interview.id,
+                    dimension_id=dimension.id,
+                    score=dim_data.get("score"),
+                    comment=dim_data.get("comment")
+                )
+                db.session.add(score_record)
 
-            db.session.commit()
-            return report_data
+        db.session.commit()
+        return report_data
