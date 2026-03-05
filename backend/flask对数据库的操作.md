@@ -102,7 +102,14 @@ TRUNCATE TABLE knowledge_items CASCADE;
 -- 修改向量维度为 512
 ALTER TABLE questions ALTER COLUMN embedding TYPE vector(512);
 ALTER TABLE knowledge_items ALTER COLUMN embedding TYPE vector(512);
+
+-- 清空 resources 表数据（防范维度冲突报错）
+TRUNCATE TABLE resources CASCADE;
+
+-- 修改向量维度为 512
+ALTER TABLE resources ALTER COLUMN embedding TYPE vector(512);
 ```
+
 
 提示词修改，如果数据库里面提示词没有结束语，请执行以下sql语句
 ```Bash

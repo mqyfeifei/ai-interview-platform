@@ -1,0 +1,80 @@
+type: excellent_answer_examples
+source:
+  - 自己整理
+items:
+  - id: EX-T-001
+    type: technical
+    question: Redis 缓存击穿如何解决？
+    framework: 问题定义-方案对比-落地细节-监控兜底
+    answer: |
+      先确认是热点 key 失效瞬间导致的数据库放大流量。常见方案有互斥锁、逻辑过期、热点永不过期。
+      我倾向“逻辑过期+后台异步重建+互斥兜底”：读请求先返回旧值，异步刷新；若刷新任务失败再走短时互斥锁。
+      监控上看 DB QPS、缓存命中率、重建耗时，并设置熔断降级避免雪崩扩散。
+    status: draft
+  - id: EX-T-002
+    type: technical
+    question: 线程池参数如何设定？
+    framework: 业务类型分析-容量估算-压测校准
+    answer: |
+      我会先区分 CPU 密集和 IO 密集任务。CPU 密集型一般接近核数；IO 密集型可按等待时间比例放大。
+      初始参数通过公式估算，再结合压测看 TP99、队列长度和拒绝率动态调整。
+      关键是避免“无界队列+默认策略”，并配套告警和限流。
+    status: draft
+
+  - id: EX-P-001
+    type: project_deep_dive
+    question: 介绍一次你做过的性能优化。
+    framework: STAR
+    answer: |
+      S：订单查询接口高峰期 TP99 达 1.8s，影响下游。
+      T：两周内将 TP99 降到 500ms 内并保持错误率稳定。
+      A：做了慢 SQL 分析、增加联合索引、引入热点缓存、批量接口改造、线程池隔离。
+      R：TP99 降到 320ms，QPS 提升 2.3 倍，CPU 峰值下降约 30%。
+    status: draft
+  - id: EX-P-002
+    type: project_deep_dive
+    question: 架构选型为什么这么做？
+    framework: 背景-约束-对比-结论
+    answer: |
+      先讲业务约束：峰值流量、团队规模、交付周期、稳定性目标。
+      再比较备选方案在复杂度、成本、可维护性上的差异。
+      最后强调“当前阶段最优”而不是“绝对最优”，并说明未来演进路径。
+    status: draft
+
+  - id: EX-S-001
+    type: scenario_design
+    question: 设计秒杀系统如何答？
+    framework: 分层设计
+    answer: |
+      入口层限流与验证码防刷；接入层做请求削峰（MQ）；业务层做库存预扣与幂等；存储层保证最终一致。
+      重点说明超卖防护（原子扣减）、回补机制、降级策略和压测指标。
+    status: draft
+  - id: EX-S-002
+    type: scenario_design
+    question: 多级缓存一致性如何答？
+    framework: 主流程+异常流
+    answer: |
+      主流程采用“先写 DB 再删缓存”并配合延时双删；热点读走本地缓存+Redis。
+      异常流考虑消息丢失、并发覆盖、回源风暴，配合订阅 binlog 或 MQ 做异步修正。
+    status: draft
+
+  - id: EX-B-001
+    type: behavioral
+    question: 讲一次线上故障处理经历。
+    framework: STAR
+    answer: |
+      S：核心支付链路错误率突增。
+      T：10 分钟内止损并在 1 小时内恢复。
+      A：先降级非核心功能，扩大监控维度定位到下游超时，临时切换备用通道并回滚风险变更。
+      R：15 分钟恢复核心可用，后续补齐熔断与容量预案，月度同类故障归零。
+    status: draft
+  - id: EX-B-002
+    type: behavioral
+    question: 讲一次跨团队协作经历。
+    framework: PREP
+    answer: |
+      P：跨团队协作核心是对齐目标和节奏。
+      R：我在一次风控项目中建立周节奏看板和统一验收口径。
+      E：需求变更减少，联调周期从 3 周缩短到 1.5 周。
+      P：最终按期上线，且返工率显著下降。
+    status: draft
