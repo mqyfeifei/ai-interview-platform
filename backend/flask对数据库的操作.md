@@ -90,3 +90,16 @@ docker exec -it <后端容器ID> /bin/bash
 # 执行脚本
 python init_data.py
 ```
+
+
+
+## C.由于嵌入了本地模型，请检查向量维度，维度不正确进数据库修改
+```Bash
+-- 清空表数据（防范维度冲突报错）
+TRUNCATE TABLE questions CASCADE;
+TRUNCATE TABLE knowledge_items CASCADE;
+
+-- 修改向量维度为 512
+ALTER TABLE questions ALTER COLUMN embedding TYPE vector(512);
+ALTER TABLE knowledge_items ALTER COLUMN embedding TYPE vector(512);
+```
