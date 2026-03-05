@@ -9,7 +9,7 @@ import router from '@/router'
 
 // 创建axios实例
 const request = axios.create({
-  baseURL: process.env.VUE_APP_API_BASE_URL || '/api',
+  baseURL: process.env.VUE_APP_API_BASE_URL || '/api/v1',
   timeout: 15000,
   headers: {
     'Content-Type': 'application/json'
