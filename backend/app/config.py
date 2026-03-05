@@ -16,6 +16,7 @@ class Config:
     # --- 补充以下 Embedding 配置 ---
     EMBEDDING_API_KEY = os.environ.get('EMBEDDING_API_KEY')
     EMBEDDING_BASE_URL = os.environ.get('EMBEDDING_BASE_URL')
+    UPLOAD_ROOT = os.environ.get('UPLOAD_ROOT')
 
 
 class DevelopmentConfig(Config):
