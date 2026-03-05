@@ -87,16 +87,38 @@ class InterviewService:
 
         # 3. 组装上下文与 RAG 提示词
         prompt_config = AiPrompt.query.filter_by(job_id=interview.job_id).first()
-        messages = [{"role": "system", "content": prompt_config.system_prompt if prompt_config else "你是面试官。"}]
+        base_prompt = prompt_config.system_prompt if prompt_config else "你是面试官，【核心指令】：当你觉得已经问了足够多的问题（例如超过5题），或者你认为已经充分评估了该候选人的能力时，请主动结束面试。结束时，请务必在你的回复文本的最后面加上特殊标记 [INTERVIEW_OVER]。"
+
+        # ================= 优化点：动态注入“面试大纲” =================
+        # 从数据库拉取真实的知识点，约束 AI 只能在这个范围内提问
+        existing_tags = KnowledgeTag.query.all()
+        tag_list = [t.name for t in existing_tags]
+        tags_str = "、".join(tag_list)
+
+        enhanced_system_prompt = f"""
+                {base_prompt}
+
+                【面试提问大纲约束】：
+                为了保证面试的标准化，请你**严格**围绕以下“面试大纲”中的知识点向候选人提问。
+                - 每次提问请挑选 1 个具体的知识点进行深入考察。
+                - 请不要提出大纲范围之外（天马行空）的技术问题。
+                - 如果候选人回答不会，请宽慰他，并从大纲中换一个全新的知识点继续提问。
+
+                面试大纲（标准知识点库）：
+                [{tags_str}]
+                """
+        # ===============================================================
+
+        messages = [{"role": "system", "content": enhanced_system_prompt}]
 
         if related_knowledge:
             messages.append({"role": "system",
-                             "content": f"参考知识点：{related_knowledge.content}。请依据此知识点对用户的回答进行追问或评价。"})
-
+                             "content": f"参考知识点：{related_knowledge.content}。请依据此知识点对用户的回答进行专业追问或评价。"})
         # 加载历史对话
         history = InterviewChat.query.filter_by(interview_id=interview_id).order_by(InterviewChat.timestamp).all()
         for msg in history:
             messages.append({"role": "user" if msg.role == 'user' else "assistant", "content": msg.content})
+
 
         # 4. 调用大模型流式输出
         llm = DeepSeekClient()
@@ -128,50 +150,46 @@ class InterviewService:
         if interview.status == 'completed':
             return {"msg": "面试已出具报告", "reportId": interview.id}
 
+
         # 1. 提取所有对话记录
         chats = InterviewChat.query.filter_by(interview_id=interview_id).order_by(InterviewChat.timestamp).all()
         chat_history = "\n".join([f"{c.role}: {c.content}" for c in chats])
-        # ================= 优化点 1: 动态查出现有的标准知识点 =================
-        # 从数据库中拉取所有已知的标签，并按 category 分类组装
-        existing_tags = KnowledgeTag.query.all()
-        tag_catalog = {}
-        for t in existing_tags:
-            cat = t.category or "通用技能"
-            if cat not in tag_catalog:
-                tag_catalog[cat] = []
-            tag_catalog[cat].append(t.name)
 
-        # 将字典转为易读的 JSON 字符串供大模型阅读
-        valid_tags_str = json.dumps(tag_catalog, ensure_ascii=False)
+        # ================= 优化点 1: 扁平化组装真实标准知识点 =================
+        existing_tags = KnowledgeTag.query.all()
+        tag_list = [t.name for t in existing_tags]
+        valid_tags_str = "、".join(tag_list)
+        # ======================================================================
         # ======================================================================
 
         # 2. 强化系统提示词，强制输出详尽的 JSON 结构
-        system_prompt = """
-            请作为资深面试官对以下面试记录进行综合评估。
-            必须严格返回 JSON 格式，不要输出任何额外的 markdown 标记或解释说明。结构如下：
-            {
-                "total_score": 85,
-                "dimensions": {
-                    "技术正确性": {"score": 80, "comment": "对技术概念理解准确度评价"},
-                    "逻辑严谨性": {"score": 90, "comment": "表达结构与条理评价"},
-                    "岗位匹配度": {"score": 85, "comment": "与目标岗位的契合度"},
-                    "表达沟通": {"score": 80, "comment": "语言流畅性与自信度"},
-                    "应变能力": {"score": 75, "comment": "面对追问的应对表现"}
-                },
-                "highlights": "列出面试中表现突出的至少2个亮点",
-                "improvements": "指出回答中的主要不足与知识盲区",
-                "suggestions": "针对不足给出3条具体、可操作的学习改进建议"
-                "knowledge_tags_eval": {
-                    "具体的知识点名称(如:Redis持久化,JVM内存模型)": 20
-                }
-            }
-            【绝对指令】：对于 knowledge_tags_eval 字段，你**只能**从下面的“标准知识点库”中挑选你在对话中考察到的知识点进行 0-100 的打分。
-        如果候选人回答完全错误或不会，给20分以下。
-        **禁止自己捏造、改写或发明新的知识点名称！如果对话涉及的知识不在下表中，请忽略它。**
-        
-        标准知识点库（按类别分类）：
-        {valid_tags_str}
-            """
+        system_prompt = f"""
+                    请作为资深面试官对以下面试记录进行综合评估。
+                    必须严格返回 JSON 格式，不要输出任何额外的 markdown 标记或解释说明。结构如下：
+                    {{
+                        "total_score": 85,
+                        "dimensions": {{
+                            "技术正确性": {{"score": 80, "comment": "评价..."}},
+                            "逻辑严谨性": {{"score": 90, "comment": "评价..."}},
+                            "岗位匹配度": {{"score": 85, "comment": "评价..."}},
+                            "表达沟通": {{"score": 80, "comment": "评价..."}},
+                            "应变能力": {{"score": 75, "comment": "评价..."}}
+                        }},
+                        "highlights": "列出面试中表现突出的至少2个亮点",
+                        "improvements": "指出回答中的主要不足与知识盲区",
+                        "suggestions": "针对不足给出3条具体、可操作的学习改进建议",
+                        "knowledge_tags_eval": {{
+                            "真实的知识点名称": 20
+                        }}
+                    }}
+
+                【绝对指令】：对于 knowledge_tags_eval 字段，你**只能**从下面的“标准知识点库”中挑选你在对话中考察到的知识点进行 0-100 的打分。
+                如果候选人回答完全错误或不会，给20分以下。
+                **禁止自己捏造、改写或发明新的知识点名称！如果对话涉及的知识不在下表中，请忽略它。**
+
+                标准知识点库：
+                [{valid_tags_str}]
+                """
         llm = DeepSeekClient()
         response_text = llm.generate_reply([
             {"role": "system", "content": system_prompt},
@@ -207,22 +225,22 @@ class InterviewService:
                     comment=dim_data.get("comment", "")
                 )
                 db.session.add(score_record)
-                # ================= 优化点 2: 严格校验，切断自动生成逻辑 =================
-                tags_eval = report_data.get("knowledge_tags_eval", {})
-                for tag_name, score in tags_eval.items():
-                    # 严格去数据库匹配已有的标签，找不到就直接丢弃（防大模型幻觉）
-                    tag = KnowledgeTag.query.filter_by(name=tag_name).first()
-                    if tag:
-                        mastery = UserKnowledgeMastery.query.filter_by(user_id=interview.user_id, tag_id=tag.id).first()
-                        if not mastery:
-                            # 用户第一次接触这个标签，直接存入分数
-                            mastery = UserKnowledgeMastery(user_id=interview.user_id, tag_id=tag.id,
-                                                           mastery_level=score)
-                            db.session.add(mastery)
-                        else:
-                            # 已有记录，将历史分数与本次分数取平均（模拟平滑的成长或遗忘）
-                            mastery.mastery_level = int((mastery.mastery_level + score) / 2)
-                # ========================================================================
+        # ================= 优化点 2: 严格校验，切断自动生成逻辑 =================
+        tags_eval = report_data.get("knowledge_tags_eval", {})
+        for tag_name, score in tags_eval.items():
+            # 严格去数据库匹配已有的标签，找不到就直接丢弃（防大模型幻觉）
+            tag = KnowledgeTag.query.filter_by(name=tag_name).first()
+            if tag:
+                mastery = UserKnowledgeMastery.query.filter_by(user_id=interview.user_id, tag_id=tag.id).first()
+                if not mastery:
+                    # 用户第一次接触这个标签，直接存入分数
+                    mastery = UserKnowledgeMastery(user_id=interview.user_id, tag_id=tag.id,
+                                                   mastery_level=score)
+                    db.session.add(mastery)
+                else:
+                    # 已有记录，将历史分数与本次分数取平均（模拟平滑的成长或遗忘）
+                    mastery.mastery_level = int((mastery.mastery_level + score) / 2)
+        # ========================================================================
 
         db.session.commit()
         result = {
