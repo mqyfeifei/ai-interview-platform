@@ -1,8 +1,17 @@
 import os
 from dotenv import load_dotenv
 
-# 加载 .env 文件中的环境变量
-load_dotenv()
+# 显式加载环境变量文件：优先 backend/app/.env，其次 backend/.env
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+APP_ENV_PATH = os.path.join(CURRENT_DIR, '.env')
+PROJECT_ENV_PATH = os.path.join(os.path.dirname(CURRENT_DIR), '.env')
+
+if os.path.exists(APP_ENV_PATH):
+    load_dotenv(APP_ENV_PATH)
+elif os.path.exists(PROJECT_ENV_PATH):
+    load_dotenv(PROJECT_ENV_PATH)
+else:
+    load_dotenv()
 
 class Config:
     """基础配置，所有环境共享的配置"""
