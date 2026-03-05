@@ -12,4 +12,4 @@ class KnowledgeItem(db.Model):
     type = db.Column(db.String(50), nullable=False) # tip, mistake, model, practice
     job_id = db.Column(db.Integer, db.ForeignKey('jobs.id'))
     tags = db.Column(JSONB)
-    embedding = db.Column(Vector(1536))
+    embedding = db.Column(Vector(512))

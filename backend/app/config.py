@@ -9,6 +9,14 @@ class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-secret-key-CHANGE-THIS')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     JSON_AS_ASCII = False
+    # DeepSeek 配置
+    DEEPSEEK_API_KEY = os.environ.get('DEEPSEEK_API_KEY')
+    DEEPSEEK_BASE_URL = os.environ.get('DEEPSEEK_BASE_URL', 'https://api.deepseek.com/v1')
+    LLM_MODEL_NAME = os.environ.get('LLM_MODEL_NAME', 'deepseek-chat')
+    # --- 补充以下 Embedding 配置 ---
+    EMBEDDING_API_KEY = os.environ.get('EMBEDDING_API_KEY')
+    EMBEDDING_BASE_URL = os.environ.get('EMBEDDING_BASE_URL')
+
 
 class DevelopmentConfig(Config):
     """开发环境配置"""
@@ -37,3 +45,4 @@ config = {
     'production': ProductionConfig,
     'default': DevelopmentConfig   # 默认使用开发环境
 }
+

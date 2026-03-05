@@ -16,8 +16,7 @@ class Question(db.Model):
     reference_answer = db.Column(db.Text)
     knowledge_points = db.Column(JSONB)
 
-    # 向量字段：1536维（对应 OpenAI text-embedding-3-small）
-    embedding = db.Column(Vector(1536))
+    embedding = db.Column(Vector(512))
 
     def to_dict(self):
         return {

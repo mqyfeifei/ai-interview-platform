@@ -14,9 +14,9 @@ def create_app(config_name=None):
     db.init_app(app)
     migrate.init_app(app, db)
 
-    # 注册蓝图等（根据需要取消注释）
-    # from app.api.v1.users import user_bp
-    # app.register_blueprint(user_bp, url_prefix='/api/v1/users')
+    # 注册蓝图
+    from app.api.v1.interview import interview_bp
+    app.register_blueprint(interview_bp, url_prefix='/api/v1/interviews')
 
     @app.route('/health')
     def health_check():
