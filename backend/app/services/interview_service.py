@@ -10,6 +10,7 @@ import json
 from app.models.interview import InterviewScore, Dimension
 import json
 from sentence_transformers import SentenceTransformer
+from datetime import datetime
 
 # 推荐在类外部进行全局加载，避免每次调用时重复加载模型进内存
 # 'BAAI/bge-small-zh-v1.5' 首次运行会自动下载
@@ -151,6 +152,13 @@ class InterviewService:
         interview.evaluation_improvements = report_data.get("improvements", "")
         interview.evaluation_suggestions = report_data.get("suggestions", "")
         interview.status = 'completed'
+        # ================= 新增：记录结束时间和计算用时 =================
+        interview.end_time = datetime.now()  # 记录当前结束时间
+        if interview.start_time:
+            # 计算时间差，并将总秒数存入 used_time 字段
+            time_diff = interview.end_time - interview.start_time
+            interview.used_time = int(time_diff.total_seconds())
+        # ================================================================
 
         # 4. 写入维度评分表
         for dim_name, dim_data in report_data.get("dimensions", {}).items():

@@ -24,7 +24,7 @@ class DevelopmentConfig(Config):
     DEBUG = True
     SQLALCHEMY_DATABASE_URI = os.environ.get('DEV_DATABASE_URL',
         'postgresql+psycopg2://postgres:mysecretpassword@localhost:5432/ai_interview_db')
-    SQLALCHEMY_ECHO = True  # 打印SQL语句
+    SQLALCHEMY_ECHO = False  # 打印SQL语句
 
 class TestingConfig(Config):
     """测试环境配置"""
