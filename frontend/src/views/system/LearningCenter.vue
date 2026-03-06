@@ -76,21 +76,26 @@
           </h2>
         </div>
 
-        <!-- 维度切换 -->
-        <div class="curve-tabs">
-          <button
-            v-for="tab in curveTabs"
-            :key="tab.key"
-            :class="['curve-tab', { active: activeCurveTab === tab.key }]"
-            @click="switchCurveTab(tab.key)"
-          >{{ tab.label }}</button>
-        </div>
-
-        <div class="chart-card">
-          <div v-if="!growthData" class="chart-loading">
-            <div class="mini-spinner" />
+        <div v-if="enableCharts">
+          <!-- 维度切换 -->
+          <div class="curve-tabs">
+            <button
+              v-for="tab in curveTabs"
+              :key="tab.key"
+              :class="['curve-tab', { active: activeCurveTab === tab.key }]"
+              @click="switchCurveTab(tab.key)"
+            >{{ tab.label }}</button>
           </div>
-          <div v-else ref="lineChart" class="line-chart" />
+
+          <div class="chart-card" style="position:relative">
+            <div ref="lineChart" class="line-chart" />
+            <div v-if="!growthData" class="chart-loading chart-loading--overlay">
+              <div class="mini-spinner" />
+            </div>
+          </div>
+        </div>
+        <div v-else class="chart-card chart-card--disabled">
+          <p>能力成长曲线图表暂时关闭，不影响其它学习功能使用。</p>
         </div>
       </section>
 
@@ -101,7 +106,7 @@
             <span class="section-title__icon">🎯</span>
             技能短板
           </h2>
-          <span class="weakness-count">{{ weaknesses.length }} 项待提升</span>
+          <span class="weakness-count">{{ (weaknesses || []).length }} 项待提升</span>
         </div>
 
         <div class="weakness-cloud">
@@ -116,10 +121,27 @@
           </span>
         </div>
 
+        <!-- 掌握度可视化图 -->
+        <div class="weakness-chart-card" v-if="enableCharts">
+          <div class="weakness-chart-header">
+            <span class="weakness-chart-title">📊 掌握度分布</span>
+            <span class="weakness-chart-hint">数值越低 = 越需提升</span>
+          </div>
+          <div ref="weaknessChart" class="weakness-chart" :style="{ height: Math.max(180, (weaknesses || []).length * 36 + 24) + 'px' }" />
+          <div v-if="!weaknesses || weaknesses.length === 0" class="chart-empty chart-loading--overlay">
+            <span style="font-size:36px">📊</span>
+            <p>暂无短板数据</p>
+          </div>
+        </div>
+        <div class="weakness-chart-card chart-card--disabled" v-else>
+          <p>掌握度可视化图表暂时关闭，您仍可通过上面的短板标签进行学习资源筛选。</p>
+        </div>
+
         <div class="weakness-legend">
-          <span class="legend-dot legend-dot--high" />高频短板
-          <span class="legend-dot legend-dot--medium" style="margin-left:12px" />中频短板
-          <span class="legend-dot legend-dot--low" style="margin-left:12px" />低频短板
+          <span class="legend-dot" style="background:#EF4444" />薄弱 (&lt;40)
+          <span class="legend-dot" style="background:#F59E0B;margin-left:12px" />一般 (40-70)
+          <span class="legend-dot" style="background:#10B981;margin-left:12px" />良好 (70-90)
+          <span class="legend-dot" style="background:#6366F1;margin-left:12px" />优秀 (≥90)
         </div>
       </section>
 
@@ -148,13 +170,19 @@
           </button>
         </div>
 
-        <!-- 资源卡片列表 -->
-        <div v-if="filteredRecommendations.length > 0" class="resource-list">
+        <!-- 资源卡片列表 (带排序动画) -->
+        <transition-group
+          v-if="filteredRecommendations.length > 0"
+          name="resource-move"
+          tag="div"
+          class="resource-list"
+        >
           <div
             v-for="(res, idx) in filteredRecommendations"
             :key="res.id"
-            class="resource-card"
+            :class="['resource-card', { 'resource-card--completed': res.completed }]"
             :style="{ animationDelay: idx * 0.05 + 's' }"
+            @click="openResource(res)"
           >
             <!-- 类型图标 + 难度 -->
             <div class="resource-card__top">
@@ -219,8 +247,11 @@
                 已完成
               </span>
             </div>
+
+            <!-- 完成标志徽章 -->
+            <div v-if="res.completed" class="resource-card__completed-badge">✓ 已完成</div>
           </div>
-        </div>
+        </transition-group>
 
         <!-- 空态 -->
         <div v-else class="empty-state-wrap">
@@ -231,13 +262,84 @@
       </section>
 
     </div>
+
+    <!-- 资源详情弹窗 -->
+    <teleport to="body">
+      <transition name="modal-fade">
+        <div v-if="showResourceDetail" class="resource-modal-overlay" @click.self="closeResource">
+          <div class="resource-modal">
+            <!-- 头部 -->
+            <div class="resource-modal__header">
+              <div :class="['resource-type-icon', 'type-' + (selectedResource.type || 'article')]">
+                {{ typeIcon(selectedResource.type) }}
+              </div>
+              <div class="resource-modal__header-text">
+                <span :class="['difficulty-badge', 'diff-' + (selectedResource.difficulty || '')]">{{ selectedResource.difficulty }}</span>
+                <span class="resource-modal__time">⏱ {{ selectedResource.readTime }}</span>
+              </div>
+              <button class="resource-modal__close" @click="closeResource">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+
+            <!-- 标题 -->
+            <h2 class="resource-modal__title">{{ selectedResource.title }}</h2>
+
+            <!-- 来源 -->
+            <div class="resource-modal__source">
+              <span>来源：{{ selectedResource.source || '未知' }}</span>
+              <span v-if="selectedResource.relatedWeakness" class="resource-modal__weakness">
+                ⚡ 针对短板：{{ selectedResource.relatedWeakness }}
+              </span>
+            </div>
+
+            <!-- 摘要/内容 -->
+            <div class="resource-modal__content">
+              <p>{{ selectedResource.summary || '暂无详细内容' }}</p>
+            </div>
+
+            <!-- 标签 -->
+            <div v-if="selectedResource.tags && selectedResource.tags.length" class="resource-modal__tags">
+              <span v-for="tag in selectedResource.tags" :key="tag" class="res-tag">{{ tag }}</span>
+            </div>
+
+            <!-- 操作按钮 -->
+            <div class="resource-modal__actions">
+              <button class="modal-btn modal-btn--primary" @click="goToResource(selectedResource)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px">
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+                </svg>
+                {{ selectedResource.url ? '前往学习' : '开始学习' }}
+              </button>
+              <button
+                :class="['modal-btn', selectedResource.bookmarked ? 'modal-btn--bookmarked' : 'modal-btn--outline']"
+                @click="handleBookmark(selectedResource)"
+              >
+                {{ selectedResource.bookmarked ? '★ 已收藏' : '☆ 收藏' }}
+              </button>
+              <button
+                v-if="!selectedResource.completed"
+                class="modal-btn modal-btn--success"
+                @click="handleComplete(selectedResource); closeResource()"
+              >✓ 标记完成</button>
+              <span v-else class="modal-done-label">✓ 已完成</span>
+            </div>
+          </div>
+        </div>
+      </transition>
+    </teleport>
+
   </div>
 </template>
 
 <script>
+import { markRaw } from 'vue'
 import { mapGetters, mapActions } from 'vuex'
 // import { INTERVIEW_DIMENSIONS } from '@/utils/constants'
 
+// 图表渲染总开关
+// 如再次出现浏览器侧 ECharts 报错，可临时改为 false 关闭图表，仅保留其它学习功能
+const ENABLE_CHARTS = true
 let echarts = null
 const CURVE_COLORS = {
   overall: '#4338CA',
@@ -252,10 +354,14 @@ export default {
   name: 'LearningCenter',
   data() {
     return {
+      enableCharts: ENABLE_CHARTS,
       activeCurveTab: 'overall',
       activeTypeFilter: 'all',
       activeWeaknessFilter: null,
       chartInstance: null,
+      weaknessChartInstance: null,
+      showResourceDetail: false,
+      selectedResource: {},
       curveTabs: [
         { key: 'overall', label: '综合' },
         { key: 'technical', label: '技术' },
@@ -268,8 +374,8 @@ export default {
         { key: 'all', label: '全部', icon: '🌐' },
         { key: 'article', label: '文章', icon: '📄' },
         { key: 'video', label: '视频', icon: '🎬' },
-        { key: 'practice', label: '练习', icon: '✏️' },
-        { key: 'example', label: '范例', icon: '⭐' }
+        { key: 'book', label: '书籍', icon: '📖' },
+        { key: 'bookmarked', label: '收藏', icon: '⭐' }
       ]
     }
   },
@@ -290,14 +396,22 @@ export default {
     },
 
     filteredRecommendations() {
-      let list = this.recommendations
-      if (this.activeTypeFilter !== 'all') {
+      let list = this.recommendations || []
+      // 收藏筛选
+      if (this.activeTypeFilter === 'bookmarked') {
+        list = list.filter(r => r.bookmarked)
+      } else if (this.activeTypeFilter !== 'all') {
         list = list.filter(r => r.type === this.activeTypeFilter)
       }
+      // 短板筛选
       if (this.activeWeaknessFilter) {
-        list = list.filter(r => r.relatedWeakness === this.activeWeaknessFilter || r.tags.includes(this.activeWeaknessFilter))
+        list = list.filter(r => r.relatedWeakness === this.activeWeaknessFilter || (r.tags || []).includes(this.activeWeaknessFilter))
       }
-      return list
+      // 排序：未完成的在前，已完成的在后（带动画效果）
+      return [...list].sort((a, b) => {
+        if (a.completed === b.completed) return 0
+        return a.completed ? 1 : -1
+      })
     }
   },
   async created() {
@@ -312,19 +426,24 @@ export default {
   },
   beforeUnmount() {
     if (this.chartInstance) { this.chartInstance.dispose(); this.chartInstance = null }
+    if (this.weaknessChartInstance) { this.weaknessChartInstance.dispose(); this.weaknessChartInstance = null }
   },
   watch: {
-    growthData() {
-      this.$nextTick(() => this.renderChart())
+    growthData(newVal) {
+      if (newVal && echarts && this.enableCharts) this.safeRenderChart()
     },
     activeCurveTab() {
-      this.$nextTick(() => this.renderChart())
+      if (echarts && this.growthData && this.enableCharts) this.safeRenderChart()
+    },
+    weaknesses(newVal) {
+      if (newVal && newVal.length && echarts && this.enableCharts) this.safeRenderWeaknessChart()
     }
   },
   methods: {
     ...mapActions('learning', ['toggleBookmark', 'markCompleted', 'updateTaskStatus']),
 
     async initECharts() {
+      if (!this.enableCharts) return
       if (!echarts) {
         try {
           echarts = await import('echarts')
@@ -333,16 +452,50 @@ export default {
           return
         }
       }
-      this.$nextTick(() => { if (this.growthData) this.renderChart() })
+      // ECharts 加载完成后，如果数据已经就绪，则触发渲染
+      if (this.growthData) this.safeRenderChart()
+      if (this.weaknesses && this.weaknesses.length) this.safeRenderWeaknessChart()
+    },
 
+    /**
+     * 安全渲染：确保容器有有效尺寸后再调用 ECharts
+     * ECharts 在容器尺寸为 0 时会导致 coordinateSystem 为 undefined
+     */
+    safeRenderChart(retries = 0) {
+      const el = this.$refs.lineChart
+      if (!el || !echarts || retries > 10) return
+      if (el.clientWidth === 0 || el.clientHeight === 0) {
+        // 容器尚未完成布局，下一帧重试
+        requestAnimationFrame(() => this.safeRenderChart(retries + 1))
+        return
+      }
+      this.renderChart()
+    },
+
+    safeRenderWeaknessChart(retries = 0) {
+      const el = this.$refs.weaknessChart
+      if (!el || !echarts || retries > 10) return
+      if (el.clientWidth === 0 || el.clientHeight === 0) {
+        requestAnimationFrame(() => this.safeRenderWeaknessChart(retries + 1))
+        return
+      }
+      this.renderWeaknessChart()
     },
 
     renderChart() {
-      if (!echarts || !this.$refs.lineChart || !this.growthData) return
-      if (!this.chartInstance) {
-        this.chartInstance = echarts.init(this.$refs.lineChart)
-        const ro = new ResizeObserver(() => this.chartInstance?.resize())
-        ro.observe(this.$refs.lineChart)
+      const el = this.$refs.lineChart
+      if (!echarts || !el || !this.growthData) return
+      if (el.clientWidth === 0 || el.clientHeight === 0) return
+      
+      // 防御性检查：确保数据结构完整
+      const { overall, dimensions, dates, realDates } = this.growthData
+      if (!overall || !dimensions || !dates) return
+      if (!overall.length && !dates.length) return
+      
+      // 复用实例或创建新实例（使用 markRaw 避免被 Vue3 响应式代理）
+      if (!this.chartInstance || this.chartInstance.isDisposed()) {
+        this.chartInstance = markRaw(echarts.init(el))
+        new ResizeObserver(() => { if (this.chartInstance && !this.chartInstance.isDisposed()) this.chartInstance.resize() }).observe(el)
       }
 
       const isOverall = this.activeCurveTab === 'overall'
@@ -350,34 +503,48 @@ export default {
 
       const dimLabels = { technical: '技术正确性', logic: '逻辑严谨性', matching: '岗位匹配度', expression: '表达沟通', adaptability: '应变能力' }
 
-      let xData, seriesData
+      let xData, scoreData, dateData, seriesName
       if (isOverall) {
-        xData = this.growthData.overall.map(d => d.date)
-        seriesData = [{
-          name: '综合得分',
-          data: this.growthData.overall.map(d => d.score),
-          color
-        }]
+        xData = (overall || []).map(d => d.label || d.date)
+        scoreData = (overall || []).map(d => d.score)
+        dateData = (overall || []).map(d => d.date || '')
+        seriesName = '综合得分'
       } else {
-        xData = this.growthData.dates
-        seriesData = [{
-          name: dimLabels[this.activeCurveTab] || this.activeCurveTab,
-          data: this.growthData.dimensions[this.activeCurveTab] || [],
-          color
-        }]
+        xData = dates || []
+        scoreData = (dimensions && dimensions[this.activeCurveTab]) || []
+        dateData = realDates || dates || []
+        seriesName = dimLabels[this.activeCurveTab] || this.activeCurveTab
       }
+
+      // 检查是否有有效数据，避免 ECharts 渲染空系列报错
+      if (!xData.length || !scoreData.length) {
+        console.warn('图表数据为空，跳过渲染')
+        return
+      }
+
+      // Y轴自适应范围
+      const allScores = scoreData.filter(v => typeof v === 'number')
+      const minScore = allScores.length ? Math.min(...allScores) : 0
+      const maxScore = allScores.length ? Math.max(...allScores) : 100
+      const yMin = Math.max(0, Math.floor((minScore - 10) / 10) * 10)
+      const yMax = Math.min(100, Math.ceil((maxScore + 10) / 10) * 10)
 
       this.chartInstance.setOption({
         backgroundColor: 'transparent',
-        grid: { top: 20, right: 16, bottom: 32, left: 40 },
+        grid: { top: 24, right: 16, bottom: 32, left: 40 },
         tooltip: {
+          show: true,
           trigger: 'axis',
+          confine: true,
+          triggerOn: 'mousemove|click',
           backgroundColor: '#1E293B',
           borderColor: 'transparent',
           textStyle: { color: '#F8FAFC', fontSize: 12, fontFamily: "'Noto Sans SC'" },
           formatter: params => {
             const p = params[0]
-            return `<div style="padding:4px 8px">${p.name}<br/><b style="font-size:16px;color:${color}">${p.value}</b> 分</div>`
+            const idx = p.dataIndex
+            const date = dateData[idx] || ''
+            return `<div style="padding:4px 8px">${p.name}${date ? ' (' + date + ')' : ''}<br/><b style="font-size:16px;color:${color}">${p.value}</b> 分</div>`
           }
         },
         xAxis: {
@@ -387,43 +554,123 @@ export default {
           axisLabel: { color: '#94A3B8', fontSize: 11, fontFamily: "'Noto Sans SC'" }
         },
         yAxis: {
-          type: 'value', min: 40, max: 100, splitNumber: 4,
+          type: 'value', min: yMin, max: yMax, splitNumber: 4,
           axisLabel: { color: '#94A3B8', fontSize: 11 },
           splitLine: { lineStyle: { color: '#F1F5F9', type: 'dashed' } },
           axisLine: { show: false }, axisTick: { show: false }
         },
-        series: seriesData.map(s => ({
-            name: s.name, type: 'line', data: s.data,
-            smooth: true, symbol: 'circle', symbolSize: 7,
-            itemStyle: { color: s.color, borderColor: 'white', borderWidth: 2 },
-            lineStyle: { color: s.color, width: 2.5 },
-            areaStyle: { color: s.color + '28' },
-            // })),
-        // series: seriesData.map(s => ({
-        //   name: s.name, type: 'line', data: s.data,
-        //   smooth: true, symbol: 'circle', symbolSize: 7,
-        //   itemStyle: { color: s.color, borderColor: 'white', borderWidth: 2 },
-        //   lineStyle: { color: s.color, width: 2.5 },
-        //   areaStyle: {
-        //     color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-        //       { offset: 0, color: s.color + '40' },
-        //       { offset: 1, color: s.color + '00' }
-        //     ])
-        //   },
+        series: [{
+          name: seriesName, type: 'line', data: scoreData,
+          smooth: false, symbol: 'circle', symbolSize: 8,
+          itemStyle: { color: color, borderColor: 'white', borderWidth: 2 },
+          lineStyle: { color: color, width: 2.5 },
+          areaStyle: { color: color + '18' },
           markPoint: {
-            data: [{ type: 'max', name: '最高' }],
+            data: [
+              { type: 'max', name: '最高' },
+              { type: 'min', name: '最低' }
+            ],
             label: { color: 'white', fontSize: 10 },
-            itemStyle: { color: s.color }
+            itemStyle: { color: color },
+            symbolSize: 40
           }
-        })),
+        }],
         animation: true,
-        animationDuration: 800,
+        animationDuration: 600,
         animationEasing: 'cubicOut'
       }, true)
     },
 
     switchCurveTab(key) {
       this.activeCurveTab = key
+    },
+
+    renderWeaknessChart() {
+      const el = this.$refs.weaknessChart
+      if (!echarts || !el) return
+      if (el.clientWidth === 0 || el.clientHeight === 0) return
+      const list = this.weaknesses || []
+      if (!list.length) return
+
+      // 复用实例或创建新实例（使用 markRaw 避免被 Vue3 响应式代理）
+      if (!this.weaknessChartInstance || this.weaknessChartInstance.isDisposed()) {
+        this.weaknessChartInstance = markRaw(echarts.init(el))
+        new ResizeObserver(() => { if (this.weaknessChartInstance && !this.weaknessChartInstance.isDisposed()) this.weaknessChartInstance.resize() }).observe(el)
+      }
+
+      // 按掌握度升序排列（最弱排最上方）
+      const sorted = [...list]
+        .filter(w => w.mastery_level !== undefined && w.mastery_level !== null)
+        .sort((a, b) => a.mastery_level - b.mastery_level)
+      if (!sorted.length) return
+
+      const names = sorted.map(w => w.tag || w.name || '未知')
+      const values = sorted.map(w => w.mastery_level)
+      const getColor = v => v < 40 ? '#EF4444' : v < 70 ? '#F59E0B' : v < 90 ? '#10B981' : '#6366F1'
+
+      this.weaknessChartInstance.setOption({
+        backgroundColor: 'transparent',
+        grid: { top: 8, right: 50, bottom: 8, left: 90 },
+        tooltip: {
+          show: true,
+          trigger: 'axis',
+          confine: true,
+          triggerOn: 'mousemove|click',
+          axisPointer: { type: 'shadow' },
+          backgroundColor: '#1E293B',
+          borderColor: 'transparent',
+          textStyle: { color: '#F8FAFC', fontSize: 12, fontFamily: "'Noto Sans SC'" },
+          formatter: params => {
+            const p = params[params.length - 1]
+            const label = p.value < 40 ? '薄弱' : p.value < 70 ? '一般' : p.value < 90 ? '良好' : '优秀'
+            const c = getColor(p.value)
+            return `<div style="padding:4px 8px">${p.name}<br/>掌握度 <b style="font-size:16px;color:${c}">${p.value}%</b> <span style="color:#94A3B8">(${label})</span></div>`
+          }
+        },
+        xAxis: {
+          type: 'value', max: 100, min: 0,
+          axisLabel: { show: false },
+          splitLine: { show: false },
+          axisLine: { show: false },
+          axisTick: { show: false }
+        },
+        yAxis: {
+          type: 'category',
+          data: names,
+          inverse: true,
+          axisLine: { show: false },
+          axisTick: { show: false },
+          axisLabel: {
+            color: '#475569', fontSize: 12,
+            width: 78, overflow: 'truncate',
+            fontFamily: "'Noto Sans SC'"
+          }
+        },
+        series: [
+          {
+            type: 'bar', z: 1,
+            data: names.map(() => 100),
+            barWidth: 14, barGap: '-100%',
+            itemStyle: { color: '#F1F5F9', borderRadius: [0, 7, 7, 0] },
+            silent: true, animation: false
+          },
+          {
+            type: 'bar', z: 2,
+            data: values.map(v => ({
+              value: v,
+              itemStyle: { color: getColor(v), borderRadius: [0, 7, 7, 0] }
+            })),
+            barWidth: 14,
+            label: {
+              show: true, position: 'right',
+              color: '#64748B', fontSize: 11, fontWeight: 'bold',
+              formatter: '{c}%'
+            },
+            animationDuration: 1000,
+            animationEasing: 'cubicOut'
+          }
+        ]
+      }, true)
     },
 
     async toggleTask(task) {
@@ -447,13 +694,42 @@ export default {
     },
 
     typeIcon(type) {
-      const map = { article: '📄', video: '🎬', practice: '✏️', example: '⭐' }
+      const map = { article: '📄', video: '🎬', book: '📖', example: '⭐', bookmarked: '⭐' }
       return map[type] || '📚'
     },
 
     taskTypeLabel(type) {
       const map = { review: '复习', practice: '练习', exercise: '训练' }
       return map[type] || type
+    },
+
+    openResource(res) {
+      this.selectedResource = res
+      this.showResourceDetail = true
+    },
+
+    closeResource() {
+      this.showResourceDetail = false
+    },
+
+    goToResource(res) {
+      // 书籍类型提示购买
+      if (res.type === 'book') {
+        this.$message({
+          type: 'info',
+          message: '📖 该书籍需要自行购买，可在各大电商平台（Amazon、京东、当当等）搜索查看',
+          duration: 4000
+        })
+        return
+      }
+
+      if (res.url) {
+        window.open(res.url, '_blank', 'noopener')
+      } else {
+        // 无外链时标记为完成
+        this.$store.dispatch('learning/markCompleted', res.id)
+        this.closeResource()
+      }
     }
   }
 }
@@ -627,6 +903,42 @@ export default {
 
 .line-chart { width: 100%; height: 200px; }
 
+.chart-loading--overlay {
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  display: flex; align-items: center; justify-content: center; flex-direction: column;
+  background: white; z-index: 2; border-radius: inherit;
+}
+
+.weakness-chart-card {
+  background: white; border-radius: $border-radius-lg;
+  box-shadow: $shadow-sm; border: 1px solid $border-color;
+  padding: $spacing-base; margin-bottom: $spacing-md;
+  overflow: hidden;
+}
+
+.weakness-chart-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: $spacing-sm;
+}
+
+.weakness-chart-title {
+  font-size: $font-size-sm; font-weight: $font-weight-semibold;
+  color: $text-primary;
+}
+
+.weakness-chart-hint {
+  font-size: $font-size-xs; color: $text-muted;
+}
+
+.weakness-chart { width: 100%; min-height: 180px; }
+
+.chart-empty {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: $spacing-xl;
+  p { color: $text-muted; font-size: $font-size-sm; margin-top: $spacing-sm; }
+}
+
 // ---- 技能短板 ----
 .weakness-count { font-size: $font-size-sm; color: $text-muted; }
 
@@ -653,8 +965,12 @@ export default {
   &.weakness-medium {
     background: $warning-bg; color: darken($warning, 20%); border-color: rgba($warning, 0.2);
   }
-  &.weakness-low {
-    background: $gray-100; color: $text-secondary; border-color: $gray-200;
+  &.weakness-good {
+    background: $success-bg; color: darken($success, 10%); border-color: rgba($success, 0.2);
+    font-size: $font-size-xs;
+  }
+  &.weakness-excellent {
+    background: #EEF2FF; color: #6366F1; border-color: rgba(#6366F1, 0.2);
     font-size: $font-size-xs;
   }
 
@@ -662,7 +978,8 @@ export default {
     width: 6px; height: 6px; border-radius: 50%;
     .weakness-high & { background: $danger; }
     .weakness-medium & { background: $warning; }
-    .weakness-low & { background: $gray-400; }
+    .weakness-good & { background: $success; }
+    .weakness-excellent & { background: #6366F1; }
   }
 }
 
@@ -712,10 +1029,17 @@ export default {
   background: white; border-radius: $border-radius-lg;
   padding: $spacing-base; box-shadow: $shadow-sm;
   border: 1px solid $border-color;
-  transition: box-shadow $transition-base, transform $transition-base;
+  transition: box-shadow $transition-base, transform $transition-base, opacity $transition-base;
   animation: fadeSlideUp 0.4s ease both;
+  position: relative;
 
   &:hover { box-shadow: $shadow-md; transform: translateY(-1px); }
+
+  &--completed {
+    opacity: 0.75;
+    background: $gray-50;
+    border-color: $success-bg;
+  }
 }
 
 .resource-card__top {
@@ -731,6 +1055,7 @@ export default {
   &.type-article { background: #DBEAFE; }
   &.type-video { background: #FEE2E2; }
   &.type-practice { background: #D1FAE5; }
+  &.type-book { background: #F3E8FF; }
   &.type-example { background: #FEF3C7; }
 }
 
@@ -785,6 +1110,14 @@ export default {
   font-weight: $font-weight-medium;
 }
 
+.resource-card__completed-badge {
+  position: absolute; top: $spacing-base; right: $spacing-base;
+  background: $success; color: white;
+  padding: 4px 12px; border-radius: $border-radius-full;
+  font-size: $font-size-xs; font-weight: $font-weight-semibold;
+  animation: slideInRight 0.3s ease;
+}
+
 .resource-card__actions {
   display: flex; align-items: center; gap: $spacing-sm;
   padding-top: $spacing-sm; border-top: 1px solid $gray-100;
@@ -829,4 +1162,153 @@ export default {
   gap: $spacing-md;
   p { color: $text-muted; font-size: $font-size-base; }
 }
+
+// ---- 资源详情弹窗 ----
+.resource-modal-overlay {
+  position: fixed; inset: 0; z-index: 9999;
+  background: rgba(0,0,0,0.45);
+  display: flex; align-items: center; justify-content: center;
+  backdrop-filter: blur(4px);
+  padding: $spacing-base;
+  overflow-y: auto;
+}
+
+.resource-modal {
+  background: white;
+  border-radius: $border-radius-xl;
+  width: 100%; max-width: 500px;
+  max-height: 90vh; overflow-y: auto;
+  padding: $spacing-xl $spacing-base $spacing-3xl;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+  animation: zoomIn 0.3s ease;
+
+  &__header {
+    display: flex; align-items: center; gap: $spacing-sm;
+    margin-bottom: $spacing-md;
+  }
+
+  &__header-text {
+    display: flex; align-items: center; gap: $spacing-sm; flex: 1;
+  }
+
+  &__time {
+    font-size: $font-size-xs; color: $text-muted;
+  }
+
+  &__close {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: $gray-100; border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background $transition-fast;
+    svg { width: 16px; height: 16px; color: $text-secondary; }
+    &:hover { background: $gray-200; }
+  }
+
+  &__title {
+    font-size: $font-size-xl; font-weight: $font-weight-bold;
+    color: $text-primary; line-height: $line-height-tight;
+    margin-bottom: $spacing-sm;
+  }
+
+  &__source {
+    display: flex; align-items: center; gap: $spacing-md;
+    font-size: $font-size-sm; color: $text-muted;
+    margin-bottom: $spacing-md;
+  }
+
+  &__weakness {
+    color: $primary; font-weight: $font-weight-medium;
+    background: $primary-bg; padding: 2px 8px;
+    border-radius: $border-radius-full; font-size: $font-size-xs;
+  }
+
+  &__content {
+    background: $gray-50; border-radius: $border-radius-lg;
+    padding: $spacing-base; margin-bottom: $spacing-md;
+    font-size: $font-size-base; color: $text-secondary;
+    line-height: $line-height-relaxed;
+    border-left: 3px solid $primary;
+  }
+
+  &__tags {
+    display: flex; flex-wrap: wrap; gap: $spacing-xs;
+    margin-bottom: $spacing-lg;
+  }
+
+  &__actions {
+    display: flex; flex-wrap: wrap; gap: $spacing-sm;
+    padding-top: $spacing-md;
+    border-top: 1px solid $gray-100;
+  }
+}
+
+.modal-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 10px 20px; border-radius: $border-radius-full;
+  font-size: $font-size-sm; font-weight: $font-weight-semibold;
+  cursor: pointer; border: 1.5px solid transparent;
+  font-family: $font-family-base; transition: all $transition-fast;
+
+  &--primary {
+    background: $primary; color: white; border-color: $primary;
+    &:hover { background: darken(#4338CA, 8%); box-shadow: 0 4px 12px rgba(67,56,202,0.35); }
+  }
+  &--outline {
+    background: white; color: $text-secondary; border-color: $border-color;
+    &:hover { border-color: $primary; color: $primary; }
+  }
+  &--bookmarked {
+    background: $primary-bg; color: $primary; border-color: rgba($primary, 0.3);
+  }
+  &--success {
+    background: white; color: $success; border-color: $success;
+    &:hover { background: $success-bg; }
+  }
+}
+
+.modal-done-label {
+  display: inline-flex; align-items: center;
+  font-size: $font-size-sm; font-weight: $font-weight-semibold;
+  color: $success; padding: 10px 20px;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes zoomIn {
+  from { transform: scale(0.95) translateY(-20px); opacity: 0; }
+  to { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(20px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+/* 列表排序动画 - 已完成的资源下滑 */
+.resource-move-move {
+  transition: transform 0.5s ease;
+}
+.resource-move-enter-active {
+  transition: all 0.4s ease;
+}
+.resource-move-leave-active {
+  transition: all 0.3s ease;
+  position: absolute;
+}
+.resource-move-enter-from {
+  opacity: 0;
+  transform: translateY(-20px);
+}
+.resource-move-leave-to {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.modal-fade-enter-active { transition: opacity 0.25s ease; }
+.modal-fade-leave-active { transition: opacity 0.2s ease; }
+.modal-fade-enter-from, .modal-fade-leave-to { opacity: 0; }
+.modal-fade-enter-to, .modal-fade-leave-from { opacity: 1; }
 </style>

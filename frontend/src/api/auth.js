@@ -74,7 +74,12 @@ export const register = async (data) => {
     const { ...safeUser } = newUser
     return { token: 'mock_token_' + Date.now(), user: safeUser }
   }
-  return request.post('/auth/register', data)
+  // 将前端的 username 字段映射为后端期望的 real_name
+  const submitData = {
+    ...data,
+    real_name: data.username || data.real_name
+  }
+  return request.post('/auth/register', submitData)
 }
 
 /**
