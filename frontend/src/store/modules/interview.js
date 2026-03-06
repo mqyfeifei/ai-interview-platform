@@ -63,7 +63,8 @@ async startSession({ commit, state, rootGetters }, options = {}) {
     // 从 user 模块拿数字 id
     const userInfo = rootGetters['user/userInfo']
     const userId = userInfo?.id  // 数字，如 1
-
+    console.log('当前用户ID:', userId)
+    console.log('当前岗位ID:', state.jobDbId)
     const res = await startInterview({
       userId,                    // 传给后端的 user_id
       jobDbId: state.jobDbId     // 传给后端的 job_id（数字）
@@ -83,14 +84,19 @@ async startSession({ commit, state, rootGetters }, options = {}) {
 },
   // 用户提交回答
 async submitAnswer({ commit, state, dispatch }, answerText) {
-  commit('ADD_MESSAGE', { role: 'user', content: answerText, timestamp: Date.now() })
+  commit('ADD_MESSAGE', { id: Date.now(),role: 'user', content: answerText, timestamp: Date.now() })
   commit('SET_LOADING', true)
-  commit('ADD_MESSAGE', { role: 'ai', content: '', timestamp: Date.now(), streaming: true })
+  commit('ADD_MESSAGE', { id: Date.now() + 1, role: 'ai', content: '', timestamp: Date.now(), streaming: true })
 
   const { sendAnswerStream } = await import('@/api/interview')
   sendAnswerStream(state.currentSession.sessionId, answerText, {
     onChunk(chunk) {
       commit('APPEND_AI_CHUNK', chunk)
+    },
+        // ✅ 新增：流正常结束（继续对话），只关闭 loading，等待用户输入
+    onStreamEnd() {
+      commit('SET_LOADING', false)
+      commit('MARK_STREAM_DONE')
     },
     onFinish() {
       commit('SET_LOADING', false)
@@ -154,40 +160,3 @@ export default { namespaced: true, state, mutations, actions, getters }
 
 
 
-// // 面试模块 - 管理当前面试会话状态
-// const state = () => ({
-//   currentSession: null,   // 当前面试会话信息
-//   selectedJob: null,      // 选中的岗位
-//   messages: [],           // 对话消息列表
-//   isFinished: false,      // 是否已结束
-//   reportId: null          // 生成的报告ID
-// })
-
-// const mutations = {
-//   SET_SESSION(state, session) { state.currentSession = session },
-//   SET_SELECTED_JOB(state, job) { state.selectedJob = job },
-//   ADD_MESSAGE(state, msg) { state.messages.push(msg) },
-//   SET_MESSAGES(state, msgs) { state.messages = msgs },
-//   SET_FINISHED(state, reportId) { state.isFinished = true; state.reportId = reportId },
-//   RESET_INTERVIEW(state) {
-//     state.currentSession = null
-//     state.messages = []
-//     state.isFinished = false
-//     state.reportId = null
-//   }
-// }
-
-// const actions = {
-//   selectJob({ commit }, job) { commit('SET_SELECTED_JOB', job) },
-//   resetInterview({ commit }) { commit('RESET_INTERVIEW') }
-// }
-
-// const getters = {
-//   selectedJob: s => s.selectedJob,
-//   currentSession: s => s.currentSession,
-//   messages: s => s.messages,
-//   isFinished: s => s.isFinished,
-//   reportId: s => s.reportId
-// }
-
-// export default { namespaced: true, state, mutations, actions, getters }

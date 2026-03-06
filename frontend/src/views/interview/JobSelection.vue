@@ -176,6 +176,7 @@ created() {
     try {
       const { fetchJobs } = await import('@/api/job')
       const jobs = await fetchJobs()
+      console.log('后端岗位列表:', jobs)
       if (jobs && jobs.length) {
         // 用后端返回的name匹配前端的JOB_TYPES，建立 frontKey→dbId 映射
         const nameToKey = {
@@ -190,6 +191,8 @@ created() {
           const key = nameToKey[j.name]
           if (key) this.jobDbIdMap[key] = j.id
         })
+        
+        console.log('岗位列表加载成功，jobDbIdMap:', this.jobDbIdMap)
       }
     } catch (e) {
       console.warn('加载岗位列表失败，使用本地 dbId 兜底', e)
@@ -215,15 +218,43 @@ created() {
       this.currentSelected = this.currentSelected?.id === job.id ? null : job
     },
 
+// async handleStart() {
+//   const job = this.selectedJob
+//   console.log('开始面试，选择的岗位:', job)
+//   const dbId = this.jobDbIdMap[job.id] || job.dbId  // 优先用后端返回的，兜底用constants里的
+//   await this.$store.dispatch('interview/selectJob', job)
+//   await this.$store.dispatch('interview/resetInterview')
+//   // 把 dbId 也存到 store，后续 startSession 用
+//   this.$store.commit('interview/SET_JOB_DB_ID', dbId)
+//   this.$router.push('/interview/session')
+// },
+
+// JobSelection.vue 的 handleStart 方法完整修复版
 async handleStart() {
-  const job = this.selectedJob
-  const dbId = this.jobDbIdMap[job.id] || job.dbId  // 优先用后端返回的，兜底用constants里的
-  await this.$store.dispatch('interview/selectJob', job)
-  await this.$store.dispatch('interview/resetInterview')
-  // 把 dbId 也存到 store，后续 startSession 用
-  this.$store.commit('interview/SET_JOB_DB_ID', dbId)
-  this.$router.push('/interview/session')
-},
+  //  关键1：校验选中的岗位是否存在
+  console.log('准备开始面试，当前选中岗位:', this.currentSelected)
+  if (!this.currentSelected) {
+    this.$message.error('请先选择一个面试岗位！');
+    return;
+  }
+  
+  try {
+    // 关键2：正确获取岗位数据库ID（优先后端映射的jobDbIdMap，兜底用constants里的dbId）
+    const jobDbId = this.jobDbIdMap[this.currentSelected.id] || this.currentSelected.dbId;
+    console.log('传递给 Vuex 的岗位数据库 ID:', jobDbId);
+    
+    // 关键3：先重置面试状态，再存储数据
+    await this.$store.dispatch('interview/resetInterview');
+    this.$store.commit('interview/SET_JOB_DB_ID', jobDbId); // 传给后端的数字 ID
+    await this.$store.dispatch('interview/selectJob', this.currentSelected); // 传递完整岗位对象
+    
+    // 跳转到面试会话页
+    this.$router.push('/interview/session');
+  } catch (err) {
+    console.error('启动面试失败：', err);
+    this.$message.error('启动面试失败，请重试！');
+  }
+}
   }
 }
 </script>

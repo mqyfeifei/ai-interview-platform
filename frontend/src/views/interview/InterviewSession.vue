@@ -66,7 +66,8 @@
           v-for="msg in messages"
           :key="msg.id"
           :class="['message-item', 'message-item--' + msg.role]"
-        >
+          v-show="!(msg.role === 'ai' && msg.streaming && !msg.content)"
+          >
           <!-- AI 头像 -->
           <div v-if="msg.role === 'ai'" class="message-avatar message-avatar--ai">
             <span>🤖</span>
@@ -81,13 +82,14 @@
               追问
             </div>
 
-            <div :class="['message-bubble', 'message-bubble--' + msg.role]">
+            <div :class="['message-bubble', 'message-bubble--' + msg.role]" v-show="msg.content">
               <p class="message-text">
-                {{ msg.content }}<span v-if="msg.streaming" class="typing-cursor">▌</span>
+                {{ msg.content }}
+                <!-- <span v-if="msg.streaming" class="typing-cursor">▌</span> -->
               </p>
             </div>
 
-            <span class="message-time">{{ formatTime(msg.timestamp) }}</span>
+            <span class="message-time" v-show="msg.content">{{ formatTime(msg.timestamp) }}</span>
           </div>
 
           <!-- 用户头像 -->
@@ -99,7 +101,7 @@
 
       <!-- AI 思考中动画 -->
       <transition name="fade">
-        <div v-if="isLoading" class="message-item message-item--ai thinking-row">
+        <div v-if="isLoading && !hasStreamingMessage" class="message-item message-item--ai thinking-row">
           <div class="message-avatar message-avatar--ai">
             <span>🤖</span>
           </div>
@@ -263,7 +265,10 @@ export default {
 
     progressOffset() {
       return this.progressCircle * (1 - this.questionTimer / QUESTION_TIME_LIMIT)
-    }
+    },
+    hasStreamingMessage() {
+  return this.messages.some(m => m.streaming  && m.content.length > 0)
+}
   },
   async created() {
     // 如果没有选择岗位，重定向到岗位选择
