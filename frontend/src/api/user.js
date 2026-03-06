@@ -31,7 +31,7 @@ export const getUserInfo = async () => {
       createdAt: '2024-09-01'
     }
   }
-  return request.get('/v1/users/me')
+  return request.get('/users/me')
 }
 
 /**
@@ -43,7 +43,7 @@ export const updateUserInfo = async (data) => {
     await mockDelay(800)
     return { ...data, updatedAt: new Date().toISOString() }
   }
-  return request.put('/v1/users/me', data)
+  return request.put('/users/me', data)
 }
 
 /**
@@ -56,7 +56,10 @@ export const changePassword = async (data) => {
     if (data.oldPassword !== '123456') throw new Error('原密码错误')
     return { success: true }
   }
-  return request.post('/v1/users/me/change-password', data)
+  return request.post('/users/me/change-password', {
+  old_password: data.oldPassword,         // 后端取 old_password
+  new_password: data.newPassword          // 后端取 new_password
+})
 }
 
 /**
@@ -68,7 +71,7 @@ export const updateDefaultJob = async (jobId) => {
     await mockDelay(400)
     return { defaultJob: jobId }
   }
-  return request.patch('/v1/users/me/preferences', { defaultJob: jobId })
+  return request.patch('/users/me/preferences', { defaultJob: jobId })
 }
 
 /**
@@ -80,7 +83,7 @@ export const uploadAvatar = async (formData) => {
     await mockDelay(1200)
     return { avatarUrl: 'https://via.placeholder.com/100' }
   }
-  return request.post('/v1/users/me/avatar', formData, {
+  return request.post('/users/me/avatar', formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
   })
 }
@@ -102,5 +105,5 @@ export const getDashboardStats = async () => {
       hotJobs: ['java-backend', 'web-frontend', 'python-algorithm']
     }
   }
-  return request.get('/v1/users/me/dashboard')
+  return request.get('/users/me/dashboard')
 }

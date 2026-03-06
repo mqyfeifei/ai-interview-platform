@@ -13,10 +13,12 @@ const state = () => ({
   isFinished: false,
   reportId: null,
   isLoading: false,        // AI 正在"思考"中
-  elapsedSeconds: 0        // 已用时（秒）
+  elapsedSeconds: 0,        // 已用时（秒）
+  jobDbId: null  // 后端数据库真实岗位id
 })
 
 const mutations = {
+  SET_JOB_DB_ID(state, id) { state.jobDbId = id },
   SET_SESSION(state, session) { state.currentSession = session },
   SET_SELECTED_JOB(state, job) { state.selectedJob = job },
   ADD_MESSAGE(state, msg) { state.messages.push(msg) },
@@ -55,51 +57,45 @@ const actions = {
   },
 
   // 开始面试（从面试主界面初始化时调用）
-  async startSession({ commit, state }, options = {}) {
-    commit('SET_LOADING', true)
-    try {
-      const res = await startInterview({
-        jobId: state.selectedJob?.id,
-        questionCount: options.questionCount || 10,
-        timeLimit: options.timeLimit || 120
-      })
-      commit('SET_SESSION', { sessionId: res.sessionId, totalQuestions: 10 })
-      // 推入AI第一个问题
-      commit('ADD_MESSAGE', {
-        id: Date.now(),
-        role: 'ai',
-        content: res.firstQuestion,
-        timestamp: new Date()
-      })
-      commit('SET_QUESTION_INDEX', 1)
-      return res
-    } finally {
-      commit('SET_LOADING', false)
-    }
-  },
+async startSession({ commit, state, rootGetters }, options = {}) {
+  commit('SET_LOADING', true)
+  try {
+    // 从 user 模块拿数字 id
+    const userInfo = rootGetters['user/userInfo']
+    const userId = userInfo?.id  // 数字，如 1
 
+    const res = await startInterview({
+      userId,                    // 传给后端的 user_id
+      jobDbId: state.jobDbId     // 传给后端的 job_id（数字）
+    })
+    commit('SET_SESSION', { sessionId: res.sessionId, totalQuestions: 10 })
+    commit('ADD_MESSAGE', {
+      id: Date.now(),
+      role: 'ai',
+      content: res.firstQuestion,
+      timestamp: new Date()
+    })
+    commit('SET_QUESTION_INDEX', 1)
+    return res
+  } finally {
+    commit('SET_LOADING', false)
+  }
+},
   // 用户提交回答
-async submitAnswer({ commit, state }, answerText) {
-  // 推入用户消息（保持不变）
+async submitAnswer({ commit, state, dispatch }, answerText) {
   commit('ADD_MESSAGE', { role: 'user', content: answerText, timestamp: Date.now() })
   commit('SET_LOADING', true)
-
-  // 推入 AI 占位消息，后续流式追加内容
-  const aiMsgIndex = state.messages.length
   commit('ADD_MESSAGE', { role: 'ai', content: '', timestamp: Date.now(), streaming: true })
 
   const { sendAnswerStream } = await import('@/api/interview')
   sendAnswerStream(state.currentSession.sessionId, answerText, {
     onChunk(chunk) {
-      // 追加到最后一条 AI 消息
       commit('APPEND_AI_CHUNK', chunk)
     },
     onFinish() {
       commit('SET_LOADING', false)
       commit('MARK_STREAM_DONE')
-      commit('SET_FINISHED', true)
-      // 调用 endInterview 生成报告
-      dispatch('endInterview')
+      dispatch('endInterview')   // ← 现在 dispatch 有了
     },
     onError(err) {
       commit('SET_LOADING', false)

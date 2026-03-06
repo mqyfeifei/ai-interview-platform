@@ -47,7 +47,7 @@ export const login = async (data) => {
 
     return { token: 'mock_token_' + Date.now(), user: safeUser }
   }
-  return request.post('/v1/auth/login', data)
+  return request.post('/auth/login', data)
 }
 
 /**
@@ -74,7 +74,7 @@ export const register = async (data) => {
     const { ...safeUser } = newUser
     return { token: 'mock_token_' + Date.now(), user: safeUser }
   }
-  return request.post('/v1/auth/register', data)
+  return request.post('/auth/register', data)
 }
 
 /**
@@ -86,7 +86,7 @@ export const sendVerifyCode = async (data) => {
     await mockDelay(500)
     return { success: true, message: '验证码已发送（Mock: 888888）' }
   }
-  return request.post('/v1/auth/send-code', data)
+  return request.post('/auth/send-code', data)
 }
 
 /**
@@ -97,5 +97,5 @@ export const logout = async () => {
     await mockDelay(300)
     return { success: true }
   }
-  return request.post('/v1/auth/logout')
+  return request.post('/auth/logout')
 }

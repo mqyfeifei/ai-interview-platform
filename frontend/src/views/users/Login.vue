@@ -211,7 +211,7 @@ export default {
         await this.login({
           loginId: this.form.loginId,
           password: this.form.password,
-          loginType: this.loginType
+          // loginType: this.loginType
         })
         const redirect = this.$route.query.redirect || '/dashboard'
         this.$router.push(redirect)

@@ -12,3 +12,5 @@ export const fetchJobs = async () => {
   const res = await request.get('/jobs')
   return res  // 返回数组：[{ id:1, name:'Java后端开发', description, tech_stack, icon_url }]
 }
+
+export const fetchJobAvgScores = () => request.get('/jobs/avg-scores')
