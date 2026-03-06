@@ -1,3 +1,9 @@
+
+<!--
+  =============================================
+  frontend/src/views/system/HistoryRecords.vue
+  历史记录页组件
+  ============================================= -->
 <template>
   <div class="history-page">
     <!-- 顶部 Header -->

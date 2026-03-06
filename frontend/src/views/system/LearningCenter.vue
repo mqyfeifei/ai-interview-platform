@@ -1,3 +1,9 @@
+
+<!--
+  =============================================
+  frontend/src/views/system/LearningCenter.vue
+  学习中心页组件
+  ============================================= -->
 <template>
   <div class="learning-page">
     <!-- 顶部 Header -->

@@ -1,3 +1,8 @@
+<!--
+  =============================================
+  frontend/src/views/users/Register.vue
+  注册页组件
+  ============================================= --> 
 <template>
   <div class="auth-page register-page">
     <div class="auth-page__brand">
