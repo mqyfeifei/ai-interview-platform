@@ -13,13 +13,13 @@ const routes = [
     path: '/login',
     name: 'Login',
     component: () => import('@/views/users/Login.vue'),
-    meta: { requiresAuth: false, title: '登录' }
+    meta: {hideNavigation: true, requiresAuth: false, title: '登录' }
   },
   {
     path: '/register',
     name: 'Register',
     component: () => import('@/views/users/Register.vue'),
-    meta: { requiresAuth: false, title: '注册' }
+    meta: { hideNavigation: true, requiresAuth: false, title: '注册' }
   },
 
   // ---- 主应用路由（需要登录）----
@@ -45,13 +45,13 @@ const routes = [
     path: '/interview/select',
     name: 'JobSelection',
     component: () => import('@/views/interview/JobSelection.vue'),
-    meta: { requiresAuth: true, title: '选择岗位' }
+    meta: {hideNavigation: true, requiresAuth: true, title: '选择岗位' }
   },
   {
     path: '/interview/session',
     name: 'InterviewSession',
     component: () => import('@/views/interview/InterviewSession.vue'),
-    meta: { requiresAuth: true, title: '模拟面试', hideNav: true }
+    meta: {hideNavigation: true, requiresAuth: true, title: '模拟面试', hideNav: true }
   },
   {
     path: '/interview/report/:reportId',

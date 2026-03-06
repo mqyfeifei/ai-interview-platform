@@ -5,8 +5,10 @@
   ============================================= -->
 <template>
   <div class="dashboard-page">
+    
     <!-- 顶部渐变Header -->
     <div class="dashboard-header">
+      
       <div class="header-content">
         <div class="header-top">
           <div class="greeting">
