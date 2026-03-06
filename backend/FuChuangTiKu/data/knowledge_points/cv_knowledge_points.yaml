@@ -1,0 +1,100 @@
+type: cv_technical_knowledge_points
+source:
+  - 官方文档
+  - 顶会论文
+modules:
+  - name: 算法数学与机器学习基础
+    points:
+      - point: 微积分与线性代数应用
+        complexity: Medium
+        estimated_hours: 4
+        resources:
+          - name: 《深度学习》(花书) - 线性代数与概率论章节
+            type: 书籍
+            url: https://www.deeplearningbook.org/
+          - name: B站 - 3Blue1Brown 线性代数的本质
+            type: 视频
+            url: https://space.bilibili.com/88461692/channel/seriesdetail?sid=604921
+      - point: 经典机器学习 (SVM, EM算法, 贝叶斯网络)
+        complexity: Hard
+        estimated_hours: 5
+        resources:
+          - name: 《统计学习方法》 - 李航
+            type: 书籍
+            url: https://book.douban.com/subject/33436836/
+          - name: 贝叶斯网络与隐马尔可夫模型解析
+            type: 技术博客
+            url: https://zhuanlan.zhihu.com/p/26652435
+  - name: 深度学习与视觉核心架构
+    points:
+      - point: CNN 经典网络 (ResNet, ConvNeXt) 与 Transformer (ViT, Swin)
+        complexity: Hard
+        estimated_hours: 6
+        resources:
+          - name: B站 - 跟李沐学AI (ResNet & ViT 论文精读)
+            type: 视频
+            url: https://space.bilibili.com/1567748478/
+          - name: Hugging Face - Vision Transformer Docs
+            type: 官方文档
+            url: https://huggingface.co/docs/transformers/model_doc/vit
+      - point: 目标检测与分割 (YOLO系列, Mask R-CNN, SAM)
+        complexity: Hard
+        estimated_hours: 6
+        resources:
+          - name: Ultralytics YOLO 官方文档
+            type: 官方文档
+            url: https://docs.ultralytics.com/
+          - name: Segment Anything (SAM) 论文与代码
+            type: 顶会论文
+            url: https://segment-anything.com/
+  - name: 模型训练优化与工程部署
+    points:
+      - point: 损失函数与优化器原理
+        complexity: Medium
+        estimated_hours: 3
+        resources:
+          - name: PyTorch 官方文档 - Optimizers
+            type: 官方文档
+            url: https://pytorch.org/docs/stable/optim.html
+      - point: 模型量化、剪枝与 TensorRT/ONNX 部署
+        complexity: Hard
+        estimated_hours: 5
+        resources:
+          - name: NVIDIA TensorRT Documentation
+            type: 官方文档
+            url: https://developer.nvidia.com/tensorrt
+          - name: 知乎 - ONNX与TensorRT工程部署实战
+            type: 技术文章
+            url: https://zhuanlan.zhihu.com/p/356220061
+  - name: 传统视觉与图像处理基础
+    points:
+      - point: 空间域与频率域滤波 (高斯滤波, 傅里叶变换)
+        complexity: Easy
+        estimated_hours: 3
+        resources:
+          - name: 《数字图像处理》(冈萨雷斯)
+            type: 书籍
+            url: https://book.douban.com/subject/24280628/
+      - point: 边缘提取与特征算子 (Canny, SIFT, HOG)
+        complexity: Medium
+        estimated_hours: 4
+        resources:
+          - name: OpenCV 官方教程 - 特征提取与匹配
+            type: 官方文档
+            url: https://docs.opencv.org/master/db/d27/tutorial_py_table_of_contents_feature2d.html
+  - name: 视觉前沿大模型与多模态
+    points:
+      - point: 视觉-语言对齐与多模态 (CLIP, BLIP)
+        complexity: Hard
+        estimated_hours: 5
+        resources:
+          - name: OpenAI CLIP 论文精读
+            type: 视频
+            url: https://www.bilibili.com/video/BV1sl4y1s7CQ
+      - point: 生成式视觉大模型 (Stable Diffusion, ControlNet)
+        complexity: Hard
+        estimated_hours: 6
+        resources:
+          - name: Hugging Face Diffusers Documentation
+            type: 官方文档
+            url: https://huggingface.co/docs/diffusers/index
