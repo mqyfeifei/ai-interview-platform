@@ -1,3 +1,9 @@
+
+<!--
+  =============================================
+  frontend/src/views/interview/InterviewReport.vue
+  面试报告页组件
+  ============================================= -->
 <template>
   <div class="report-page">
     <!-- 顶部导航 -->

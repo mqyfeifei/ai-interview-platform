@@ -1,3 +1,8 @@
+<!--
+  =============================================
+  frontend/src/views/interview/JobSelection.vue
+  岗位选择页组件
+  ============================================= -->
 <template>
   <div class="job-selection-page">
     <!-- 顶部Header -->

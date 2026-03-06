@@ -1,13 +1,7 @@
-// import { createStore } from "vuex";
-
-// export default createStore({
-//   state: {},
-//   getters: {},
-//   mutations: {},
-//   actions: {},
-//   modules: {},
-// });
-
+// =============================================
+// frontend/src/store/index.js
+// Vuex Store入口，整合各模块
+// =============================================  
 
 import { createStore } from 'vuex'
 import user from './modules/user'

@@ -1,3 +1,8 @@
+<!--
+  =============================================
+  frontend/src/views/system/Dashboard.vue
+  仪表盘首页组件
+  ============================================= -->
 <template>
   <div class="dashboard-page">
     <!-- 顶部渐变Header -->
