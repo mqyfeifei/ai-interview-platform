@@ -155,11 +155,7 @@
         </button>
       </section>
 
-      <div style="height: 80px;" />
     </div>
-
-    <!-- 底部导航 -->
-    <BottomNav />
 
     <!-- 编辑信息弹窗 -->
     <transition name="modal">
@@ -296,12 +292,10 @@
 
 <script>
 import { mapGetters, mapActions } from 'vuex'
-import BottomNav from '@/components/common/BottomNav.vue'
 import { JOB_TYPES, GRADE_OPTIONS } from '@/utils/constants'
 
 export default {
   name: 'PersonalCenter',
-  components: { BottomNav },
   data() {
     return {
       showEditModal: false,
