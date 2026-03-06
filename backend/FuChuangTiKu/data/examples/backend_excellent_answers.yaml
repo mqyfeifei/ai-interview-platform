@@ -1,8 +1,8 @@
-type: excellent_answer_examples
+type: backend_excellent_answer_examples
 source:
   - 自己整理
 items:
-  - id: EX-T-001
+  - id: BE-EX-T-001
     type: technical
     question: Redis 缓存击穿如何解决？
     framework: 问题定义-方案对比-落地细节-监控兜底
@@ -11,7 +11,7 @@ items:
       我倾向“逻辑过期+后台异步重建+互斥兜底”：读请求先返回旧值，异步刷新；若刷新任务失败再走短时互斥锁。
       监控上看 DB QPS、缓存命中率、重建耗时，并设置熔断降级避免雪崩扩散。
     status: draft
-  - id: EX-T-002
+  - id: BE-EX-T-002
     type: technical
     question: 线程池参数如何设定？
     framework: 业务类型分析-容量估算-压测校准
@@ -21,7 +21,7 @@ items:
       关键是避免“无界队列+默认策略”，并配套告警和限流。
     status: draft
 
-  - id: EX-P-001
+  - id: BE-EX-P-001
     type: project_deep_dive
     question: 介绍一次你做过的性能优化。
     framework: STAR
@@ -31,7 +31,7 @@ items:
       A：做了慢 SQL 分析、增加联合索引、引入热点缓存、批量接口改造、线程池隔离。
       R：TP99 降到 320ms，QPS 提升 2.3 倍，CPU 峰值下降约 30%。
     status: draft
-  - id: EX-P-002
+  - id: BE-EX-P-002
     type: project_deep_dive
     question: 架构选型为什么这么做？
     framework: 背景-约束-对比-结论
@@ -41,7 +41,7 @@ items:
       最后强调“当前阶段最优”而不是“绝对最优”，并说明未来演进路径。
     status: draft
 
-  - id: EX-S-001
+  - id: BE-EX-S-001
     type: scenario_design
     question: 设计秒杀系统如何答？
     framework: 分层设计
@@ -49,7 +49,7 @@ items:
       入口层限流与验证码防刷；接入层做请求削峰（MQ）；业务层做库存预扣与幂等；存储层保证最终一致。
       重点说明超卖防护（原子扣减）、回补机制、降级策略和压测指标。
     status: draft
-  - id: EX-S-002
+  - id: BE-EX-S-002
     type: scenario_design
     question: 多级缓存一致性如何答？
     framework: 主流程+异常流
@@ -58,7 +58,7 @@ items:
       异常流考虑消息丢失、并发覆盖、回源风暴，配合订阅 binlog 或 MQ 做异步修正。
     status: draft
 
-  - id: EX-B-001
+  - id: BE-EX-B-001
     type: behavioral
     question: 讲一次线上故障处理经历。
     framework: STAR
@@ -68,7 +68,7 @@ items:
       A：先降级非核心功能，扩大监控维度定位到下游超时，临时切换备用通道并回滚风险变更。
       R：15 分钟恢复核心可用，后续补齐熔断与容量预案，月度同类故障归零。
     status: draft
-  - id: EX-B-002
+  - id: BE-EX-B-002
     type: behavioral
     question: 讲一次跨团队协作经历。
     framework: PREP
