@@ -338,21 +338,33 @@ export default {
     startQuestionTimer() {
       this.clearTimers()
       this.timerInterval = setInterval(() => {
-        if (this.questionTimer > 0 && !this.isFinished) {
+            if (this.isFinished) {
+              this.clearTimers()
+              return
+            }
+        if (this.questionTimer > 0) {
           this.questionTimer--
         } else if (this.questionTimer === 0) {
           // 超时自动发送（发送空回答，AI会继续下一题）
+          this.questionTimer = -1 // 防止重复触发
           this.autoSubmitOnTimeout()
         }
       }, 1000)
     },
 
     autoSubmitOnTimeout() {
-      if (!this.isLoading && !this.isFinished && !this.isTranscribing) { // ✅ 新增：转写中禁止自动提交
-        const text = this.inputText.trim() || '（超时，跳过此题）'
-        this.inputText = ''
-        this.submitAnswer(text)
+      // isLoading 或 isTranscribing 时跳过，等流结束后计时器已被 watch(questionIndex) 重置
+      if (this.isLoading || this.isFinished || this.isTranscribing) {
+        // 还原为0，等 loading 结束后下次 tick 不会再触发（因为 watch questionIndex 会重置为120）
+        this.questionTimer = 0
+        return
       }
+      const text = this.inputText.trim() || '（超时，跳过此题）'
+      this.inputText = ''
+      this.resetTextarea()
+      // 提交前先重置计时器，submitAnswer 完成后 watch(questionIndex) 也会重置
+      this.questionTimer = QUESTION_TIME_LIMIT
+      this.submitAnswer(text)
     },
 
     clearTimers() {

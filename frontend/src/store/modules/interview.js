@@ -13,10 +13,12 @@ const state = () => ({
   isFinished: false,
   reportId: null,
   isLoading: false,        // AI 正在"思考"中
-  elapsedSeconds: 0        // 已用时（秒）
+  elapsedSeconds: 0,        // 已用时（秒）
+  jobDbId: null  // 后端数据库真实岗位id
 })
 
 const mutations = {
+  SET_JOB_DB_ID(state, id) { state.jobDbId = id },
   SET_SESSION(state, session) { state.currentSession = session },
   SET_SELECTED_JOB(state, job) { state.selectedJob = job },
   ADD_MESSAGE(state, msg) { state.messages.push(msg) },
@@ -28,13 +30,13 @@ const mutations = {
   },
 
   APPEND_AI_CHUNK(state, chunk) {
-    const last = state.messages[state.messages.length - 1]
-    if (last && last.role === 'ai') last.content += chunk
-  },
-  MARK_STREAM_DONE(state) {
-    const last = state.messages[state.messages.length - 1]
-    if (last) last.streaming = false
-  },
+  const last = state.messages[state.messages.length - 1]
+  if (last && last.role === 'ai') last.content += chunk
+},
+MARK_STREAM_DONE(state) {
+  const last = state.messages[state.messages.length - 1]
+  if (last) last.streaming = false
+},
   SET_LOADING(state, v) { state.isLoading = v },
   SET_ELAPSED(state, v) { state.elapsedSeconds = v },
   RESET_INTERVIEW(state) {
@@ -55,61 +57,62 @@ const actions = {
   },
 
   // 开始面试（从面试主界面初始化时调用）
-  async startSession({ commit, state, rootGetters }, options = {}) {
-    commit('SET_LOADING', true)
-    try {
-      // 从 user 模块获取当前用户 ID
-      const userId = rootGetters['user/userInfo']?.id
-      const res = await startInterview({
-        userId: userId,
-        jobId: state.selectedJob?.id,
-        questionCount: options.questionCount || 10,
-        timeLimit: options.timeLimit || 120
-      })
-      commit('SET_SESSION', { sessionId: res.sessionId, totalQuestions: 10 })
-      // 推入AI第一个问题
-      commit('ADD_MESSAGE', {
-        id: Date.now(),
-        role: 'ai',
-        content: res.firstQuestion,
-        timestamp: new Date()
-      })
-      commit('SET_QUESTION_INDEX', 1)
-      return res
-    } finally {
-      commit('SET_LOADING', false)
-    }
-  },
-
-  // 用户提交回答
-  async submitAnswer({ commit, state }, answerText) {
-    // 推入用户消息（保持不变）
-    commit('ADD_MESSAGE', { role: 'user', content: answerText, timestamp: Date.now() })
-    commit('SET_LOADING', true)
-
-    // 推入 AI 占位消息，后续流式追加内容
-    const aiMsgIndex = state.messages.length
-    commit('ADD_MESSAGE', { role: 'ai', content: '', timestamp: Date.now(), streaming: true })
-
-    const { sendAnswerStream } = await import('@/api/interview')
-    sendAnswerStream(state.currentSession.sessionId, answerText, {
-      onChunk(chunk) {
-        // 追加到最后一条 AI 消息
-        commit('APPEND_AI_CHUNK', chunk)
-      },
-      onFinish() {
-        commit('SET_LOADING', false)
-        commit('MARK_STREAM_DONE')
-        commit('SET_FINISHED', true)
-        // 调用 endInterview 生成报告
-        dispatch('endInterview')
-      },
-      onError(err) {
-        commit('SET_LOADING', false)
-        console.error('SSE error', err)
-      }
+async startSession({ commit, state, rootGetters }, options = {}) {
+  commit('SET_LOADING', true)
+  try {
+    // 从 user 模块拿数字 id
+    const userInfo = rootGetters['user/userInfo']
+    const userId = userInfo?.id  // 数字，如 1
+    console.log('当前用户ID:', userId)
+    console.log('当前岗位ID:', state.jobDbId)
+    const res = await startInterview({
+      userId,                    // 传给后端的 user_id
+      jobDbId: state.jobDbId     // 传给后端的 job_id（数字）
     })
-  },
+    commit('SET_SESSION', { sessionId: res.sessionId, totalQuestions: 10 })
+    commit('ADD_MESSAGE', {
+      id: Date.now(),
+      role: 'ai',
+      content: res.firstQuestion,
+      timestamp: new Date()
+    })
+    commit('SET_QUESTION_INDEX', 1)
+    return res
+  } finally {
+    commit('SET_LOADING', false)
+  }
+},
+  // 用户提交回答
+async submitAnswer({ commit, state, dispatch }, answerText) {
+  if (state.isLoading) return
+  commit('ADD_MESSAGE', { id: Date.now(),role: 'user', content: answerText, timestamp: Date.now() })
+  commit('SET_LOADING', true)
+  commit('ADD_MESSAGE', { id: Date.now() + 1, role: 'ai', content: '', timestamp: Date.now(), streaming: true })
+
+  const { sendAnswerStream } = await import('@/api/interview')
+  sendAnswerStream(state.currentSession.sessionId, answerText, {
+    onChunk(chunk) {
+      commit('APPEND_AI_CHUNK', chunk)
+    },
+        // ✅ 新增：流正常结束（继续对话），只关闭 loading，等待用户输入
+    onStreamEnd() {
+      commit('SET_LOADING', false)
+      commit('MARK_STREAM_DONE')
+      const next = state.questionIndex + 1 // AI 正常回复完毕，题号 +1
+      commit('SET_QUESTION_INDEX', next)
+    },
+    onFinish() {
+      commit('SET_LOADING', false)
+      commit('MARK_STREAM_DONE')
+      dispatch('endInterview')   // ← 现在 dispatch 有了
+    },
+    onError(err) {
+      commit('SET_LOADING', false)
+      commit('MARK_STREAM_DONE')
+      console.error('SSE error', err)
+    }
+  })
+},
   // 手动结束面试
   async endInterview({ commit, state }) {
     if (!state.currentSession) return
@@ -161,40 +164,3 @@ export default { namespaced: true, state, mutations, actions, getters }
 
 
 
-// // 面试模块 - 管理当前面试会话状态
-// const state = () => ({
-//   currentSession: null,   // 当前面试会话信息
-//   selectedJob: null,      // 选中的岗位
-//   messages: [],           // 对话消息列表
-//   isFinished: false,      // 是否已结束
-//   reportId: null          // 生成的报告ID
-// })
-
-// const mutations = {
-//   SET_SESSION(state, session) { state.currentSession = session },
-//   SET_SELECTED_JOB(state, job) { state.selectedJob = job },
-//   ADD_MESSAGE(state, msg) { state.messages.push(msg) },
-//   SET_MESSAGES(state, msgs) { state.messages = msgs },
-//   SET_FINISHED(state, reportId) { state.isFinished = true; state.reportId = reportId },
-//   RESET_INTERVIEW(state) {
-//     state.currentSession = null
-//     state.messages = []
-//     state.isFinished = false
-//     state.reportId = null
-//   }
-// }
-
-// const actions = {
-//   selectJob({ commit }, job) { commit('SET_SELECTED_JOB', job) },
-//   resetInterview({ commit }) { commit('RESET_INTERVIEW') }
-// }
-
-// const getters = {
-//   selectedJob: s => s.selectedJob,
-//   currentSession: s => s.currentSession,
-//   messages: s => s.messages,
-//   isFinished: s => s.isFinished,
-//   reportId: s => s.reportId
-// }
-
-// export default { namespaced: true, state, mutations, actions, getters }

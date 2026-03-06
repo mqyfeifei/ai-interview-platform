@@ -1,0 +1,168 @@
+type: qa_project_deep_dive_questions
+source:
+  - 面经库
+items:
+  - id: QA-PQ-001
+    type: project_deep_dive
+    question: 介绍一下你主导或参与构建的自动化测试框架，你是如何解决用例维护成本高的问题的？
+    tags: [自动化框架, 架构设计]
+    difficulty: hard
+    source: 面经库
+    status: draft
+    key_points:
+      - 讲清框架分层理念（如PO模式：Page Object，数据与脚本分离）
+      - 体现全局配置管理、公共基础方法封装的能力
+      - 解决维护成本的手段：关键字驱动、数据驱动（Excel/YAML）、异常自动截图、失败重跑机制
+  - id: QA-PQ-002
+    type: project_deep_dive
+    question: 在你的项目中，如何保证功能测试的覆盖率？有没有遗漏Bug到线上的情况，你是如何复盘的？
+    tags: [质量保障, 复盘]
+    difficulty: medium
+    source: 面经库
+    status: draft
+    key_points:
+      - 覆盖率保障：需求评审前置（测试左移）、思维导图梳理、双向追溯矩阵、代码覆盖率工具（如JaCoCo）分析
+      - 漏测复盘：不推诿，利用5 Whys法挖掘根因（是需求不明确、用例缺失、还是环境差异），并落地改进措施放入回归库
+  - id: QA-PQ-003
+    type: project_deep_dive
+    question: 介绍一下你参与的 CI/CD 持续集成流水线建设，测试环节是如何无缝接入的？
+    tags: [CI/CD, 自动化集成]
+    difficulty: hard
+    source: 面经库
+    status: draft
+    key_points:
+      - 描述流水线工具链（如 Gitlab CI, Jenkins, Docker）
+      - 阐述触发机制：如研发提交MR/PR后，自动触发代码静态扫描（SonarQube）及核心API自动化测试脚本
+      - 质量门禁（Quality Gate）：设定通过率阈值（如自动化用例通过率需达100%），阻断不合格的代码合并
+  - id: QA-PQ-004
+    type: project_deep_dive
+    question: 你们项目的测试环境和测试数据是如何管理的？遇到过脏数据或环境互相踩踏的问题吗？如何解决？
+    tags: [环境管理, 测试数据]
+    difficulty: medium
+    source: 面经库
+    status: draft
+    key_points:
+      - 环境治理：引入多套测试环境（如FAT、UAT）或基于标签的路由隔离环境（如微服务的染色环境）防踩踏
+      - 数据构造：编写工厂模式的数据生成脚本，或者基于线上脱敏数据进行快照回放
+      - 数据清理：坚持自动化用例的无状态化设计，利用Teardown步骤或数据库事务回滚清理脏数据
+  - id: QA-PQ-005
+    type: project_deep_dive
+    question: 讲一个你主导的将纯手工测试模块转化为自动化测试的演进过程。
+    tags: [自动化演进, 效率提升]
+    difficulty: medium
+    source: 面经库
+    status: draft
+    key_points:
+      - 评估ROI：挑选主干流程、更新频率低、手工回归成本极高的用例优先自动化
+      - 框架设计：采用关键字驱动或数据驱动（如 Pytest + YAML）降低后续维护门槛
+      - 落地收益：展示重构后的用例执行效率提升比，以及在多次迭代中成功拦截的Bug数量
+  - id: QA-PQ-006
+    type: project_deep_dive
+    question: 在你的测试项目中，是否有过与开发或产品的冲突？你是如何沟通和解决的？
+    tags: [跨部门沟通, 冲突解决]
+    difficulty: medium
+    source: 面经库
+    status: draft
+    key_points:
+      - 以事实为依据，避免情绪化对立（如提供复现步骤、日志、需求文档）
+      - 评估风险影响面：如果影响极小可记录并搁置，如果影响大则拉拢产品经理或Leader进行三方风险评估定级
+      - 强调团队目标一致性，寻求共识而非对立，必要时引入第三方协调资源进行调解
+  - id: QA-PQ-007
+    type: project_deep_dive
+    question: 你在项目中是如何进行版本控制和发布的？遇到过哪些挑战？
+    tags: [版本控制, 发布流程]
+    difficulty: medium
+    source: 自己整理
+    status: draft
+    key_points:
+      - 讲述分支管理策略（如Git Flow）或 trunk-based development 的实践经验
+      - 描述CI/CD流程（如使用Jenkins/GitHub Actions自动化测试和部署）的设计与实施
+      - 分享遇到的挑战（如合并冲突、回滚策略）以及解决方案的具体案例
+  - id: QA-PQ-008
+    type: project_deep_dive
+    question: 在你的测试项目中，是否遇到过设备兼容性或供应链问题？你是如何应对的？
+    tags: [供应链管理, 兼容性]
+    difficulty: medium
+    source: 自己整理
+    status: draft
+    key_points:
+      - 描述具体的兼容性问题（如不同操作系统、浏览器或硬件平台导致的测试失败）
+      - 展现多供应商策略的优势（如避免单点故障、增强议价能力）
+      - 分享成功说服管理层调整采购计划或技术方案以适应变化的经历 
+  - id: QA-PQ-009
+    type: project_deep_dive
+    question: 你在测试项目中是否有过使用自动化工具（如 Ansible、Terraform）来管理测试环境配置的经历？请举例说明自动化的具体应用和效果。
+    tags: [测试环境自动化, 配置管理]
+    difficulty: medium
+    source: 自己整理
+    status: draft
+    key_points:
+      - 描述具体的自动化应用场景（如使用Ansible自动部署测试环境、Terraform管理云资源）
+      - 阐述使用的工具及其优势（如Ansible的无代理架构、Terraform的基础设施即代码理念）
+      - 分享自动化带来的效果（如提升了环境配置的一致性、减少了人为错误）及遇到的挑战（如学习曲线、工具集成问题）
+  - id: QA-PQ-010
+    type: project_deep_dive
+    question: 你在测试项目中是否有过使用测试监控和分析工具（如 Nagios、Grafana）来排查性能问题的经历？请举例说明你是如何使用这些工具来定位问题的，以及取得了什么效果。
+    tags: [测试监控, 性能分析]
+    difficulty: medium
+    source: 自己整理
+    status: draft
+    key_points:
+      - 描述具体的监控应用场景（如使用Nagios监控测试环境的资源使用情况、Grafana分析测试结果数据）
+      - 阐述使用的工具及其优势（如Nagios的实时监控能力、Grafana的数据可视化功能）
+      - 分享通过监控和分析定位性能问题的实际案例，以及最终解决问题后带来的效果（如提升了测试效率、减少了测试失败率）
+  - id: QA-PQ-011
+    type: project_deep_dive
+    question: 你在测试项目中有没有遇到过“技术债务”？你是如何识别和管理它的？
+    tags: [技术债务, 项目管理]
+    difficulty: hard
+    source: 自己整理
+    status: draft
+    key_points:
+      - 识别技术债务的能力：如测试用例覆盖不足、自动化程度低、缺乏文档等
+      - 展现主动沟通和说服能力，向团队和管理层说明技术债务的风险和长期成本
+      - 制定清晰的偿还计划，如定期重构测试代码、引入自动化测试覆盖、优化测试流程等措施逐步消除技术债务
+  - id: QA-PQ-012
+    type: project_deep_dive
+    question: 你在测试项目中有没有遇到过“技术孤岛”？你是如何打破它的？
+    tags: [技术孤岛, 跨部门协作]
+    difficulty: hard
+    source: 自己整理
+    status: draft
+    key_points:
+      - 识别技术孤岛的能力：如某个测试模块或工具只有特定人员理解和维护，缺乏文档和知识共享
+      - 展现主动沟通和协作能力，推动团队内部的知识分享和交叉培训
+      - 引入代码审查、文档规范和定期技术分享会等机制促进团队整体技术水平的提升和信息流通  
+  - id: QA-PQ-013
+    type: project_deep_dive
+    question: 你在测试项目中有没有遇到过“技术迷茫期”？你是如何走出它的？
+    tags: [技术迷茫, 自我驱动]
+    difficulty: hard
+    source: 自己整理
+    status: draft
+    key_points:
+      - 识别技术迷茫的能力：如对测试框架选型、测试策略设计等缺乏清晰方向感
+      - 展现自我驱动和学习能力，通过阅读文档、咨询专家、进行小规模实验等方式寻找解决方案
+      - 分享成功走出技术迷茫期的案例，以及从中学到的经验教训
+  - id: QA-PQ-014
+    type: project_deep_dive
+    question: 你在测试项目中有没有遇到过“技术瓶颈”？你是如何突破它的？
+    tags: [技术瓶颈, 创新]
+    difficulty: hard
+    source: 自己整理
+    status: draft
+    key_points:
+      - 识别技术瓶颈的能力：如性能问题、架构限制等
+      - 展现创新和解决问题的能力，通过引入新技术、优化算法、重构架构等方式突破瓶颈
+      - 分享成功突破技术瓶颈的案例，以及从中学到的经验教训
+  - id: QA-PQ-015
+    type: project_deep_dive
+    question: 你在测试项目中有没有遇到过“技术挑战”？你是如何迎接它的？
+    tags: [技术挑战, 挑战应对]
+    difficulty: hard
+    source: 自己整理
+    status: draft
+    key_points:
+      - 识别技术挑战的能力：如新技术的学习曲线、复杂问题的解决等
+      - 展现迎接挑战的能力，通过积极学习、团队协作、寻求帮助等方式应对挑战
+      - 分享成功迎接技术挑战的案例，以及从中学到的经验教训

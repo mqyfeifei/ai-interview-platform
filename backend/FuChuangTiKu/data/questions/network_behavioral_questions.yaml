@@ -1,0 +1,169 @@
+type: network_behavioral_questions
+source:
+  - 面经库
+items:
+  - id: NW-BQ-001
+    type: behavioral
+    question: 讲一次你在高压下处理核心网络设备宕机或大面积断网故障的经历。
+    tags: [应急响应, 抗压能力]
+    difficulty: hard
+    source: 面经库
+    status: draft
+    key_points:
+      - 清晰的故障排查逻辑（如从物理层到协议层的自底向上，或利用分段排查法）
+      - 强调“先恢复业务止损，后排查根因”的运维底线原则（如启用备用链路、回滚配置）
+      - 故障后的复盘机制，产出 SOP 或引入自动化监控避免二次发生
+  - id: NW-BQ-002
+    type: behavioral
+    question: 当研发或业务部门抱怨“网络卡顿”、“丢包”，但你排查后发现网络指标正常，你如何与他们沟通并协同解决？
+    tags: [跨部门沟通, 甩锅应对]
+    difficulty: medium
+    source: 面经库
+    status: draft
+    key_points:
+      - 避免直接生硬回复“网络没问题”，展现服务意识与同理心
+      - 提供量化数据自证清白（如链路监控曲线、丢包率、延迟数据）
+      - 主动跨前一步，协助抓包（TCP Dump/Wireshark）分析 TCP 状态转换、重传率等，帮助业务定位真实瓶颈（如服务器 OS 资源瓶颈、应用层代码缺陷）
+  - id: NW-BQ-003
+    type: behavioral
+    question: 讲一次你主导推动老旧网络架构升级（如 IPv6 改造、SDN 引入）的经历。
+    tags: [技术演进, 推动力]
+    difficulty: medium
+    source: 面经库
+    status: draft
+    key_points:
+      - 准确拿捏当前架构痛点（如单点故障风险、性能瓶颈、运维成本高昂）
+      - 提供平滑演进与割接方案，展现对业务连续性（Zero Downtime）的极高敏感度
+      - 成功说服管理层的成本收益分析（ROI）与风险控制预案
+  - id: NW-BQ-004
+    type: behavioral
+    question: 在与运营商（ISP）或设备供应商（如锐捷、华为）沟通时，遇到工单响应缓慢或 SLA 不达标，你会怎么处理？
+    tags: [供应商管理, 沟通协调]
+    difficulty: easy
+    source: 自己整理
+    status: draft
+    key_points:
+      - 收集并整理清晰的故障日志、抓包文件和时间线，降低对方排查门槛
+      - 熟悉并合理运用 SLA 升级机制（Escalation Matrix），调动更高层级资源
+      - 建立定期 Review 机制，将故障处理时长作为考核指标推动服务优化
+  - id: NW-BQ-005
+    type: behavioral
+    question: 讲一次你接手一个缺乏文档和拓扑图的“历史遗留”网络，你是如何梳理并规范化的？
+    tags: [规范建设, 执行力]
+    difficulty: medium
+    source: 自己整理
+    status: draft
+    key_points:
+      - 借助自动化发现工具（如 LLDP/CDP）结合手工跳线梳理，逆向还原真实拓扑
+      - 重新规划并收敛 IP 地址管理体系（IPAM），清除未使用的僵尸策略和安全 ACL
+      - 建立严格的变更管理规范，确保图纸与线上配置的强一致性
+  - id: NW-BQ-006
+    type: behavioral
+    question: 讲一次你在网络安全事件（如 DDoS 攻击、内网泄密）中的应急响应和后续改进经历。
+    tags: [网络安全, 应急响应]
+    difficulty: hard
+    source: 自己整理
+    status: draft
+    key_points:
+      - 快速识别攻击特征（如流量突增、异常连接数）并启用防护措施（如 ACL、黑洞路由）
+      - 协同安全团队进行溯源分析，定位攻击源头或泄密路径
+      - 事后复盘总结，强化边界防护（如引入 WAF、IPS）和内部访问控制（如微分段）
+  - id: NW-BQ-007
+    type: behavioral
+    question: 你如何看待网络运维自动化？你在项目中是如何推动自动化落地的？
+    tags: [自动化, 效率提升]
+    difficulty: medium
+    source: 自己整理
+    status: draft
+    key_points:
+      - 强调自动化对提升效率、降低人为失误的巨大价值，树立自动化思维
+      - 从小规模试点（如自动化配置模板、定时巡检脚本）逐步推广到全局（如 Ansible/Chef/Puppet）
+      - 通过培训和文档降低团队门槛，建立持续迭代优化的自动化体系
+  - id: NW-BQ-008
+    type: behavioral
+    question: 讲一次你在网络项目中遇到过的团队冲突，你是如何处理和调解的？
+    tags: [团队冲突, 沟通]
+    difficulty: hard
+    source: 自己整理
+    status: draft
+    key_points:
+      - 以身作则保持冷静，倾听双方诉求，避免情绪化对抗
+      - 引导回归问题本质，聚焦于技术方案的优劣而非个人观点
+      - 寻求双赢的解决方案，如引入第三方专家评审或制定新的实验验证方案打破僵局
+  - id: NW-BQ-009
+    type: behavioral
+    question: 你在网络项目中有没有遇到过“技术债务”？你是如何识别和管理它的？
+    tags: [技术债务, 项目管理]
+    difficulty: hard
+    source: 自己整理
+    status: draft
+    key_points:
+      - 识别技术债务的能力：如配置混乱、缺乏文档、过度复杂的拓扑等
+      - 展现主动沟通和说服能力，向团队和管理层说明技术债务的风险和长期成本
+      - 制定清晰的偿还计划，如定期重构、引入自动化测试覆盖、优化监控告警等措施逐步消除技术债务
+  - id: NW-BQ-010
+    type: behavioral
+    question: 你在网络项目中有没有遇到过“技术孤岛”？你是如何打破它的？
+    tags: [技术孤岛, 跨部门协作]
+    difficulty: hard
+    source: 自己整理
+    status: draft
+    key_points:
+      - 识别技术孤岛的能力：如某个网络设备或配置只有特定人员理解和维护，缺乏文档和知识共享
+      - 展现主动沟通和协作能力，推动团队内部的知识分享和交叉培训
+      - 引入代码审查、文档规范和定期技术分享会等机制促进团队整体技术水平的提升和信息流通
+  - id: NW-BQ-011
+    type: behavioral
+    question: 你在网络项目中有没有遇到过“技术迷茫期”？你是如何走出它的？
+    tags: [技术迷茫, 自我驱动]
+    difficulty: hard
+    source: 自己整理
+    status: draft
+    key_points:
+      - 识别技术迷茫的能力：如对网络架构设计、协议选型等缺乏清晰方向感
+      - 展现自我驱动和学习能力，通过阅读文档、咨询专家、进行小规模实验等方式寻找解决方案
+      - 分享成功走出技术迷茫期的案例，以及从中学到的经验教训
+  - id: NW-BQ-012
+    type: behavioral
+    question: 你在网络项目中有没有遇到过“技术瓶颈”？你是如何突破它的？
+    tags: [技术瓶颈, 创新]
+    difficulty: hard
+    source: 自己整理
+    status: draft
+    key_points:
+      - 识别技术瓶颈的能力：如性能问题、架构限制等
+      - 展现创新和解决问题的能力，通过引入新技术、优化算法、重构架构等方式突破瓶颈
+      - 分享成功突破技术瓶颈的案例，以及从中学到的经验教训
+  - id: NW-BQ-013
+    type: behavioral
+    question: 你在网络项目中有没有遇到过“技术挑战”？你是如何迎接它的？
+    tags: [技术挑战, 挑战应对]
+    difficulty: hard
+    source: 自己整理
+    status: draft
+    key_points:
+      - 识别技术挑战的能力：如新技术的学习曲线、复杂问题的解决等
+      - 展现迎接挑战的能力，通过积极学习、团队协作、寻求帮助等方式应对挑战
+      - 分享成功迎接技术挑战的案例，以及从中学到的经验教训
+  - id: NW-BQ-014
+    type: behavioral
+    question: 你在网络项目中有没有遇到过“技术创新”？你是如何推动它的？
+    tags: [技术创新, 创新推动]
+    difficulty: hard
+    source: 自己整理
+    status: draft
+    key_points:
+      - 识别技术创新的能力：如新协议的应用、架构优化等
+      - 展现推动创新的能力，通过积极学习、团队协作、寻求支持等方式推动创新落地
+      - 分享成功推动技术创新的案例，以及从中学到的经验教训
+  - id: NW-BQ-015
+    type: behavioral
+    question: 你在网络项目中有没有遇到过“技术迷茫期”？你是如何走出它的？
+    tags: [技术迷茫, 自我驱动]
+    difficulty: hard
+    source: 自己整理
+    status: draft
+    key_points:
+      - 识别技术迷茫的能力：如对网络架构设计、协议选型等缺乏清晰方向感
+      - 展现自我驱动和学习能力，通过阅读文档、咨询专家、进行小规模实验等方式寻找解决方案
+      - 分享成功走出技术迷茫期的案例，以及从中学到的经验教训

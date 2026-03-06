@@ -1,7 +1,7 @@
 version: 1
 project: FuChuangTiKu
 locale: zh-CN
-domain: java-backend-interview
+domain: multi-domain-interview # 涵盖后端、前端、CV、网络、QA
 maintainer: owner
 updated_at: 2026-03-03
 
@@ -35,3 +35,9 @@ fields:
     - answer
     - framework
     - status
+  knowledge_point:
+    - module_name
+    - point
+    - complexity
+    - estimated_hours
+    - resources

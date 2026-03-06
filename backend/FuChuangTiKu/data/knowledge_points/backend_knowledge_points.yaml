@@ -1,0 +1,611 @@
+type: backend_technical_knowledge_points
+source:
+  - 官方文档
+modules:
+  - name: Java 基础与进阶
+    points:
+      - point: Java 语法与面向对象
+        complexity: Easy
+        estimated_hours: 4
+        resources:
+          - name: Oracle Java Tutorials - Language Basics
+            type: 官方文档
+            url: https://docs.oracle.com/javase/tutorial/java/nutsandbolts/index.html
+          - name: B站 - 尚硅谷Java零基础入门教程
+            type: 视频
+            url: https://www.bilibili.com/video/BV1Kb411W75N
+          - name: 《Head First Java》
+            type: 书籍
+            url: https://www.pdfiles.net/pdf/view/Head-First-Java,-3nd-Edition
+          - name: 菜鸟教程 - Java 教程
+            type: 快速入门
+            url: https://www.runoob.com/java/java-tutorial.html
+
+      - point: 泛型与反射
+        complexity: Medium
+        estimated_hours: 3
+        resources:
+          - name: Oracle Java Tutorials - Generics
+            type: 官方文档
+            url: https://docs.oracle.com/javase/tutorial/java/generics/
+          - name: Oracle Java Tutorials - Reflection API
+            type: 官方文档
+            url: https://docs.oracle.com/javase/tutorial/reflect/
+          - name: B站 - 【狂神说Java】Java零基础学习
+            type: 视频
+            url: https://www.bilibili.com/video/BV12J41137hu (反射部分)
+          - name: 美团技术团队 - Java 反射到底慢在哪？
+            type: 技术博客
+            url: https://tech.meituan.com/2017/03/31/java-reflection.html
+
+      - point: 异常体系与最佳实践
+        complexity: Easy
+        estimated_hours: 2
+        resources:
+          - name: Oracle Java Tutorials - Exceptions
+            type: 官方文档
+            url: https://docs.oracle.com/javase/tutorial/essential/exceptions/
+          - name: B站 - Java异常处理 | 10分钟速成
+            type: 视频
+            url: https://www.bilibili.com/video/BV15b4y1k7yS
+          - name: Baeldung - Exception Handling in Java
+            type: 技术博客
+            url: https://www.baeldung.com/exception-handling-in-java
+
+      - point: Stream 与函数式编程
+        complexity: Medium
+        estimated_hours: 3
+        resources:
+          - name: Oracle Java Tutorials - Lambda Expressions
+            type: 官方文档
+            url: https://docs.oracle.com/javase/tutorial/java/javaOO/lambdaexpressions.html
+          - name: B站 - Java8新特性，Lambda表达式、函数式接口、Stream流、Optional
+            type: 视频
+            url: https://www.bilibili.com/video/BV1k54y1S74a
+          - name: 廖雪峰的官方网站 - Java教程 - 函数式编程
+            type: 快速入门
+            url: https://www.liaoxuefeng.com/wiki/1252599548343744/1260451488633280
+          - name: 《Java 8 in Action》 (中文名《Java 8实战》)
+            type: 书籍
+            url: https://book.douban.com/subject/26772632/
+
+      - point: 新特性（Java 8+）
+        complexity: Medium
+        estimated_hours: 2
+        resources:
+          - name: Baeldung - A Guide to What's New in Java
+            type: 技术博客
+            url: https://www.baeldung.com/java-new-features
+          - name: B站 - 宏哥说说|Java17新特性
+            type: 视频
+            url: https://www.bilibili.com/video/BV1uT4y1d7EC
+          - name: OpenJDK - Project Loom (Virtual Threads)
+            type: 官方文档
+            url: https://openjdk.java.net/projects/loom/
+          - name: InfoQ - Java 21 新特性一览
+            type: 技术文章
+            url: https://www.infoq.cn/article/p2zWHwD6A9S4D6l3j82K
+
+  - name: JVM (Java Virtual Machine)
+    points:
+      - point: 内存模型与对象生命周期
+        complexity: Hard
+        estimated_hours: 5
+        resources:
+          - name: 《深入理解Java虚拟机（第3版）》周志明
+            type: 书籍
+            url: https://book.douban.com/subject/34907497/ (必读经典)
+          - name: B站 - 尚硅谷宋红康JVM全套教程
+            type: 视频
+            url: https://www.bilibili.com/video/BV1PJ411n7xZ
+          - name: Oracle Docs - The Java Virtual Machine Specification
+            type: 官方文档
+            url: https://docs.oracle.com/javase/specs/jvms/se17/html/jvms-2.html#jvms-2.5
+          - name: 美团技术团队 - Java中9种常见的CMS GC问题分析与解决
+            type: 技术博客
+            url: https://tech.meituan.com/2020/11/12/java-9-cms-gc.html
+
+      - point: 垃圾回收器与调优
+        complexity: Hard
+        estimated_hours: 6
+        resources:
+          - name: 《深入理解Java虚拟机（第3版）》周志明
+            type: 书籍
+            url: https://book.douban.com/subject/34907497/ (GC章节)
+          - name: B站 - 黑马程序员JVM虚拟机
+            type: 视频
+            url: https://www.bilibili.com/video/BV1yE411Z7AP (GC部分)
+          - name: Oracle Docs - HotSpot Virtual Machine Garbage Collection Tuning Guide
+            type: 官方文档
+            url: https://docs.oracle.com/en/java/javase/17/gctuning/
+          - name: Baeldung - A Guide to Java Garbage Collection
+            type: 技术博客
+            url: https://www.baeldung.com/java-garbage-collection
+
+      - point: 类加载机制与字节码
+        complexity: Hard
+        estimated_hours: 4
+        resources:
+          - name: 《深入理解Java虚拟机（第3版）》周志明
+            type: 书籍
+            url: https://book.douban.com/subject/34907497/ (类加载及执行子系统章节)
+          - name: B站 - 【狂神说Java】JVM最新教程
+            type: 视频
+            url: https://www.bilibili.com/video/BV1iJ411d7jS (类加载部分)
+          - name: Oracle Docs - The Class File Format
+            type: 官方文档
+            url: https://docs.oracle.com/javase/specs/jvms/se17/html/jvms-4.html
+          - name: Hollis - 深入分析Java类加载器
+            type: 技术博客
+            url: https://www.hollischuang.com/archives/195
+
+      - point: 性能分析工具（JFR, JCMD, Arthas）
+        complexity: Medium
+        estimated_hours: 3
+        resources:
+          - name: B站 - Java兄弟连 | Arthas
+            type: 视频
+            url: https://www.bilibili.com/video/BV12a411B7c3
+          - name: Arthas 官方文档
+            type: 官方文档
+            url: https://arthas.aliyun.com/doc/
+          - name: Baeldung - Guide to Java Flight Recorder
+            type: 技术博客
+            url: https://www.baeldung.com/java-flight-recorder-monitoring
+          - name: Oracle Docs - The jcmd Utility
+            type: 官方文档
+            url: https://docs.oracle.com/en/java/javase/17/docs/specs/man/jcmd.html
+
+  - name: 并发编程
+    points:
+      - point: JMM、happens-before、volatile
+        complexity: Hard
+        estimated_hours: 4
+        resources:
+          - name: 《Java并发编程实战》
+            type: 书籍
+            url: https://book.douban.com/subject/10484692/ (必读经典)
+          - name: B站 - 【Java并发编程】JMM&volatile
+            type: 视频
+            url: https://www.bilibili.com/video/BV1xK4y1X7aF
+          - name: Oracle Docs - Memory Model
+            type: 官方文档
+            url: https://docs.oracle.com/javase/specs/jls/se17/html/jls-17.html#jls-17.4
+          - name: InfoQ - 深入理解Java内存模型
+            type: 技术文章
+            url: https://www.infoq.cn/article/java-memory-model-1
+
+      - point: 锁优化（synchronized, Lock）与无锁结构
+        complexity: Hard
+        estimated_hours: 5
+        resources:
+          - name: 《Java并发编程的艺术》
+            type: 书籍
+            url: https://book.douban.com/subject/26591326/ 
+          - name: B站 - 黑马程序员Java并发编程
+            type: 视频
+            url: https://www.bilibili.com/video/BV16J411h7Rd (锁章节)
+          - name: 美团技术团队 - 不可不说的Java“锁”事
+            type: 技术博客
+            url: https://tech.meituan.com/2018/11/15/java-lock.html
+          - name: Baeldung - A Guide to an Atomic Variables in Java
+            type: 技术博客
+            url: https://www.baeldung.com/java-atomic-variables
+
+      - point: 线程池与任务编排
+        complexity: Hard
+        estimated_hours: 4
+        resources:
+          - name: 《Java并发编程的艺术》
+            type: 书籍
+            url: https://book.douban.com/subject/26591326/ (线程池章节)
+          - name: B站 - 动力节点-Java-线程池
+            type: 视频
+            url: https://www.bilibili.com/video/BV1sZ4y1F76a
+          - name: 美团技术团队 - Java线程池实现原理及其在美团业务中的实践
+            type: 技术博客
+            url: https://tech.meituan.com/2020/04/02/java-pooling-pratice-in-meituan.html
+          - name: Baeldung - Guide to CompletableFuture
+            type: 技术博客
+            url: https://www.baeldung.com/java-completablefuture
+
+      - point: 并发容器与原子类
+        complexity: Medium
+        estimated_hours: 3
+        resources:
+          - name: Oracle Docs - java.util.concurrent
+            type: 官方文档
+            url: https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/concurrent/package-summary.html
+          - name: B站 - Java并发容器，CopyOnWrite，ConcurrentHashMap，BlockingQueue
+            type: 视频
+            url: https://www.bilibili.com/video/BV1N741127z5
+          - name: Hollis - 一文让你彻底理解Java中的ConcurrentHashMap
+            type: 技术博客
+            url: https://www.hollischuang.com/archives/1146
+          - name: 《Java并发编程实战》
+            type: 书籍
+            url: https://book.douban.com/subject/10484692/ (并发容器章节)
+
+  - name: Spring 生态
+    points:
+      - point: IOC/AOP 原理
+        complexity: Hard
+        estimated_hours: 5
+        resources:
+          - name: Spring Framework Reference - Core Technologies (IoC & AOP)
+            type: 官方文档
+            url: https://docs.spring.io/spring-framework/reference/core.html
+          - name: B站 - 尚硅谷Spring6教程
+            type: 视频
+            url: https://www.bilibili.com/video/BV1CB4y1o7zz
+          - name: 《Spring揭秘》
+            type: 书籍
+            url: https://book.douban.com/subject/3897837/ (经典绝版书)
+          - name: 芋道源码 - Spring 源码解析系列
+            type: 技术博客
+            url: https://www.iocoder.cn/categories/Spring/
+
+      - point: Spring Boot 自动配置
+        complexity: Medium
+        estimated_hours: 3
+        resources:
+          - name: Spring Boot Reference Documentation - Auto-configuration
+            type: 官方文档
+            url: https://docs.spring.io/spring-boot/docs/current/reference/html/features.html#features.developing-auto-configuration
+          - name: B站 - 黑马程序员SpringBoot3教程
+            type: 视频
+            url: https://www.bilibili.com/video/BV1dM4y1g7Zf
+          - name: Baeldung - Custom Auto-Configuration with Spring Boot
+            type: 技术博客
+            url: https://www.baeldung.com/spring-boot-custom-auto-configuration
+
+      - point: Spring MVC 请求处理链
+        complexity: Medium
+        estimated_hours: 3
+        resources:
+          - name: Spring Web MVC Reference
+            type: 官方文档
+            url: https://docs.spring.io/spring-framework/reference/web/webmvc.html
+          - name: InfoQ - 深入理解 Spring MVC 核心流程
+            type: 技术文章
+            url: https://www.infoq.cn/article/spring-mvc-core-process
+          - name: B站 - 尚硅谷SpringMVC教程
+            type: 视频
+            url: https://www.bilibili.com/video/BV1Ry4y1574R
+
+      - point: Spring Data 与事务管理
+        complexity: Hard
+        estimated_hours: 4
+        resources:
+          - name: Spring Transaction Management
+            type: 官方文档
+            url: https://docs.spring.io/spring-framework/reference/data-access/transaction.html
+          - name: 美团技术团队 - 聊聊Spring事务失效的12种场景
+            type: 技术博客
+            url: https://juejin.cn/post/6934800355444162568 (原文或相关高赞文章，美团官网无同名文章，此为社区同名神作)
+          - name: Baeldung - Transactions in Spring
+            type: 技术博客
+            url: https://www.baeldung.com/spring-transactional
+
+      - point: Spring Security 鉴权模型
+        complexity: Hard
+        estimated_hours: 4
+        resources:
+          - name: Spring Security Reference
+            type: 官方文档
+            url: https://docs.spring.io/spring-security/reference/index.html
+          - name: B站 - 狂神说Java：SpringSecurity教程
+            type: 视频
+            url: https://www.bilibili.com/video/BV1mm4y1X7Hc
+          - name: Baeldung - Spring Security Tutorial
+            type: 快速入门
+            url: https://www.baeldung.com/security-spring
+
+  - name: 数据库与缓存
+    points:
+      - point: MySQL 索引与执行计划
+        complexity: Hard
+        estimated_hours: 5
+        resources:
+          - name: MySQL 8.0 Reference Manual - Optimization and Indexes
+            type: 官方文档
+            url: https://dev.mysql.com/doc/refman/8.0/en/optimization.html
+          - name: 美团技术团队 - MySQL索引原理及慢查询优化
+            type: 技术博客
+            url: https://tech.meituan.com/2014/06/30/mysql-index.html
+          - name: 《高性能MySQL (第4版)》
+            type: 书籍
+            url: https://book.douban.com/subject/36096578/ (必读经典)
+          - name: B站 - 尚硅谷MySQL数据库高级篇
+            type: 视频
+            url: https://www.bilibili.com/video/BV1iq4y1u7vj
+
+      - point: 事务隔离与 MVCC
+        complexity: Hard
+        estimated_hours: 4
+        resources:
+          - name: MySQL Docs - InnoDB Transaction Model
+            type: 官方文档
+            url: https://dev.mysql.com/doc/refman/8.0/en/innodb-transaction-model.html
+          - name: 阿里开发者社区 - 深入理解MVCC与BufferPool缓存机制
+            type: 技术文章
+            url: https://developer.aliyun.com/article/782200
+          - name: B站 - 深入浅出MySQL事务与MVCC
+            type: 视频
+            url: https://www.bilibili.com/video/BV1Ua411G7nZ
+
+      - point: 分库分表与读写分离
+        complexity: Hard
+        estimated_hours: 4
+        resources:
+          - name: Apache ShardingSphere 官方文档
+            type: 官方文档
+            url: https://shardingsphere.apache.org/document/current/cn/overview/
+          - name: 《MySQL运维内参》
+            type: 书籍
+            url: https://book.douban.com/subject/27043336/ 
+          - name: InfoQ - 数据库分库分表策略与实践
+            type: 技术博客
+            url: https://www.infoq.cn/article/database-sharding-strategy-and-practice
+
+      - point: Redis 数据结构与持久化
+        complexity: Medium
+        estimated_hours: 3
+        resources:
+          - name: Redis Official Documentation - Data Types & Persistence
+            type: 官方文档
+            url: https://redis.io/docs/
+          - name: 《Redis设计与实现》
+            type: 书籍
+            url: http://redisbook.com/ (黄健宏著，剖析源码的经典)
+          - name: 美团技术团队 - Redis 核心原理与实践
+            type: 技术博客
+            url: https://tech.meituan.com/tags/redis.html
+          - name: B站 - 黑马程序员Redis入门到实战
+            type: 视频
+            url: https://www.bilibili.com/video/BV1cr4y1671t
+
+      - point: 缓存一致性与高可用
+        complexity: Hard
+        estimated_hours: 4
+        resources:
+          - name: 阿里开发者社区 - 缓存与数据库一致性保证
+            type: 技术文章
+            url: https://developer.aliyun.com/article/712285
+          - name: Redis Sentinel & Cluster Documentation
+            type: 官方文档
+            url: https://redis.io/docs/management/sentinel/
+          - name: Baeldung - Spring Cache Abstraction
+            type: 技术博客
+            url: https://www.baeldung.com/spring-cache-tutorial
+
+  - name: 分布式与微服务
+    points:
+      - point: 服务注册发现与配置中心
+        complexity: Medium
+        estimated_hours: 3
+        resources:
+          - name: Spring Cloud Alibaba 官方文档 (Nacos)
+            type: 官方文档
+            url: https://spring.io/projects/spring-cloud-alibaba
+          - name: Nacos 官方文档
+            type: 官方文档
+            url: https://nacos.io/zh-cn/docs/what-is-nacos.html
+          - name: B站 - 尚硅谷SpringCloud Alibaba教程
+            type: 视频
+            url: https://www.bilibili.com/video/BV18E411x7eT
+
+      - point: 负载均衡与网关
+        complexity: Medium
+        estimated_hours: 3
+        resources:
+          - name: Spring Cloud Gateway Reference
+            type: 官方文档
+            url: https://docs.spring.io/spring-cloud-gateway/reference/
+          - name: 深入理解 Spring Cloud Gateway 原理
+            type: 技术博客
+            url: https://www.iocoder.cn/categories/Spring-Cloud-Gateway/
+
+      - point: 分布式事务（2PC/TCC/SAGA）
+        complexity: Hard
+        estimated_hours: 6
+        resources:
+          - name: Seata 官方文档
+            type: 官方文档
+            url: https://seata.io/zh-cn/docs/overview/what-is-seata.html
+          - name: 阿里技术 - 终于有人把分布式事务说清楚了！
+            type: 技术文章
+            url: https://developer.aliyun.com/article/767988
+          - name: B站 - 分布式事务全方案解析
+            type: 视频
+            url: https://www.bilibili.com/video/BV1Yj411z7v2
+
+      - point: 分布式锁与一致性协议
+        complexity: Hard
+        estimated_hours: 5
+        resources:
+          - name: Redisson Distributed Locks
+            type: 官方文档
+            url: https://github.com/redisson/redisson/wiki/8.-Distributed-locks-and-synchronizers
+          - name: 阿里开发者社区 - ZooKeeper 与 Paxos/ZAB 协议原理
+            type: 技术文章
+            url: https://developer.aliyun.com/article/758062
+          - name: 《数据密集型应用系统设计》 (DDIA)
+            type: 书籍
+            url: https://book.douban.com/subject/30329536/ (神书，共识算法必读)
+
+      - point: 限流、熔断、降级
+        complexity: Medium
+        estimated_hours: 3
+        resources:
+          - name: Sentinel 官方文档
+            type: 官方文档
+            url: https://sentinelguard.io/zh-cn/docs/introduction.html
+          - name: Resilience4j Documentation
+            type: 官方文档
+            url: https://resilience4j.readme.io/docs/getting-started
+          - name: Baeldung - Introduction to Resilience4j
+            type: 技术博客
+            url: https://www.baeldung.com/resilience4j
+
+  - name: 消息队列
+    points:
+      - point: Kafka/RabbitMQ 基础模型
+        complexity: Medium
+        estimated_hours: 4
+        resources:
+          - name: Apache Kafka Documentation
+            type: 官方文档
+            url: https://kafka.apache.org/documentation/
+          - name: RabbitMQ Tutorials
+            type: 官方文档
+            url: https://www.rabbitmq.com/getstarted.html
+          - name: 《Kafka权威指南》
+            type: 书籍
+            url: https://book.douban.com/subject/27665114/ 
+          - name: B站 - 尚硅谷Kafka教程
+            type: 视频
+            url: https://www.bilibili.com/video/BV1a4411B7V9
+
+      - point: 消息可靠性与幂等
+        complexity: Hard
+        estimated_hours: 4
+        resources:
+          - name: 美团技术团队 - 消息队列设计精要
+            type: 技术博客
+            url: https://tech.meituan.com/2016/07/01/mq-design.html
+          - name: InfoQ - 如何保证消息的可靠投递与幂等性
+            type: 技术文章
+            url: https://www.infoq.cn/article/how-to-ensure-reliable-delivery-and-idempotency-of-messages
+
+      - point: 顺序消费与重试死信
+        complexity: Medium
+        estimated_hours: 3
+        resources:
+          - name: RabbitMQ Dead Letter Exchanges
+            type: 官方文档
+            url: https://www.rabbitmq.com/dlx.html
+          - name: 阿里云 - RocketMQ 顺序消息与死信队列机制
+            type: 官方文档
+            url: https://help.aliyun.com/zh/apsaramq-for-rocketmq/
+
+      - point: 事务消息与最终一致性
+        complexity: Hard
+        estimated_hours: 4
+        resources:
+          - name: Apache RocketMQ - 事务消息
+            type: 官方文档
+            url: https://rocketmq.apache.org/zh/docs/featureBehavior/04transactionmessage/
+          - name: 架构师社区 - 基于 RocketMQ 的分布式事务落地实践
+            type: 技术博客
+            url: https://developer.aliyun.com/article/782215
+
+  - name: 工程化与质量
+    points:
+      - point: 单元测试与集成测试
+        complexity: Medium
+        estimated_hours: 3
+        resources:
+          - name: JUnit 5 User Guide
+            type: 官方文档
+            url: https://junit.org/junit5/docs/current/user-guide/
+          - name: Mockito Documentation
+            type: 官方文档
+            url: https://site.mockito.org/
+          - name: Baeldung - Testing in Spring Boot
+            type: 技术博客
+            url: https://www.baeldung.com/spring-boot-testing
+
+      - point: CI/CD 与发布策略
+        complexity: Medium
+        estimated_hours: 3
+        resources:
+          - name: GitLab CI/CD Documentation
+            type: 官方文档
+            url: https://docs.gitlab.com/ee/ci/
+          - name: Jenkins User Documentation
+            type: 官方文档
+            url: https://www.jenkins.io/doc/
+          - name: 美团技术团队 - 蓝绿部署与灰度发布实践
+            type: 技术博客
+            url: https://tech.meituan.com/2020/02/13/meituan-waimai-continuous-delivery.html (美团外卖持续交付的前世今生，涵盖灰度实践)
+
+      - point: 代码规范与静态扫描
+        complexity: Easy
+        estimated_hours: 2
+        resources:
+          - name: 阿里巴巴Java开发手册
+            type: 官方文档
+            url: https://github.com/alibaba/p3c
+          - name: SonarQube Documentation
+            type: 官方文档
+            url: https://docs.sonarsource.com/sonarqube/latest/
+          - name: Checkstyle Configuration
+            type: 官方文档
+            url: https://checkstyle.sourceforge.io/
+
+      - point: API 文档与契约测试
+        complexity: Easy
+        estimated_hours: 2
+        resources:
+          - name: Swagger (OpenAPI) Specification
+            type: 官方文档
+            url: https://swagger.io/specification/
+          - name: Spring Cloud Contract Reference
+            type: 官方文档
+            url: https://docs.spring.io/spring-cloud-contract/docs/current/reference/html/
+          - name: Baeldung - Introduction to Spring Cloud Contract
+            type: 技术博客
+            url: https://www.baeldung.com/spring-cloud-contract
+
+  - name: 可观测性与稳定性
+    points:
+      - point: 日志规范与链路追踪
+        complexity: Medium
+        estimated_hours: 3
+        resources:
+          - name: Apache SkyWalking Documentation
+            type: 官方文档
+            url: https://skywalking.apache.org/docs/
+          - name: Spring Cloud Sleuth & Micrometer Tracing
+            type: 官方文档
+            url: https://docs.spring.io/spring-cloud-sleuth/docs/current/reference/html/
+          - name: 阿里开发者社区 - 分布式链路追踪技术原理
+            type: 技术文章
+            url: https://developer.aliyun.com/article/760431
+
+      - point: Metrics 与告警体系
+        complexity: Medium
+        estimated_hours: 3
+        resources:
+          - name: Prometheus Documentation
+            type: 官方文档
+            url: https://prometheus.io/docs/introduction/overview/
+          - name: Grafana Documentation
+            type: 官方文档
+            url: https://grafana.com/docs/
+          - name: Baeldung - Micrometer in Spring Boot
+            type: 技术博客
+            url: https://www.baeldung.com/micrometer-spring-boot
+
+      - point: SLI/SLO 与容量规划
+        complexity: Hard
+        estimated_hours: 4
+        resources:
+          - name: 《SRE：Google运维解密》
+            type: 书籍
+            url: https://sre.google/sre-book/table-of-contents/ (英文版在线免费阅读)
+          - name: 极客时间 - SRE实战手册
+            type: 专栏/课程
+            url: https://time.geekbang.org/column/intro/297 (需至极客时间APP或网页搜索)
+
+      - point: 故障演练与应急预案
+        complexity: Hard
+        estimated_hours: 3
+        resources:
+          - name: Chaos Mesh Documentation
+            type: 官方文档
+            url: https://chaos-mesh.org/docs/
+          - name: 阿里技术 - 混沌工程（Chaos Engineering）实践
+            type: 技术博客
+            url: https://developer.aliyun.com/article/777894

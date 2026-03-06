@@ -3,9 +3,13 @@
 
 <template>
   <div id="app-root" class="app-shell">
-    <SideNav class="app-shell__side" />
+    <!-- 根据路由元信息控制侧边栏显示 -->
+    <SideNav 
+      v-if="!route.meta.hideNavigation && !route.meta.hideSideNav" 
+      class="app-shell__side" 
+    />
 
-    <main class="app-shell__main">
+    <main class="app-shell__main" :class="{ 'no-nav': hideAllNav }">
       <router-view v-slot="{ Component, route }">
         <transition name="page" mode="out-in">
           <component :is="Component" :key="route.path" />
@@ -13,19 +17,37 @@
       </router-view>
     </main>
 
-    <BottomNav class="app-shell__bottom" />
+    <!-- 根据路由元信息控制底部导航显示 -->
+    <BottomNav 
+      v-if="!route.meta.hideNavigation && !route.meta.hideBottomNav" 
+      class="app-shell__bottom" 
+    />
   </div>
 </template>
 
 <script>
 import BottomNav from '@/components/common/BottomNav.vue'
 import SideNav from '@/components/common/SideNav.vue'
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
 
 export default {
   name: 'App',
   components: {
     SideNav,
     BottomNav
+  },
+  setup() {
+    const route = useRoute()
+    
+    const hideAllNav = computed(() => {
+      return route.meta.hideNavigation === true
+    })
+    
+    return {
+      route,
+      hideAllNav
+    }
   }
 }
 </script>
@@ -98,5 +120,22 @@ export default {
 @keyframes pageLeave {
   from { opacity: 1; transform: translateY(0); }
   to   { opacity: 0; transform: translateY(-8px); }
+}
+
+
+
+.app-shell__main {
+  min-height: 100vh;
+  padding-bottom: $bottom-nav-height;
+  
+  &.no-nav {
+    padding-bottom: 0;
+  }
+}
+
+@media (min-width: 1024px) {
+  .app-shell__main.no-nav {
+    // PC端无导航时的样式调整
+  }
 }
 </style>

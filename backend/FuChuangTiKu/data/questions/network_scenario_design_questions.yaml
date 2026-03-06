@@ -1,0 +1,115 @@
+type: network_scenario_design_questions
+source:
+  - 技术博客
+items:
+  - id: NW-SQ-001
+    type: scenario_design
+    question: 如果让你设计一个高可用的大型数据中心网络，要求支持虚拟机大范围动态迁移，你会采用什么架构？
+    tags: [架构设计, 数据中心, SDN]
+    difficulty: hard
+    source: 技术博客
+    status: draft
+    key_points:
+      - 摒弃传统 STP 三层架构，采用 Spine-Leaf（叶脊）全网状架构提供无阻塞横向（East-West）带宽
+      - 引入 VXLAN 叠加网络（Overlay）实现大二层隔离，突破 4096 VLAN 限制并支持跨三层虚机迁移
+      - 结合 EVPN 作为控制平面，实现 MAC 和 IP 路由的动态学习与防环
+  - id: NW-SQ-002
+    type: scenario_design
+    question: 一家全国性零售企业有 500 家分支门店，需要连接至总部数据中心，如何设计高性价比且安全的组网方案？
+    tags: [SD-WAN, 广域网组网]
+    difficulty: medium
+    source: 技术博客
+    status: draft
+    key_points:
+      - 采用 SD-WAN 架构替代传统纯 MPLS 专线，利用 Internet + 4G/5G 混合链路降低成本
+      - 边缘 CPE 设备支持零接触部署（ZTP），实现门店快速自动化开局
+      - 动态应用选路（基于时延、抖动、丢包率自动将核心 ERP 业务切至优链路），并通过 IPsec 保障数据安全
+  - id: NW-SQ-003
+    type: scenario_design
+    question: 设计一套零信任网络接入（ZTNA）方案，取代传统 VPN，实现员工远程及在岗办公的安全管控。
+    tags: [安全架构, 零信任]
+    difficulty: hard
+    source: 技术博客
+    status: draft
+    key_points:
+      - 核心原则：永不信任，始终验证。打破内外网边界概念
+      - 身份与设备双重认证：整合统一身份认证（SSO/MFA）与终端设备合规性检查（操作系统补丁、杀软状态）
+      - 微隔离与动态授权：基于 RBAC/ABAC 模型按需打通应用层隧道，隐藏后端服务真实 IP
+  - id: NW-SQ-004
+    type: scenario_design
+    question: 企业网拥有联通和电信双 ISP 出口，如何设计 BGP 路由策略以实现最佳访问体验和主备容灾？
+    tags: [BGP, 路由选路, 流量工程]
+    difficulty: hard
+    source: 自己整理
+    status: draft
+    key_points:
+      - 流量对称性设计：电信流量走电信出口，联通走联通出口（南联通北电信调度）
+      - Outbound 选路控制：利用 BGP Local Preference 属性优先指定内部流量的优选出口
+      - Inbound 选路控制：利用 AS-Path Prepending 属性或 MED 属性干预外部公网回程流量
+  - id: NW-SQ-005
+    type: scenario_design
+    question: 某园区网络内频繁爆发 ARP 欺骗和 IP 冲突，导致核心网关 MAC 漂移，如何设计一套彻底的防护方案？
+    tags: [局域网安全, 二层防护]
+    difficulty: medium
+    source: 自己整理
+    status: draft
+    key_points:
+      - 在接入层交换机开启 DHCP Snooping 生成绑定表
+      - 结合 Dynamic ARP Inspection (DAI) 严格校验 ARP 报文合法性
+      - 配置 IP Source Guard (IPSG) 防御 IP 欺骗，并结合核心设备的防 MAC 漂移策略和日志告警
+  - id: NW-SQ-006
+    type: scenario_design
+    question: 设计一个基于 SDN 的网络自动化运维系统，如何实现故障自动检测与自愈？
+    tags: [SDN, 网络自动化, 自愈系统]
+    difficulty: hard
+    source: 技术博客
+    status: draft
+    key_points:
+      - 利用 SDN 控制器（如 OpenDaylight）集中收集网络状态数据（流量、错误率、链路状态）
+      - 定义基于规则的故障检测机制（如流量异常、链路丢包率过高触发告警）
+      - 设计自动化修复流程（如自动重启接口、调整流量路径、通知运维人员）并通过闭环反馈持续优化检测规则
+  - id: NW-SQ-007
+    type: scenario_design
+    question: 设计一个企业级的网络访问控制系统，如何实现基于角色和时间的动态访问权限管理？
+    tags: [网络安全, 访问控制]
+    difficulty: medium
+    source: 技术博客
+    status: draft
+    key_points:
+      - 采用基于角色的访问控制（RBAC）模型定义用户角色与权限映射关系
+      - 引入时间维度限制（如工作时间、非工作时间、特定日期）动态调整访问权限
+      - 利用 NAC（Network Access Control）设备或 SDN 控制器实施实时访问策略，并结合日志审计确保合规性
+  - id: NW-SQ-008
+    type: scenario_design
+    question: 设计一个基于云的混合云网络架构，如何实现本地数据中心与公有云之间的安全高效连接？
+    tags: [混合云, 云网络, 安全连接]
+    difficulty: hard
+    source: 技术博客
+    status: draft
+    key_points:
+      - 采用 VPN 或专线（如 AWS Direct Connect、Azure ExpressRoute）实现本地与云端的安全连接
+      - 在云端部署虚拟私有云（VPC）并配置子网、路由表和安全组实现细粒度访问控制
+      - 利用 SD-WAN 技术优化跨云流量路径，提升访问性能并降低成本
+  - id: NW-SQ-009
+    type: scenario_design
+    question: 设计一个支持大规模 IoT 设备接入的网络架构，如何解决设备认证和数据安全问题？
+    tags: [IoT, 网络安全, 认证]
+    difficulty: medium
+    source: 技术博客
+    status: draft
+    key_points:
+      - 采用轻量级协议（如 MQTT、CoAP）适配资源受限的 IoT 设备
+      - 引入基于证书的设备认证机制（如 X.509）确保接入设备的合法性
+      - 利用 TLS/SSL 加密通信保障数据传输安全，并结合边缘计算进行数据预处理减少云端压力
+  - id: NW-SQ-010
+    type: scenario_design
+    question: 设计一个企业级的网络监控系统，如何实现对网络性能和安全事件的实时监测与告警？
+    tags: [网络监控, 性能分析, 安全事件]
+    difficulty: hard
+    source: 技术博客
+    status: draft
+    key_points:
+      - 部署分布式监控代理（如 Prometheus Node Exporter）收集网络设备和服务器的性能指标
+      - 利用流量分析工具（如 NetFlow、sFlow）监测异常流量模式并结合 IDS/IPS 识别安全事件
+      - 配置基于规则的告警系统（如 Alertmanager）实现实时通知，并结合可视化工具（如 Grafana）展示监控数据趋势和异常情况
+      
