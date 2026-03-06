@@ -84,6 +84,7 @@ async startSession({ commit, state, rootGetters }, options = {}) {
 },
   // 用户提交回答
 async submitAnswer({ commit, state, dispatch }, answerText) {
+  if (state.isLoading) return
   commit('ADD_MESSAGE', { id: Date.now(),role: 'user', content: answerText, timestamp: Date.now() })
   commit('SET_LOADING', true)
   commit('ADD_MESSAGE', { id: Date.now() + 1, role: 'ai', content: '', timestamp: Date.now(), streaming: true })
@@ -97,6 +98,8 @@ async submitAnswer({ commit, state, dispatch }, answerText) {
     onStreamEnd() {
       commit('SET_LOADING', false)
       commit('MARK_STREAM_DONE')
+      const next = state.questionIndex + 1 // AI 正常回复完毕，题号 +1
+      commit('SET_QUESTION_INDEX', next)
     },
     onFinish() {
       commit('SET_LOADING', false)
@@ -105,6 +108,7 @@ async submitAnswer({ commit, state, dispatch }, answerText) {
     },
     onError(err) {
       commit('SET_LOADING', false)
+      commit('MARK_STREAM_DONE')
       console.error('SSE error', err)
     }
   })
