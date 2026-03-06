@@ -52,7 +52,63 @@ items:
     tags: [工程规范, 团队建设]
     difficulty: medium
     source: 面经库
-    status: draft    key_points:
+    status: draft    
+    key_points:
       - 强格局跳脱自我本份转攻惠全军拔升大家战斗力层段的共建统辖心感
       - 输出全员公测可落地高标准规范如统一代码提交流式卡口防尘防污制导系统流
       - 造福小白或梯队开坛宣讲沉淀打赢队伍向上的教头号号令加持自身重核心级分量影响
+  - id: FE-BQ-006
+    type: behavioral
+    question: 讲一次你在项目中遇到技术选型分歧时是如何推动达成共识的。
+    tags: [技术选型, 决策]  
+    difficulty: medium
+    source: 面经库
+    status: draft
+    key_points:
+      - 以大局为重的格局感和说服力，先理解不同意见背后的担忧和需求
+      - 通过数据和小规模验证来客观评估不同选项的利弊，避免主观臆断
+      - 寻求折中方案或引入第三方专家评审来打破僵局，推动团队达成共识
+  - id: FE-BQ-007
+    type: behavioral
+    question: 你如何看待前端领域的技术更新迭代？你是如何保持学习和适应新技术的？
+    tags: [学习能力, 适应性]
+    difficulty: medium
+    source: 面经库
+    status: draft
+    key_points:
+      - 认识到前端技术的快速迭代是行业发展的必然趋势，保持开放心态迎接变化
+      - 通过定期阅读技术博客、参加社区活动和在线课程来持续学习新技术
+      - 在项目中主动尝试引入新技术，通过实践来加深理解和适应能力
+  - id: FE-BQ-008
+    type: behavioral
+    question: 讲一次你在项目中遇到过的团队冲突，你是如何处理和调解的？
+    tags: [团队冲突, 沟通]
+    difficulty: hard
+    source: 面经库
+    status: draft
+    key_points:
+      - 保持冷静和客观，倾听双方的观点和情绪，避免情绪化对抗
+      - 引导团队回归问题本质，聚焦于数据和事实而非个人观点
+      - 寻求双赢的解决方案，如引入第三方专家评审或制定新的实验验证方案打破僵局
+  - id: FE-BQ-009
+    type: behavioral
+    question: 你在项目中有没有遇到过“技术债务”？你是如何识别和管理它的？
+    tags: [技术债务, 项目管理]
+    difficulty: hard
+    source: 面经库
+    status: draft
+    key_points:
+      - 识别技术债务的能力，如代码质量下降、缺乏文档等
+      - 主动沟通和说服能力，向团队和管理层说明技术债务的风险和长期成本
+      - 制定清晰的偿还计划，如定期重构、引入自动化测试覆盖等措施逐步消除技术债务
+  - id: FE-BQ-010
+    type: behavioral
+    question: 你在项目中有没有遇到过“技术孤岛”？你是如何打破它的？
+    tags: [技术孤岛, 跨部门协作]
+    difficulty: hard
+    source: 面经库
+    status: draft
+    key_points:
+      - 识别技术孤岛的能力，如某个模块或算法只有特定人员理解和维护，缺乏文档和知识共享
+      - 主动沟通和协作能力，推动团队内部的知识分享和交叉培训
+      - 引入代码审查、文档规范和定期技术分享会等机制促进团队整体技术水平的提升和信息流通

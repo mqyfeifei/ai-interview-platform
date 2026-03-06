@@ -1,0 +1,112 @@
+meta:
+  name: 研发与工程岗位知识库(含后端、前端、CV、网络、QA)
+  generated_at: 2026-03-03
+
+targets:
+  technical_interview_questions: 30
+  project_deep_dive_questions: 10
+  scenario_design_questions: 10
+  behavioral_questions: 10
+  excellent_answer_examples_per_type: "2-3"
+  technical_knowledge_points: "unlimited"
+
+datasets:
+  # 1. 后端数据源 (Backend)
+  - type: technical_interview_questions_backend
+    path: data/questions/backend_technical_interview_questions.yaml
+    source: ["牛客网", "CSDN"]
+  - type: project_deep_dive_questions_backend
+    path: data/questions/backend_project_deep_dive_questions.yaml
+    source: ["面经库"]
+  - type: scenario_design_questions_backend
+    path: data/questions/backend_scenario_design_questions.yaml
+    source: ["技术博客"]
+  - type: behavioral_questions_backend
+    path: data/questions/backend_behavioral_questions.yaml
+    source: ["面经库"]
+  - type: excellent_answer_examples_backend
+    path: data/examples/backend_excellent_answers.yaml
+    source: ["自己整理"]
+  - type: technical_knowledge_points_backend
+    path: data/knowledge_points/backend_knowledge_points.yaml
+    source: ["官方文档"]
+  
+  # 2. 前端数据源 (Frontend)
+  - type: technical_interview_questions_frontend
+    path: data/questions/frontend_technical_interview_questions.yaml
+    source: ["牛客网", "掘金"]
+  - type: project_deep_dive_questions_frontend
+    path: data/questions/frontend_project_deep_dive_questions.yaml
+    source: ["面经库"]
+  - type: scenario_design_questions_frontend
+    path: data/questions/frontend_scenario_design_questions.yaml
+    source: ["技术博客"]
+  - type: behavioral_questions_frontend
+    path: data/questions/frontend_behavioral_questions.yaml
+    source: ["面经库"]
+  - type: excellent_answer_examples_frontend
+    path: data/examples/frontend_excellent_answers.yaml
+    source: ["自己整理"]
+  - type: technical_knowledge_points_frontend
+    path: data/knowledge_points/frontend_knowledge_points.yaml
+    source: ["MDN", "官方文档"]
+
+  # 3. 计算机视觉数据源 (CV)
+  - type: technical_interview_questions_cv
+    path: data/questions/cv_technical_interview_questions.yaml
+    source: ["牛客网", "顶会论文"]
+  - type: project_deep_dive_questions_cv
+    path: data/questions/cv_project_deep_dive_questions.yaml
+    source: ["面经库", "自己整理"]
+  - type: scenario_design_questions_cv
+    path: data/questions/cv_scenario_design_questions.yaml
+    source: ["技术博客", "自己整理"]
+  - type: behavioral_questions_cv
+    path: data/questions/cv_behavioral_questions.yaml
+    source: ["面经库", "自己整理"]
+  - type: excellent_answer_examples_cv
+    path: data/examples/cv_excellent_answers.yaml
+    source: ["自己整理"]
+  - type: technical_knowledge_points_cv
+    path: data/knowledge_points/cv_knowledge_points.yaml
+    source: ["官方文档", "顶会论文"]
+
+  # 4. 网络工程师数据源 (Network)
+  - type: technical_interview_questions_network
+    path: data/questions/network_technical_interview_questions.yaml
+    source: ["牛客网", "经典教材"]
+  - type: project_deep_dive_questions_network
+    path: data/questions/network_project_deep_dive_questions.yaml
+    source: ["面经库"]
+  - type: scenario_design_questions_network
+    path: data/questions/network_scenario_design_questions.yaml
+    source: ["技术博客", "自己整理"]
+  - type: behavioral_questions_network
+    path: data/questions/network_behavioral_questions.yaml
+    source: ["面经库", "自己整理"]
+  - type: excellent_answer_examples_network
+    path: data/examples/network_excellent_answers.yaml
+    source: ["自己整理"]
+  - type: technical_knowledge_points_network
+    path: data/knowledge_points/network_knowledge_points.yaml
+    source: ["官方文档", "行业经典书籍"]
+
+  # 5. 测试工程师数据源 (QA)
+  - type: technical_interview_questions_qa
+    path: data/questions/qa_technical_interview_questions.yaml
+    source: ["牛客网", "测试社区"]
+  - type: project_deep_dive_questions_qa
+    path: data/questions/qa_project_deep_dive_questions.yaml
+    source: ["面经库"]
+  - type: scenario_design_questions_qa
+    path: data/questions/qa_scenario_design_questions.yaml
+    source: ["技术博客", "自己整理"]
+  - type: behavioral_questions_qa
+    path: data/questions/qa_behavioral_questions.yaml
+    source: ["面经库", "自己整理"]
+  - type: excellent_answer_examples_qa
+    path: data/examples/qa_excellent_answers.yaml
+    source: ["自己整理"]
+  - type: technical_knowledge_points_qa
+    path: data/knowledge_points/qa_knowledge_points.yaml
+    source: ["官方文档", "极客时间"]
