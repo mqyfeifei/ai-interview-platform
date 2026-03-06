@@ -61,7 +61,7 @@ const routes = [
   },
 
   // ---- 其他功能路由 ----
-{
+  {
     path: '/learning',
     name: 'LearningCenter',
     component: () => import('@/views/system/LearningCenter.vue'),
@@ -73,11 +73,17 @@ const routes = [
     component: () => import('@/views/system/HistoryRecords.vue'),
     meta: { requiresAuth: true, title: '历史记录', showBottomNav: true }
   },
+  {
+    path: '/question/detail',
+    name: 'QuestionDetail',
+    component: () => import('@/views/system/QuestionDetail.vue'),
+    meta: { requiresAuth: false, title: '题目详情' }
+  },
 
   // ---- 404 ----
   {
     path: '/:pathMatch(.*)*',
-    redirect: '/'  
+    redirect: '/'
   }
 ]
 

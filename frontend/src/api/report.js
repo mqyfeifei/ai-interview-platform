@@ -173,9 +173,20 @@ export const getHistoryList = async (params = {}) => {
       total: 4
     }
   }
-  return request.get('/v1/reports', { params })
+  return request.get('/reports', { params })
 }
 
+/**
+ * 获取单个报告详情
+ * @param {string} reportId - 报告ID
+ */
+export const getReportDetail = async (reportId) => {
+  if (USE_MOCK) {
+    await mockDelay()
+    return buildMockReport(reportId)
+  }
+  return request.get(`/reports/${reportId}`)
+}
 
 // 在文件末尾加适配函数
 const adaptBackendReport = (raw, reportId) => ({
@@ -186,13 +197,13 @@ const adaptBackendReport = (raw, reportId) => ({
   createdAt: new Date().toISOString(),
   // 维度映射：后端用中文key，前端用英文key
   dimensions: {
-    technical:    raw.dimensions?.['技术正确性']?.score ?? 0,
-    logic:        raw.dimensions?.['逻辑严谨性']?.score ?? 0,
-    matching:     raw.dimensions?.['岗位匹配度']?.score ?? 0,
-    expression:   raw.dimensions?.['表达沟通']?.score ?? 0,
+    technical: raw.dimensions?.['技术正确性']?.score ?? 0,
+    logic: raw.dimensions?.['逻辑严谨性']?.score ?? 0,
+    matching: raw.dimensions?.['岗位匹配度']?.score ?? 0,
+    expression: raw.dimensions?.['表达沟通']?.score ?? 0,
     adaptability: raw.dimensions?.['应变能力']?.score ?? 0
   },
-  avgDimensions: { technical:70, logic:68, matching:72, expression:66, adaptability:65 },
+  avgDimensions: { technical: 70, logic: 68, matching: 72, expression: 66, adaptability: 65 },
   // highlights/improvements 后端返回字符串，前端期望数组
   highlights: (raw.highlights || '').split('\n').filter(Boolean),
   improvements: (raw.improvements || '').split('\n').filter(Boolean).map(text => ({ text, resourceLink: null })),

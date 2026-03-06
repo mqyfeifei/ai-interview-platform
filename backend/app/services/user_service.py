@@ -7,7 +7,7 @@ from flask import current_app
 from werkzeug.utils import secure_filename
 from app.extensions import db
 from app.models.user import User
-from app.models.interview import Interview
+from app.models.interview import Interview, InterviewScore, Dimension
 from app.models.job import Job
 
 
@@ -119,16 +119,118 @@ class UserService:
             if key:
                 hot_jobs.append(key)
 
+        # 计算用户各维度的平均能力分数
+        abilities = cls._collect_user_abilities(user_id)
+
+        # 计算连续学习天数
+        streak_days = cls._calculate_streak_days(user_id)
+
+        # 计算最高分
+        max_score_value = completed_base.with_entities(func.max(Interview.total_score)).scalar()
+        max_score = int(max_score_value) if max_score_value else 0
+
         return {
             "totalInterviews": total_interviews,
             "avgScore": avg_score,
+            "maxScore": max_score,
             "lastInterviewScore": latest.total_score if latest else 0,
             "lastInterviewAt": (latest.end_time or latest.start_time).isoformat() if latest else None,
             "lastInterviewJob": last_job_name,
             "scoreImprovement": (latest.total_score - previous.total_score) if (latest and previous) else 0,
             "weeklyPractice": weekly_practice,
-            "hotJobs": hot_jobs
+            "streakDays": streak_days,
+            "hotJobs": hot_jobs,
+            "abilities": abilities
         }
+
+    @classmethod
+    def _collect_user_abilities(cls, user_id):
+        """计算用户各维度的平均能力分数"""
+        # 维度名称映射到前端字段
+        dimension_map = {
+            '技术正确性': 'knowledge',
+            '逻辑严谨性': 'logic',
+            '表达沟通': 'expression',
+            '岗位匹配度': 'problemSolving',
+            '应变能力': 'coding'
+        }
+
+        # 获取用户所有已完成面试的维度分数
+        completed_interview_ids = db.session.query(Interview.id).filter(
+            Interview.user_id == user_id,
+            Interview.status == 'completed'
+        ).subquery()
+
+        # 查询各维度的平均分
+        dimension_scores = db.session.query(
+            Dimension.name,
+            func.avg(InterviewScore.score).label('avg_score')
+        ).join(
+            InterviewScore, InterviewScore.dimension_id == Dimension.id
+        ).filter(
+            InterviewScore.interview_id.in_(completed_interview_ids)
+        ).group_by(Dimension.name).all()
+
+        # 构建能力数据，默认值为0
+        abilities = {
+            'knowledge': 0,
+            'logic': 0,
+            'expression': 0,
+            'problemSolving': 0,
+            'coding': 0,
+            'learning': 0  # 学习能力暂时用平均分代替
+        }
+
+        for dim_name, avg_score in dimension_scores:
+            key = dimension_map.get(dim_name)
+            if key and avg_score is not None:
+                abilities[key] = int(round(float(avg_score)))
+
+        # 学习能力用所有维度的平均值
+        non_zero_scores = [v for v in abilities.values() if v > 0]
+        if non_zero_scores:
+            abilities['learning'] = int(sum(non_zero_scores) / len(non_zero_scores))
+
+        return abilities
+
+    @classmethod
+    def _calculate_streak_days(cls, user_id):
+        """计算用户连续学习天数"""
+        # 获取用户所有面试的日期（去重）
+        interviews = Interview.query.filter(
+            Interview.user_id == user_id
+        ).order_by(Interview.start_time.desc()).all()
+
+        if not interviews:
+            return 0
+
+        # 提取所有面试日期（只保留日期部分）
+        interview_dates = set()
+        for interview in interviews:
+            if interview.start_time:
+                interview_dates.add(interview.start_time.date())
+
+        if not interview_dates:
+            return 0
+
+        # 从今天开始向前计算连续天数
+        today = datetime.utcnow().date()
+        streak = 0
+
+        # 检查今天或昨天是否有面试（允许今天还没练习的情况）
+        if today in interview_dates:
+            current_date = today
+        elif (today - timedelta(days=1)) in interview_dates:
+            current_date = today - timedelta(days=1)
+        else:
+            return 0
+
+        # 向前计算连续天数
+        while current_date in interview_dates:
+            streak += 1
+            current_date = current_date - timedelta(days=1)
+
+        return streak
 
     @staticmethod
     def _is_phone(value):

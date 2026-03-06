@@ -84,9 +84,12 @@ class LearningService:
             results.append({
                 "id": r.id,
                 "title": r.title,
-                "type": r.type,  # article, video, etc.
+                "type": r.type,  # article, video, book, example
+                "url": r.url,
+                "content": r.content,
                 "source": r.source,
-                "difficulty": r.difficulty
+                "difficulty": r.difficulty,
+                "tags": r.tags
             })
         return results
 

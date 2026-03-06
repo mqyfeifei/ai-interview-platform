@@ -20,8 +20,8 @@ const state = () => ({
 
 const mutations = {
   SET_GROWTH_DATA(state, data) { state.growthData = data },
-  SET_WEAKNESSES(state, data) { state.weaknesses = data },
-  SET_RECOMMENDATIONS(state, data) { state.recommendations = data },
+  SET_WEAKNESSES(state, data) { state.weaknesses = Array.isArray(data) ? data : [] },
+  SET_RECOMMENDATIONS(state, data) { state.recommendations = Array.isArray(data) ? data : [] },
   SET_DAILY_PLAN(state, data) { state.dailyPlan = data },
   SET_LOADING(state, v) { state.loading = v },
   SET_ACTIVE_FILTER(state, v) { state.activeFilter = v },
@@ -67,7 +67,9 @@ const actions = {
 
   async loadRecommendations({ commit }, params = {}) {
     try {
-      const { list } = await getRecommendations(params)
+      const data = await getRecommendations(params)
+      // 兼容后端返回数组或 {list: [...]} 格式
+      const list = Array.isArray(data) ? data : (data?.list || data || [])
       commit('SET_RECOMMENDATIONS', list)
     } catch (e) { console.warn('加载推荐失败', e) }
   },
