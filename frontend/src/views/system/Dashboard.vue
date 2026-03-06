@@ -148,23 +148,17 @@
         </div>
       </section>
 
-      <div style="height: 80px;" />
     </div>
-
-    <!-- 底部导航 -->
-    <BottomNav />
   </div>
 </template>
 
 <script>
 import { mapGetters, mapActions } from 'vuex'
-import BottomNav from '@/components/common/BottomNav.vue'
 import { getDashboardStats } from '@/api/user'
 import { JOB_TYPES } from '@/utils/constants'
 
 export default {
   name: 'DashboardPage',
-  components: { BottomNav },
   data() {
     return {
       stats: {

@@ -30,7 +30,7 @@ export const getUserInfo = async () => {
       createdAt: '2024-09-01'
     }
   }
-  return request.get('/v1/users/me')
+  return request.get('/users/me')
 }
 
 /**

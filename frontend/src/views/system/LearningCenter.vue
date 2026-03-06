@@ -224,17 +224,12 @@
         </div>
       </section>
 
-      <div style="height: 80px;" />
     </div>
-
-    <!-- 底部导航 -->
-    <BottomNav />
   </div>
 </template>
 
 <script>
 import { mapGetters, mapActions } from 'vuex'
-import BottomNav from '@/components/common/BottomNav.vue'
 // import { INTERVIEW_DIMENSIONS } from '@/utils/constants'
 
 let echarts = null
@@ -249,7 +244,6 @@ const CURVE_COLORS = {
 
 export default {
   name: 'LearningCenter',
-  components: { BottomNav },
   data() {
     return {
       activeCurveTab: 'overall',
