@@ -167,28 +167,7 @@
           <transition name="step" mode="out-in">
             <div v-if="currentStep === 2" key="step2" class="step-fields">
               <div class="form-group">
-                <label>真实姓名 *</label>
-                <div class="input-wrapper">
-                  <span class="input-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                      <circle cx="12" cy="7" r="4"/>
-                    </svg>
-                  </span>
-                  <input
-                    v-model="form.realName"
-                    type="text"
-                    placeholder="请输入真实姓名"
-                    class="form-control with-icon"
-                    :class="{ error: errors.realName }"
-                  />
-                </div>
-                <span v-if="errors.realName" class="form-error">{{ errors.realName }}</span>
-              </div>
-
-
-              <div class="form-group">
-                <label>你的昵称 *</label>
+                <label>你的姓名 *</label>
                 <div class="input-wrapper">
                   <span class="input-icon">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -199,7 +178,7 @@
                   <input
                     v-model="form.username"
                     type="text"
-                    placeholder="请输入昵称"
+                    placeholder="请输入姓名"
                     class="form-control with-icon"
                     :class="{ error: errors.username }"
                     autocomplete="nickname"
@@ -242,7 +221,7 @@
                 </div>
                 <div class="form-group">
                   <label>年级 *</label>
-                  <select v-model="form.grade" class="form-control form-select">
+                  <select v-model="form.grade" class="form-control form-select" :class="{ error: errors.grade }">
                     <option value="">选择年级</option>
                     <option v-for="g in gradeOptions" :key="g" :value="g">{{ g }}</option>
                   </select>
@@ -379,22 +358,18 @@ if (phone && !/^1\d{10}$/.test(phone)) { // 原规则：/^1[3-9]\d{9}$/
       return Object.keys(this.errors).length === 0
     },
 
-// 修改 validateStep2 方法
     validateStep2() {
       this.errors = {}
-      if (!this.form.realName.trim()) {
-        this.errors.realName = '请输入真实姓名'
-      }
       if (!this.form.username.trim()) {
-        this.errors.username = '请输入昵称'
+        this.errors.username = '请输入姓名'
       }
       if (!this.form.school.trim()) {
-        this.errors.school = '请输入就读学校'
+        this.errors.school = '请输入学校'
       }
       if (!this.form.major.trim()) {
-        this.errors.major = '请输入专业方向'
+        this.errors.major = '请输入专业'
       }
-      if (!this.form.grade.trim()) {
+      if (!this.form.grade) {
         this.errors.grade = '请选择年级'
       }
       return Object.keys(this.errors).length === 0

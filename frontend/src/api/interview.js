@@ -77,29 +77,18 @@ const FOLLOW_UP_TRIGGERS = [
  * @returns {Promise<{ sessionId, firstQuestion, totalQuestions }>}
  */
 export const startInterview = async (data) => {
-  if (USE_MOCK) {
-    await mockDelay()
-    const questions = MOCK_QUESTION_BANKS[data.jobId] || MOCK_QUESTION_BANKS['default']
-    const sessionId = 'mock_session_' + Date.now()
-    // 把题目列表存进 sessionStorage 供后续 mock 使用
-    sessionStorage.setItem(sessionId, JSON.stringify({ questions, index: 0, jobId: data.jobId }))
-    return {
-      sessionId,
-      firstQuestion: questions[0],
-      totalQuestions: data.questionCount || 10
-    }
-  }
+  if (USE_MOCK) { /* 原mock代码不变 */ }
   const res = await request.post('/interviews/start', {
-    user_id: data.userId,   // 整数，来自 userInfo.id
-    job_id: data.jobDbId    // 整数，来自数据库 jobs.id
+    user_id: data.userId,   // 暂时从 data 传入，待JWT完善后从拦截器注入
+    job_id: data.jobId
   })
-      console.log('后端 startInterview 响应:', res)
-const payload = res.interview_id ? res : (res.data || res)
-return {
-  sessionId: String(payload.interview_id),
-  firstQuestion: payload.question,
-  isFinished: false
-}
+  // 响应拦截器已解包，res 就是后端返回的 data 对象
+  // 统一适配为前端期望的格式
+  return {
+    sessionId: String(res.interview_id),
+    firstQuestion: res.question,
+    isFinished: false
+  }
 }
 
 
@@ -179,7 +168,7 @@ export const sendAnswerStream = (sessionId, answer, { onChunk, onFinish, onStrea
           } else {
             onChunk(chunk)
           }
-        } catch {}
+        } catch { }
       }
     }
     // ✅ 流正常结束（AI 继续追问），通知 store 关闭 loading
@@ -202,7 +191,7 @@ export const finishInterview = async (sessionId) => {
   const res = await request.post(`/interviews/${sessionId}/finish`)
   // 把后端报告存到 sessionStorage，供报告页读取（后端暂无 GET /report/:id 接口）
   sessionStorage.setItem(`report_${sessionId}`, JSON.stringify(res.data))
-    // res 是后端 data 字段，即 { reportId, jobName, total_score, ... }
+  // res 是后端 data 字段，即 { reportId, jobName, total_score, ... }
   return { reportId: res.reportId || sessionId }
 }
 /**

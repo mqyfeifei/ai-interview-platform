@@ -53,7 +53,7 @@
 
     <!-- 内容区 -->
     <div class="profile-body">
-      <!-- 个人信息 -->
+      <!-- 个人信息 - 新版左右布局 -->
       <section class="profile-section">
         <div class="section-header">
           <h2 class="section-title">个人信息</h2>
@@ -65,43 +65,106 @@
           </button>
         </div>
 
-        <div class="info-card">
-          <div class="info-row" v-for="row in infoRows" :key="row.key">
-            <span class="info-row__icon">{{ row.icon }}</span>
-            <div class="info-row__content">
-              <span class="info-row__label">{{ row.label }}</span>
-              <span class="info-row__value" :class="{ muted: !row.value }">
-                {{ row.value || '未填写' }}
-              </span>
+        <div class="profile-info-card">
+          <!-- 左侧：头像和岗位 -->
+          <div class="profile-info-left">
+            <!-- 头像区域 -->
+            <div class="avatar-section">
+              <div class="avatar-wrapper-lg" @click="triggerAvatarUpload">
+                <div class="avatar-lg">
+                  <img v-if="userInfo && userInfo.avatar" :src="userInfo.avatar" alt="头像" />
+                  <span v-else class="avatar-lg__fallback">{{ avatarLetter }}</span>
+                </div>
+                <div class="avatar-edit-badge-lg">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                  </svg>
+                </div>
+                <input ref="avatarInput" type="file" accept="image/*" class="hidden-input" @change="handleAvatarChange" />
+              </div>
+              <span class="avatar-label">{{ userInfo && userInfo.username || '用户' }}</span>
+            </div>
+
+            <div class="divider-line"></div>
+
+            <!-- 默认岗位区域 -->
+            <div class="job-section">
+              <span class="job-section-label">默认岗位:</span>
+              <div v-if="currentDefaultJob" class="job-display">
+                <span class="job-icon">{{ currentDefaultJob.icon }}</span>
+                <span class="job-name">{{ currentDefaultJob.name }}</span>
+              </div>
+              <div v-else class="job-display job-display--empty">
+                <span>🎯</span>
+                <span>未设置</span>
+              </div>
+              <button class="job-select-btn" @click="showJobPicker = true">
+                选择岗位
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;margin-left:4px">
+                  <polyline points="9 18 15 12 9 6"/>
+                </svg>
+              </button>
             </div>
           </div>
-        </div>
-      </section>
 
-      <!-- 默认岗位偏好 -->
-      <section class="profile-section">
-        <div class="section-header">
-          <h2 class="section-title">默认岗位</h2>
-        </div>
+          <!-- 分割线 -->
+          <div class="profile-info-divider"></div>
 
-        <div class="job-preference-card">
-          <div v-if="currentDefaultJob" class="job-selected">
-            <div class="job-selected__icon" :style="{ background: currentDefaultJob.colorBg }">
-              {{ currentDefaultJob.icon }}
+          <!-- 右侧：基本信息和教育信息（横向排列） -->
+          <div class="profile-info-right">
+            <!-- 基本信息 -->
+            <div class="info-group">
+              <div class="info-group-header">
+                <span class="info-group-icon">📋</span>
+                <span class="info-group-title">基本信息</span>
+              </div>
+              <div class="info-list">
+                <div class="info-item">
+                  <span class="info-item__icon">👤</span>
+                  <span class="info-item__label">用户昵称</span>
+                  <span class="info-item__value">{{ userInfo && userInfo.username || '未填写' }}</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-item__icon">📧</span>
+                  <span class="info-item__label">邮箱</span>
+                  <span class="info-item__value">{{ userInfo && userInfo.email || '未填写' }}</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-item__icon">📱</span>
+                  <span class="info-item__label">手机</span>
+                  <span class="info-item__value">{{ userInfo && userInfo.phone ? maskPhone(userInfo.phone) : '未填写' }}</span>
+                </div>
+              </div>
             </div>
-            <div class="job-selected__info">
-              <p class="job-selected__name">{{ currentDefaultJob.name }}</p>
-              <p class="job-selected__stack">{{ currentDefaultJob.techStack.slice(0, 3).join(' · ') }}</p>
+
+            <!-- 分割线 -->
+            <div class="info-vertical-divider"></div>
+
+            <!-- 教育信息 -->
+            <div class="info-group">
+              <div class="info-group-header">
+                <span class="info-group-icon">🎓</span>
+                <span class="info-group-title">教育信息</span>
+              </div>
+              <div class="info-list">
+                <div class="info-item">
+                  <span class="info-item__icon">🏫</span>
+                  <span class="info-item__label">学校</span>
+                  <span class="info-item__value">{{ userInfo && userInfo.school || '未填写' }}</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-item__icon">📖</span>
+                  <span class="info-item__label">专业</span>
+                  <span class="info-item__value">{{ userInfo && userInfo.major || '未填写' }}</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-item__icon">📅</span>
+                  <span class="info-item__label">年级</span>
+                  <span class="info-item__value">{{ userInfo && userInfo.grade || '未填写' }}</span>
+                </div>
+              </div>
             </div>
-            <button class="job-change-btn" @click="showJobPicker = true">更换</button>
           </div>
-          <button v-else class="job-set-btn" @click="showJobPicker = true">
-            <span>🎯</span>
-            <span>设置默认岗位</span>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;margin-left:auto">
-              <polyline points="9 18 15 12 9 6"/>
-            </svg>
-          </button>
         </div>
       </section>
 
@@ -377,8 +440,22 @@ export default {
   created() {
     this.selectedJobId = this.defaultJob
   },
+  mounted() {
+    // 页面加载时从数据库同步最新用户信息
+    this.syncUserInfo()
+  },
   methods: {
-    ...mapActions('user', ['updateUserInfo', 'changePassword', 'updateDefaultJob', 'logout']),
+    ...mapActions('user', ['updateUserInfo', 'changePassword', 'updateDefaultJob', 'logout', 'fetchUserInfo']),
+
+    // 从数据库同步用户信息
+    async syncUserInfo() {
+      try {
+        await this.fetchUserInfo()
+        this.selectedJobId = this.defaultJob
+      } catch (err) {
+        console.error('同步用户信息失败', err)
+      }
+    },
 
     maskPhone(phone) {
       return phone ? phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2') : ''
@@ -415,6 +492,8 @@ export default {
       this.savingInfo = true
       try {
         await this.updateUserInfo(this.editForm)
+        // 保存成功后从数据库同步最新数据
+        await this.syncUserInfo()
         this.showEditModal = false
       } catch (e) {
         alert(e.message || '保存失败')
@@ -459,8 +538,11 @@ export default {
       this.selectedJobId = job.id
       try {
         await this.updateDefaultJob(job.id)
+        // 保存成功后同步用户信息，确保默认岗位显示正确
+        await this.syncUserInfo()
       } catch (e) {
         console.warn('更新默认岗位失败', e)
+        alert('更新默认岗位失败，请重试')
       }
       setTimeout(() => { this.showJobPicker = false }, 300)
     },
@@ -649,6 +731,245 @@ export default {
   font-family: $font-family-base;
   transition: background $transition-fast;
   &:hover { background: darken(#EEF2FF, 4%); }
+}
+
+// 新版个人信息卡片 - 左右布局
+.profile-info-card {
+  display: flex;
+  background: white;
+  border-radius: $border-radius-lg;
+  box-shadow: $shadow-sm;
+  border: 1px solid $border-color;
+  overflow: hidden;
+}
+
+.profile-info-left {
+  flex: 0 0 180px;
+  padding: $spacing-lg $spacing-base;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-right: 1px dashed $border-color;
+}
+
+.avatar-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $spacing-sm;
+}
+
+.avatar-wrapper-lg {
+  position: relative;
+  cursor: pointer;
+}
+
+.avatar-lg {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: 3px solid rgba(102, 126, 234, 0.3);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  img { width: 100%; height: 100%; object-fit: cover; }
+
+  &__fallback {
+    font-size: 28px;
+    font-weight: $font-weight-bold;
+    color: white;
+    font-family: $font-family-display;
+  }
+}
+
+.avatar-edit-badge-lg {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 22px;
+  height: 22px;
+  background: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: $shadow;
+  color: $primary;
+  svg { width: 11px; height: 11px; }
+}
+
+.avatar-label {
+  font-size: 15px;
+  color: $text-primary;
+  font-weight: $font-weight-semibold;
+  margin-top: $spacing-sm;
+}
+
+.divider-line {
+  width: 80%;
+  height: 1px;
+  background: $border-color;
+  margin: $spacing-md 0;
+}
+
+.job-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $spacing-sm;
+  width: 100%;
+}
+
+.job-section-label {
+  font-size: $font-size-xs;
+  color: $text-muted;
+  font-weight: $font-weight-medium;
+}
+
+.job-display {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  padding: $spacing-sm $spacing-md;
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border-radius: $border-radius;
+
+  .job-icon {
+    font-size: 16px;
+  }
+
+  .job-name {
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    color: #92400e;
+  }
+
+  &--empty {
+    background: $gray-100;
+    .job-name {
+      color: $text-muted;
+    }
+  }
+}
+
+.job-select-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: $primary;
+  font-size: $font-size-sm;
+  cursor: pointer;
+  font-family: $font-family-base;
+  padding: $spacing-sm $spacing-md;
+  transition: opacity $transition-fast;
+  &:hover { opacity: 0.8; }
+}
+
+.profile-info-divider {
+  width: 1px;
+  background: transparent;
+}
+
+.profile-info-right {
+  flex: 1;
+  padding: $spacing-lg $spacing-xl;
+  display: flex;
+  flex-direction: row;
+  gap: $spacing-xl;
+}
+
+.info-vertical-divider {
+  width: 1px;
+  background: $border-color;
+  align-self: stretch;
+}
+
+.info-group {
+  flex: 1;
+  min-width: 200px;
+
+  &-header {
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+    margin-bottom: $spacing-md;
+    padding-bottom: $spacing-sm;
+    border-bottom: 1px solid $gray-100;
+  }
+
+  &-icon {
+    font-size: 18px;
+  }
+
+  &-title {
+    font-size: 15px;
+    font-weight: $font-weight-semibold;
+    color: $text-primary;
+  }
+}
+
+.info-list {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+
+  &__icon {
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+
+  &__label {
+    font-size: 14px;
+    color: $text-muted;
+    min-width: 70px;
+  }
+
+  &__value {
+    font-size: 14px;
+    color: $text-primary;
+    font-weight: $font-weight-medium;
+  }
+}
+
+// 响应式适配
+@media (max-width: 768px) {
+  .profile-info-right {
+    flex-direction: column;
+    gap: $spacing-lg;
+  }
+
+  .info-vertical-divider {
+    width: 100%;
+    height: 1px;
+  }
+}
+
+@media (max-width: 480px) {
+  .profile-info-card {
+    flex-direction: column;
+  }
+
+  .profile-info-left {
+    flex: none;
+    border-right: none;
+    border-bottom: 1px dashed $border-color;
+    padding: $spacing-md;
+  }
+
+  .profile-info-right {
+    padding: $spacing-md;
+  }
 }
 
 // 信息卡片
