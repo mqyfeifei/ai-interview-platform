@@ -1,3 +1,8 @@
+<!--
+  =============================================
+  frontend/src/views/interview/InterviewSession.vue
+  面试会话页组件
+  ============================================= -->
 <template>
   <div class="interview-page">
     <!-- 顶部状态栏 -->

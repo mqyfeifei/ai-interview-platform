@@ -1,3 +1,9 @@
+
+<!--
+  =============================================
+  frontend/src/views/users/PersonalCenter.vue
+  个人中心页组件
+  ============================================= --> 
 <template>
   <div class="profile-page">
     <!-- 头部 -->
