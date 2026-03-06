@@ -1,0 +1,115 @@
+type: frontend_scenario_design_questions
+source:
+  - 技术博客
+items:
+  - id: FE-SQ-001
+    type: scenario_design
+    question: 设计一个前端埋点与监控SDK，如何保证不上报脏数据、防串报、并降低性能消耗？
+    tags: [工程设计, 监控 SDK]
+    difficulty: hard
+    source: 技术博客
+    status: draft
+    key_points:
+      - 无感埋藏流与强制手动全包裹体系互补交错捕捉全盘图景
+      - 核心借助Navigator.sendBeacon/fetch keepalive坚固护航关闭页面终局发送不丢失不截断
+      - 使用本地全缓存与闲置帧（requestIdleCallback）的柔性排队补发打赢不卡UI无卡死消耗狙击战
+  - id: FE-SQ-002
+    type: scenario_design
+    question: 设计一个高可用的大文件分片上传组件，需要支持断点续传、并发控制及错误重试。
+    tags: [文件上传, 并发控制]
+    difficulty: hard
+    source: 技术博客
+    status: draft
+    key_points:
+      - 巧用WebWorker另起灶台开动分片大哈希规避主脑阻塞定格
+      - 严控并发高并发水闸（Promise机制节流并发量）打赢全频塞死僵局痛点
+      - 断点续传历史缓存查验以及拼图聚合失败大超重构及重试防崩溃铁链式双保险设计
+  - id: FE-SQ-003
+    type: scenario_design
+    question: 设计方案实现单点登录 (SSO)，如果是跨主域的情况，前端应该如何配合？
+    tags: [安全设计, SSO, 跨域]
+    difficulty: medium
+    source: 技术博客
+    status: draft
+    key_points:
+      - 单中心CAS登录全域核发强信行流枢纽中心建立
+      - 运用跨界票据传递术（携卷URL跳转或内嵌信道连通认证法）打破同源墙城
+      - 熟练管控浏览器cookie异地传发令牌认证特性以及JWT授权护照凭据防泄漏机制网
+  - id: FE-SQ-004
+    type: scenario_design
+    question: 如果让你开发一个基于 Web IDE 的代码高亮编辑器，你会如何选型和架构？
+    tags: [组件架构, Web IDE]
+    difficulty: hard
+    source: 技术博客
+    status: draft
+    key_points:
+      - 极道基床核心强硬依托Monaco Editor引擎支撑等霸主生态压顶降维化解重任
+      - 主架构全依托AST剖心剥离辅以Worker强行渲染隔离计算实现长段重排毒打抵抗
+      - 视口虚拟化DOM和极致canvas绘板加速防死拉跨的抗重型渲染能力护城河展现
+  - id: FE-SQ-005
+    type: scenario_design
+    question: 针对复杂表单（例如近 100 项带联动的配置项），如何设计能避免卡顿并具有良好可维护性？
+    tags: [性能优化, 复杂表单]
+    difficulty: medium
+    source: 技术博客
+    status: draft    
+    key_points:
+      - 杜绝大水漫灌重排渲染采用极致颗粒响应分拆只点阵渲染防爆
+      - 抽取元级强引擎联动Schema外挂控制取代杂乱盘布于原身面条级无脑控制代码
+      - 强加消隐懒化加载视觉及重重交叠下的复杂事件单流响应提速设计解耦
+  - id: FE-SQ-006
+    type: scenario_design
+    question: 设计一个前端自动化测试框架，如何支持多浏览器兼容性测试和持续集成？
+    tags: [自动化测试, 持续集成]
+    difficulty: medium
+    source: 技术博客
+    status: draft    
+    key_points:
+      - 选型强大跨平台的测试引擎（如Playwright）打通多浏览器兼容性测试的壁垒
+      - 架构层面设计分布式执行环境（如Selenium Grid或云测试服务）实现并行加速
+      - 与CI/CD工具链（如Jenkins/GitHub Actions）无缝集成实现自动触发和结果反馈闭环
+  - id: FE-SQ-007
+    type: scenario_design
+    question: 设计一个前端性能监控系统，如何收集关键性能指标（KPI）并进行分析和报警？
+    tags: [性能监控, KPI, 报警]
+    difficulty: medium
+    source: 技术博客
+    status: draft    
+    key_points:
+      - 选取核心KPI指标（如FCP、LCP、CLS等）并利用Performance API精准采集
+      - 架构设计分布式数据收集与处理管道（如使用Kafka和Elasticsearch）实现大规模数据分析
+      - 配置智能报警规则（如基于阈值或异常检测）及时通知相关人员并提供可操作的洞察报告
+  - id: FE-SQ-008
+    type: scenario_design
+    question: 设计一个前端国际化（i18n）解决方案，如何支持多语言切换和动态内容翻译？
+    tags: [国际化, i18n, 多语言]
+    difficulty: medium
+    source: 技术博客
+    status: draft    
+    key_points:
+      - 选型成熟的国际化库（如i18next或Vue I18n）提供基础的多语言支持
+      - 架构设计动态加载语言包和基于上下文的翻译机制实现高效切换和内容翻译
+      - 考虑文化差异和格式化需求（如日期、数字等）提供全面的国际化支持
+  - id: FE-SQ-009
+    type: scenario_design
+    question: 设计一个前端状态管理方案，如何处理复杂组件之间的状态共享和更新？
+    tags: [状态管理, 组件通信]
+    difficulty: medium
+    source: 技术博客
+    status: draft    
+    key_points:
+      - 选型适合项目需求的状态管理库（如Redux、MobX或Vuex）提供全局状态管理能力
+      - 架构设计模块化状态切片和基于事件的更新机制实现组件间高效共享和解耦
+      - 利用中间件（如Redux Thunk或Saga）处理异步操作和复杂业务逻辑提升可维护性
+  - id: FE-SQ-010
+    type: scenario_design
+    question: 设计一个前端安全防护方案，如何防止常见的安全漏洞（如XSS、CSRF）？
+    tags: [安全防护, XSS, CSRF]
+    difficulty: medium
+    source: 技术博客
+    status: draft    
+    key_points:
+      - 采用内容安全策略（CSP）限制资源加载和执行来源防止XSS攻击
+      - 实现CSRF令牌机制确保请求合法性并防止跨站请求伪造
+      - 定期进行安全审计和使用自动化工具（如OWASP ZAP）检测潜在漏洞并及时修复
+      

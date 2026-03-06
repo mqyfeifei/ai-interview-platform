@@ -1,0 +1,47 @@
+type: network_excellent_answer_examples
+source:
+  - 自己整理
+items:
+  - id: NW-EX-T-001
+    type: technical
+    question: TCP 为什么会产生 TIME_WAIT 状态？如果服务器上存在大量的 TIME_WAIT 应该如何处理？
+    framework: 机制原理解读 - 影响面评估 - 系统内核参数调优
+    answer: |
+      TIME_WAIT 是主动关闭连接方在发送完最后一个 ACK 后进入的状态，持续 2MSL。它的核心价值是：1. 确保对端收到最后的 ACK（若丢失可重传）；2. 防止网络中迷途的旧数据包干扰新建立的同四元组连接。
+      在服务端，如果出现大量 TIME_WAIT（常发生于高并发短连接场景），会耗尽本地临时端口或造成内存占用过高。
+      处理策略上：
+      首先修改应用程序侧逻辑，尽量复用连接池实现长连接；
+      在系统/内核侧，可以开启 `net.ipv4.tcp_tw_reuse = 1` 允许复用 TIME_WAIT 端口（依赖时间戳机制），或者适当调整 `tcp_max_tw_buckets` 限制最大数量。切忌盲目开启 `tcp_tw_recycle`，因为在 NAT 环境下极易导致正常的握手包被误杀抛弃。
+    status: draft
+    
+  - id: NW-EX-P-001
+    type: project_deep_dive
+    question: 请分享一次你主导的核心交换机零停机（Zero Downtime）割接迁移经验。
+    framework: STAR + 割接纪律
+    answer: |
+      S：老园区网的核心交换机性能到达瓶颈且脱保，需要替换为两台新的支持 VSU/堆叠的设备，由于承载产线业务，业务方要求必须零停机。
+      T：主导方案设计与深夜割接实施，确保路由和数据平滑转移。
+      A：在方案设计期，我没有选择传统的“拔线硬切”，而是采用旁路接入新核心、打通底层 OSPF 邻居的方案。实施当晚，我先通过调整 OSPF Cost 值，将下行流量通过路由收敛平滑引入新核心；接着调整 VRRP 优先级将网关主控权转移；最后逐根迁移下联交换机的物理上联线卡，由于采用 LACP 聚合，单线插拔未引发端口 Down 震荡。
+      R：全程长Ping丢包不超过 3 个，产线完全无感知，割接按计划提前 1 小时完成。此次沉淀的路由引流割接标准作业流程（SOP），成为了部门的规范基线。
+    status: draft
+
+  - id: NW-EX-S-001
+    type: scenario_design
+    question: 为一个有 500 台服务器的机房设计网络架构，你会如何选择？
+    framework: 架构选型对比 - 物理与逻辑设计 - 横向扩展性
+    answer: |
+      500 台规模已具备一定体量，我不会采用传统的三层树状架构（核心-汇聚-接入），因为 STP 会阻塞大量上行链路且存在“东西向”流量瓶颈。
+      我会采用无阻塞的 Spine-Leaf（叶脊）二层全网状架构。
+      逻辑设计上：底层 Underlay 使用 OSPF 或 EBGP 打通所有交换机 Loopback IP；上层 Overlay 部署 VXLAN 解决大二层隔离要求，引入 BGP EVPN 作为控制平面降低 MAC 泛洪。
+      冗余与扩展性：Leaf 层下联服务器采用 M-LAG (或双活聚合) 保证服务器网卡双活；后期若需扩容，只需平行增加 Spine 或 Leaf 节点，无需改动现有网络架构，具备极强的弹性。
+    status: draft
+
+  - id: NW-EX-B-001
+    type: behavioral
+    question: 业务部门反馈网络慢，但网络监控一切正常，且对方态度强硬认为是网络背锅，你怎么办？
+    framework: 情绪安抚 - 数据自证 - 跨界协同排障闭环
+    answer: |
+      首先，网络作为基础设施最容易成为“默认背锅侠”，我不会产生对立情绪，而是认同业务受损的紧迫性。
+      接着，我会拉出当时的 Zabbix/Prometheus 监控大盘，出示该时段网络链路带宽利用率、无丢包记录以及设备 CPU 空闲的数据作为基线。
+      最关键的是第三步“破局”：我会主动找业务开发要到报错的服务 IP 对，在核心交换机或通过服务器 OS 层挂载 tcpdump 进行报文镜像抓包。上次类似事件中，我通过 Wireshark 分析 TCP 流，指出了明显的应用层响应延迟（服务器收到 ACK 后过了 2 秒才发回 HTTP Data），并协助开发定位到了是他们连接池打满导致的。最终不仅洗清了网络的冤屈，还赢得了开发团队的尊重与信任。
+    status: draft

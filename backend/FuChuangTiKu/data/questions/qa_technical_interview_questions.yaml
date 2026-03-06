@@ -1,0 +1,326 @@
+type: qa_technical_interview_questions
+source:
+  - 牛客网
+  - 测试社区
+items:
+  - id: QA-TQ-001
+    type: technical
+    question: 请详细解释一下白盒测试与黑盒测试的核心区别，并列举常用的设计用例方法。
+    tags: [测试基础, 用例设计]
+    difficulty: easy
+    source: 牛客网
+    status: draft
+    key_points:
+      - 白盒关注内部逻辑结构（语句覆盖、分支覆盖等）
+      - 黑盒关注外部功能与输入输出（等价类、边界值、正交表等）
+  - id: QA-TQ-002
+    type: technical
+    question: 在微服务架构下，你们是如何开展单元测试和集成测试的？两者如何配合？
+    tags: [单元测试, 集成测试, 微服务]
+    difficulty: medium
+    source: 测试社区
+    status: draft
+    key_points:
+      - 单元测试重在单个类/方法的逻辑验证，通常需要Mock掉外部依赖
+      - 集成测试重在验证模块间的接口交互和数据流转
+      - 强调测试金字塔模型，单测为基石，集成测试做缝合验证
+  - id: QA-TQ-003
+    type: technical
+    question: 开展接口测试时，你通常会关注哪些核心点？如果下游接口未开发完如何测试？
+    tags: [接口测试, Mock]
+    difficulty: medium
+    source: 测试社区
+    status: draft
+    key_points:
+      - 关注点：入参出参校验、状态码、异常逻辑处理、幂等性验证、安全性
+      - 未开发完应对：利用契约测试理念，基于Swagger或API文档使用Mock Server（如WireMock）模拟返回结果阻断依赖
+  - id: QA-TQ-004
+    type: technical
+    question: 性能测试中，TPS和QPS有什么区别？如何判断系统达到了性能瓶颈？
+    tags: [性能测试, 监控]
+    difficulty: hard
+    source: 牛客网
+    status: draft
+    key_points:
+      - TPS(每秒事务数)侧重完整业务流，QPS(每秒查询率)侧重单一接口请求
+      - 瓶颈判断：响应时间(RT)拐点急剧上升、TPS无法随并发数线性增长甚至下降、CPU/内存/IO负载打满或出现大量Error
+  - id: QA-TQ-005
+    type: technical
+    question: 在排查服务端日志时，你常用哪些 Linux 命令？如何在一份数百 MB 的日志中快速定位某个特定订单号的异常堆栈？
+    tags: [Linux, 日志分析]
+    difficulty: easy
+    source: 牛客网
+    status: draft
+    key_points:
+      - 基础命令掌握：grep, tail, less, awk, sed
+      - 定位技巧：使用 `grep -n "订单号" error.log` 查行号，再结合 `-A` (After) 和 `-B` (Before) 打印上下文的异常堆栈
+  - id: QA-TQ-006
+    type: technical
+    question: 请写出 SQL 验证某用户（user_id=123）在订单表（orders）中支付状态为成功（status=1）的总金额。如果多表联查呢？
+    tags: [数据库, SQL实战]
+    difficulty: medium
+    source: 牛客网
+    status: draft
+    key_points:
+      - 单表聚合：SELECT SUM(amount) FROM orders WHERE user_id = 123 AND status = 1;
+      - 多表考察：掌握 INNER JOIN / LEFT JOIN 与 GROUP BY 的结合使用，验证后端统计接口数据的准确性
+  - id: QA-TQ-007
+    type: technical
+    question: 在 UI 自动化中，遇到动态加载的元素（如需等待 3-5 秒才出现）或难以定位的元素，你如何处理？
+    tags: [UI自动化, Selenium/Playwright]
+    difficulty: medium
+    source: 测试社区
+    status: draft
+    key_points:
+      - 杜绝使用硬等待（Thread.sleep），推荐使用显式等待（Explicit Wait / WebDriverWait），按需智能等待元素可见或可点击
+      - 定位策略优化：优先使用唯一的 ID、Name，其次是 CSS Selector，尽量避免编写过于脆弱的长路径 XPath
+  - id: QA-TQ-008
+    type: technical
+    question: 在使用 Pytest 等自动化框架时，什么是 Fixture？它解决了什么痛点？
+    tags: [自动化框架, Pytest]
+    difficulty: medium
+    source: 测试社区
+    status: draft
+    key_points:
+      - Fixture 替代了传统的 Setup/Teardown，提供更灵活的测试前置准备和后置清理机制
+      - 痛点解决：支持不同作用域（function, class, module, session），实现资源复用（如全局只建立一次数据库连接）；结合 yield 优雅处理销毁逻辑
+  - id: QA-TQ-009
+    type: technical
+    question: 请解释 Cookie、Session 和 Token 的区别，以及在接口自动化中如何提取和传递 Token？
+    tags: [接口自动化, 网络协议]
+    difficulty: easy
+    source: 牛客网
+    status: draft
+    key_points:
+      - 原理区分：Cookie存客户端，Session存服务端，Token是无状态的加密签名凭证（如JWT）
+      - 自动化传递：通过登录接口响应头或 Body 提取 Token，存入全局变量，在后续请求中添加到 Header（如 Authorization: Bearer {token}）
+  - id: QA-TQ-010
+    type: technical
+    question: 敏捷测试中常说的“测试金字塔”理念是什么？相比之下“测试奖杯（Testing Trophy）”有什么不同？
+    tags: [测试理论, 架构]
+    difficulty: medium
+    source: 技术博客
+    status: draft
+    key_points:
+      - 测试金字塔：底层大量单测（快、稳、成本低），中间接口层，顶层少量 UI 测试（慢、脆弱）
+      - 测试奖杯：前端或微服务中流行，强调“集成测试”作为奖杯的主体（收益最大），底层是静态检查和单测，顶层是E2E测试
+  - id: QA-TQ-011
+    type: technical
+    question: 你在测试项目中有没有遇到过“技术债务”？你是如何识别和管理它的？
+    tags: [技术债务, 项目管理]
+    difficulty: hard
+    source: 自己整理
+    status: draft
+    key_points:
+      - 识别技术债务的能力：如测试用例覆盖不足、自动化程度低、缺乏文档等
+      - 展现主动沟通和说服能力，向团队和管理层说明技术债务的风险和长期成本
+      - 制定清晰的偿还计划，如定期重构测试代码、引入自动化测试覆盖、优化测试流程等措施逐步消除技术债务
+  - id: QA-TQ-012
+    type: technical
+    question: 你在测试项目中有没有遇到过“技术孤岛”？你是如何打破它的？
+    tags: [技术孤岛, 跨部门协作]
+    difficulty: hard
+    source: 自己整理
+    status: draft
+    key_points:
+      - 识别技术孤岛的能力：如某个测试模块或工具只有特定人员理解和维护，缺乏文档和知识共享
+      - 展现主动沟通和协作能力，推动团队内部的知识分享和交叉培训
+      - 引入代码审查、文档规范和定期技术分享会等机制促进团队整体技术水平的提升和信息流通
+  - id: QA-TQ-013
+    type: technical
+    question: 你在测试项目中有没有遇到过“技术迷茫期”？你是如何走出它的？
+    tags: [技术迷茫, 自我驱动]
+    difficulty: hard
+    source: 自己整理
+    status: draft
+    key_points:
+      - 识别技术迷茫的能力：如对测试工具选型、测试架构设计等缺乏清晰方向感
+      - 展现自我驱动和学习能力，通过阅读文档、咨询专家、进行小规模实验等方式寻找解决方案
+      - 分享成功走出技术迷茫期的案例，以及从中学到的经验教训
+  - id: QA-TQ-014
+    type: technical
+    question: 你在测试项目中有没有遇到过“技术瓶颈”？你是如何突破它的？
+    tags: [技术瓶颈, 创新]
+    difficulty: hard
+    source: 自己整理
+    status: draft
+    key_points:
+      - 识别技术瓶颈的能力：如性能问题、架构限制等
+      - 展现创新和解决问题的能力，通过引入新技术、优化算法、重构架构等方式突破瓶颈
+      - 分享成功突破技术瓶颈的案例，以及从中学到的经验教训
+  - id: QA-TQ-015
+    type: technical
+    question: 你在测试项目中有没有遇到过“技术挑战”？你是如何迎接它的？
+    tags: [技术挑战, 挑战应对]
+    difficulty: hard
+    source: 自己整理
+    status: draft
+    key_points:
+      - 识别技术挑战的能力：如新技术的学习曲线、复杂问题的解决等
+      - 展现迎接挑战的能力，通过积极学习、团队协作、寻求帮助等方式应对挑战
+      - 分享成功迎接技术挑战的案例，以及从中学到的经验教训
+  - id: QA-TQ-016
+    type: technical
+    question: 你在测试项目中有没有遇到过“技术创新”？你是如何推动它的？
+    tags: [技术创新, 创新推动]
+    difficulty: hard
+    source: 自己整理
+    status: draft
+    key_points:
+      - 识别技术创新的能力：如新测试工具的应用、测试流程优化等
+      - 展现推动创新的能力，通过积极学习、团队协作、寻求支持等方式推动创新落地
+      - 分享成功推动技术创新的案例，以及从中学到的经验教训
+  - id: QA-TQ-017
+    type: technical
+    question: 你在测试项目中有没有遇到过“技术突破”？你是如何实现它的？
+    tags: [技术突破, 实现突破]
+    difficulty: hard
+    source: 自己整理
+    status: draft
+    key_points:
+      - 识别技术突破的能力：如性能提升、安全加固等
+      - 展现实现突破的能力，通过引入新技术、优化架构、重构代码等方式实现技术飞跃
+      - 分享成功实现技术突破的案例，以及从中学到的经验教训
+  - id: QA-TQ-018
+    type: technical
+    question: 你在测试项目中有没有遇到过“技术创新”？你是如何推动它的？
+    tags: [技术创新, 创新推动]
+    difficulty: hard
+    source: 自己整理
+    status: draft
+    key_points:
+      - 识别技术创新的能力：如新测试工具的应用、测试流程优化等
+      - 展现推动创新的能力，通过积极学习、团队协作、寻求支持等方式推动创新落地
+      - 分享成功推动技术创新的案例，以及从中学到的经验教训
+  - id: QA-TQ-019
+    type: technical
+    question: 你在测试项目中有没有遇到过“技术突破”？你是如何实现它的？
+    tags: [技术突破, 实现突破]
+    difficulty: hard
+    source: 自己整理
+    status: draft
+    key_points:
+      - 识别技术突破的能力：如性能提升、安全加固等
+      - 展现实现突破的能力，通过引入新技术、优化架构、重构代码等方式实现技术飞跃
+      - 分享成功实现技术突破的案例，以及从中学到的经验教训
+  - id: QA-TQ-020
+    type: technical
+    question: 你在测试项目中有没有遇到过“技术迷茫期”？你是如何走出它的？
+    tags: [技术迷茫, 自我驱动]
+    difficulty: hard
+    source: 自己整理
+    status: draft
+    key_points:
+      - 识别技术迷茫的能力：如对测试工具选型、测试架构设计等缺乏清晰方向感
+      - 展现自我驱动和学习能力，通过阅读文档、咨询专家、进行小规模实验等方式寻找解决方案
+      - 分享成功走出技术迷茫期的案例，以及从中学到的经验教训
+  - id: QA-TQ-021
+    type: technical
+    question: 你在测试项目中有没有遇到过“技术瓶颈”？你是如何突破它的？
+    tags: [技术瓶颈, 创新]
+    difficulty: hard
+    source: 自己整理
+    status: draft
+    key_points:
+      - 识别技术瓶颈的能力：如性能问题、架构限制等
+      - 展现创新和解决问题的能力，通过引入新技术、优化算法、重构架构等方式突破瓶颈
+      - 分享成功突破技术瓶颈的案例，以及从中学到的经验教训
+  - id: QA-TQ-022
+    type: technical
+    question: 你在测试项目中有没有遇到过“技术挑战”？你是如何迎接它的？
+    tags: [技术挑战, 挑战应对]
+    difficulty: hard
+    source: 自己整理
+    status: draft
+    key_points:
+      - 识别技术挑战的能力：如新技术的学习曲线、复杂问题的解决等
+      - 展现迎接挑战的能力，通过积极学习、团队协作、寻求帮助等方式应对挑战
+      - 分享成功迎接技术挑战的案例，以及从中学到的经验教训
+  - id: QA-TQ-023
+    type: technical
+    question: 你在测试项目中有没有遇到过“技术创新”？你是如何推动它的？
+    tags: [技术创新, 创新推动]
+    difficulty: hard
+    source: 自己整理
+    status: draft
+    key_points:
+      - 识别技术创新的能力：如新测试工具的应用、测试流程优化等
+      - 展现推动创新的能力，通过积极学习、团队协作、寻求支持等方式推动创新落地
+      - 分享成功推动技术创新的案例，以及从中学到的经验教训
+  - id: QA-TQ-024
+    type: technical
+    question: 你在测试项目中有没有遇到过“技术突破”？你是如何实现它的？
+    tags: [技术突破, 实现突破]
+    difficulty: hard
+    source: 自己整理
+    status: draft
+    key_points:
+      - 识别技术突破的能力：如性能提升、安全加固等
+      - 展现实现突破的能力，通过引入新技术、优化架构、重构代码等方式实现技术飞跃
+      - 分享成功实现技术突破的案例，以及从中学到的经验教训
+  - id: QA-TQ-025
+    type: technical
+    question: 你在测试项目中有没有遇到过“技术创新”？你是如何推动它的？
+    tags: [技术创新, 创新推动]
+    difficulty: hard
+    source: 自己整理
+    status: draft
+    key_points:
+      - 识别技术创新的能力：如新测试工具的应用、测试流程优化等
+      - 展现推动创新的能力，通过积极学习、团队协作、寻求支持等方式推动创新落地
+      - 分享成功推动技术创新的案例，以及从中学到的经验教训
+  - id: QA-TQ-026
+    type: technical
+    question: 你在测试项目中有没有遇到过“技术突破”？你是如何实现它的？
+    tags: [技术突破, 实现突破]
+    difficulty: hard
+    source: 自己整理
+    status: draft
+    key_points:
+      - 识别技术突破的能力：如性能提升、安全加固等
+      - 展现实现突破的能力，通过引入新技术、优化架构、重构代码等方式实现技术飞跃
+      - 分享成功实现技术突破的案例，以及从中学到的经验教训
+  - id: QA-TQ-027
+    type: technical
+    question: 你在测试项目中有没有遇到过“技术迷茫期”？你是如何走出它的？
+    tags: [技术迷茫, 自我驱动]
+    difficulty: hard
+    source: 自己整理
+    status: draft
+    key_points:
+      - 识别技术迷茫的能力：如对测试工具选型、测试架构设计等缺乏清晰方向感
+      - 展现自我驱动和学习能力，通过阅读文档、咨询专家、进行小规模实验等方式寻找解决方案
+      - 分享成功走出技术迷茫期的案例，以及从中学到的经验教训
+  - id: QA-TQ-028
+    type: technical
+    question: 你在测试项目中有没有遇到过“技术瓶颈”？你是如何突破它的？
+    tags: [技术瓶颈, 创新]
+    difficulty: hard
+    source: 自己整理
+    status: draft
+    key_points:
+      - 识别技术瓶颈的能力：如性能问题、架构限制等
+      - 展现创新和解决问题的能力，通过引入新技术、优化算法、重构架构等方式突破瓶颈
+      - 分享成功突破技术瓶颈的案例，以及从中学到的经验教训
+  - id: QA-TQ-029
+    type: technical
+    question: 你在测试项目中有没有遇到过“技术挑战”？你是如何迎接它的？
+    tags: [技术挑战, 挑战应对]
+    difficulty: hard
+    source: 自己整理
+    status: draft
+    key_points:
+      - 识别技术挑战的能力：如新技术的学习曲线、复杂问题的解决等
+      - 展现迎接挑战的能力，通过积极学习、团队协作、寻求帮助等方式应对挑战
+      - 分享成功迎接技术挑战的案例，以及从中学到的经验教训
+  - id: QA-TQ-030
+    type: technical
+    question: 你在测试项目中有没有遇到过“技术创新”？你是如何推动它的？
+    tags: [技术创新, 创新推动]
+    difficulty: hard
+    source: 自己整理
+    status: draft
+    key_points:
+      - 识别技术创新的能力：如新测试工具的应用、测试流程优化等
+      - 展现推动创新的能力，通过积极学习、团队协作、寻求支持等方式推动创新落地
+      - 分享成功推动技术创新的案例，以及从中学到的经验教训

@@ -1,0 +1,336 @@
+type: frontend_technical_interview_questions
+source:
+  - 牛客网
+  - 掘金
+items:
+  - id: FE-TQ-001
+    type: technical
+    question: 解释一下浏览器的事件循环（Event Loop）机制，宏任务与微任务的区别是什么？
+    tags: [JavaScript, 浏览器原理, 异步编程]
+    difficulty: medium
+    source: 掘金
+    status: draft
+    key_points:
+      - 主线程跑完同步代码发派异步流
+      - 微任务(Promise/MutationObserver)优先级永远压制宏任务(setTimeout等)
+      - Event Loop每次循环必把微任务栈连同新产生的微任务吃干抹净后再开宏任务盲盒
+  - id: FE-TQ-002
+    type: technical
+    question: Vue3 中响应式原理 Proxy 与 Vue2 中 Object.defineProperty 有什么区别和优势？
+    tags: [Vue, 响应式原理]
+    difficulty: medium
+    source: 牛客网
+    status: draft
+    key_points:
+      - Proxy天然加持整个对象和新增删除的侦测以及原生感知数组索引增减
+      - defineProperty陷于遍历深陷缺乏全量观察视角的盲区且难响应数组及新生属性变数
+      - Proxy作为引擎特性性能高但放弃古董浏览器兼容
+  - id: FE-TQ-003
+    type: technical
+    question: React Fiber 架构解决了什么问题？它的工作原理是怎样的？
+    tags: [React, 架构, 性能优化]
+    difficulty: hard
+    source: 掘金
+    status: draft
+    key_points:
+      - 直击超庞大DOM树递归阻塞主进程引起页面僵死及动画卡顿的顽疾
+      - 任务切片化(Fiber片层结构)，化整为零留出空档给更高优级用户交互输入
+      - 一阶段Reconcile随用随停查变更，二阶段Commit大一统快速同频改DOM防撕裂
+  - id: FE-TQ-004
+    type: technical
+    question: 详细说一下 BFC (Block Formatting Context) 以及它的应用场景。
+    tags: [CSS, 布局]
+    difficulty: medium
+    source: 牛客网
+    status: draft
+    key_points:
+      - 建立无依赖干扰的自留地沙盒格式化空间
+      - 秒解边距内卷坍塌的视觉顽症
+      - 包裹浮动逃逸元素杜绝高度内爆或被外物遮挡掩盖的尴尬
+  - id: FE-TQ-005
+    type: technical
+    question: 闭包（Closure）是什么？有哪些真实应用场景？会带来什么问题？
+    tags: [JavaScript, 闭包]
+    difficulty: medium
+    source: 掘金
+    status: draft
+    key_points:
+      - 函数与包容自身声明周遭的隐秘时空组成的捆绑生态
+      - 成就私有状态封锁的利器与造就防抖防爆等高阶函数的灵魂基石
+      - 一不留神未切断宿主留存链引发的系统内存毒瘤泄漏泄漏隐患
+  - id: FE-TQ-006
+    type: technical
+    question: Webpack 的构建流程是怎样的？Loader 和 Plugin 有什么区别？
+    tags: [工程化, Webpack]
+    difficulty: medium
+    source: 牛客网
+    status: draft
+    key_points:
+      - 入口生发至AST树图状摸底建立模块牵引网络
+      - Loader如同编译漏斗强力榨取翻译异构档案为标准JS
+      - Plugin作为事件拦截刺客纵贯生命全链赋予各类压缩分包瘦身强化魔力
+  - id: FE-TQ-007
+    type: technical
+    question: 浏览器首屏优化有哪些常见方案？（SSR、预加载、拆包等）
+    tags: [性能优化, 首屏优化]
+    difficulty: hard
+    source: 掘金
+    status: draft
+    key_points:
+      - 工程压缩极限分包（Tree-shaking及模块分离懒加载流）
+      - 强力突围SSR服务端生成快出流或者静态预烘焙消除首屏白脸尴尬
+      - 外力借驻CDN高低空输送+全量网络包Gzip压缩护航+强骨架屏保体验
+  - id: FE-TQ-008
+    type: technical
+    question: 跨域问题是如何产生的？有哪些常见的解决方式（CORS、JSONP、Nginx代理）？
+    tags: [网络, 跨域]
+    difficulty: easy
+    source: 牛客网
+    status: draft
+    key_points:
+      - 安防机制同源铁律导致三元素（域口协）必一造就排异围栏
+      - 单薄不争的古董JSONP仅且单GET的苍白与淘汰定局
+      - 标准官方CORS与后端深情协商协议，及主流前端以服务器代理骗取同源的高频实践闭环方案
+  - id: FE-TQ-009
+    type: technical
+    question: Vite 为什么比 Webpack 在开发环境下快那么多？
+    tags: [工程化, Vite]
+    difficulty: medium
+    source: 掘金
+    status: draft
+    key_points:
+      - 弃用Webpack全量依赖抓取编译捆绑后上服务器的臃肿传统包袱
+      - 极度吃透原生ESM浏览器底层模块特使实现纯粹懒汉按需抛投模块源
+      - 模块隔离免重捆绑彻底刷新史诗般0损耗极速HMR瞬刻热换装震撼体验
+  - id: FE-TQ-010
+    type: technical
+    question: ES6 模块（import/export）与 CommonJS 模块有什么本质区别？
+    tags: [JavaScript, 模块化]
+    difficulty: medium
+    source: 牛客网
+    status: draft    
+    key_points:
+      - ESM主打静态远征探针与树摇无死角排查，所牵输出全为活性原身同脉链接
+      - CommonJs走随走随看的运行态读取拉取，输出深复制绝情抛投
+      - 一个前处理统筹长远(构建时)，一个吃实时状态应付急需反应各霸一方
+  - id: FE-TQ-011
+    type: technical
+    question: 你在项目中有没有遇到过性能瓶颈？你是如何定位和解决的？
+    tags: [性能优化, 排障]
+    difficulty: hard
+    source: 面经库
+    status: draft    
+    key_points:
+      - 利用浏览器开发者工具进行性能分析，识别瓶颈所在（如长任务、内存泄漏等）
+      - 针对具体问题采取相应优化措施，如代码分割、懒加载、减少重绘重排等
+      - 分享成功解决性能瓶颈的案例，以及从中学到的经验教训
+  - id: FE-TQ-012
+    type: technical
+    question: 你在项目中有没有遇到过安全问题？你是如何发现和解决的？
+    tags: [安全, 排障]  
+    difficulty: hard
+    source: 面经库
+    status: draft
+    key_points:
+      - 通过代码审查、依赖扫描等方式发现潜在安全漏洞（如XSS、CSRF等）
+      - 采取相应的安全措施，如输入验证、使用安全库、设置Content Security Policy等
+      - 分享成功解决安全问题的案例，以及从中学到的经验教训
+  - id: FE-TQ-013
+    type: technical
+    question: 你在项目中有没有遇到过技术挑战？你是如何迎接它的？
+    tags: [技术挑战, 挑战应对]
+    difficulty: hard
+    source: 面经库
+    status: draft    
+    key_points:
+      - 识别技术挑战的能力，如性能瓶颈、安全问题、架构限制等
+      - 展现创新和解决问题的能力，通过引入新技术、优化算法、重构架构等方式迎接挑战
+      - 分享成功迎接技术挑战的案例，以及从中学到的经验教训
+  - id: FE-TQ-014
+    type: technical
+    question: 你在项目中有没有遇到过技术创新？你是如何推动它的？
+    tags: [技术创新, 创新推动]
+    difficulty: hard
+    source: 面经库
+    status: draft    
+    key_points:
+      - 识别技术创新的能力，如新技术的应用、架构优化等
+      - 展现推动创新的能力，通过积极学习、团队协作、寻求支持等方式推动创新落地
+      - 分享成功推动技术创新的案例，以及从中学到的经验教训
+  - id: FE-TQ-015
+    type: technical
+    question: 你在项目中有没有遇到过技术迷茫期？你是如何走出它的？
+    tags: [技术迷茫, 自我驱动]
+    difficulty: hard
+    source: 面经库
+    status: draft    
+    key_points:
+      - 识别技术迷茫的能力，如对技术选型、架构设计等缺乏清晰方向感
+      - 展现自我驱动和学习能力，通过阅读文档、咨询专家、进行小规模实验等方式寻找解决方案
+      - 分享成功走出技术迷茫期的案例，以及从中学到的经验教训
+  - id: FE-TQ-016
+    type: technical
+    question: 你在项目中有没有遇到过技术瓶颈？你是如何突破它的？
+    tags: [技术瓶颈, 创新]
+    difficulty: hard
+    source: 面经库
+    status: draft    
+    key_points:
+      - 识别技术瓶颈的能力，如性能问题、架构限制等
+      - 展现创新和解决问题的能力，通过引入新技术、优化算法、重构架构等方式突破瓶颈
+      - 分享成功突破技术瓶颈的案例，以及从中学到的经验教训
+  - id: FE-TQ-017
+    type: technical
+    question: 你在项目中有没有遇到过技术挑战？你是如何迎接它的？
+    tags: [技术挑战, 挑战应对]
+    difficulty: hard
+    source: 面经库
+    status: draft    
+    key_points:
+      - 识别技术挑战的能力，如新技术的学习曲线、复杂问题的解决等
+      - 展现迎接挑战的能力，通过积极学习、团队协作、寻求帮助等方式应对挑战
+      - 分享成功迎接技术挑战的案例，以及从中学到的经验教训
+  - id: FE-TQ-018
+    type: technical
+    question: 你在项目中有没有遇到过技术创新？你是如何推动它的？
+    tags: [技术创新, 推动创新]
+    difficulty: hard
+    source: 面经库
+    status: draft    
+    key_points:
+      - 识别技术创新的能力，如新技术的潜力、创新机会等
+      - 展现推动创新的能力，通过提出新想法、进行实验验证、推动团队采纳等方式推动创新
+      - 分享成功推动技术创新的案例，以及从中学到的经验教训
+  - id: FE-TQ-019
+    type: technical
+    question: 你在项目中有没有遇到过技术突破？你是如何实现它的？
+    tags: [技术突破, 实现突破]
+    difficulty: hard
+    source: 面经库
+    status: draft    
+    key_points:
+      - 识别技术突破的能力，如性能飞跃、架构革新等
+      - 展现实现突破的能力，通过引入前沿技术、优化算法、重构架构等方式实现技术飞跃
+      - 分享成功实现技术突破的案例，以及从中学到的经验教训
+  - id: FE-TQ-020
+    type: technical
+    question: 你在项目中有没有遇到过技术迷茫期？你是如何走出它的？
+    tags: [技术迷茫, 自我驱动]
+    difficulty: hard
+    source: 面经库
+    status: draft    
+    key_points:
+      - 识别技术迷茫的能力，如对技术选型、架构设计等缺乏清晰方向感
+      - 展现自我驱动和学习能力，通过阅读文档、咨询专家、进行小规模实验等方式寻找解决方案
+      - 分享成功走出技术迷茫期的案例，以及从中学到的经验教训
+  - id: FE-TQ-021
+    type: technical
+    question: 你在项目中有没有遇到过技术瓶颈？你是如何突破它的？
+    tags: [技术瓶颈, 创新]
+    difficulty: hard
+    source: 面经库
+    status: draft    
+    key_points:
+      - 识别技术瓶颈的能力，如性能问题、架构限制等
+      - 展现创新和解决问题的能力，通过引入新技术、优化算法、重构架构等方式突破瓶颈
+      - 分享成功突破技术瓶颈的案例，以及从中学到的经验教训
+  - id: FE-TQ-022
+    type: technical
+    question: 你在项目中有没有遇到过技术挑战？你是如何迎接它的？
+    tags: [技术挑战, 挑战应对]
+    difficulty: hard
+    source: 面经库
+    status: draft    
+    key_points:
+      - 识别技术挑战的能力，如新技术的学习曲线、复杂问题的解决等
+      - 展现迎接挑战的能力，通过积极学习、团队协作、寻求帮助等方式应对挑战
+      - 分享成功迎接技术挑战的案例，以及从中学到的经验教训
+  - id: FE-TQ-023
+    type: technical
+    question: 你在项目中有没有遇到过技术创新？你是如何推动它的？
+    tags: [技术创新, 推动创新]
+    difficulty: hard
+    source: 面经库
+    status: draft    
+    key_points:
+      - 识别技术创新的能力，如新技术的潜力、创新机会等
+      - 展现推动创新的能力，通过提出新想法、进行实验验证、推动团队采纳等方式推动创新
+      - 分享成功推动技术创新的案例，以及从中学到的经验教训
+  - id: FE-TQ-024
+    type: technical
+    question: 你在项目中有没有遇到过技术突破？你是如何实现它的？
+    tags: [技术突破, 实现突破]
+    difficulty: hard
+    source: 面经库
+    status: draft    
+    key_points:
+      - 识别技术突破的能力，如性能飞跃、架构革新等
+      - 展现实现突破的能力，通过引入前沿技术、优化算法、重构架构等方式实现技术飞跃
+      - 分享成功实现技术突破的案例，以及从中学到的经验教训  
+  - id: FE-TQ-025
+    type: technical
+    question: 你在项目中有没有遇到过技术迷茫期？你是如何走出它的？
+    tags: [技术迷茫, 自我驱动]
+    difficulty: hard
+    source: 面经库
+    status: draft    
+    key_points:
+      - 识别技术迷茫的能力，如对技术选型、架构设计等缺乏清晰方向感
+      - 展现自我驱动和学习能力，通过阅读文档、咨询专家、进行小规模实验等方式寻找解决方案
+      - 分享成功走出技术迷茫期的案例，以及从中学到的经验教训
+  - id: FE-TQ-026
+    type: technical
+    question: 你在项目中有没有遇到过技术瓶颈？你是如何突破它的？
+    tags: [技术瓶颈, 创新]
+    difficulty: hard
+    source: 面经库
+    status: draft    
+    key_points:
+      - 识别技术瓶颈的能力，如性能问题、架构限制等
+      - 展现创新和解决问题的能力，通过引入新技术、优化算法、重构架构等方式突破瓶颈
+      - 分享成功突破技术瓶颈的案例，以及从中学到的经验教训
+  - id: FE-TQ-027
+    type: technical
+    question: 你在项目中有没有遇到过技术挑战？你是如何迎接它的？
+    tags: [技术挑战, 挑战应对]
+    difficulty: hard
+    source: 面经库
+    status: draft    
+    key_points:
+      - 识别技术挑战的能力，如新技术的学习曲线、复杂问题的解决等
+      - 展现迎接挑战的能力，通过积极学习、团队协作、寻求帮助等方式应对挑战
+      - 分享成功迎接技术挑战的案例，以及从中学到的经验教训
+  - id: FE-TQ-028
+    type: technical
+    question: 你在项目中有没有遇到过技术创新？你是如何推动它的？
+    tags: [技术创新, 推动创新]
+    difficulty: hard
+    source: 面经库
+    status: draft    
+    key_points:
+      - 识别技术创新的能力，如新技术的潜力、创新机会等
+      - 展现推动创新的能力，通过提出新想法、进行实验验证、推动团队采纳等方式推动创新
+      - 分享成功推动技术创新的案例，以及从中学到的经验教训
+  - id: FE-TQ-029
+    type: technical
+    question: 你在项目中有没有遇到过技术突破？你是如何实现它的？
+    tags: [技术突破, 实现突破]
+    difficulty: hard
+    source: 面经库
+    status: draft    
+    key_points:
+      - 识别技术突破的能力，如性能飞跃、架构革新等
+      - 展现实现突破的能力，通过引入前沿技术、优化算法、重构架构等方式实现技术飞跃
+      - 分享成功实现技术突破的案例，以及从中学到的经验教训
+  - id: FE-TQ-030
+    type: technical
+    question: 你在项目中有没有遇到过技术迷茫期？你是如何走出它的？
+    tags: [技术迷茫, 自我驱动]
+    difficulty: hard
+    source: 面经库
+    status: draft    
+    key_points:
+      - 识别技术迷茫的能力，如对技术选型、架构设计等缺乏清晰方向感
+      - 展现自我驱动和学习能力，通过阅读文档、咨询专家、进行小规模实验等方式寻找解决方案
+      - 分享成功走出技术迷茫期的案例，以及从中学到的经验教训
+    
