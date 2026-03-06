@@ -1,0 +1,169 @@
+type: network_project_deep_dive_questions
+source:
+  - 面经库
+items:
+  - id: NW-PQ-001
+    type: project_deep_dive
+    question: 介绍一个你主导的企业园区网或数据中心网络的从零规划与实施项目。
+    tags: [网络规划, 架构设计]
+    difficulty: hard
+    source: 面经库
+    status: draft
+    key_points:
+      - 阐述清晰的层级架构选择（核心-汇聚-接入 三层架构 vs Spine-Leaf 扁平架构）
+      - 详细说明 IP 地址规划原则、VLAN 划分策略及路由协议选型思路
+      - 强调对高可用性（HA）的设计考量（如 VRRP/HSRP，跨设备链路聚合 VSS/M-LAG）
+  - id: NW-PQ-002
+    type: project_deep_dive
+    question: 在你参与的核心网络割接（核心交换机替换/路由重分发调整）项目中，你是如何保证业务“零感知”断网的？
+    tags: [割接迁移, 风险控制]
+    difficulty: hard
+    source: 面经库
+    status: draft
+    key_points:
+      - 极其详尽的割接前演练与方案设计（包括步骤颗粒度到分钟级）
+      - 利用路由优先级控制（如 OSPF Cost、BGP Local Pref）实现流量的平滑引流与抽流
+      - 严谨的秒级状态监控指标及触发回滚操作的明确阈值红线
+  - id: NW-PQ-003
+    type: project_deep_dive
+    question: 讲述一次你解决过的最复杂的网络疑难杂症（如间歇性丢包、神秘路由环路）。
+    tags: [疑难排障, 抓包分析]
+    difficulty: hard
+    source: 面经库
+    status: draft
+    key_points:
+      - 复杂度的真实体现（如非对称路由导致的防火墙状态阻断、MTU 不匹配导致的黑洞问题）
+      - 展现扎实的协议级抓包分析能力（Wireshark 追踪 TCP Stream）及 OS 内核网络参数的排查
+      - 根因定位及修复措施的闭环（如修改 MSS 钳制、调整路由过滤策略）
+  - id: NW-PQ-004
+    type: project_deep_dive
+    question: 在高密无线网络覆盖项目（如大型会议室、体育场馆）中，你是如何优化 Wi-Fi 漫游与抗干扰的？
+    tags: [无线网络, 优化调优]
+    difficulty: medium
+    source: 面经库
+    status: draft
+    key_points:
+      - 合理的信道与功率规划（动态射频调整 RRM），避免同频干扰
+      - 启用快速漫游协议（802.11r/k/v），并调整探针响应与剔除弱信号终端的阈值
+      - 结合高密场景调整空口利用率，限制低速率报文传输
+  - id: NW-PQ-005
+    type: project_deep_dive
+    question: 你在项目中是如何实现网络安全分区与细粒度访问控制的？
+    tags: [网络安全, 防火墙策略]
+    difficulty: medium
+    source: 面经库
+    status: draft
+    key_points:
+      - 阐述多安全域（Trust, Untrust, DMZ）的设计逻辑
+      - 利用防火墙安全策略或交换机 ACL 进行细粒度的端口/IP级管控，秉持最小权限原则
+      - 应对复杂策略膨胀时的运维治理（策略清洗、基于对象组的管理）
+  - id: NW-PQ-006
+    type: project_deep_dive
+    question: 请详细说明你在网络项目中是如何进行版本控制和发布的？遇到过哪些挑战？
+    tags: [版本控制, 发布管理]
+    difficulty: medium
+    source: 自己整理
+    status: draft
+    key_points:
+      - 介绍使用的版本控制工具（如 Git）及分支管理策略（如 Git Flow）
+      - 阐述配置变更的审批流程与自动化部署工具（如 Ansible、Terraform）的应用
+      - 分享遇到的挑战（如配置冲突、回滚难题）及解决方案（如引入 CI/CD 流水线、加强变更审计）
+  - id: NW-PQ-007
+    type: project_deep_dive
+    question: 在你的网络项目中，是否遇到过设备兼容性或供应链问题？你是如何应对的？
+    tags: [供应链管理, 兼容性]
+    difficulty: medium
+    source: 自己整理
+    status: draft
+    key_points:
+      - 描述具体的兼容性问题（如新旧设备间的协议支持差异、供应商停产导致的替代方案）
+      - 展现多供应商策略的优势（如避免单点故障、增强议价能力）
+      - 分享成功说服管理层调整采购计划或技术方案以适应变化的经历
+  - id: NW-PQ-008
+    type: project_deep_dive
+    question: 你在网络项目中是否有过与云服务（如 AWS VPC、Azure Virtual Network）集成的经历？请举例说明云网融合的具体方法和效果。
+    tags: [云网融合, 混合云]
+    difficulty: medium
+    source: 自己整理
+    status: draft
+    key_points:
+      - 描述具体的云网集成场景（如数据中心与 AWS 之间的 VPN 连接或 Direct Connect）
+      - 阐述网络设计原则（如 IP 地址规划、路由策略）以确保云网之间的无缝通信
+      - 分享集成后的效果（如提升了灾备能力、实现了弹性扩展）及遇到的挑战（如安全策略一致性）
+  - id: NW-PQ-009
+    type: project_deep_dive
+    question: 在你的网络项目中，是否有过使用自动化工具（如 Ansible、Terraform）来管理网络设备配置的经历？请举例说明自动化的具体应用和效果。
+    tags: [网络自动化, 配置管理]
+    difficulty: medium
+    source: 自己整理
+    status: draft
+    key_points:
+      - 描述具体的自动化应用场景（如批量配置交换机 VLAN、自动化部署防火墙规则）
+      - 阐述使用的工具及其优势（如 Ansible 的无代理架构、Terraform 的基础设施即代码理念）
+      - 分享自动化带来的效果（如提升了配置一致性、减少了人为错误）及遇到的挑战（如学习曲线、工具集成问题）
+  - id: NW-PQ-010
+    type: project_deep_dive
+    question: 你在网络项目中是否有过使用网络监控和分析工具（如 Nagios、Wireshark）来排查性能问题的经历？请举例说明你是如何使用这些工具来定位问题的，以及取得了什么效果。
+    tags: [网络监控, 性能分析]
+    difficulty: medium
+    source: 自己整理
+    status: draft
+    key_points:
+      - 描述具体的监控和分析场景（如利用 Nagios 监控链路状态、使用 Wireshark 分析 TCP 流量）
+      - 阐述使用工具的具体方法（如设置合适的监控指标、进行协议级抓包分析）
+      - 分享通过这些工具定位并解决性能问题的实际效果（如提升了网络稳定性、减少了故障恢复时间）
+  - id: NW-PQ-011
+    type: project_deep_dive
+    question: 你在网络项目中有没有遇到过“技术债务”？你是如何识别和管理它的？
+    tags: [技术债务, 项目管理]
+    difficulty: hard
+    source: 自己整理
+    status: draft
+    key_points:
+      - 识别技术债务的能力：如配置混乱、缺乏文档、过度复杂的拓扑等
+      - 展现主动沟通和说服能力，向团队和管理层说明技术债务的风险和长期成本
+      - 制定清晰的偿还计划，如定期重构、引入自动化测试覆盖、优化监控告警等措施逐步消除技术债务
+  - id: NW-PQ-012
+    type: project_deep_dive
+    question: 你在网络项目中有没有遇到过“技术孤岛”？你是如何打破它的？
+    tags: [技术孤岛, 跨部门协作]
+    difficulty: hard
+    source: 自己整理
+    status: draft
+    key_points:
+      - 识别技术孤岛的能力：如某个网络设备或配置只有特定人员理解和维护，缺乏文档和知识共享
+      - 展现主动沟通和协作能力，推动团队内部的知识分享和交叉培训
+      - 引入代码审查、文档规范和定期技术分享会等机制促进团队整体技术水平的提升和信息流通
+  - id: NW-PQ-013
+    type: project_deep_dive
+    question: 你在网络项目中有没有遇到过“技术迷茫期”？你是如何走出它的？
+    tags: [技术迷茫, 自我驱动]
+    difficulty: hard
+    source: 自己整理
+    status: draft
+    key_points:
+      - 识别技术迷茫的能力：如对网络架构设计、协议选型等缺乏清晰方向感
+      - 展现自我驱动和学习能力，通过阅读文档、咨询专家、进行小规模实验等方式寻找解决方案
+      - 分享成功走出技术迷茫期的案例，以及从中学到的经验教训
+  - id: NW-PQ-014
+    type: project_deep_dive
+    question: 你在网络项目中有没有遇到过“技术瓶颈”？你是如何突破它的？
+    tags: [技术瓶颈, 创新]
+    difficulty: hard
+    source: 自己整理
+    status: draft
+    key_points:
+      - 识别技术瓶颈的能力：如性能问题、架构限制等
+      - 展现创新和解决问题的能力，通过引入新技术、优化算法、重构架构等方式突破瓶颈
+      - 分享成功突破技术瓶颈的案例，以及从中学到的经验教训
+  - id: NW-PQ-015
+    type: project_deep_dive
+    question: 你在网络项目中有没有遇到过“技术挑战”？你是如何迎接它的？
+    tags: [技术挑战, 挑战应对]
+    difficulty: hard
+    source: 自己整理
+    status: draft
+    key_points:
+      - 识别技术挑战的能力：如新技术的学习曲线、复杂问题的解决等
+      - 展现迎接挑战的能力，通过积极学习、团队协作、寻求帮助等方式应对挑战
+      - 分享成功迎接技术挑战的案例，以及从中学到的经验教训

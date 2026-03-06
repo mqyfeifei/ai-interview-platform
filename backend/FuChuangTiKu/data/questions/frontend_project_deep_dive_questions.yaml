@@ -1,0 +1,168 @@
+type: frontend_project_deep_dive_questions
+source:
+  - 面经库
+items:
+  - id: FE-PQ-001
+    type: project_deep_dive
+    question: 这个前端项目的整体架构是如何设计的？你在其中承担了什么角色？
+    tags: [项目架构, 职责]
+    difficulty: easy
+    source: 面经库
+    status: draft
+    key_points:
+      - 全面透析工程宏大选型及项目组织建构脉络与层次分隔艺术(基础组件/网络层/核心逻辑等)
+      - 突出自己在浩大多人协同场内发散的核心向导或者破局者的独立高亮角色感
+  - id: FE-PQ-002
+    type: project_deep_dive
+    question: 项目中的状态管理（如 Redux/Pinia）是如何划分的？遇到过什么痛点？
+    tags: [状态管理, 架构]
+    difficulty: medium
+    source: 面经库
+    status: draft
+    key_points:
+      - 严苛区分局部私需与全域通告状态流不乱搅和泥巴
+      - 利用强力状态管理中枢化解超深渊多层无用传导以及异族组件孤岛联动痛击
+      - 吐诉并拆解过多黑盒嵌套模板毒瘤的恶心及其抽象钩子化轻量封装救赎路线
+  - id: FE-PQ-003
+    type: project_deep_dive
+    question: 你们项目中针对首屏或者长列表等特定场景做过哪些性能优化？效果如何？
+    tags: [性能优化, 真实数据]
+    difficulty: hard
+    source: 面经库
+    status: draft
+    key_points:
+      - 抛弃空口套白狼必亮量化利器打底表成绩(如FP/LCP由某到某)
+      - 重型列表必交的虚拟长卷滚动按需绘制渲染减少万节点负担的标准答卷
+      - 精通使用Lighthouse等探查监控雷达寻热热点卡顿源或图体优化的实际工程手腕
+  - id: FE-PQ-004
+    type: project_deep_dive
+    question: 前后端接口联调时遇到过哪些沟通或数据格式上的问题，是如何解决的？
+    tags: [联调, 协作]
+    difficulty: medium
+    source: 面经库
+    status: draft
+    key_points:
+      - 展示因格式断代/超长字段撕裂崩坏等高频现实惨剧的处理嗅觉
+      - 主打前浪基建破局法（引出Swagger协议契约/ApiFox等打通屏障阻滞）
+      - 运用Mock隔离护城河构建并行加速不受后端落后步调干涉之自主强效把控节奏
+  - id: FE-PQ-005
+    type: project_deep_dive
+    question: 项目中是否有自研或二次封装的组件库？讲讲你封装的最复杂的组件。
+    tags: [组件封装, 复用性]
+    difficulty: medium
+    source: 面经库
+    status: draft    
+    key_points:
+      - 打出复用生态体系、低耦合高包容且健造参数多端下放的标准工业级思维王牌
+      - 深虑配置入参、事件分层反射、插槽包容化的高级抽象形态结构规划
+      - 外拓边界兜底完善防雷以及全量组件维护体系与测试规约建构闭环沉淀展现
+  - id: FE-PQ-006
+    type: project_deep_dive
+    question: 你在项目中是如何进行版本控制和发布的？遇到过哪些挑战？
+    tags: [版本控制, 发布流程]
+    difficulty: medium
+    source: 面经库
+    status: draft    
+    key_points:
+      - 讲述分支管理策略（如Git Flow）或 trunk-based development 的实践经验
+      - 描述CI/CD流程（如使用Jenkins/GitHub Actions自动化测试和部署）的设计与实施
+      - 分享遇到的挑战（如合并冲突、回滚策略）以及解决方案的具体案例
+  - id: FE-PQ-007
+    type: project_deep_dive
+    question: 在项目中你是如何进行代码质量控制的？是否有引入静态分析工具或代码审查流程？
+    tags: [代码质量, 静态分析]
+    difficulty: medium
+    source: 面经库
+    status: draft    
+    key_points:
+      - 介绍使用的静态分析工具（如ESLint、Prettier）以及配置规范
+      - 描述代码审查流程（如Pull Request流程、Code Review标准）的实施细节
+      - 分享通过这些措施提升代码质量的实际效果和团队反馈
+  - id: FE-PQ-008
+    type: project_deep_dive
+    question: 你在项目中是否有过与后端或设计师等其他角色的跨部门协作经历？请举例说明一次成功的协作经历。
+    tags: [跨部门协作, 沟通]
+    difficulty: medium
+    source: 面经库
+    status: draft    
+    key_points:
+      - 描述与后端或设计师的具体协作场景（如接口设计、UI/UX讨论）
+      - 强调沟通技巧（如同理心、数据驱动的决策）在协作中的重要作用
+      - 分享协作成功的结果（如项目按时交付、用户体验提升）以及从中学到的经验教训
+  - id: FE-PQ-009
+    type: project_deep_dive
+    question: 你在项目中有没有遇到过“技术债务”？你是如何识别和管理它的？
+    tags: [技术债务, 项目管理]
+    difficulty: hard
+    source: 面经库
+    status: draft    
+    key_points:
+      - 识别技术债务的能力：如代码质量下降、模块耦合度增加、缺乏文档等
+      - 展现主动沟通和说服能力，向团队和管理层说明技术债务的风险和长期成本
+      - 制定清晰的偿还计划，如定期重构、引入自动化测试覆盖、优化数据管道等措施逐步消除技术债务
+  - id: FE-PQ-010
+    type: project_deep_dive
+    question: 你在项目中有没有遇到过“技术孤岛”？你是如何打破它的？
+    tags: [技术孤岛, 跨部门协作]
+    difficulty: hard
+    source: 面经库
+    status: draft    
+    key_points:
+      - 识别技术孤岛的能力：如某个模块或功能只有特定人员理解和维护，缺乏文档和知识共享
+      - 展现主动沟通和协作能力，推动团队内部的知识分享和交叉培训
+      - 引入代码审查、文档规范和定期技术分享会等机制促进团队整体技术水平的提升和信息流通  
+  - id: FE-PQ-011
+    type: project_deep_dive
+    question: 你在项目中有没有遇到过“技术迷茫期”？你是如何走出它的？
+    tags: [技术迷茫, 自我驱动]
+    difficulty: hard
+    source: 面经库
+    status: draft    
+    key_points:
+      - 识别技术迷茫的能力：如对技术选型、架构设计等缺乏清晰方向感
+      - 展现自我驱动和学习能力，通过阅读文档、咨询专家、进行小规模实验等方式寻找解决方案
+      - 分享成功走出技术迷茫期的案例，以及从中学到的经验教训
+  - id: FE-PQ-012
+    type: project_deep_dive
+    question: 你在项目中有没有遇到过“技术瓶颈”？你是如何突破它的？
+    tags: [技术瓶颈, 创新]
+    difficulty: hard
+    source: 面经库
+    status: draft    
+    key_points:
+      - 识别技术瓶颈的能力：如性能问题、架构限制等
+      - 展现创新和解决问题的能力，通过引入新技术、优化算法、重构架构等方式突破瓶颈
+      - 分享成功突破技术瓶颈的案例，以及从中学到的经验教训
+  - id: FE-PQ-013
+    type: project_deep_dive
+    question: 你在项目中有没有遇到过“技术挑战”？你是如何迎接它的？
+    tags: [技术挑战, 挑战应对]
+    difficulty: hard
+    source: 面经库
+    status: draft    
+    key_points:
+      - 识别技术挑战的能力：如新技术的学习曲线、复杂问题的解决等
+      - 展现迎接挑战的能力，通过积极学习、团队协作、寻求帮助等方式应对挑战
+      - 分享成功迎接技术挑战的案例，以及从中学到的经验教训  
+  - id: FE-PQ-014
+    type: project_deep_dive
+    question: 你在项目中有没有遇到过“技术创新”？你是如何推动它的？
+    tags: [技术创新, 推动创新]
+    difficulty: hard
+    source: 面经库
+    status: draft    
+    key_points:
+      - 识别技术创新的能力：如新技术的潜力、创新机会等
+      - 展现推动创新的能力，通过提出新想法、进行实验验证、推动团队采纳等方式推动创新
+      - 分享成功推动技术创新的案例，以及从中学到的经验教训
+  - id: FE-PQ-015
+    type: project_deep_dive
+    question: 你在项目中有没有遇到过“技术突破”？你是如何实现它的？
+    tags: [技术突破, 实现突破]
+    difficulty: hard
+    source: 面经库
+    status: draft    
+    key_points:
+      - 识别技术突破的能力：如新技术的重大进展、突破性的解决方案等
+      - 展现实现技术突破的能力，通过深入研究、持续优化、团队协作等方式实现突破
+      - 分享成功实现技术突破的案例，以及从中学到的经验教训

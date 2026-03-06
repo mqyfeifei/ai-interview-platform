@@ -1,0 +1,95 @@
+type: network_technical_knowledge_points
+source:
+  - 官方文档
+  - 行业经典书籍
+modules:
+  - name: 计算机网络与协议基础
+    points:
+      - point: TCP/IP 协议栈与底层机制
+        complexity: Hard
+        estimated_hours: 5
+        resources:
+          - name: 《TCP/IP详解 卷1：协议》
+            type: 书籍
+            url: https://book.douban.com/subject/1088054/
+          - name: 极客时间 - 趣谈网络协议
+            type: 专栏
+            url: https://time.geekbang.org/column/intro/100007101
+      - point: HTTP/HTTPS 与应用层协议
+        complexity: Medium
+        estimated_hours: 3
+        resources:
+          - name: 《图解HTTP》
+            type: 书籍
+            url: https://book.douban.com/subject/25863515/
+      - point: 操作系统网络栈与 Socket 编程
+        complexity: Hard
+        estimated_hours: 4
+        resources:
+          - name: 《UNIX网络编程 卷1》
+            type: 书籍
+            url: https://book.douban.com/subject/1500149/
+          - name: Linux内核网络栈解析
+            type: 技术博客
+            url: https://developer.aliyun.com/article/network-stack
+
+  - name: 路由与交换技术
+    points:
+      - point: 二层交换原理 (VLAN, STP/RSTP, LACP)
+        complexity: Medium
+        estimated_hours: 4
+        resources:
+          - name: 华为 HCIA-Datacom 官方培训教材
+            type: 官方文档
+            url: https://e.huawei.com/cn/talent/#/cert/product-details?certifiedProductId=287
+      - point: IGP 动态路由协议 (OSPF, IS-IS)
+        complexity: Hard
+        estimated_hours: 6
+        resources:
+          - name: 《路由与交换技术》
+            type: 书籍
+            url: https://book.douban.com/subject/25902409/
+          - name: OSPF Design Guide (Cisco)
+            type: 官方文档
+            url: https://www.cisco.com/c/en/us/support/docs/ip/open-shortest-path-first-ospf/7039-1.html
+      - point: BGP 与大规模路由控制
+        complexity: Hard
+        estimated_hours: 6
+        resources:
+          - name: 《BGP设计与实现》
+            type: 书籍
+            url: https://book.douban.com/subject/2153676/
+
+  - name: 无线网络与广域网技术
+    points:
+      - point: WLAN 原理与 Wi-Fi 6 (802.11ax) 部署
+        complexity: Medium
+        estimated_hours: 4
+        resources:
+          - name: 锐捷网络 - 无线网络规划与优化指南
+            type: 官方文档
+            url: https://www.ruijie.com.cn/
+      - point: SD-WAN 与企业级 VPN (IPsec, SSL VPN)
+        complexity: Hard
+        estimated_hours: 5
+        resources:
+          - name: SD-WAN 架构与实战
+            type: 技术文章
+            url: https://developer.aliyun.com/article/sd-wan
+
+  - name: 数据中心与网络自动化
+    points:
+      - point: 数据中心架构 (Spine-Leaf, VXLAN, EVPN)
+        complexity: Hard
+        estimated_hours: 6
+        resources:
+          - name: 《数据中心网络技术红宝书》
+            type: 书籍
+            url: https://book.douban.com/subject/35340156/
+      - point: SDN 与自动化运维 (Python/Ansible/Netconf)
+        complexity: Medium
+        estimated_hours: 4
+        resources:
+          - name: Network Programmability and Automation
+            type: 书籍
+            url: https://book.douban.com/subject/27618239/
