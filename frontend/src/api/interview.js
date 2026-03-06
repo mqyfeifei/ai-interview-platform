@@ -93,11 +93,13 @@ export const startInterview = async (data) => {
     user_id: data.userId,   // 整数，来自 userInfo.id
     job_id: data.jobDbId    // 整数，来自数据库 jobs.id
   })
-  return {
-    sessionId: String(res.interview_id),
-    firstQuestion: res.question,
-    isFinished: false
-  }
+      console.log('后端 startInterview 响应:', res)
+const payload = res.interview_id ? res : (res.data || res)
+return {
+  sessionId: String(payload.interview_id),
+  firstQuestion: payload.question,
+  isFinished: false
+}
 }
 
 
@@ -144,7 +146,7 @@ export const sendAnswer = async (sessionId, answer) => {
 // ---- 新增：SSE 流式聊天（替换原 sendAnswer）----
 // 原 sendAnswer 返回 { reply, nextQuestion, isFinished }
 // 后端是 SSE 流，通过 fetch 手动处理，检测 [INTERVIEW_OVER] 标记
-export const sendAnswerStream = (sessionId, answer, { onChunk, onFinish, onError }) => {
+export const sendAnswerStream = (sessionId, answer, { onChunk, onFinish, onStreamEnd, onError }) => {
   const API_BASE = process.env.VUE_APP_API_BASE_URL || '/api/v1'
   const token = localStorage.getItem('ai_interview_token')
 
@@ -158,34 +160,30 @@ export const sendAnswerStream = (sessionId, answer, { onChunk, onFinish, onError
   }).then(async (response) => {
     const reader = response.body.getReader()
     const decoder = new TextDecoder()
-    let fullText = ''
 
     while (true) {
       const { done, value } = await reader.read()
       if (done) break
 
       const rawChunk = decoder.decode(value, { stream: true })
-      // SSE 格式: "data: {...}\n\n"
       const lines = rawChunk.split('\n').filter(l => l.startsWith('data: '))
       for (const line of lines) {
         try {
           const json = JSON.parse(line.slice(6))
           const chunk = json.chunk || ''
-          fullText += chunk
 
           if (chunk.includes('[INTERVIEW_OVER]')) {
-            // 检测到结束标记，通知组件
             onChunk(chunk.replace('[INTERVIEW_OVER]', ''))
-            onFinish()
-            return
+            onFinish && onFinish()
+            return  // 提前退出，不再触发 onStreamEnd
           } else {
             onChunk(chunk)
           }
         } catch {}
       }
     }
-    // 流正常结束但没有 [INTERVIEW_OVER]（继续追问）
-    // 不调用 onFinish，等下一轮
+    // ✅ 流正常结束（AI 继续追问），通知 store 关闭 loading
+    onStreamEnd && onStreamEnd()
   }).catch(onError)
 }
 
@@ -204,7 +202,8 @@ export const finishInterview = async (sessionId) => {
   const res = await request.post(`/interviews/${sessionId}/finish`)
   // 把后端报告存到 sessionStorage，供报告页读取（后端暂无 GET /report/:id 接口）
   sessionStorage.setItem(`report_${sessionId}`, JSON.stringify(res.data))
-  return { reportId: sessionId }
+    // res 是后端 data 字段，即 { reportId, jobName, total_score, ... }
+  return { reportId: res.reportId || sessionId }
 }
 /**
  * 获取面试历史列表（用于历史记录页）
