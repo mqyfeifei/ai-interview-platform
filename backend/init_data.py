@@ -31,17 +31,39 @@ def init_db():
         # 3. 初始化示例岗位 (Jobs) - 可选
         if Job.query.count() == 0:
             print("正在初始化示例岗位...")
-            java_job = Job(
-                name='Java后端开发',
-                description='负责企业级后端系统开发',
-                tech_stack=['Java', 'Spring Boot', 'MySQL', 'Redis']
-            )
-            frontend_job = Job(
-                name='前端开发',
-                description='负责Web端用户界面开发',
-                tech_stack=['Vue', 'React', 'TypeScript', 'CSS']
-            )
-            db.session.add_all([java_job, frontend_job])
+            jobs = [
+                Job(
+                    name='Java后端开发',
+                    description='负责企业级后端系统开发',
+                    tech_stack=['Java', 'Spring Boot', 'MySQL', 'Redis', 'JVM']
+                ),
+                Job(
+                    name='Web前端开发',
+                    description='负责Web端用户界面开发',
+                    tech_stack=['Vue3', 'React', 'TypeScript', 'Webpack', 'CSS3']
+                ),
+                Job(
+                    name='Python算法工程师',
+                    description='深入机器学习、数据处理和算法实现',
+                    tech_stack=['Python', 'PyTorch', 'NumPy', 'Pandas', 'Sklearn']
+                ),
+                Job(
+                    name='全栈开发工程师',
+                    description='前后端全链路开发能力，熟悉微服务架构',
+                    tech_stack=['Node.js', 'Vue3', 'Docker', 'MySQL', 'Redis']
+                ),
+                Job(
+                    name='Android开发',
+                    description='负责移动端Android应用开发',
+                    tech_stack=['Kotlin', 'Java', 'Jetpack', 'Retrofit', 'Room']
+                ),
+                Job(
+                    name='DevOps工程师',
+                    description='负责CI/CD流水线和基础设施自动化',
+                    tech_stack=['Docker', 'Kubernetes', 'Jenkins', 'Terraform', 'Linux']
+                )
+            ]
+            db.session.add_all(jobs)
             db.session.commit()
             print("示例岗位初始化完成。")
 

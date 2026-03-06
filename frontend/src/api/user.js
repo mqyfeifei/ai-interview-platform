@@ -40,8 +40,9 @@ export const getUserInfo = async () => {
  */
 export const updateUserInfo = async (data) => {
   if (USE_MOCK) {
-    await mockDelay(800)
-    return { ...data, updatedAt: new Date().toISOString() }
+    await mockDelay()
+    // Mock a successful update
+    return { success: true, ...data }
   }
   return request.put('/users/me', data)
 }
@@ -56,10 +57,7 @@ export const changePassword = async (data) => {
     if (data.oldPassword !== '123456') throw new Error('原密码错误')
     return { success: true }
   }
-  return request.post('/users/me/change-password', {
-  old_password: data.oldPassword,         // 后端取 old_password
-  new_password: data.newPassword          // 后端取 new_password
-})
+  return request.post('/v1/users/me/change-password', data)
 }
 
 /**
@@ -71,7 +69,7 @@ export const updateDefaultJob = async (jobId) => {
     await mockDelay(400)
     return { defaultJob: jobId }
   }
-  return request.patch('/users/me/preferences', { defaultJob: jobId })
+  return request.patch('/v1/users/me/preferences', { defaultJob: jobId })
 }
 
 /**
@@ -80,30 +78,35 @@ export const updateDefaultJob = async (jobId) => {
  */
 export const uploadAvatar = async (formData) => {
   if (USE_MOCK) {
-    await mockDelay(1200)
-    return { avatarUrl: 'https://via.placeholder.com/100' }
+    await mockDelay(1000)
+    return {
+      url: 'https://fuss10.elemecdn.com/e/5d/4a731a90594a4af544c0c25941171jpeg.jpeg'
+    }
   }
   return request.post('/users/me/avatar', formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
   })
 }
 
+// =============================================
+// 以下为仪表盘、成长曲线等新版API
+// =============================================
+
 /**
- * 获取首页统计数据
+ * 获取用户仪表盘数据
  */
-export const getDashboardStats = async () => {
+export const getDashboardData = async () => {
   if (USE_MOCK) {
-    await mockDelay(500)
-    return {
-      totalInterviews: 12,
-      avgScore: 78,
-      lastInterviewScore: 82,
-      lastInterviewAt: '2024-12-20',
-      lastInterviewJob: 'Java后端开发',
-      scoreImprovement: +8,
-      weeklyPractice: 3,
-      hotJobs: ['java-backend', 'web-frontend', 'python-algorithm']
-    }
+    await mockDelay()
+    return MOCK_DASHBOARD
   }
   return request.get('/users/me/dashboard')
+}
+
+/**
+ * 获取仪表盘统计数据（练习次数、平均分等）
+ */
+export const getDashboardStats = async () => {
+  const res = await request.get('/users/me/dashboard')
+  return res
 }

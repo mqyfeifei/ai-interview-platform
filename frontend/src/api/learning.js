@@ -12,36 +12,37 @@ const mockDelay = (ms = 600) => new Promise(resolve => setTimeout(resolve, ms))
 const MOCK_GROWTH_CURVE = {
   // 综合得分折线
   overall: [
-    { date: '11/25', score: 58 },
-    { date: '12/01', score: 63 },
-    { date: '12/05', score: 67 },
-    { date: '12/10', score: 70 },
-    { date: '12/15', score: 70 },
-    { date: '12/18', score: 75 },
-    { date: '12/20', score: 82 }
+    { label: '第1次', date: '11/25', score: 58 },
+    { label: '第2次', date: '12/01', score: 63 },
+    { label: '第3次', date: '12/05', score: 67 },
+    { label: '第4次', date: '12/10', score: 70 },
+    { label: '第5次', date: '12/15', score: 70 },
+    { label: '第6次', date: '12/18', score: 75 },
+    { label: '第7次', date: '12/20', score: 82 }
   ],
   // 各维度折线（最近5次）
   dimensions: {
-    technical:    [65, 70, 74, 78, 85],
-    logic:        [60, 65, 68, 72, 78],
-    matching:     [72, 75, 78, 82, 88],
-    expression:   [55, 60, 64, 68, 72],
+    technical: [65, 70, 74, 78, 85],
+    logic: [60, 65, 68, 72, 78],
+    matching: [72, 75, 78, 82, 88],
+    expression: [55, 60, 64, 68, 72],
     adaptability: [58, 63, 68, 72, 80]
   },
-  dates: ['12/01', '12/05', '12/10', '12/18', '12/20']
+  dates: ['第1次', '第2次', '第3次', '第4次', '第5次'],
+  realDates: ['12/01', '12/05', '12/10', '12/18', '12/20']
 }
 
 const MOCK_WEAKNESSES = [
-  { id: 'w1', tag: 'Redis持久化', level: 'high', jobId: 'java-backend' },
-  { id: 'w2', tag: 'GC收集器', level: 'high', jobId: 'java-backend' },
-  { id: 'w3', tag: '表达结构化', level: 'high', jobId: null },
-  { id: 'w4', tag: '分布式事务', level: 'medium', jobId: 'java-backend' },
-  { id: 'w5', tag: '性能调优', level: 'medium', jobId: 'java-backend' },
-  { id: 'w6', tag: 'Vue3响应式原理', level: 'medium', jobId: 'web-frontend' },
-  { id: 'w7', tag: 'Webpack配置', level: 'low', jobId: 'web-frontend' },
-  { id: 'w8', tag: '算法复杂度', level: 'low', jobId: 'python-algorithm' },
-  { id: 'w9', tag: 'MySQL索引优化', level: 'medium', jobId: 'java-backend' },
-  { id: 'w10', tag: 'STAR回答法', level: 'low', jobId: null }
+  { id: 'w1', tag: 'Redis持久化', level: 'high', mastery_level: 25, jobId: 'java-backend' },
+  { id: 'w2', tag: 'GC收集器', level: 'high', mastery_level: 30, jobId: 'java-backend' },
+  { id: 'w3', tag: '表达结构化', level: 'high', mastery_level: 35, jobId: null },
+  { id: 'w4', tag: '分布式事务', level: 'medium', mastery_level: 45, jobId: 'java-backend' },
+  { id: 'w5', tag: '性能调优', level: 'medium', mastery_level: 55, jobId: 'java-backend' },
+  { id: 'w6', tag: 'Vue3响应式原理', level: 'medium', mastery_level: 60, jobId: 'web-frontend' },
+  { id: 'w7', tag: 'Webpack配置', level: 'good', mastery_level: 75, jobId: 'web-frontend' },
+  { id: 'w8', tag: '算法复杂度', level: 'good', mastery_level: 80, jobId: 'python-algorithm' },
+  { id: 'w9', tag: 'MySQL索引优化', level: 'medium', mastery_level: 50, jobId: 'java-backend' },
+  { id: 'w10', tag: 'STAR回答法', level: 'excellent', mastery_level: 92, jobId: null }
 ]
 
 const MOCK_RECOMMENDATIONS = [
@@ -70,16 +71,17 @@ const MOCK_RECOMMENDATIONS = [
     completed: false
   },
   {
-    id: 'r3', type: 'practice',
-    title: '面试结构化表达专题：STAR法则实战训练',
-    summary: '通过10道经典情景题练习STAR法则，提升回答逻辑性与说服力，附优秀答案范例。',
-    source: 'AI面试助手',
-    tags: ['表达技巧', '通用能力'],
-    readTime: '20分钟',
-    difficulty: '初级',
-    relatedWeakness: '表达结构化',
+    id: 'r3', type: 'book',
+    title: 'Java核心技术手册：非常详细的探了各种为API和配置',
+    summary: '深入帮助你理解Java核心框架的每一个细节，提升技术业准。',
+    source: 'O\'Reilly',
+    tags: ['Java', '核心', '书籍'],
+    readTime: '习题杀手',
+    difficulty: '高级',
+    relatedWeakness: null,
     bookmarked: false,
-    completed: false
+    completed: false,
+    url: null
   },
   {
     id: 'r4', type: 'article',
@@ -152,92 +154,260 @@ const MOCK_DAILY_PLAN = {
   ]
 }
 
+// ---- 常量 ----
+
+/** 后端 dimension_id → 前端 key 映射 */
+const DIMENSION_ID_MAP = {
+  1: 'technical',    // 技术正确性
+  2: 'logic',        // 逻辑严谨性
+  3: 'matching',     // 岗位匹配度
+  4: 'expression',   // 表达沟通
+  5: 'adaptability'  // 应变能力
+}
+
+/** 日期格式转换 "2024-12-15" → "12/15" */
+const fmtDate = d => {
+  const [, m, day] = d.split('-')
+  return `${parseInt(m)}/${parseInt(day)}`
+}
+
 // ---- API 函数 ----
 
 /**
  * 获取能力成长曲线数据
- * @param {string} dimension - 'overall' | 'technical' | 'logic' | 'matching' | 'expression' | 'adaptability'
+ * 对后端发起 6 次并行请求（1 次总分 + 5 次各维度），
+ * 组装为前端 renderChart() 需要的 {overall, dimensions, dates} 结构。
+ * 若后端不可用或无数据则降级为 Mock。
  */
-export const getGrowthCurve = async (dimension = 'overall') => {
+export const getGrowthCurve = async () => {
   if (USE_MOCK) {
     await mockDelay(400)
     return MOCK_GROWTH_CURVE
   }
-  return request.get('/v1/learning/growth-curve', { params: { dimension } })
+
+  try {
+    // 从本地缓存获取 user_id
+    const cached = localStorage.getItem('ai_interview_user')
+    const userId = cached ? (JSON.parse(cached).id || JSON.parse(cached).user_id) : null
+    if (!userId) {
+      console.warn('[GrowthCurve] 未找到用户ID，降级为Mock')
+      return MOCK_GROWTH_CURVE
+    }
+
+    // 并行请求：总分 + 5 个维度
+    const dimIds = Object.keys(DIMENSION_ID_MAP) // ['1','2','3','4','5']
+    const [overallRaw, ...dimRawList] = await Promise.all([
+      request.get('/learning/growth-curve', { params: { user_id: userId } }),
+      ...dimIds.map(did =>
+        request.get('/learning/growth-curve', { params: { user_id: userId, dimension_id: did } })
+      )
+    ])
+
+    // 组装 overall: [{label:'第1次', date:'3/6', score:82}, ...]
+    const overall = (overallRaw || []).map((item, idx) => ({
+      label: `第${idx + 1}次`,
+      date: fmtDate(item.date),
+      score: item.score
+    }))
+
+    // 组装 dimensions 与共享日期轴
+    const dimensions = {}
+    let dates = []      // 序号标签
+    let realDates = []  // 真实日期
+    dimIds.forEach((did, idx) => {
+      const key = DIMENSION_ID_MAP[did]
+      const raw = dimRawList[idx] || []
+      dimensions[key] = raw.map(r => r.score)
+      if (idx === 0 && raw.length) {
+        dates = raw.map((r, i) => `第${i + 1}次`)
+        realDates = raw.map(r => fmtDate(r.date))
+      }
+    })
+
+    // 无任何数据时降级
+    if (!overall.length && !dates.length) {
+      console.warn('[GrowthCurve] 后端无成长数据，降级为Mock')
+      return MOCK_GROWTH_CURVE
+    }
+
+    return { overall, dimensions, dates, realDates }
+  } catch (err) {
+    console.warn('[GrowthCurve] 请求失败，降级为Mock', err)
+    return MOCK_GROWTH_CURVE
+  }
 }
 
 /**
- * 获取技能短板列表
+ * 获取薄弱知识点标签
  */
-export const getWeaknesses = async () => {
+export const getWeaknessTags = async () => {
   if (USE_MOCK) {
-    await mockDelay(300)
+    await mockDelay()
     return MOCK_WEAKNESSES
   }
-  return request.get('/v1/learning/weaknesses')
-}
-
-/**
- * 获取个性化推荐资源列表
- * @param {Object} params - { type, jobId, page, pageSize }
- */
-export const getRecommendations = async (params = {}) => {
-  if (USE_MOCK) {
-    await mockDelay(500)
-    let list = [...MOCK_RECOMMENDATIONS]
-    if (params.type && params.type !== 'all') {
-      list = list.filter(r => r.type === params.type)
+  try {
+    const cached = localStorage.getItem('ai_interview_user')
+    const userId = cached ? (JSON.parse(cached).id || JSON.parse(cached).user_id) : null
+    if (!userId) {
+      console.warn('[Weaknesses] 未找到用户ID，降级为Mock')
+      return MOCK_WEAKNESSES
     }
-    return { list, total: list.length }
+    const data = await request.get('/learning/weaknesses', { params: { user_id: userId } })
+    if (!Array.isArray(data) || !data.length) return MOCK_WEAKNESSES
+    // 后端 {tag_id, name, mastery_level} → 前端 {id, tag, level, mastery_level}
+    return data.map((item, idx) => ({
+      id: `w${item.tag_id || idx}`,
+      tag: item.name,
+      mastery_level: item.mastery_level,
+      level: item.mastery_level < 40 ? 'high' : item.mastery_level < 70 ? 'medium' : item.mastery_level < 90 ? 'good' : 'excellent'
+    }))
+  } catch (err) {
+    console.warn('[Weaknesses] 请求失败，降级为Mock', err)
+    return MOCK_WEAKNESSES
   }
-  return request.get('/v1/learning/recommendations', { params })
 }
 
+// 为了兼容 store 中的导入名称
+export const getWeaknesses = getWeaknessTags
+
 /**
- * 收藏/取消收藏资源
- * @param {string} resourceId
- * @param {boolean} bookmarked
+ * 获取推荐学习资源（基于后端向量检索 + 薄弱知识点匹配）
+ * 后端返回: [{id, title, type, source, difficulty}, ...]
+ * 前端补全展示所需字段
  */
-export const toggleBookmark = async (resourceId, bookmarked) => {
+export const getRecommendedResources = async () => {
+  // 从 localStorage 中缓存的书签和完成信息
+  const bookmarks = JSON.parse(localStorage.getItem('learning_bookmarks') || '{}')
+  const completed = JSON.parse(localStorage.getItem('learning_completed') || '[]')
+
   if (USE_MOCK) {
-    await mockDelay(200)
-    return { resourceId, bookmarked }
+    await mockDelay()
+    return MOCK_RECOMMENDATIONS.map(item => ({
+      ...item,
+      bookmarked: bookmarks[item.id] || false,
+      completed: completed.includes(item.id) || false
+    }))
   }
-  return request.post(`/v1/learning/resources/${resourceId}/bookmark`, { bookmarked })
+  try {
+    const cached = localStorage.getItem('ai_interview_user')
+    const userId = cached ? (JSON.parse(cached).id || JSON.parse(cached).user_id) : null
+    if (!userId) {
+      console.warn('[Recommendations] 未找到用户ID，降级为Mock')
+      return MOCK_RECOMMENDATIONS.map(item => ({
+        ...item,
+        bookmarked: bookmarks[item.id] || false,
+        completed: completed.includes(item.id) || false
+      }))
+    }
+    const data = await request.get('/learning/recommendations', {
+      params: { user_id: userId, limit: 10 }
+    })
+    if (!Array.isArray(data) || !data.length) return MOCK_RECOMMENDATIONS.map(item => ({
+      ...item,
+      bookmarked: bookmarks[item.id] || false,
+      completed: completed.includes(item.id) || false
+    }))
+
+    // 难度映射
+    const diffMap = { easy: '初级', medium: '中级', hard: '高级' }
+    // 类型图标映射
+    const typeReadTime = { article: '8分钟', video: '30分钟', course: '45分钟', example: '15分钟', book: '习题杀手' }
+
+    return data.map(item => ({
+      id: item.id,
+      title: item.title,
+      type: item.type || 'article',
+      summary: item.content ? item.content.slice(0, 100) + '...' : `针对您的薄弱环节推荐的${diffMap[item.difficulty] || ''}学习资源`,
+      source: item.source || 'AI面试助手',
+      tags: Array.isArray(item.tags) ? item.tags.slice(0, 3) : [],
+      readTime: typeReadTime[item.type] || '10分钟',
+      difficulty: diffMap[item.difficulty] || item.difficulty || '中级',
+      relatedWeakness: null,
+      bookmarked: bookmarks[item.id] || false,
+      completed: completed.includes(item.id) || false,
+      url: item.url || null
+    }))
+  } catch (err) {
+    console.warn('[Recommendations] 请求失败，降级为Mock', err)
+    return MOCK_RECOMMENDATIONS
+  }
 }
 
-/**
- * 标记资源已完成
- * @param {string} resourceId
- */
-export const markCompleted = async (resourceId) => {
-  if (USE_MOCK) {
-    await mockDelay(200)
-    return { resourceId, completed: true }
-  }
-  return request.post(`/v1/learning/resources/${resourceId}/complete`)
-}
+// 为了兼容 store 中的导入名称
+export const getRecommendations = getRecommendedResources
 
 /**
- * 获取今日学习计划
+ * 获取每日学习计划
  */
 export const getDailyPlan = async () => {
   if (USE_MOCK) {
-    await mockDelay(300)
+    await mockDelay()
     return MOCK_DAILY_PLAN
   }
-  return request.get('/v1/learning/daily-plan')
+  return request.get('/learning/daily-plan')
 }
 
 /**
- * 更新每日任务完成状态
- * @param {string} taskId
- * @param {boolean} done
+ * 切换资源收藏状态
+ * @param {string} resourceId - 资源ID
+ * @param {boolean} bookmarked - 收藏状态
+ */
+export const toggleBookmark = async (resourceId, bookmarked) => {
+  // 永久化到 localStorage
+  const bookmarks = JSON.parse(localStorage.getItem('learning_bookmarks') || '{}')
+  bookmarks[resourceId] = bookmarked
+  localStorage.setItem('learning_bookmarks', JSON.stringify(bookmarks))
+
+  if (USE_MOCK) {
+    await mockDelay(300)
+    return { success: true }
+  }
+  // 可以了触发后端扣构端类型的接口，但可选
+  return request.post(`/learning/resources/${resourceId}/bookmark`, { bookmarked }).catch(() => ({ success: true }))
+}
+
+/**
+ * 标记资源为已完成
+ * @param {string} resourceId - 资源ID
+ */
+export const markCompleted = async (resourceId) => {
+  // 永久化到 localStorage
+  const completed = JSON.parse(localStorage.getItem('learning_completed') || '[]')
+  if (!completed.includes(resourceId)) {
+    completed.push(resourceId)
+    localStorage.setItem('learning_completed', JSON.stringify(completed))
+  }
+
+  if (USE_MOCK) {
+    await mockDelay(300)
+    return { success: true }
+  }
+
+  const cached = localStorage.getItem('ai_interview_user')
+  const userId = cached ? (JSON.parse(cached).id || JSON.parse(cached).user_id) : null
+  if (!userId) return { success: true }
+
+  try {
+    // 先调 start_learning
+    await request.post('/learning/records/start', { user_id: userId, resource_id: resourceId })
+    // 再调 finish_learning
+    await request.post('/learning/records/finish', { user_id: userId, resource_id: resourceId })
+    return { success: true }
+  } catch (err) {
+    // 失败时保留 localStorage 的标记
+    return { success: true }
+  }
+}
+
+/**
+ * 更新每日计划任务状态
+ * @param {string} taskId - 任务ID
+ * @param {boolean} done - 完成状态
  */
 export const updateTaskStatus = async (taskId, done) => {
   if (USE_MOCK) {
-    await mockDelay(200)
-    return { taskId, done }
+    await mockDelay(300)
+    return { success: true }
   }
-  return request.patch(`/v1/learning/tasks/${taskId}`, { done })
+  return request.post(`/learning/tasks/${taskId}/status`, { done })
 }
