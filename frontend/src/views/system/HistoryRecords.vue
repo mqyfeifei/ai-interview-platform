@@ -184,16 +184,11 @@
         </template>
       </div>
 
-      <div style="height: 80px;" />
     </div>
-
-    <!-- 底部导航 -->
-    <BottomNav />
   </div>
 </template>
 
 <script>
-import BottomNav from '@/components/common/BottomNav.vue'
 import { getHistoryList } from '@/api/report'
 import { JOB_TYPES } from '@/utils/constants'
 
@@ -201,7 +196,6 @@ const PAGE_SIZE = 10
 
 export default {
   name: 'HistoryRecords',
-  components: { BottomNav },
   data() {
     return {
       list: [],

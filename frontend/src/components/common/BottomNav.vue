@@ -56,6 +56,11 @@ export default {
 
 <style lang="scss" scoped>
 .bottom-nav {
+  /* PC端隐藏 */
+  @media (min-width: 1024px) {
+    display: none !important;
+  }
+
   position: fixed;
   bottom: 0;
   left: 50%;
