@@ -2,6 +2,8 @@
 // module.exports = defineConfig({
 //   transpileDependencies: true,
 // });
+
+// frontend/vue.config.js
 const { defineConfig } = require('@vue/cli-service')
 
 module.exports = defineConfig({
