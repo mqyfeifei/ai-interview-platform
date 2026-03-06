@@ -61,7 +61,7 @@ def import_knowledge_base():
 
         # 2. 加载本地向量模型
         print("⏳ 正在加载向量模型 (BAAI/bge-small-zh-v1.5)...")
-        model = SentenceTransformer('BAAI/bge-small-zh-v1.5')
+        model = SentenceTransformer('BAAI/bge-small-zh-v1.5', local_files_only=False)
 
         # =====================================================================
         # 3. 导入面试题 -> KnowledgeItem (用于面试中的追问与提示)
