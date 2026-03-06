@@ -57,6 +57,7 @@
           <!-- Step 1: 账号信息 -->
           <transition name="step" mode="out-in">
             <div v-if="currentStep === 1" key="step1" class="step-fields">
+
               <div class="form-group">
                 <label>邮箱地址 *</label>
                 <div class="input-wrapper">
@@ -166,6 +167,27 @@
           <transition name="step" mode="out-in">
             <div v-if="currentStep === 2" key="step2" class="step-fields">
               <div class="form-group">
+                <label>真实姓名 *</label>
+                <div class="input-wrapper">
+                  <span class="input-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                      <circle cx="12" cy="7" r="4"/>
+                    </svg>
+                  </span>
+                  <input
+                    v-model="form.realName"
+                    type="text"
+                    placeholder="请输入真实姓名"
+                    class="form-control with-icon"
+                    :class="{ error: errors.realName }"
+                  />
+                </div>
+                <span v-if="errors.realName" class="form-error">{{ errors.realName }}</span>
+              </div>
+
+
+              <div class="form-group">
                 <label>你的昵称 *</label>
                 <div class="input-wrapper">
                   <span class="input-icon">
@@ -187,7 +209,7 @@
               </div>
 
               <div class="form-group">
-                <label>就读学校</label>
+                <label>就读学校 *</label>
                 <div class="input-wrapper">
                   <span class="input-icon">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -200,26 +222,31 @@
                     type="text"
                     placeholder="如：北京大学"
                     class="form-control with-icon"
+                    :class="{ error: errors.school }"
                   />
                 </div>
+                <span v-if="errors.school" class="form-error">{{ errors.school }}</span>
               </div>
 
               <div class="form-row">
                 <div class="form-group">
-                  <label>专业方向</label>
+                  <label>专业方向 *</label>
                   <input
                     v-model="form.major"
                     type="text"
                     placeholder="如：计算机科学"
                     class="form-control"
+                    :class="{ error: errors.major }"
                   />
+                  <span v-if="errors.major" class="form-error">{{ errors.major }}</span>
                 </div>
                 <div class="form-group">
-                  <label>年级</label>
+                  <label>年级 *</label>
                   <select v-model="form.grade" class="form-control form-select">
                     <option value="">选择年级</option>
                     <option v-for="g in gradeOptions" :key="g" :value="g">{{ g }}</option>
                   </select>
+                  <span v-if="errors.grade" class="form-error">{{ errors.grade }}</span>
                 </div>
               </div>
             </div>
@@ -281,6 +308,7 @@ export default {
         email: '',
         phone: '',
         password: '',
+        realName: '',
         confirmPassword: '',
         username: '',
         school: '',
@@ -332,8 +360,8 @@ export default {
         this.errors.email = '请输入有效的邮箱地址'
       }
 
-      if (phone && !/^1[3-9]\d{9}$/.test(phone)) {
-        this.errors.phone = '请输入有效的手机号码'
+if (phone && !/^1\d{10}$/.test(phone)) { // 原规则：/^1[3-9]\d{9}$/
+  this.errors.phone = '请输入有效的手机号码'
       }
 
       if (!password) {
@@ -351,10 +379,23 @@ export default {
       return Object.keys(this.errors).length === 0
     },
 
+// 修改 validateStep2 方法
     validateStep2() {
       this.errors = {}
+      if (!this.form.realName.trim()) {
+        this.errors.realName = '请输入真实姓名'
+      }
       if (!this.form.username.trim()) {
         this.errors.username = '请输入昵称'
+      }
+      if (!this.form.school.trim()) {
+        this.errors.school = '请输入就读学校'
+      }
+      if (!this.form.major.trim()) {
+        this.errors.major = '请输入专业方向'
+      }
+      if (!this.form.grade.trim()) {
+        this.errors.grade = '请选择年级'
       }
       return Object.keys(this.errors).length === 0
     },
@@ -369,8 +410,10 @@ export default {
       this.globalError = ''
       this.loading = true
       try {
-        const { ...submitData } = this.form
-        // const { confirmPassword: _, ...submitData } = this.form
+        // const { ...submitData } = this.form
+        const { confirmPassword, ...submitData } = this.form
+        submitData.real_name = submitData.realName
+        delete submitData.realName // 移除驼峰命名的字段
         await this.register(submitData)
         this.$router.push('/interview/select')
       } catch (err) {

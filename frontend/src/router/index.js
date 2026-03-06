@@ -31,13 +31,13 @@ const routes = [
     path: '/dashboard',
     name: 'Dashboard',
     component: () => import('@/views/system/Dashboard.vue'),
-    meta: { requiresAuth: false, title: '首页', showBottomNav: true }
+    meta: { requiresAuth: true, title: '首页', showBottomNav: true }
   },
   {
     path: '/profile',
     name: 'PersonalCenter',
     component: () => import('@/views/users/PersonalCenter.vue'),
-    meta: { requiresAuth: false, title: '个人中心', showBottomNav: true }
+    meta: { requiresAuth: true, title: '个人中心', showBottomNav: true }
   },
 
   // ---- 面试相关路由 ----
@@ -45,19 +45,19 @@ const routes = [
     path: '/interview/select',
     name: 'JobSelection',
     component: () => import('@/views/interview/JobSelection.vue'),
-    meta: { requiresAuth: false, title: '选择岗位' }
+    meta: { requiresAuth: true, title: '选择岗位' }
   },
   {
     path: '/interview/session',
     name: 'InterviewSession',
     component: () => import('@/views/interview/InterviewSession.vue'),
-    meta: { requiresAuth: false, title: '模拟面试', hideNav: true }
+    meta: { requiresAuth: true, title: '模拟面试', hideNav: true }
   },
   {
     path: '/interview/report/:reportId',
     name: 'InterviewReport',
     component: () => import('@/views/interview/InterviewReport.vue'),
-    meta: { requiresAuth: false, title: '面试报告' }
+    meta: { requiresAuth: true, title: '面试报告' }
   },
 
   // ---- 其他功能路由 ----
@@ -65,13 +65,13 @@ const routes = [
     path: '/learning',
     name: 'LearningCenter',
     component: () => import('@/views/system/LearningCenter.vue'),
-    meta: { requiresAuth: false, title: '学习中心', showBottomNav: true }
+    meta: { requiresAuth: true, title: '学习中心', showBottomNav: true }
   },
   {
     path: '/history',
     name: 'HistoryRecords',
     component: () => import('@/views/system/HistoryRecords.vue'),
-    meta: { requiresAuth: false, title: '历史记录', showBottomNav: true }
+    meta: { requiresAuth: true, title: '历史记录', showBottomNav: true }
   },
 
   // ---- 404 ----

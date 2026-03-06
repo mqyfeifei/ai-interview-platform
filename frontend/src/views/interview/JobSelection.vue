@@ -149,7 +149,8 @@ export default {
         { key: 'all', label: '全部岗位' },
         { key: '中级', label: '中级' },
         { key: '高级', label: '高级' }
-      ]
+      ],
+      jobDbIdMap: {}
     }
   },
   computed: {
@@ -169,7 +170,31 @@ export default {
       return jobs
     }
   },
-  created() {
+created() {
+  // 核心修改1：将异步逻辑封装到 async 函数中并立即执行
+  const initJobs = async () => {
+    try {
+      const { fetchJobs } = await import('@/api/job')
+      const jobs = await fetchJobs()
+      if (jobs && jobs.length) {
+        // 用后端返回的name匹配前端的JOB_TYPES，建立 frontKey→dbId 映射
+        const nameToKey = {
+          'Java后端开发': 'java-backend',
+          '前端开发': 'web-frontend',
+          'Python算法工程师': 'python-algorithm',
+          '全栈开发工程师': 'fullstack',
+          'Android开发': 'android',
+          'DevOps工程师': 'devops'
+        }
+        jobs.forEach(j => {
+          const key = nameToKey[j.name]
+          if (key) this.jobDbIdMap[key] = j.id
+        })
+      }
+    } catch (e) {
+      console.warn('加载岗位列表失败，使用本地 dbId 兜底', e)
+    }
+
     // 回显 store 中已选岗位 或 用户默认岗位
     const storeJob = this.$store.getters['interview/selectedJob']
     if (storeJob) {
@@ -180,24 +205,25 @@ export default {
         this.currentSelected = JOB_TYPES.find(j => j.id === defaultJobId) || null
       }
     }
-  },
+  }
+
+  // 核心修改2：立即执行异步初始化函数
+  initJobs()
+},
   methods: {
     toggleSelect(job) {
       this.currentSelected = this.currentSelected?.id === job.id ? null : job
     },
 
-    async handleStart() {
-      if (!this.currentSelected) return
-      // 写入 store
-      this.$store.dispatch('interview/selectJob', this.currentSelected)
-      // 若勾选了记住，持久化到后端
-      if (this.rememberChoice) {
-        this.$store.dispatch('user/updateDefaultJob', this.currentSelected.id).catch(() => {})
-      }
-      // 清空上次面试消息
-      this.$store.dispatch('interview/resetInterview')
-      this.$router.push('/interview/session')
-    }
+async handleStart() {
+  const job = this.selectedJob
+  const dbId = this.jobDbIdMap[job.id] || job.dbId  // 优先用后端返回的，兜底用constants里的
+  await this.$store.dispatch('interview/selectJob', job)
+  await this.$store.dispatch('interview/resetInterview')
+  // 把 dbId 也存到 store，后续 startSession 用
+  this.$store.commit('interview/SET_JOB_DB_ID', dbId)
+  this.$router.push('/interview/session')
+},
   }
 }
 </script>

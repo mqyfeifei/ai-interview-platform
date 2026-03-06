@@ -142,7 +142,10 @@ const buildMockReport = (reportId) => ({
  */
 // 替换 getReport 函数
 export const getReport = async (reportId) => {
-  if (USE_MOCK) { /* 原mock代码不变 */ }
+  if (USE_MOCK) {
+    await mockDelay(1000)
+    return buildMockReport(reportId)
+  }
   // 优先从 sessionStorage 读取（由 finishInterview 写入）
   const cached = sessionStorage.getItem(`report_${reportId}`)
   if (cached) {

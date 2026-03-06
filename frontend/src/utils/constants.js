@@ -14,6 +14,7 @@ export const API_BASE_URL = process.env.VUE_APP_API_BASE_URL || '/api'
 export const JOB_TYPES = [
   {
     id: 'java-backend',
+    dbId: 1, 
     name: 'Java后端开发',
     icon: '☕',
     color: '#F59E0B',
@@ -26,6 +27,7 @@ export const JOB_TYPES = [
   },
   {
     id: 'web-frontend',
+    dbId: 2,
     name: 'Web前端开发',
     icon: '🎨',
     color: '#3B82F6',
@@ -38,6 +40,7 @@ export const JOB_TYPES = [
   },
   {
     id: 'python-algorithm',
+    dbId: 3,
     name: 'Python算法工程师',
     icon: '🐍',
     color: '#10B981',
@@ -50,6 +53,7 @@ export const JOB_TYPES = [
   },
   {
     id: 'fullstack',
+    dbId: 4,
     name: '全栈开发工程师',
     icon: '⚡',
     color: '#8B5CF6',
@@ -62,6 +66,7 @@ export const JOB_TYPES = [
   },
   {
     id: 'android',
+    dbId: 5,  
     name: 'Android开发',
     icon: '🤖',
     color: '#EF4444',
@@ -74,6 +79,7 @@ export const JOB_TYPES = [
   },
   {
     id: 'devops',
+    dbId: 6,
     name: 'DevOps工程师',
     icon: '🛠️',
     color: '#6366F1',
