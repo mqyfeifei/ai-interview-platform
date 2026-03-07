@@ -32,7 +32,7 @@
 
           <!-- 已登录：头像 -->
           <div class="header-avatar" v-if="isLoggedIn" @click="$router.push('/profile')">
-            <img v-if="userInfo && userInfo.avatar" :src="userInfo.avatar" alt="头像" />
+            <img v-if="userInfo && userInfo.avatar" :src="resolvedAvatarSrc" alt="头像" />
             <span v-else class="avatar-fallback">{{ avatarLetter }}</span>
           </div>
         </div>
@@ -394,6 +394,22 @@ export default {
       if (!this.isLoggedIn) return '客'
       const name = this.userName || '用'
       return name.charAt(0)
+    },
+
+    resolvedAvatarSrc() {
+      const raw = this.userInfo && this.userInfo.avatar
+      if (!raw) return ''
+      const asString = String(raw)
+      const stamp = Date.now()
+
+      const withStamp = (url) => url.includes('?') ? `${url}&t=${stamp}` : `${url}?t=${stamp}`
+      if (/^https?:\/\//i.test(asString)) return withStamp(asString)
+
+      const origin = (process.env.VUE_APP_BACKEND_ORIGIN || '').replace(/\/$/, '')
+      if (origin) {
+        return withStamp(`${origin}${asString.startsWith('/') ? '' : '/'}${asString}`)
+      }
+      return withStamp(asString)
     },
 
     defaultJobName() {
