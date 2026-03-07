@@ -6,9 +6,9 @@
   ============================================= -->
 <template>
   <div class="report-page">
-    <!-- 顶部导航 -->
+    <!-- 顶部导航：修复返回按钮 -->
     <div class="report-nav">
-      <button class="back-btn" @click="$router.push('/dashboard')">
+      <button class="back-btn" @click="$router.back()">  <!-- ← 修复：back()替代push('/dashboard') -->
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="15 18 9 12 15 6"/>
         </svg>
@@ -26,7 +26,7 @@
     <!-- 加载中 -->
     <div v-if="loading" class="loading-wrap">
       <div class="loading-spinner" />
-      <p>正在生成面试报告...</p>
+      <p>正在加载面试报告...</p>
     </div>
 
     <template v-else-if="report">
@@ -34,40 +34,27 @@
       <div class="report-hero">
         <div class="hero-bg-circle" />
         <div class="hero-bg-circle hero-bg-circle--2" />
-
         <div class="hero-content">
           <div class="hero-meta">
             <span class="job-badge">{{ report.jobName }}</span>
             <span class="date-text">{{ formatDateTime(report.createdAt) }}</span>
           </div>
-
-          <!-- 大分数圆环 -->
           <div class="score-circle-wrap">
             <svg class="score-circle-svg" viewBox="0 0 180 180">
               <circle cx="90" cy="90" r="76" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="10"/>
-              <circle
-                cx="90" cy="90" r="76"
-                fill="none" stroke="white" stroke-width="10"
-                stroke-linecap="round"
-                :stroke-dasharray="scoreCircumference"
-                :stroke-dashoffset="scoreOffset"
-                transform="rotate(-90 90 90)"
-                style="transition: stroke-dashoffset 1.5s cubic-bezier(0.4,0,0.2,1)"
-              />
+              <circle cx="90" cy="90" r="76" fill="none" stroke="white" stroke-width="10"
+                stroke-linecap="round" :stroke-dasharray="scoreCircumference" :stroke-dashoffset="scoreOffset"
+                transform="rotate(-90 90 90)" style="transition: stroke-dashoffset 1.5s cubic-bezier(0.4,0,0.2,1)"/>
             </svg>
             <div class="score-circle-inner">
               <span class="score-circle-number">{{ animatedScore }}</span>
               <span class="score-circle-label">综合得分</span>
             </div>
           </div>
-
-          <!-- 等级标签 -->
           <div class="score-grade">
             <span class="grade-badge" :class="'grade-' + grade.key">{{ grade.label }}</span>
             <span class="grade-desc">{{ grade.desc }}</span>
           </div>
-
-          <!-- 概览数据 -->
           <div class="hero-stats">
             <div class="hero-stat">
               <span class="hero-stat__icon">⏱️</span>
@@ -92,43 +79,31 @@
 
       <!-- 内容区 -->
       <div class="report-body">
+
         <!-- 能力雷达图 -->
         <section class="report-section">
           <div class="section-header">
             <h2 class="section-title">
-              <span class="section-title__icon">📊</span>
-              能力雷达图
+              <span class="section-title__icon">📊</span>能力雷达图
             </h2>
             <div class="legend">
               <span class="legend-item legend-item--you">本次</span>
               <span class="legend-item legend-item--avg">平均</span>
             </div>
           </div>
-
           <div class="radar-card">
             <div ref="radarChart" class="radar-chart" />
-            <!-- 维度得分列表 -->
             <div class="dimension-scores">
-              <div
-                v-for="dim in dimensionList"
-                :key="dim.key"
-                class="dim-score-item"
-              >
+              <div v-for="dim in dimensionList" :key="dim.key" class="dim-score-item">
                 <div class="dim-score-item__left">
                   <span class="dim-score-item__name">{{ dim.label }}</span>
                   <div class="dim-score-bar">
-                    <div
-                      class="dim-score-bar__fill"
-                      :style="{ width: dim.score + '%', background: dim.color }"
-                    />
+                    <div class="dim-score-bar__fill" :style="{ width: dim.score + '%', background: dim.color }" />
                   </div>
                 </div>
                 <div class="dim-score-item__right">
                   <span class="dim-score-item__score" :style="{ color: dim.color }">{{ dim.score }}</span>
-                  <span
-                    class="dim-vs-avg"
-                    :class="dim.score >= dim.avg ? 'above' : 'below'"
-                  >
+                  <span class="dim-vs-avg" :class="dim.score >= dim.avg ? 'above' : 'below'">
                     {{ dim.score >= dim.avg ? '+' : '' }}{{ dim.score - dim.avg }}
                   </span>
                 </div>
@@ -139,17 +114,9 @@
 
         <!-- 亮点 -->
         <section class="report-section">
-          <h2 class="section-title">
-            <span class="section-title__icon">✨</span>
-            回答亮点
-          </h2>
+          <h2 class="section-title"><span class="section-title__icon">✨</span>回答亮点</h2>
           <div class="highlight-list">
-            <div
-              v-for="(h, i) in report.highlights"
-              :key="i"
-              class="highlight-item"
-              :style="{ animationDelay: i * 0.08 + 's' }"
-            >
+            <div v-for="(h, i) in report.highlights" :key="i" class="highlight-item" :style="{ animationDelay: i * 0.08 + 's' }">
               <div class="highlight-item__dot" />
               <p>{{ h }}</p>
             </div>
@@ -158,17 +125,9 @@
 
         <!-- 待改进 -->
         <section class="report-section">
-          <h2 class="section-title">
-            <span class="section-title__icon">🔧</span>
-            待提升项
-          </h2>
+          <h2 class="section-title"><span class="section-title__icon">🔧</span>待提升项</h2>
           <div class="improvement-list">
-            <div
-              v-for="(imp, i) in report.improvements"
-              :key="i"
-              class="improvement-item"
-              :style="{ animationDelay: i * 0.08 + 's' }"
-            >
+            <div v-for="(imp, i) in report.improvements" :key="i" class="improvement-item" :style="{ animationDelay: i * 0.08 + 's' }">
               <div class="improvement-item__header">
                 <span class="improvement-item__num">{{ i + 1 }}</span>
                 <p class="improvement-item__point">{{ imp.point }}</p>
@@ -187,16 +146,19 @@
           </div>
         </section>
 
-        <!-- 逐题回顾 -->
+        <!-- 逐题回顾（含 AI 点评） -->
         <section class="report-section">
           <div class="section-header">
-            <h2 class="section-title">
-              <span class="section-title__icon">📋</span>
-              逐题回顾
-            </h2>
+            <h2 class="section-title"><span class="section-title__icon">📋</span>逐题回顾</h2>
             <button class="expand-all-btn" @click="toggleAllQuestions">
               {{ allExpanded ? '全部收起' : '全部展开' }}
             </button>
+          </div>
+
+          <!-- 点评加载提示 -->
+          <div v-if="analysisLoading" class="analysis-loading-tip">
+            <div class="analysis-loading-tip__dot" />
+            <span>AI 正在生成逐题点评，请稍候...</span>
           </div>
 
           <div class="question-list">
@@ -206,7 +168,6 @@
               class="question-item"
               :class="{ expanded: expandedItems.includes(q.id) }"
             >
-              <!-- 题目头部 -->
               <div class="question-item__header" @click="toggleQuestion(q.id)">
                 <div class="question-item__left">
                   <div class="q-index">
@@ -217,26 +178,31 @@
                 </div>
                 <div class="question-item__right">
                   <span :class="['q-score', scoreClass(q.score)]">{{ q.score }}</span>
-                  <svg
-                    class="q-chevron"
-                    :class="{ rotated: expandedItems.includes(q.id) }"
-                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                  >
+                  <svg class="q-chevron" :class="{ rotated: expandedItems.includes(q.id) }"
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="6 9 12 15 18 9"/>
                   </svg>
                 </div>
               </div>
 
-              <!-- 展开内容 -->
               <transition name="collapse">
                 <div v-if="expandedItems.includes(q.id)" class="question-item__detail">
                   <div class="detail-answer">
                     <p class="detail-label">你的回答</p>
-                    <p class="detail-content">{{ q.answer }}</p>
+                    <p class="detail-content">{{ q.answer || '（未作答）' }}</p>
                   </div>
                   <div class="detail-comment">
-                    <p class="detail-label">AI 点评</p>
-                    <p class="detail-content">{{ q.comment }}</p>
+                    <p class="detail-label">
+                      AI 点评
+                      <!-- 该题点评还在加载中 -->
+                      <span v-if="analysisLoading && !q.comment" class="comment-loading-badge">生成中...</span>
+                    </p>
+                    <p v-if="q.comment" class="detail-content">{{ q.comment }}</p>
+                    <p v-else-if="!analysisLoading" class="detail-content detail-content--muted">暂无点评</p>
+                    <div v-else class="comment-skeleton">
+                      <div class="comment-skeleton__line" />
+                      <div class="comment-skeleton__line comment-skeleton__line--short" />
+                    </div>
                   </div>
                 </div>
               </transition>
@@ -247,16 +213,13 @@
         <!-- 操作按钮区 -->
         <section class="report-actions">
           <button class="action-btn action-btn--primary" @click="retryInterview">
-            <span>🔄</span>
-            <span>再次面试</span>
+            <span>🔄</span><span>再次面试</span>
           </button>
           <button class="action-btn action-btn--outline" @click="$router.push('/learning')">
-            <span>📚</span>
-            <span>学习中心</span>
+            <span>📚</span><span>学习中心</span>
           </button>
           <button class="action-btn action-btn--ghost" @click="$router.push('/history')">
-            <span>📋</span>
-            <span>历史记录</span>
+            <span>📋</span><span>历史记录</span>
           </button>
         </section>
 
@@ -264,7 +227,6 @@
       </div>
     </template>
 
-    <!-- 报告加载失败 -->
     <div v-else-if="!loading" class="error-state">
       <span style="font-size:48px">😕</span>
       <p>报告加载失败</p>
@@ -274,12 +236,10 @@
 </template>
 
 <script>
-import { getReport } from '@/api/report'
+import { getReport, getReplyAnalysis } from '@/api/report'
 import { INTERVIEW_DIMENSIONS } from '@/utils/constants'
 
-// ECharts 按需引入
 let echarts = null
-
 const DIMENSION_COLORS = ['#4338CA', '#10B981', '#F59E0B', '#3B82F6', '#8B5CF6']
 
 export default {
@@ -287,6 +247,7 @@ export default {
   data() {
     return {
       loading: true,
+      analysisLoading: false,   // ← 新增：逐题点评单独加载状态
       report: null,
       expandedItems: [],
       animatedScore: 0,
@@ -295,10 +256,7 @@ export default {
     }
   },
   computed: {
-    reportId() {
-      return this.$route.params.reportId
-    },
-
+    reportId() { return this.$route.params.reportId },
     grade() {
       const s = this.report?.totalScore || 0
       if (s >= 90) return { key: 'excellent', label: '优秀', desc: '表现出色，大厂可期！' }
@@ -307,19 +265,13 @@ export default {
       if (s >= 60) return { key: 'pass', label: '及格', desc: '基础薄弱，需要加强练习。' }
       return { key: 'fail', label: '待提升', desc: '建议从基础开始系统学习。' }
     },
-
-    scoreCircumference() {
-      return 2 * Math.PI * 76
-    },
-
+    scoreCircumference() { return 2 * Math.PI * 76 },
     scoreOffset() {
-      const score = this.report?.totalScore || 0
-      return this.scoreCircumference * (1 - score / 100)
+      return this.scoreCircumference * (1 - (this.report?.totalScore || 0) / 100)
     },
-
     dimensionList() {
       if (!this.report) return []
-      const dims = this.report.dimensions
+      const dims = this.report.dimensions || {}
       const avg = this.report.avgDimensions || {}
       return INTERVIEW_DIMENSIONS.map((d, i) => ({
         key: d.key,
@@ -329,21 +281,16 @@ export default {
         color: DIMENSION_COLORS[i % DIMENSION_COLORS.length]
       }))
     },
-
     followUpCount() {
-      if (!this.report?.questions) return 0
-      return this.report.questions.filter(q => q.isFollowUp).length
+      return (this.report?.questions || []).filter(q => q.isFollowUp).length
     },
-
     allExpanded() {
-      return this.report?.questions?.length === this.expandedItems.length
+      return this.report?.questions?.length > 0 &&
+             this.report.questions.length === this.expandedItems.length
     }
   },
   async created() {
     await this.loadReport()
-  },
-  mounted() {
-    this.loadECharts()
   },
   beforeUnmount() {
     if (this.scoreInterval) clearInterval(this.scoreInterval)
@@ -353,11 +300,18 @@ export default {
     async loadReport() {
       this.loading = true
       try {
+        // 1. 先加载报告基础数据（含 questions，但 comment 为空）
         this.report = await getReport(this.reportId)
+
+        // 2. 修复雷达图：先确保 echarts 加载完毕，再初始化图表
+        await this.ensureECharts()
         this.$nextTick(() => {
           this.animateScore()
           this.initRadarChart()
         })
+
+        // 3. 异步加载逐题 AI 点评，不阻塞报告主体渲染
+        this.loadAnalysis()
       } catch (e) {
         console.error('加载报告失败', e)
       } finally {
@@ -365,7 +319,41 @@ export default {
       }
     },
 
-    // 分数滚动动画
+    // 确保 echarts 已加载，修复竞态问题
+    async ensureECharts() {
+      if (!echarts) {
+        try {
+          echarts = await import('echarts')
+        } catch {
+          console.warn('ECharts 未安装，雷达图不可用。运行: npm install echarts')
+        }
+      }
+    },
+
+    // 逐题点评：单独请求，完成后逐题回写 comment
+    async loadAnalysis() {
+      if (!this.report?.questions?.length) return
+      this.analysisLoading = true
+      try {
+        const data = await getReplyAnalysis(this.reportId)
+        if (!data?.items?.length) return
+
+        // 按 index 将 evaluationText 回写到对应题目的 comment 字段
+        // index 从 1 开始，对应 questions 数组下标 index-1
+        data.items.forEach(item => {
+          const q = this.report.questions[item.index - 1]
+          if (q) {
+            // Vue 响应式更新：直接赋值属性
+            q.comment = item.evaluationText || ''
+          }
+        })
+      } catch (e) {
+        console.warn('逐题点评加载失败', e)
+      } finally {
+        this.analysisLoading = false
+      }
+    },
+
     animateScore() {
       const target = this.report?.totalScore || 0
       this.animatedScore = 0
@@ -379,141 +367,90 @@ export default {
       }, 30)
     },
 
-    // 初始化 ECharts 雷达图
-    async loadECharts() {
-      if (!echarts) {
-        try {
-          echarts = await import('echarts')
-        } catch {
-          console.warn('ECharts 未安装，雷达图不可用。运行: npm install echarts')
-          return
-        }
-      }
-      this.$nextTick(() => {
-        if (this.report) this.initRadarChart()
-      })
-    },
-
     initRadarChart() {
       if (!echarts || !this.$refs.radarChart || !this.report) return
-
       if (this.chartInstance) this.chartInstance.dispose()
 
       const chart = echarts.init(this.$refs.radarChart)
       this.chartInstance = chart
 
       const dims = this.dimensionList
-      const indicator = dims.map(d => ({ name: d.label, max: 100 }))
-      const myValues = dims.map(d => d.score)
-      const avgValues = dims.map(d => d.avg)
-
       chart.setOption({
         backgroundColor: 'transparent',
         radar: {
-          indicator,
-          shape: 'circle',
-          splitNumber: 4,
-          center: ['50%', '50%'],
-          radius: '68%',
-          axisName: {
-            color: '#475569',
-            fontSize: 11,
-            fontFamily: "'Noto Sans SC', sans-serif"
-          },
-          splitArea: {
-            areaStyle: {
-              color: ['rgba(67,56,202,0.02)', 'rgba(67,56,202,0.04)', 'rgba(67,56,202,0.06)', 'rgba(67,56,202,0.08)']
-            }
-          },
+          indicator: dims.map(d => ({ name: d.label, max: 100 })),
+          shape: 'circle', splitNumber: 4,
+          center: ['50%', '50%'], radius: '68%',
+          axisName: { color: '#475569', fontSize: 11 },
+          splitArea: { areaStyle: { color: ['rgba(67,56,202,0.02)', 'rgba(67,56,202,0.04)', 'rgba(67,56,202,0.06)', 'rgba(67,56,202,0.08)'] } },
           axisLine: { lineStyle: { color: '#E2E8F0' } },
           splitLine: { lineStyle: { color: '#E2E8F0' } }
         },
-        series: [
-          {
-            type: 'radar',
-            data: [
-              {
-                value: avgValues,
-                name: '平均水平',
-                areaStyle: { color: 'rgba(148,163,184,0.15)' },
-                lineStyle: { color: '#CBD5E1', width: 1.5, type: 'dashed' },
-                itemStyle: { color: '#CBD5E1' },
-                symbol: 'circle', symbolSize: 4
+        series: [{
+          type: 'radar',
+          data: [
+            {
+              value: dims.map(d => d.avg),
+              name: '平均水平',
+              areaStyle: { color: 'rgba(148,163,184,0.15)' },
+              lineStyle: { color: '#CBD5E1', width: 1.5, type: 'dashed' },
+              itemStyle: { color: '#CBD5E1' }, symbol: 'circle', symbolSize: 4
+            },
+            {
+              value: dims.map(d => d.score),
+              name: '本次表现',
+              areaStyle: {
+                color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                  { offset: 0, color: 'rgba(67,56,202,0.35)' },
+                  { offset: 1, color: 'rgba(124,58,237,0.15)' }
+                ])
               },
-              {
-                value: myValues,
-                name: '本次表现',
-                areaStyle: {
-                  color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                    { offset: 0, color: 'rgba(67,56,202,0.35)' },
-                    { offset: 1, color: 'rgba(124,58,237,0.15)' }
-                  ])
-                },
-                lineStyle: { color: '#4338CA', width: 2.5 },
-                itemStyle: { color: '#4338CA', borderColor: 'white', borderWidth: 2 },
-                symbol: 'circle', symbolSize: 7
-              }
-            ],
-            animation: true,
-            animationDuration: 1000,
-            animationEasing: 'cubicOut'
-          }
-        ]
+              lineStyle: { color: '#4338CA', width: 2.5 },
+              itemStyle: { color: '#4338CA', borderColor: 'white', borderWidth: 2 },
+              symbol: 'circle', symbolSize: 7
+            }
+          ],
+          animation: true, animationDuration: 1000, animationEasing: 'cubicOut'
+        }]
       })
 
-      // 响应式
       const resizeObs = new ResizeObserver(() => chart.resize())
       resizeObs.observe(this.$refs.radarChart)
     },
 
-    // 题目展开收起
     toggleQuestion(id) {
       const idx = this.expandedItems.indexOf(id)
-      if (idx === -1) {
-        this.expandedItems.push(id)
-      } else {
-        this.expandedItems.splice(idx, 1)
-      }
+      if (idx === -1) this.expandedItems.push(id)
+      else this.expandedItems.splice(idx, 1)
     },
-
     toggleAllQuestions() {
-      if (this.allExpanded) {
-        this.expandedItems = []
-      } else {
-        this.expandedItems = this.report.questions.map(q => q.id)
-      }
+      if (this.allExpanded) this.expandedItems = []
+      else this.expandedItems = this.report.questions.map(q => q.id)
     },
-
     scoreClass(score) {
       if (score >= 85) return 'score-excellent'
       if (score >= 75) return 'score-good'
       if (score >= 60) return 'score-average'
       return 'score-poor'
     },
-
     formatDuration(seconds) {
       if (!seconds) return '--'
-      const m = Math.floor(seconds / 60)
-      const s = seconds % 60
-      return `${m}分${s}秒`
+      return `${Math.floor(seconds / 60)}分${seconds % 60}秒`
     },
-
     formatDateTime(iso) {
       if (!iso) return ''
       const d = new Date(iso)
       return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`
     },
-
     retryInterview() {
       this.$store.dispatch('interview/resetInterview')
       this.$router.push('/interview/select')
     },
-
     handleShare() {
+      const text = `我的${this.report.jobName}模拟面试得分：${this.report.totalScore}分！`
       if (navigator.share) {
-        navigator.share({ title: 'AI面试报告', text: `我的${this.report.jobName}模拟面试得分：${this.report.totalScore}分！`, url: window.location.href }).catch(() => {})
+        navigator.share({ title: 'AI面试报告', text, url: window.location.href }).catch(() => {})
       } else {
-        // 复制链接
         navigator.clipboard.writeText(window.location.href).then(() => alert('链接已复制到剪贴板'))
       }
     }
@@ -966,5 +903,58 @@ export default {
   align-items: center; justify-content: center;
   height: 60vh; gap: $spacing-md;
   p { color: $text-muted; font-size: $font-size-base; }
+}
+
+/* 点评加载提示条 */
+.analysis-loading-tip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  margin-bottom: 12px;
+  background: #F0F9FF;
+  border-radius: 10px;
+  font-size: 13px;
+  color: #0369A1;
+}
+.analysis-loading-tip__dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: #0EA5E9;
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+/* 点评骨架屏 */
+.comment-skeleton { padding: 4px 0; }
+.comment-skeleton__line {
+  height: 12px;
+  background: linear-gradient(90deg, #F1F5F9 25%, #E2E8F0 50%, #F1F5F9 75%);
+  background-size: 200% 100%;
+  border-radius: 6px;
+  margin-bottom: 8px;
+  animation: shimmer 1.5s infinite;
+}
+.comment-skeleton__line--short { width: 65%; }
+
+.comment-loading-badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 7px;
+  background: #DBEAFE;
+  color: #2563EB;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 500;
+  vertical-align: middle;
+}
+.detail-content--muted { color: #94A3B8; font-style: italic; }
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.85); }
 }
 </style>

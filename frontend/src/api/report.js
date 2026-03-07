@@ -157,6 +157,22 @@ export const getReport = async (reportId) => {
   return res
 }
 
+export const getReplyAnalysis = async (reportId) => {
+  if (USE_MOCK) {
+    await mockDelay(600)
+    return null  // Mock 模式下不调用，直接用 buildMockReport 里的 comment
+  }
+  try {
+    const res = await request.get(`/reports/${reportId}/reply-analysis`, {
+      timeout: 90000  // AI 逐题评价耗时较长，单独放宽超时
+    })
+    return res  // { reportId, totalRounds, items: [{index, question, answer, evaluationText, ...}] }
+  } catch (e) {
+    console.warn('逐题点评加载失败，跳过', e)
+    return null
+  }
+}
+
 
 /**
  * 获取历史面试列表
@@ -178,6 +194,7 @@ export const getHistoryList = async (params = {}) => {
   return request.get('/reports', { params })
 }
 
+
 /**
  * 获取单个报告详情
  * @param {string} reportId - 报告ID
@@ -191,7 +208,7 @@ export const getReportDetail = async (reportId) => {
 }
 
 // 在文件末尾加适配函数
-const adaptBackendReport = (raw, reportId) => ({
+export const adaptBackendReport = (raw, reportId) => ({
   id: reportId,
   jobName: '模拟面试',   // 后端finish接口暂未返回jobName，待后端补充
   totalScore: raw.total_score,
@@ -212,5 +229,8 @@ const adaptBackendReport = (raw, reportId) => ({
   suggestions: raw.suggestions,
   questions: []  // 后端 finish 接口暂不返回题目列表，报告页题目回顾留空待后端补充 GET /report/:id 接口
 })
+
+
+
 
 
