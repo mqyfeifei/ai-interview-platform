@@ -13,13 +13,18 @@ module.exports = defineConfig({
     proxy: {
       // 后端API代理配置 - 对接后端时只需修改target即可
       '/api': {
-        target:'http://127.0.0.1:5000',
+        target: 'http://127.0.0.1:5000',
         changeOrigin: true,
         // 若后端路由包含/api前缀则不需要rewrite，否则开启
         // pathRewrite: { '^/api': '' }
+      },
+      // 上传文件静态访问（头像等）
+      '/uploads': {
+        target: 'http://127.0.0.1:5000',
+        changeOrigin: true
       }
     }
-    
+
   },
   css: {
     loaderOptions: {
@@ -29,5 +34,5 @@ module.exports = defineConfig({
       }
     }
   },
-  lintOnSave: false 
+  lintOnSave: false
 })

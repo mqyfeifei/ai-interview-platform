@@ -4,7 +4,7 @@
 // =============================================
 
 import { login, register, logout } from '@/api/auth'
-import { getUserInfo, updateUserInfo, changePassword, updateDefaultJob } from '@/api/user'
+import { getUserInfo, updateUserInfo, changePassword, updateDefaultJob, uploadAvatar } from '@/api/user'
 import { setToken, getToken, clearAuth, getCachedUser, setCachedUser } from '@/utils/auth'
 
 const state = () => ({
@@ -101,6 +101,22 @@ const actions = {
     const result = await updateDefaultJob(jobId)
     commit('UPDATE_USER_INFO', { defaultJob: jobId })
     return result
+  },
+
+  // 上传头像
+  async uploadAvatar({ commit }, file) {
+    if (!file) throw new Error('请选择头像文件')
+    const formData = new FormData()
+    // 后端同时兼容 file/avatar 字段，这里统一用 avatar
+    formData.append('avatar', file)
+    const res = await uploadAvatar(formData)
+    // 后端返回 { avatarUrl, avatar_url, user }
+    if (res && res.user) {
+      commit('SET_USER_INFO', res.user)
+    } else if (res && (res.avatarUrl || res.avatar_url)) {
+      commit('UPDATE_USER_INFO', { avatar: res.avatarUrl || res.avatar_url, avatarUrl: res.avatarUrl || res.avatar_url, avatar_url: res.avatarUrl || res.avatar_url })
+    }
+    return res
   },
 
   // 退出登录
