@@ -55,7 +55,10 @@
           v-for="(job, idx) in filteredJobs"
           :key="job.id"
           class="job-card"
-          :class="{ selected: currentSelected && currentSelected.id === job.id }"
+          :class="{
+            selected: currentSelected && currentSelected.id === job.id,
+            'job-card--default': defaultJobId === job.id
+          }"
           :style="{ animationDelay: idx * 0.06 + 's' }"
           @click="toggleSelect(job)"
         >
@@ -84,6 +87,16 @@
             <span v-for="tech in job.techStack.slice(0, 4)" :key="tech" class="stack-tag">
               {{ tech }}
             </span>
+          </div>
+
+          <!-- 默认岗位操作放在灰色分界线上方 -->
+          <div class="job-card__default">
+            <button
+              v-if="defaultJobId !== job.id"
+              class="btn-set-default"
+              @click.stop="setDefault(job)"
+            >设为默认</button>
+            <span v-else class="default-badge">默认岗位</span>
           </div>
 
           <!-- 底部：题型 + 均分 -->
@@ -179,6 +192,9 @@ export default {
         )
       }
       return jobs
+    },
+    defaultJobId() {
+      return this.$store.getters['user/defaultJob']
     }
   },
 created() {
@@ -228,6 +244,16 @@ created() {
     toggleSelect(job) {
       this.currentSelected = this.currentSelected?.id === job.id ? null : job
     },
+    async setDefault(job) {
+      try {
+        await this.$store.dispatch('user/updateDefaultJob', job.id)
+        this.currentSelected = job
+        // no notification as requested
+      } catch (err) {
+        console.error('设置默认岗位失败', err)
+        // quietly fail, could show toast later if needed
+      }
+    },
 
 // async handleStart() {
 //   const job = this.selectedJob
@@ -245,10 +271,13 @@ async handleStart() {
   //  关键1：校验选中的岗位是否存在
   console.log('准备开始面试，当前选中岗位:', this.currentSelected)
   if (!this.currentSelected) {
-    this.$message.error('请先选择一个面试岗位！');
-    return;
-  }
-  
+      if (this.$message && typeof this.$message.error === 'function') {
+        this.$message.error('请先选择一个面试岗位！');
+      } else {
+        alert('请先选择一个面试岗位！');
+      }
+      return;
+    }
   try {
     // 关键2：正确获取岗位数据库ID（优先后端映射的jobDbIdMap，兜底用constants里的dbId）
     const jobDbId = this.jobDbIdMap[this.currentSelected.id] || this.currentSelected.dbId|| this.currentSelected.id;
@@ -263,9 +292,13 @@ async handleStart() {
     // 跳转到面试会话页
     this.$router.push('/interview/session');
   } catch (err) {
-    console.error('启动面试失败：', err);
-    this.$message.error('启动面试失败，请重试！');
-  }
+      console.error('启动面试失败：', err);
+      if (this.$message && typeof this.$message.error === 'function') {
+        this.$message.error('启动面试失败，请重试！');
+      } else {
+        alert('启动面试失败，请重试！');
+      }
+    }
 }
   }
 }
@@ -275,6 +308,42 @@ async handleStart() {
 .job-selection-page {
   min-height: 100vh;
   background: $bg-page;
+}
+
+.job-card {
+  position: relative;
+}
+.job-card__default {
+  /* inline placement just above footer divider */
+  position: static;
+  margin: 0 0 8px; /* add bottom gap before divider */
+  text-align: right; /* move horizontally to right */
+}
+.job-card__default .default-badge {
+  display: inline-block;
+  padding: 2px 6px;
+  font-size: 10px;
+  color: #fff;
+  background: #3b82f6;
+  border-radius: 3px;
+}
+.job-card__default .btn-set-default {
+  font-size: 11px;
+  color: #3b82f6;
+  background: transparent;
+  border: 1px solid #3b82f6;
+  border-radius: 3px;
+  padding: 2px 6px;
+  cursor: pointer;
+}
+.job-card__default .btn-set-default:hover {
+  background: #3b82f6;
+  color: #fff;
+}
+
+/* highlight default job card */
+.job-card--default {
+  border: 1px solid #3b82f6;
 }
 
 // ---- Header ----
