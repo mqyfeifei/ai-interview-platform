@@ -451,9 +451,16 @@ export default {
       if (score >= 60) return 'score-average'
       return 'score-poor'
     },
-    formatDuration(seconds) {
-      if (!seconds) return '--'
-      return `${Math.floor(seconds / 60)}分${seconds % 60}秒`
+    formatDuration(duration) {
+      if (!duration) return '--'
+      
+      const seconds = Math.floor(duration / 1000)
+      const mins = Math.floor(seconds / 60)
+      const secs = seconds % 60
+      if (mins === 0) return `${secs}秒`        // 不足1分钟只显示秒
+      if (secs === 0) return `${mins}分钟`      // 整分钟不显示0秒
+      return `${mins}分${secs}秒`
+      // return `${Math.floor(seconds / 60)}分${seconds % 60}秒`
     },
     formatDateTime(iso) {
       if (!iso) return ''
