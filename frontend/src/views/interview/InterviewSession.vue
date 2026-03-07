@@ -8,7 +8,7 @@
     <!-- 顶部状态栏 -->
     <header class="interview-header">
       <div class="interview-header__left">
-        <button class="header-end-btn" @click="showEndConfirm = true">
+        <button class="header-end-btn" @click="showBackConfirm = true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="15 18 9 12 15 6"/>
           </svg>
@@ -63,10 +63,12 @@
     <!-- 消息流 -->
     <div class="messages-container" ref="messagesContainer">
       <!-- 面试开始提示 -->
-      <div class="session-start-tip">
-        <div class="session-start-tip__line" />
-        <span>面试正式开始</span>
-        <div class="session-start-tip__line" />
+      <div class="messages-inner"> 
+        <div class="session-start-tip">
+          <div class="session-start-tip__line" />
+          <span>面试正式开始</span>
+          <div class="session-start-tip__line" />
+        </div>
       </div>
 
       <!-- 消息气泡 -->
@@ -92,10 +94,12 @@
             </div>
 
             <div :class="['message-bubble', 'message-bubble--' + msg.role]" v-show="msg.content">
-              <p class="message-text">
-                {{ msg.content }}
-                <!-- <span v-if="msg.streaming" class="typing-cursor">▌</span> -->
-              </p>
+            <div
+              v-if="msg.role === 'ai'"
+              class="message-text markdown-body"
+              v-html="renderMarkdown(msg.content)"
+            />
+            <p v-else class="message-text">{{ msg.content }}</p>
             </div>
 
             <span class="message-time" v-show="msg.content">{{ formatTime(msg.timestamp) }}</span>
@@ -103,7 +107,8 @@
 
           <!-- 用户头像 -->
           <div v-if="msg.role === 'user'" class="message-avatar message-avatar--user">
-            <span>{{ userAvatarLetter }}</span>
+            <img v-if="userAvatarUrl" :src="userAvatarUrl" class="avatar-img" alt="avatar" />
+            <span v-else>{{ userAvatarLetter }}</span>
           </div>
         </div>
       </transition-group>
@@ -200,7 +205,7 @@
 
         <!-- ↓ 新增：面试结束/报告生成中 遮罩 -->
     <transition name="ending-fade">
-      <div v-if="isEnding || isFinished" class="ending-overlay">
+      <div v-if="showEndingOverlay" class="ending-overlay">
         <div class="ending-card">
           <div class="ending-icon-wrap">
             <svg class="ending-spin-ring" viewBox="0 0 60 60">
@@ -216,6 +221,11 @@
             <div class="ending-progress-fill" />
           </div>
           <p class="ending-hint">通常需要 10 ~ 30 秒，请勿关闭页面</p>
+          <transition name="fade">
+            <button v-if="reportReady" class="view-report-btn" @click="goToReport">
+              查看面试报告 →
+            </button>
+          </transition>
         </div>
       </div>
     </transition>
@@ -241,11 +251,30 @@
         </div>
       </div>
     </transition>
+        <!-- 返回确认弹窗 -->
+        <transition name="modal">
+      <div v-if="showBackConfirm" class="modal-overlay" @click.self="showBackConfirm = false">
+        <div class="modal-sheet">
+          <div class="modal-body-centered">
+            <div class="confirm-icon">🚪</div>
+            <h3 class="confirm-title">确认离开面试？</h3>
+            <p class="confirm-desc">
+              离开后本次面试进度将丢失，不会生成报告。
+            </p>
+            <div class="confirm-actions">
+              <button class="btn btn-ghost" @click="showBackConfirm = false">继续面试</button>
+              <button class="btn btn-danger" @click="handleBack">确认离开</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </transition>
   </div>
 </template>
 
 <script>
 import { mapGetters, mapActions } from 'vuex'
+import { marked } from 'marked'
 
 const QUESTION_TIME_LIMIT = 120 // 每题时限（秒）
 
@@ -267,11 +296,14 @@ export default {
       audioChunks: [],
       // ✅ 新增：语音转写状态（用于显示加载中）
       isTranscribing: false,
+      showBackConfirm: false,
+      showEndingOverlay: false,
+      reportReady: false,        // 报告已生成完毕
       isSending: false
     }
   },
   computed: {
-    ...mapGetters('user', ['userName']),
+    ...mapGetters('user', ['userName','userInfo']),
     ...mapGetters('interview', [
       'selectedJob', 'messages', 'questionIndex',
       'isEnding', 
@@ -281,6 +313,9 @@ export default {
     userAvatarLetter() {
       return (this.userName || '我').charAt(0)
     },
+    userAvatarUrl() {
+  return this.userInfo?.avatar || this.userInfo?.avatarUrl || null
+},
 
     timerDisplay() {
       const m = Math.floor(this.questionTimer / 60)
@@ -326,26 +361,37 @@ export default {
       }
     },
     // isEnding 一旦为 true 立即停止计时器（不等 reportId）
-      isEnding(val) {
-    if (val) this.clearTimers()
-  },
-    // 面试结束时跳转报告页
-  isFinished(val) {
-    if (val) {
-      this.clearTimers()
-      if (this.reportId) {
-        setTimeout(() => this.$router.push(`/interview/report/${this.reportId}`), 2500)
-      } else {
-        // reportId 还未到，等它就位再跳转
-        const unwatch = this.$watch('reportId', (id) => {
-          if (id) {
-            unwatch()
-            setTimeout(() => this.$router.push(`/interview/report/${id}`), 2500)
-          }
-        })
+    isEnding(val) {
+      if (val) {
+        this.clearTimers()
+        this.showEndingOverlay = true  
       }
+    },
+    // 面试结束时跳转报告页
+    // isFinished(val) {
+    //   if (val) {
+    //     this.clearTimers()
+    //     // 报告生成完毕，直接关掉遮罩，不跳转
+    //     this.showEndingOverlay = false
+    //   }
+    // },
+
+    isFinished(val) {
+  if (val) {
+    this.clearTimers()
+    this.showEndingOverlay = true
+    if (this.reportId) {
+      this.reportReady = true
+    } else {
+      const unwatch = this.$watch('reportId', (id) => {
+        if (id) {
+          unwatch()
+          this.reportReady = true
+        }
+      })
     }
-  },
+  }
+},
     // 消息更新自动滚底
     messages() {
       this.$nextTick(this.scrollToBottom)
@@ -375,7 +421,10 @@ export default {
       this.questionTimer = QUESTION_TIME_LIMIT
       await this.submitAnswer(text)
     },
-
+    goToReport() {
+      this.showEndingOverlay = false
+      this.$router.push(`/interview/report/${this.reportId}`)
+    },
     // ---- 结束面试 ----
     async handleEnd() {
       this.endingInterview = true
@@ -387,6 +436,14 @@ export default {
       }
     },
 
+    handleBack() {
+      this.showBackConfirm = false
+      this.$router.replace('/interview/select')
+    },
+  renderMarkdown(text) {
+    if (!text) return ''
+    return marked.parse(text)
+  },
     // ---- 计时器 ----
     startQuestionTimer() {
       this.clearTimers()
@@ -660,7 +717,11 @@ export default {
   display: flex; flex-direction: column; gap: 4px;
   max-width: calc(100% - 80px);
 
-  .message-item--user & { align-items: flex-end; }
+  .message-item--user {
+  flex-direction: row-reverse;
+  align-items: flex-start;  // ← 改为 flex-start，头像贴顶
+}
+
   .message-item--ai & { align-items: flex-start; }
 }
 
@@ -766,7 +827,10 @@ export default {
   padding-bottom: calc(#{$spacing-sm} + env(safe-area-inset-bottom));
   box-shadow: 0 -4px 16px rgba(0,0,0,0.06);
   flex-shrink: 0;
-
+  .input-row {
+    // max-width: 800px;   // ← 新增
+    margin: 0 auto;     // ← 新增
+  }
   &.disabled { opacity: 0.6; pointer-events: none; }
 }
 
@@ -1023,5 +1087,50 @@ export default {
   font-size: 10px; font-weight: $font-weight-semibold;
   padding: 2px 7px; border-radius: $border-radius-full;
   margin-top: 2px;
+}
+.avatar-img {
+  width: 100%; height: 100%;
+  border-radius: 50%; object-fit: cover;
+}
+
+.view-report-btn {
+  margin-top: 16px;
+  padding: 10px 24px;
+  border-radius: $border-radius-full;
+  background: white;
+  color: #312e81;
+  font-weight: $font-weight-bold;
+  font-size: $font-size-sm;
+  border: none;
+  cursor: pointer;
+  transition: all $transition-base;
+  &:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+}
+.messages-inner {
+  max-width: 800px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+
+.markdown-body {
+  font-size: $font-size-base;
+  line-height: $line-height-relaxed;
+  color: $text-primary;
+  word-break: break-word;
+
+  p { margin: 0 0 8px; &:last-child { margin-bottom: 0; } }
+  strong { font-weight: $font-weight-semibold; }
+  code {
+    background: $gray-100; border-radius: 4px;
+    padding: 1px 5px; font-family: $font-family-mono; font-size: 13px;
+  }
+  pre {
+    background: $gray-100; border-radius: 8px;
+    padding: 10px 12px; overflow-x: auto; margin: 8px 0;
+    code { background: none; padding: 0; }
+  }
+  ul, ol { padding-left: 18px; margin: 6px 0; }
+  li { margin-bottom: 4px; }
 }
 </style>

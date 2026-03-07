@@ -163,7 +163,7 @@ export const sendAnswerStream = (sessionId, answer, { onChunk, onFinish, onStrea
           const chunk = json.chunk || ''
           fullText += chunk
 
-          if (chunk.includes('[INTERVIEW_OVER]')) {
+          if (chunk.includes('[INTERVIEW_OVER]') && !isOver) {
             if (!isOver) {
               isOver = true
               // 把干净内容（去掉标记）推给UI
