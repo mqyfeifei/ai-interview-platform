@@ -15,7 +15,8 @@ const state = () => ({
   reportId: null,
   isLoading: false,        // AI 正在"思考"中
   elapsedSeconds: 0,        // 已用时（秒）
-  jobDbId: null  // 后端数据库真实岗位id
+  jobDbId: null,  // 后端数据库真实岗位id
+  voiceMode: false
 })
 
 const mutations = {
@@ -25,6 +26,7 @@ const mutations = {
   ADD_MESSAGE(state, msg) { state.messages.push(msg) },
   SET_MESSAGES(state, msgs) { state.messages = msgs },
   SET_QUESTION_INDEX(state, idx) { state.questionIndex = idx },
+  SET_VOICE_MODE(state, v) { state.voiceMode = v },
   SET_FINISHED(state, reportId) {
     state.isFinished = true
     state.isEnding = false 
@@ -51,6 +53,7 @@ MARK_STREAM_DONE(state) {
     state.reportId = null
     state.isLoading = false
     state.elapsedSeconds = 0
+    state.voiceMode = false
   }
 }
 
@@ -169,6 +172,7 @@ const getters = {
   isEnding: s => s.isEnding,
   reportId: s => s.reportId,
   isLoading: s => s.isLoading,
+  voiceMode: s => s.voiceMode,
   elapsedSeconds: s => s.elapsedSeconds
 }
 

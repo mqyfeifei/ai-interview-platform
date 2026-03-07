@@ -19,7 +19,16 @@
           </span>
           <div>
             <p class="job-info__name">{{ selectedJob ? selectedJob.name : '模拟面试' }}</p>
-            <p class="job-info__progress">问题 {{ questionIndex }} / {{ totalQuestions }}</p>
+            <p class="job-info__progress">
+              <span v-if="voiceMode" class="voice-mode-badge">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                  stroke-linecap="round" stroke-linejoin="round" style="width:10px;height:10px">
+                  <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                </svg>
+                语音模式
+              </span>
+              问题 {{ questionIndex }} / {{ totalQuestions }}</p>
           </div>
         </div>
       </div>
@@ -265,7 +274,7 @@ export default {
     ...mapGetters('interview', [
       'selectedJob', 'messages', 'questionIndex',
       'isEnding', 
-      'totalQuestions', 'isFinished', 'isLoading', 'reportId'
+      'totalQuestions', 'isFinished', 'isLoading', 'reportId','voiceMode'  
     ]),
 
     userAvatarLetter() {
@@ -340,9 +349,18 @@ export default {
     messages() {
       this.$nextTick(this.scrollToBottom)
     },
-    isLoading() {
+    isLoading(val) {
       this.$nextTick(this.scrollToBottom)
-    }
+      // 语音模式：AI 回复完毕（loading 结束）且面试未结束，自动开始录音
+      if (!val && this.voiceMode && !this.isFinished && !this.isEnding && !this.isRecording) {
+        // 稍微延迟，等气泡渲染完再录音，体验更自然
+        setTimeout(() => {
+          if (!this.isLoading && !this.isFinished && !this.isEnding) {
+            this.startRecording()
+          }
+        }, 800)
+      }
+    },
   },
   methods: {
     ...mapActions('interview', ['startSession', 'submitAnswer', 'endInterview']),
@@ -447,10 +465,14 @@ export default {
             this.inputText = '（语音识别失败，请手动输入）'
           } finally {
             this.isTranscribing = false
-            // 转写完成后聚焦输入框
-            this.$nextTick(() => {
-              if (this.$refs.inputRef) this.$refs.inputRef.focus()
-            })
+            // 语音模式：转写完成直接自动提交，无需手动点发送
+            if (this.voiceMode && this.inputText && this.inputText !== '（语音识别失败，请手动输入）') {
+              this.$nextTick(() => this.handleSend())
+            } else {
+              this.$nextTick(() => {
+                if (this.$refs.inputRef) this.$refs.inputRef.focus()
+              })
+            }
           }
         }
 
@@ -1004,4 +1026,11 @@ export default {
 .fade-leave-active { animation: fadeIn 0.2s ease reverse both; }
 
 .message-enter-active { animation: msgIn 0.3s ease both; }
+.voice-mode-badge {
+  display: inline-flex; align-items: center; gap: 3px;
+  background: rgba(67,56,202,0.1); color: $primary;
+  font-size: 10px; font-weight: $font-weight-semibold;
+  padding: 2px 7px; border-radius: $border-radius-full;
+  margin-top: 2px;
+}
 </style>
