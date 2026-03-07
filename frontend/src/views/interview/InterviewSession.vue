@@ -189,6 +189,28 @@
       </div>
     </div>
 
+        <!-- ↓ 新增：面试结束/报告生成中 遮罩 -->
+    <transition name="ending-fade">
+      <div v-if="isEnding || isFinished" class="ending-overlay">
+        <div class="ending-card">
+          <div class="ending-icon-wrap">
+            <svg class="ending-spin-ring" viewBox="0 0 60 60">
+              <circle cx="30" cy="30" r="26" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="5"/>
+              <circle cx="30" cy="30" r="26" fill="none" stroke="white" stroke-width="5"
+                stroke-linecap="round" stroke-dasharray="50 114" transform="rotate(-90 30 30)"/>
+            </svg>
+            <span class="ending-emoji">🎯</span>
+          </div>
+          <h2 class="ending-title">面试已结束</h2>
+          <p class="ending-sub">AI 正在为你生成专属评估报告...</p>
+          <div class="ending-progress-track">
+            <div class="ending-progress-fill" />
+          </div>
+          <p class="ending-hint">通常需要 10 ~ 30 秒，请勿关闭页面</p>
+        </div>
+      </div>
+    </transition>
+
     <!-- 结束确认弹窗 -->
     <transition name="modal">
       <div v-if="showEndConfirm" class="modal-overlay" @click.self="showEndConfirm = false">
@@ -242,6 +264,7 @@ export default {
     ...mapGetters('user', ['userName']),
     ...mapGetters('interview', [
       'selectedJob', 'messages', 'questionIndex',
+      'isEnding', 
       'totalQuestions', 'isFinished', 'isLoading', 'reportId'
     ]),
 
@@ -292,15 +315,27 @@ export default {
         this.questionTimer = QUESTION_TIME_LIMIT
       }
     },
+    // isEnding 一旦为 true 立即停止计时器（不等 reportId）
+      isEnding(val) {
+    if (val) this.clearTimers()
+  },
     // 面试结束时跳转报告页
-    isFinished(val) {
-      if (val && this.reportId) {
-        this.clearTimers()
-        setTimeout(() => {
-          this.$router.push(`/interview/report/${this.reportId}`)
-        }, 2000)
+  isFinished(val) {
+    if (val) {
+      this.clearTimers()
+      if (this.reportId) {
+        setTimeout(() => this.$router.push(`/interview/report/${this.reportId}`), 2500)
+      } else {
+        // reportId 还未到，等它就位再跳转
+        const unwatch = this.$watch('reportId', (id) => {
+          if (id) {
+            unwatch()
+            setTimeout(() => this.$router.push(`/interview/report/${id}`), 2500)
+          }
+        })
       }
-    },
+    }
+  },
     // 消息更新自动滚底
     messages() {
       this.$nextTick(this.scrollToBottom)
@@ -338,7 +373,7 @@ export default {
     startQuestionTimer() {
       this.clearTimers()
       this.timerInterval = setInterval(() => {
-            if (this.isFinished) {
+            if (this.isFinished || this.isEnding) {
               this.clearTimers()
               return
             }
@@ -879,6 +914,86 @@ export default {
   animation: spin 0.8s linear infinite;
   &--danger { border-color: rgba($danger, 0.3); border-top-color: $danger; }
 }
+
+
+
+/* ---- 面试结束遮罩 ---- */
+.ending-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+}
+.ending-card {
+  background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 24px;
+  padding: 40px 32px;
+  width: 300px;
+  text-align: center;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.4);
+}
+.ending-icon-wrap {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 20px;
+}
+.ending-spin-ring {
+  position: absolute;
+  inset: 0;
+  animation: spin 2s linear infinite;
+}
+.ending-emoji {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+}
+.ending-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #fff;
+  margin: 0 0 8px;
+}
+.ending-sub {
+  font-size: 13px;
+  color: rgba(255,255,255,0.7);
+  margin: 0 0 20px;
+}
+.ending-progress-track {
+  height: 4px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+.ending-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #818cf8, #c4b5fd);
+  border-radius: 2px;
+  animation: progress-slide 25s linear forwards;
+}
+.ending-hint {
+  font-size: 11px;
+  color: rgba(255,255,255,0.4);
+  margin: 0;
+}
+
+/* 遮罩出现动画 */
+.ending-fade-enter-active { transition: opacity 0.4s ease; }
+.ending-fade-leave-active { transition: opacity 0.3s ease; }
+.ending-fade-enter-from, .ending-fade-leave-to { opacity: 0; }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes progress-slide { from { width: 0 } to { width: 95% } }
 
 .modal-enter-active { animation: modalIn 0.3s ease both; }
 .modal-leave-active { animation: modalOut 0.2s ease both; }
