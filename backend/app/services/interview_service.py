@@ -26,6 +26,8 @@ import json
 from sentence_transformers import SentenceTransformer
 from datetime import datetime
 from app.models.learning import KnowledgeTag, UserKnowledgeMastery
+from app.services.asr_service import global_speed_cache
+
 
 # 推荐在类外部进行全局加载，避免每次调用时重复加载模型进内存
 # 'BAAI/bge-small-zh-v1.5' 首次运行会自动下载
@@ -54,7 +56,13 @@ class InterviewService:
     @staticmethod
     def start_interview(user_id, job_id):
         # 1. 创建面试记录
-        interview = Interview(user_id=user_id, job_id=job_id, status='in_progress', question_count=1)
+        interview = Interview(
+            user_id=user_id,
+            job_id=job_id,
+            status='in_progress',
+            question_count=1,
+            start_time=datetime.now()
+        )
         db.session.add(interview)
         db.session.commit()
 
@@ -74,6 +82,11 @@ class InterviewService:
     def process_chat_round_stream(interview_id, user_answer):
         """处理对话并返回流式生成器"""
         interview = Interview.query.get(interview_id)
+
+        # ================= 直接从全局缓存中获取语速 =================
+        # 如果当前回答的文本刚好在缓存里，说明是刚才语音识别来的，拿到语速并删掉缓存
+        actual_speed = global_speed_cache.pop(user_answer, None)
+        # ============================================================
 
         # 1. 记录用户回答
         user_chat = InterviewChat(interview_id=interview.id, role='user', content=user_answer)
@@ -96,9 +109,20 @@ class InterviewService:
         tag_list = [t.name for t in existing_tags]
         tags_str = "、".join(tag_list)
 
+        # ================= 动态拼装情感安抚指令 =================
+        emotion_instruction = ""
+        if actual_speed is not None:
+            emotion_instruction = f"""
+                【语音情感与状态隐式分析】：
+                用户本次回答使用的是语音输入。系统检测到其语速为 {actual_speed} 字/秒。
+                （参考：正常中等语速约 3-5 字/秒。大于 5 字/秒可能偏快/紧张/激动，小于 3 字/秒可能偏慢/犹豫/边想边答）。
+                请你结合语速和文本内容，简单分析候选人当前的情绪状态，并**在本次回复的最开头，用一两句话自然地给予情绪反馈或安抚**（例如：“听得出你有些紧张，没关系...”）。
+                    """
+        # ========================================================
+
         enhanced_system_prompt = f"""
                 {base_prompt}
-
+                {emotion_instruction}
                 【面试提问大纲约束】：
                 为了保证面试的标准化，请你**严格**围绕以下“面试大纲”中的知识点向候选人提问。
                 - 每次提问请挑选 1 个具体的知识点进行深入考察。
