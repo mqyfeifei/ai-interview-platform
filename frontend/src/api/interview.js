@@ -239,5 +239,6 @@ export const uploadAudio = async (audioBlob) => {
   const res = await request.post('/interviews/upload-audio', formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
   })
-  return res.data
+  console.log('ASR识别结果：', res)
+  return res
 }

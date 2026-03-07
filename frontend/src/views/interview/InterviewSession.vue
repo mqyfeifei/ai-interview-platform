@@ -145,8 +145,8 @@
           <span class="recording-bar__time">{{ recordingTime }}s</span>
         </div>
       </transition>
-      <div v-if="isTranscribing" class="transcribing-tip">
-        🎤 语音转写中...
+      <div v-if="isSending" class="transcribing-tip">
+        📡 语音发送中，请稍候...
       </div>
       <div class="input-row">
         <!-- 语音按钮 -->
@@ -266,7 +266,8 @@ export default {
       mediaRecorder: null,
       audioChunks: [],
       // ✅ 新增：语音转写状态（用于显示加载中）
-      isTranscribing: false
+      isTranscribing: false,
+      isSending: false
     }
   },
   computed: {
@@ -351,9 +352,8 @@ export default {
     },
     isLoading(val) {
       this.$nextTick(this.scrollToBottom)
-      // 语音模式：AI 回复完毕（loading 结束）且面试未结束，自动开始录音
-      if (!val && this.voiceMode && !this.isFinished && !this.isEnding && !this.isRecording) {
-        // 稍微延迟，等气泡渲染完再录音，体验更自然
+      // 语音模式：AI 回复完毕后自动开始录音
+      if (!val && this.voiceMode && !this.isFinished && !this.isEnding && !this.isRecording && !this.isSending) {
         setTimeout(() => {
           if (!this.isLoading && !this.isFinished && !this.isEnding) {
             this.startRecording()
@@ -435,9 +435,8 @@ export default {
     },
 
     async startRecording() {
-      // ✅ 新增：转写中禁止开始录音
-      if (this.isTranscribing) {
-        alert('正在处理语音，请稍等...')
+      if (this.isSending) {
+        alert('正在发送上一段语音，请稍等...')
         return
       }
       try {
@@ -445,34 +444,27 @@ export default {
         this.audioChunks = []
         this.mediaRecorder = new MediaRecorder(stream)
         this.mediaRecorder.ondataavailable = e => this.audioChunks.push(e.data)
-        
-        // ✅ 核心修改：替换原有 onstop 逻辑，整合语音转文字
+
         this.mediaRecorder.onstop = async () => {
-          // 先停止音轨
           stream.getTracks().forEach(t => t.stop())
-          // 构建音频 Blob
           const audioBlob = new Blob(this.audioChunks, { type: 'audio/wav' })
-          this.isTranscribing = true
+
+          this.isSending = true
           try {
-            // 动态导入上传音频API
             const { uploadAudio } = await import('@/api/interview')
-            // 上传音频并获取转文字结果
-            const { text } = await uploadAudio(audioBlob)
-            // ✅ 适配现有变量：把转写结果赋值给 inputText（原有代码用 inputText 而非 userInput）
-            this.inputText = text || '（语音识别失败，请手动输入）'
-          } catch (err) {
-            console.error('语音转文字失败：', err)
-            this.inputText = '（语音识别失败，请手动输入）'
-          } finally {
-            this.isTranscribing = false
-            // 语音模式：转写完成直接自动提交，无需手动点发送
-            if (this.voiceMode && this.inputText && this.inputText !== '（语音识别失败，请手动输入）') {
-              this.$nextTick(() => this.handleSend())
+            const result = await uploadAudio(audioBlob)
+            const text = result && result.text ? result.text.trim() : ''
+            console.log('[语音] 后端返回文字：', text)
+
+            if (text) {
+              await this.submitAnswer(text)
             } else {
-              this.$nextTick(() => {
-                if (this.$refs.inputRef) this.$refs.inputRef.focus()
-              })
+              console.warn('[语音] 返回文字为空，跳过提交')
             }
+          } catch (err) {
+            console.error('[语音] 发送失败：', err)
+          } finally {
+            this.isSending = false
           }
         }
 
@@ -481,9 +473,8 @@ export default {
         this.recordingTime = 0
         this.recordingInterval = setInterval(() => { this.recordingTime++ }, 1000)
       } catch (err) {
-        // 麦克风权限被拒绝时，降级为文字提示
-        console.warn('麦克风权限被拒绝，请使用文字输入', err)
-        alert('无法访问麦克风，请使用文字输入或检查浏览器权限设置。')
+        console.warn('麦克风权限被拒绝', err)
+        alert('无法访问麦克风，请检查浏览器权限设置。')
       }
     },
 
