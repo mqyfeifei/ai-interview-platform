@@ -34,9 +34,11 @@ const mutations = {
   },
   SET_ENDING(state, v) { state.isEnding = v },
 
-  APPEND_AI_CHUNK(state, chunk) {
+APPEND_AI_CHUNK(state, chunk) {
   const last = state.messages[state.messages.length - 1]
-  if (last && last.role === 'ai') last.content += chunk
+  if (last && last.role === 'ai') {
+    last.content = (last.content + chunk).replace(/\[INTERVIEW_OVER\]/g, '')
+  }
 },
 MARK_STREAM_DONE(state) {
   const last = state.messages[state.messages.length - 1]
