@@ -80,7 +80,7 @@ export const startInterview = async (data) => {
   if (USE_MOCK) { /* 原mock代码不变 */ }
   const res = await request.post('/interviews/start', {
     user_id: data.userId,   // 暂时从 data 传入，待JWT完善后从拦截器注入
-    job_id: data.jobId
+    job_id: data.jobDbId 
   })
   // 响应拦截器已解包，res 就是后端返回的 data 对象
   // 统一适配为前端期望的格式
@@ -128,7 +128,7 @@ export const sendAnswer = async (sessionId, answer) => {
       questionIndex: session.index
     }
   }
-  return request.post(`/v1/interviews/${sessionId}/answer`, { answer })
+  return request.post(`/interviews/${sessionId}/answer`, { answer })
 }
 
 
@@ -191,7 +191,7 @@ export const finishInterview = async (sessionId) => {
   const res = await request.post(`/interviews/${sessionId}/finish`)
   // 把后端报告存到 sessionStorage，供报告页读取（后端暂无 GET /report/:id 接口）
   sessionStorage.setItem(`report_${sessionId}`, JSON.stringify(res.data))
-  // res 是后端 data 字段，即 { reportId, jobName, total_score, ... }
+  
   return { reportId: res.reportId || sessionId }
 }
 /**
@@ -210,7 +210,7 @@ export const getInterviewList = async (params = {}) => {
       total: 3
     }
   }
-  return request.get('/v1/interviews', { params })
+  return request.get('/interviews', { params })
 }
 
 
