@@ -219,6 +219,8 @@ class ReportService:
         questions = cls._build_questions(interview.id, total_score)
 
         created_time = interview.end_time or interview.start_time
+        start_time = interview.start_time
+        end_time = interview.end_time
         duration = interview.used_time
         if duration is None and interview.start_time and interview.end_time:
             duration = int((interview.end_time - interview.start_time).total_seconds())
@@ -230,6 +232,8 @@ class ReportService:
             'jobName': job.name if job else '',
             'totalScore': total_score,
             'duration': duration or 0,
+            'startTime': start_time.isoformat() if start_time else None,
+            'endTime': end_time.isoformat() if end_time else None,
             'createdAt': created_time.isoformat() if created_time else None,
             'dimensions': cls._build_dimensions(interview.id),
             'avgDimensions': cls._build_avg_dimensions(interview.job_id),
@@ -262,6 +266,8 @@ class ReportService:
                 'totalScore': interview.total_score or 0,
                 'duration': interview.used_time or 0,
                 'questionCount': interview.question_count or 0,
+                'startTime': interview.start_time.isoformat() if interview.start_time else None,
+                'endTime': interview.end_time.isoformat() if interview.end_time else None,
                 'createdAt': (interview.end_time or interview.start_time).isoformat() if (interview.end_time or interview.start_time) else None
             })
 
@@ -343,6 +349,8 @@ class ReportService:
                 'id': interview.id,
                 'reportId': interview.id,
                 'interviewDate': interview_time.isoformat() if interview_time else None,
+                'startTime': interview.start_time.isoformat() if interview.start_time else None,
+                'endTime': interview.end_time.isoformat() if interview.end_time else None,
                 'createdAt': interview_time.isoformat() if interview_time else None,
                 'jobId': cls._job_to_front_key(job),
                 'jobName': job.name if job else '',
