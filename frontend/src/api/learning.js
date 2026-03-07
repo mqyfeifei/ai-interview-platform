@@ -302,18 +302,22 @@ export const getRecommendedResources = async () => {
     const data = await request.get('/learning/recommendations', {
       params: { user_id: userId, limit: 10 }
     })
-    if (!Array.isArray(data) || !data.length) return MOCK_RECOMMENDATIONS.map(item => ({
-      ...item,
-      bookmarked: bookmarks[item.id] || false,
-      completed: completed.includes(item.id) || false
-    }))
+    if (!Array.isArray(data) || !data.length) {
+      const result = MOCK_RECOMMENDATIONS.map(item => ({
+        ...item,
+        bookmarked: bookmarks[item.id] || false,
+        completed: completed.includes(item.id) || false
+      }))
+      _updateCacheWithList(result)
+      return result
+    }
 
     // 难度映射
     const diffMap = { easy: '初级', medium: '中级', hard: '高级' }
     // 类型图标映射
     const typeReadTime = { article: '8分钟', video: '30分钟', course: '45分钟', example: '15分钟', book: '习题杀手' }
 
-    return data.map(item => ({
+    let result = data.map(item => ({
       id: item.id,
       title: item.title,
       type: item.type || 'article',
@@ -327,6 +331,27 @@ export const getRecommendedResources = async () => {
       completed: completed.includes(item.id) || false,
       url: item.url || null
     }))
+
+    // 缓存新拿到的资源
+    _updateCacheWithList(result)
+
+    // 如果有已收藏但本次列表不含的资源，从缓存补出来；纯完成但未收藏的仍保持隐藏
+    const existingIds = new Set(result.map(r => r.id))
+    const additions = []
+    Object.keys(bookmarks).forEach(id => {
+      if (bookmarks[id] && !existingIds.has(id)) {
+        const cached = _getCachedItem(id)
+        if (cached) {
+          cached.bookmarked = true
+          cached.completed = completed.includes(id)
+          additions.push(cached)
+          existingIds.add(id)
+        }
+      }
+    })
+    if (additions.length) result = result.concat(additions)
+
+    return result
   } catch (err) {
     console.warn('[Recommendations] 请求失败，降级为Mock', err)
     return MOCK_RECOMMENDATIONS
@@ -335,6 +360,33 @@ export const getRecommendedResources = async () => {
 
 // 为了兼容 store 中的导入名称
 export const getRecommendations = getRecommendedResources
+
+// ---------- local cache helpers ----------
+// 保存最近拿到过的资源基本信息，供收藏/完成时在后端不再推荐的情况下继续展示
+const CACHE_KEY = 'learning_resource_cache'
+function _loadCache() {
+  try {
+    return JSON.parse(localStorage.getItem(CACHE_KEY) || '{}')
+  } catch (e) {
+    console.warn('解析推荐资源缓存失败', e)
+    return {}
+  }
+}
+function _saveCache(cache) {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify(cache))
+  } catch (e) {
+    console.warn('保存推荐资源缓存失败', e)
+  }
+}
+function _updateCacheWithList(list) {
+  const cache = _loadCache()
+  list.forEach(item => { cache[item.id] = item })
+  _saveCache(cache)
+}
+function _getCachedItem(id) {
+  return _loadCache()[id]
+}
 
 /**
  * 获取每日学习计划
@@ -357,6 +409,12 @@ export const toggleBookmark = async (resourceId, bookmarked) => {
   const bookmarks = JSON.parse(localStorage.getItem('learning_bookmarks') || '{}')
   bookmarks[resourceId] = bookmarked
   localStorage.setItem('learning_bookmarks', JSON.stringify(bookmarks))
+  // 若已在缓存中则更新标志
+  const cached = _getCachedItem(resourceId)
+  if (cached) {
+    cached.bookmarked = bookmarked
+    _updateCacheWithList([cached])
+  }
 
   if (USE_MOCK) {
     await mockDelay(300)
@@ -377,14 +435,20 @@ export const markCompleted = async (resourceId) => {
     completed.push(resourceId)
     localStorage.setItem('learning_completed', JSON.stringify(completed))
   }
+  // 同步缓存状态
+  const cached = _getCachedItem(resourceId)
+  if (cached) {
+    cached.completed = true
+    _updateCacheWithList([cached])
+  }
 
   if (USE_MOCK) {
     await mockDelay(300)
     return { success: true }
   }
 
-  const cached = localStorage.getItem('ai_interview_user')
-  const userId = cached ? (JSON.parse(cached).id || JSON.parse(cached).user_id) : null
+  const userCached = localStorage.getItem('ai_interview_user')
+  const userId = userCached ? (JSON.parse(userCached).id || JSON.parse(userCached).user_id) : null
   if (!userId) return { success: true }
 
   try {
