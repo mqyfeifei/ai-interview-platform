@@ -121,6 +121,16 @@
           </span>
           <span>记住选择</span>
         </label>
+        <label class="voice-mode-toggle" :class="{ active: voiceMode }" @click="voiceMode = !voiceMode">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px;flex-shrink:0">
+            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+            <line x1="12" y1="19" x2="12" y2="23"/>
+            <line x1="8" y1="23" x2="16" y2="23"/>
+          </svg>
+          <span>语音面试</span>
+        </label>
 
         <button class="start-btn" @click="handleStart">
           <span class="start-btn__main">开始面试</span>
@@ -145,6 +155,7 @@ export default {
       activeFilter: 'all',
       currentSelected: null,
       rememberChoice: false,
+      voiceMode: false,
       filterTabs: [
         { key: 'all', label: '全部岗位' },
         { key: '中级', label: '中级' },
@@ -246,6 +257,7 @@ async handleStart() {
     // 关键3：先重置面试状态，再存储数据
     await this.$store.dispatch('interview/resetInterview');
     this.$store.commit('interview/SET_JOB_DB_ID', jobDbId); // 传给后端的数字 ID
+    this.$store.commit('interview/SET_VOICE_MODE', this.voiceMode);
     await this.$store.dispatch('interview/selectJob', this.currentSelected); // 传递完整岗位对象
     
     // 跳转到面试会话页
@@ -554,5 +566,21 @@ async handleStart() {
     padding: 2px 8px; border-radius: $border-radius-full;
   }
   svg { width: 16px; height: 16px; flex-shrink: 0; }
+}
+
+.voice-mode-toggle {
+  display: flex; align-items: center; gap: 5px;
+  flex-shrink: 0; cursor: pointer; user-select: none;
+  font-size: $font-size-sm; color: $text-secondary;
+  padding: 6px 12px; border-radius: $border-radius-full;
+  border: 1.5px solid $border-color; background: white;
+  transition: all $transition-fast;
+
+  &.active {
+    background: $primary-bg;
+    border-color: $primary;
+    color: $primary;
+    font-weight: $font-weight-semibold;
+  }
 }
 </style>
