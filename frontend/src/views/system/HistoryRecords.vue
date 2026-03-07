@@ -63,7 +63,8 @@
         <div class="sort-select-wrap">
           <select v-model="sortOrder" class="sort-select">
             <option value="desc">最新优先</option>
-            <option value="asc">最早优先</option>
+            <option value="duration_desc">时长最长</option>
+            <option value="duration_asc">时长最短</option>
             <option value="score_desc">分数最高</option>
             <option value="score_asc">分数最低</option>
           </select>
@@ -232,10 +233,12 @@ export default {
         arr = arr.filter(r => r.jobName.toLowerCase().includes(q))
       }
 
+
       // 排序
       arr.sort((a, b) => {
         if (this.sortOrder === 'desc') return new Date(b.createdAt) - new Date(a.createdAt)
-        if (this.sortOrder === 'asc') return new Date(a.createdAt) - new Date(b.createdAt)
+        if (this.sortOrder === 'duration_desc') return (b.duration || 0) - (a.duration || 0)
+        if (this.sortOrder === 'duration_asc') return (a.duration || 0) - (b.duration || 0)
         if (this.sortOrder === 'score_desc') return b.totalScore - a.totalScore
         if (this.sortOrder === 'score_asc') return a.totalScore - b.totalScore
         return 0
@@ -348,12 +351,10 @@ export default {
     formatDate(iso) {
       if (!iso) return ''
       const d = new Date(iso)
-      const now = new Date()
-      const diffDays = Math.floor((now - d) / (1000 * 60 * 60 * 24))
-      if (diffDays === 0) return '今天'
-      if (diffDays === 1) return '昨天'
-      if (diffDays < 7) return `${diffDays}天前`
-      return `${d.getMonth() + 1}/${d.getDate()}`
+      const y = d.getFullYear()
+      const m = String(d.getMonth() + 1).padStart(2, '0')
+      const day = String(d.getDate()).padStart(2, '0')
+      return `${y}-${m}-${day}`
     }
   }
 }
