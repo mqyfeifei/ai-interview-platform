@@ -177,7 +177,6 @@
                   <p class="q-text">{{ q.question }}</p>
                 </div>
                 <div class="question-item__right">
-                  <span :class="['q-score', scoreClass(q.score)]">{{ q.score }}</span>
                   <svg class="q-chevron" :class="{ rotated: expandedItems.includes(q.id) }"
                     viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="6 9 12 15 18 9"/>
@@ -306,10 +305,7 @@ export default {
 
         // 2. 修复雷达图：先确保 echarts 加载完毕，再初始化图表
         await this.ensureECharts()
-        this.$nextTick(() => {
-          this.animateScore()
-          this.initRadarChart()
-        })
+
 
         // 3. 异步加载逐题 AI 点评，不阻塞报告主体渲染
         // this.loadAnalysis()
@@ -317,6 +313,10 @@ export default {
         console.error('加载报告失败', e)
       } finally {
         this.loading = false
+                this.$nextTick(() => {
+          this.animateScore()
+          this.initRadarChart()
+        })
       }
     },
 
