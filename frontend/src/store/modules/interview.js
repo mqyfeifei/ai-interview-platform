@@ -9,8 +9,9 @@ const state = () => ({
   currentSession: null,    // { sessionId, totalQuestions }
   selectedJob: null,       // 选中的岗位对象（来自 constants.js JOB_TYPES）
   messages: [],            // { id, role:'ai'|'user', content, timestamp, isFollowUp? }
-  questionIndex: 0,        // 当前是第几题（0-based）
+  questionIndex: 1,        // 当前是第几题（0-based）
   isFinished: false,
+  isEnding: false, 
   reportId: null,
   isLoading: false,        // AI 正在"思考"中
   elapsedSeconds: 0,        // 已用时（秒）
@@ -26,8 +27,10 @@ const mutations = {
   SET_QUESTION_INDEX(state, idx) { state.questionIndex = idx },
   SET_FINISHED(state, reportId) {
     state.isFinished = true
+    state.isEnding = false 
     state.reportId = reportId
   },
+  SET_ENDING(state, v) { state.isEnding = v },
 
   APPEND_AI_CHUNK(state, chunk) {
   const last = state.messages[state.messages.length - 1]
@@ -44,6 +47,7 @@ MARK_STREAM_DONE(state) {
     state.messages = []
     state.questionIndex = 0
     state.isFinished = false
+    state.isEnding = false
     state.reportId = null
     state.isLoading = false
     state.elapsedSeconds = 0
@@ -98,13 +102,20 @@ async submitAnswer({ commit, state, dispatch }, answerText) {
     onStreamEnd() {
       commit('SET_LOADING', false)
       commit('MARK_STREAM_DONE')
+
       const next = state.questionIndex + 1 // AI 正常回复完毕，题号 +1
-      commit('SET_QUESTION_INDEX', next)
-    },
+      const total = state.currentSession?.totalQuestions || 10
+      // 兜底：超出总题数则自动结束，不再递增
+        if (next > total) {
+          dispatch('endInterview')
+        } else {
+          commit('SET_QUESTION_INDEX', next)
+        }
+      },
     onFinish() {
       commit('SET_LOADING', false)
       commit('MARK_STREAM_DONE')
-      dispatch('endInterview')   // ← 现在 dispatch 有了
+      dispatch('endInterview')   
     },
     onError(err) {
       commit('SET_LOADING', false)
@@ -116,17 +127,22 @@ async submitAnswer({ commit, state, dispatch }, answerText) {
   // 手动结束面试
   async endInterview({ commit, state }) {
     if (!state.currentSession) return
+    if (state.isEnding || state.isFinished) return 
+    commit('SET_ENDING', true) // 立即标记：面试结束流程开始，计时器将停止
     commit('SET_LOADING', true)
     try {
       const res = await finishInterview(state.currentSession.sessionId)
-      commit('ADD_MESSAGE', {
-        id: Date.now(),
-        role: 'ai',
-        content: '好的，面试提前结束。感谢你的参与，正在为你生成评估报告...',
-        timestamp: new Date()
-      })
+      // commit('ADD_MESSAGE', {
+      //   id: Date.now(),
+      //   role: 'ai',
+      //   content: '好的，面试提前结束。感谢你的参与，正在为你生成评估报告...',
+      //   timestamp: new Date()
+      // })
       commit('SET_FINISHED', res.reportId)
       return res
+    } catch(e) {
+      commit('SET_ENDING', false)  // ← 失败时恢复，允许重试
+      throw e
     } finally {
       commit('SET_LOADING', false)
     }
@@ -150,6 +166,7 @@ const getters = {
   totalQuestions: s => s.currentSession?.totalQuestions || 10,
   progressText: s => `${s.questionIndex} / ${s.currentSession?.totalQuestions || 10}`,
   isFinished: s => s.isFinished,
+  isEnding: s => s.isEnding,
   reportId: s => s.reportId,
   isLoading: s => s.isLoading,
   elapsedSeconds: s => s.elapsedSeconds
