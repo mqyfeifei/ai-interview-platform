@@ -9,110 +9,71 @@
     <!-- 头部 -->
     <div class="profile-header">
       <div class="profile-header__content">
-        <!-- 头像 -->
         <div class="avatar-wrapper" @click="triggerAvatarUpload">
           <div class="avatar">
-            <img v-if="userInfo && userInfo.avatar" :src="userInfo.avatar" alt="头像" />
+            <img v-if="userInfo && userInfo.avatar" :src="resolvedAvatarSrc" alt="头像" />
             <span v-else class="avatar__fallback">{{ avatarLetter }}</span>
           </div>
           <div class="avatar-edit-badge">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+              <path d="M12 20h9" />
+              <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
             </svg>
           </div>
-          <input ref="avatarInput" type="file" accept="image/*" class="hidden-input" @change="handleAvatarChange" />
         </div>
 
-        <h1 class="profile-header__name">{{ userInfo && userInfo.username || '用户' }}</h1>
-        <p class="profile-header__school">
-          <span v-if="userInfo && userInfo.school">{{ userInfo.school }}</span>
-          <span v-if="userInfo && userInfo.major"> · {{ userInfo.major }}</span>
-          <span v-if="userInfo && userInfo.grade"> · {{ userInfo.grade }}</span>
-          <span v-if="!userInfo || !userInfo.school" class="text-muted-inline">未填写学校信息</span>
-        </p>
+        <h1 class="profile-header__name">{{ (userInfo && userInfo.username) || '用户' }}</h1>
 
-        <!-- 面试统计 -->
         <div class="profile-stats">
-          <div class="profile-stat">
-            <span class="profile-stat__value">{{ userInfo && userInfo.totalInterviews || 0 }}</span>
-            <span class="profile-stat__label">练习次数</span>
-          </div>
-          <div class="profile-stat-divider" />
-          <div class="profile-stat">
-            <span class="profile-stat__value">{{ userInfo && userInfo.avgScore || '--' }}</span>
-            <span class="profile-stat__label">平均分</span>
-          </div>
-          <div class="profile-stat-divider" />
           <div class="profile-stat">
             <span class="profile-stat__value">{{ memberDays }}</span>
             <span class="profile-stat__label">加入天数</span>
+          </div>
+          <div class="profile-stat-divider"></div>
+          <div class="profile-stat">
+            <span class="profile-stat__value">{{ practiceCount }}</span>
+            <span class="profile-stat__label">练习次数</span>
+          </div>
+          <div class="profile-stat-divider"></div>
+          <div class="profile-stat">
+            <span class="profile-stat__value">{{ avgScoreDisplay }}</span>
+            <span class="profile-stat__label">平均分数</span>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- 内容区 -->
     <div class="profile-body">
-      <!-- 个人信息 - 新版左右布局 -->
+      <!-- 个人信息 -->
       <section class="profile-section">
         <div class="section-header">
           <h2 class="section-title">个人信息</h2>
-          <button class="edit-btn" @click="openEditModal">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px">
-              <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
-            </svg>
-            编辑
-          </button>
+          <button class="edit-btn" @click="openEditModal">编辑</button>
         </div>
 
         <div class="profile-info-card">
-          <!-- 左侧：头像和岗位 -->
-          <div class="profile-info-left">
-            <!-- 头像区域 -->
+          <!-- 第1列：头像 -->
+          <div class="profile-info-col profile-info-col--avatar">
             <div class="avatar-section">
               <div class="avatar-wrapper-lg" @click="triggerAvatarUpload">
                 <div class="avatar-lg">
-                  <img v-if="userInfo && userInfo.avatar" :src="userInfo.avatar" alt="头像" />
+                  <img v-if="userInfo && userInfo.avatar" :src="resolvedAvatarSrc" alt="头像" />
                   <span v-else class="avatar-lg__fallback">{{ avatarLetter }}</span>
                 </div>
                 <div class="avatar-edit-badge-lg">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                    <path d="M12 20h9" />
+                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
                   </svg>
                 </div>
                 <input ref="avatarInput" type="file" accept="image/*" class="hidden-input" @change="handleAvatarChange" />
               </div>
-              <span class="avatar-label">{{ userInfo && userInfo.username || '用户' }}</span>
-            </div>
-
-            <div class="divider-line"></div>
-
-            <!-- 默认岗位区域 -->
-            <div class="job-section">
-              <span class="job-section-label">默认岗位:</span>
-              <div v-if="currentDefaultJob" class="job-display">
-                <span class="job-icon">{{ currentDefaultJob.icon }}</span>
-                <span class="job-name">{{ currentDefaultJob.name }}</span>
-              </div>
-              <div v-else class="job-display job-display--empty">
-                <span>🎯</span>
-                <span>未设置</span>
-              </div>
-              <button class="job-select-btn" @click="showJobPicker = true">
-                选择岗位
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;margin-left:4px">
-                  <polyline points="9 18 15 12 9 6"/>
-                </svg>
-              </button>
+              <span class="avatar-label">{{ (userInfo && userInfo.username) || '用户' }}</span>
             </div>
           </div>
 
-          <!-- 分割线 -->
-          <div class="profile-info-divider"></div>
-
-          <!-- 右侧：基本信息和教育信息（横向排列） -->
-          <div class="profile-info-right">
-            <!-- 基本信息 -->
+          <!-- 第2列：基本信息 -->
+          <div class="profile-info-col">
             <div class="info-group">
               <div class="info-group-header">
                 <span class="info-group-icon">📋</span>
@@ -122,12 +83,12 @@
                 <div class="info-item">
                   <span class="info-item__icon">👤</span>
                   <span class="info-item__label">用户昵称</span>
-                  <span class="info-item__value">{{ userInfo && userInfo.username || '未填写' }}</span>
+                  <span class="info-item__value">{{ (userInfo && userInfo.username) || '未填写' }}</span>
                 </div>
                 <div class="info-item">
                   <span class="info-item__icon">📧</span>
                   <span class="info-item__label">邮箱</span>
-                  <span class="info-item__value">{{ userInfo && userInfo.email || '未填写' }}</span>
+                  <span class="info-item__value">{{ (userInfo && userInfo.email) || '未填写' }}</span>
                 </div>
                 <div class="info-item">
                   <span class="info-item__icon">📱</span>
@@ -136,11 +97,10 @@
                 </div>
               </div>
             </div>
+          </div>
 
-            <!-- 分割线 -->
-            <div class="info-vertical-divider"></div>
-
-            <!-- 教育信息 -->
+          <!-- 第3列：教育信息 -->
+          <div class="profile-info-col">
             <div class="info-group">
               <div class="info-group-header">
                 <span class="info-group-icon">🎓</span>
@@ -150,19 +110,44 @@
                 <div class="info-item">
                   <span class="info-item__icon">🏫</span>
                   <span class="info-item__label">学校</span>
-                  <span class="info-item__value">{{ userInfo && userInfo.school || '未填写' }}</span>
+                  <span class="info-item__value">{{ (userInfo && userInfo.school) || '未填写' }}</span>
                 </div>
                 <div class="info-item">
                   <span class="info-item__icon">📖</span>
                   <span class="info-item__label">专业</span>
-                  <span class="info-item__value">{{ userInfo && userInfo.major || '未填写' }}</span>
+                  <span class="info-item__value">{{ (userInfo && userInfo.major) || '未填写' }}</span>
                 </div>
                 <div class="info-item">
                   <span class="info-item__icon">📅</span>
                   <span class="info-item__label">年级</span>
-                  <span class="info-item__value">{{ userInfo && userInfo.grade || '未填写' }}</span>
+                  <span class="info-item__value">{{ (userInfo && userInfo.grade) || '未填写' }}</span>
                 </div>
               </div>
+            </div>
+          </div>
+
+          <!-- 第4列：求职岗位（格式与教育信息相同） -->
+          <div class="profile-info-col">
+            <div class="info-group">
+              <div class="info-group-header">
+                <span class="info-group-icon">🎯</span>
+                <span class="info-group-title">求职岗位</span>
+              </div>
+              <div class="info-list">
+                <div class="info-item">
+                  <span class="info-item__icon">💼</span>
+                  <span class="info-item__label">岗位</span>
+                  <span class="info-item__value">{{ currentDefaultJob ? currentDefaultJob.name : '未设置' }}</span>
+                </div>
+              </div>
+                <div class="job-select-wrap">
+                  <button class="job-select-btn" @click="goToJobSelection">
+                    选择岗位
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;margin-left:4px">
+                      <polyline points="9 18 15 12 9 6" />
+                    </svg>
+                  </button>
+                </div>
             </div>
           </div>
         </div>
@@ -385,6 +370,26 @@ export default {
       return (this.userName || '用').charAt(0)
     },
 
+    resolvedAvatarSrc() {
+      const raw = this.userInfo && this.userInfo.avatar
+      if (!raw) return ''
+
+      const asString = String(raw)
+      // 绝对地址直接使用
+      if (/^https?:\/\//i.test(asString)) {
+        return this.appendCacheBuster(asString)
+      }
+
+      // 相对地址（如 /uploads/...）补全为后端地址
+      const origin = (process.env.VUE_APP_BACKEND_ORIGIN || '').replace(/\/$/, '')
+      if (origin) {
+        return this.appendCacheBuster(`${origin}${asString.startsWith('/') ? '' : '/'}${asString}`)
+      }
+
+      // 兜底：走当前域名（若你配置了 devServer /uploads 代理也能生效）
+      return this.appendCacheBuster(asString)
+    },
+
     infoRows() {
       const u = this.userInfo || {}
       return [
@@ -405,9 +410,36 @@ export default {
 
     memberDays() {
       const u = this.userInfo
-      if (!u || !u.createdAt) return 0
-      const days = Math.floor((Date.now() - new Date(u.createdAt)) / (1000 * 60 * 60 * 24))
-      return Math.max(1, days)
+      if (!u) return 0
+      const createdRaw = u.createdAt || u.created_at
+      if (!createdRaw) return 0
+
+      const created = new Date(createdRaw)
+      if (Number.isNaN(created.getTime())) return 0
+
+      const now = new Date()
+      const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+      const startCreated = new Date(created.getFullYear(), created.getMonth(), created.getDate())
+
+      const msPerDay = 24 * 60 * 60 * 1000
+      const days = Math.floor((startToday.getTime() - startCreated.getTime()) / msPerDay)
+      return Math.max(0, days)
+    },
+
+    practiceCount() {
+      const u = this.userInfo || {}
+      const value = u.totalInterviews ?? u.total_interviews
+      const asNumber = Number(value)
+      return Number.isFinite(asNumber) ? asNumber : 0
+    },
+
+    avgScoreDisplay() {
+      const u = this.userInfo || {}
+      const value = u.avgScore ?? u.avg_score
+      const asNumber = Number(value)
+      if (!Number.isFinite(asNumber)) return 0
+      // 后端已 round 到两位，这里仅做展示兜底
+      return (Math.round(asNumber * 100) / 100).toString()
     },
 
     securityMenu() {
@@ -445,7 +477,17 @@ export default {
     this.syncUserInfo()
   },
   methods: {
-    ...mapActions('user', ['updateUserInfo', 'changePassword', 'updateDefaultJob', 'logout', 'fetchUserInfo']),
+    ...mapActions('user', ['updateUserInfo', 'changePassword', 'updateDefaultJob', 'logout', 'fetchUserInfo', 'uploadAvatar']),
+
+    appendCacheBuster(url) {
+      if (!url) return url
+      const stamp = Date.now()
+      return url.includes('?') ? `${url}&t=${stamp}` : `${url}?t=${stamp}`
+    },
+    
+    goToJobSelection() {
+      this.$router.push('/interview/select')
+    },
 
     // 从数据库同步用户信息
     async syncUserInfo() {
@@ -472,8 +514,19 @@ export default {
         alert('图片大小不能超过5MB')
         return
       }
-      // TODO: 调用上传接口
-      console.log('上传头像:', file)
+      // 允许重复选择同一文件也触发 change
+      e.target.value = ''
+      this.doUploadAvatar(file)
+    },
+
+    async doUploadAvatar(file) {
+      try {
+        await this.uploadAvatar(file)
+        // 再从数据库同步一次，确保展示最新统计/字段
+        await this.syncUserInfo()
+      } catch (err) {
+        alert(err?.message || '头像上传失败')
+      }
     },
 
     openEditModal() {
@@ -577,7 +630,7 @@ export default {
   background: $gradient-primary;
   position: relative;
   overflow: hidden;
-  padding-bottom: $spacing-lg;
+  padding-bottom: $spacing-md;
 
   &::before {
     content: '';
@@ -595,7 +648,7 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 52px $spacing-base $spacing-base;
+  padding: 40px $spacing-base $spacing-md;
   text-align: center;
 }
 
@@ -663,12 +716,12 @@ export default {
 .profile-stats {
   display: flex;
   align-items: center;
-  gap: $spacing-xl;
+  gap: $spacing-lg;
   background: rgba(255,255,255,0.12);
   backdrop-filter: blur(8px);
   border: 1px solid rgba(255,255,255,0.2);
   border-radius: $border-radius-xl;
-  padding: $spacing-md $spacing-xl;
+  padding: $spacing-sm $spacing-lg;
 }
 
 .profile-stat {
@@ -689,7 +742,7 @@ export default {
 
 .profile-stat-divider {
   width: 1px;
-  height: 32px;
+  height: 28px;
   background: rgba(255,255,255,0.2);
 }
 
@@ -735,7 +788,8 @@ export default {
 
 // 新版个人信息卡片 - 左右布局
 .profile-info-card {
-  display: flex;
+  display: grid;
+  grid-template-columns: 180px minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
   background: white;
   border-radius: $border-radius-lg;
   box-shadow: $shadow-sm;
@@ -743,13 +797,19 @@ export default {
   overflow: hidden;
 }
 
-.profile-info-left {
-  flex: 0 0 180px;
-  padding: $spacing-lg $spacing-base;
+.profile-info-col {
+  padding: $spacing-md $spacing-lg;
+  min-width: 0;
+}
+
+.profile-info-col + .profile-info-col {
+  border-left: 1px dashed $border-color;
+}
+
+.profile-info-col--avatar {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  border-right: 1px dashed $border-color;
+  justify-content: center;
 }
 
 .avatar-section {
@@ -808,167 +868,95 @@ export default {
   margin-top: $spacing-sm;
 }
 
-.divider-line {
-  width: 80%;
-  height: 1px;
-  background: $border-color;
-  margin: $spacing-md 0;
-}
-
-.job-section {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: $spacing-sm;
-  width: 100%;
-}
-
-.job-section-label {
-  font-size: $font-size-xs;
-  color: $text-muted;
-  font-weight: $font-weight-medium;
-}
-
-.job-display {
-  display: flex;
-  align-items: center;
-  gap: $spacing-sm;
-  padding: $spacing-sm $spacing-md;
-  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-  border-radius: $border-radius;
-
-  .job-icon {
-    font-size: 16px;
-  }
-
-  .job-name {
-    font-size: $font-size-sm;
-    font-weight: $font-weight-semibold;
-    color: #92400e;
-  }
-
-  &--empty {
-    background: $gray-100;
-    .job-name {
-      color: $text-muted;
-    }
-  }
-}
-
-.job-select-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: none;
-  border: none;
-  color: $primary;
-  font-size: $font-size-sm;
-  cursor: pointer;
-  font-family: $font-family-base;
-  padding: $spacing-sm $spacing-md;
-  transition: opacity $transition-fast;
-  &:hover { opacity: 0.8; }
-}
-
-.profile-info-divider {
-  width: 1px;
-  background: transparent;
-}
-
-.profile-info-right {
-  flex: 1;
-  padding: $spacing-lg $spacing-xl;
-  display: flex;
-  flex-direction: row;
-  gap: $spacing-xl;
-}
-
-.info-vertical-divider {
-  width: 1px;
-  background: $border-color;
-  align-self: stretch;
-}
-
 .info-group {
-  flex: 1;
-  min-width: 200px;
+  min-width: 0;
+}
 
-  &-header {
-    display: flex;
-    align-items: center;
-    gap: $spacing-sm;
-    margin-bottom: $spacing-md;
-    padding-bottom: $spacing-sm;
-    border-bottom: 1px solid $gray-100;
-  }
+.info-group-header {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-md;
+  padding-bottom: $spacing-sm;
+  border-bottom: 1px solid $gray-100;
+}
 
-  &-icon {
-    font-size: 18px;
-  }
+.info-group-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
 
-  &-title {
-    font-size: 15px;
-    font-weight: $font-weight-semibold;
-    color: $text-primary;
-  }
+.info-group-title {
+  font-size: $font-size-base;
+  font-weight: $font-weight-semibold;
+  color: $text-primary;
 }
 
 .info-list {
   display: flex;
   flex-direction: column;
-  gap: $spacing-md;
+  gap: $spacing-sm;
 }
 
 .info-item {
-  display: flex;
+  display: grid;
+  grid-template-columns: 18px 70px 1fr;
   align-items: center;
-  gap: $spacing-md;
+  gap: $spacing-sm;
+}
 
-  &__icon {
-    font-size: 16px;
-    flex-shrink: 0;
-  }
+.info-item__icon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
 
-  &__label {
-    font-size: 14px;
-    color: $text-muted;
-    min-width: 70px;
-  }
+.info-item__label {
+  font-size: $font-size-xs;
+  color: $text-muted;
+  min-width: 70px;
+}
 
-  &__value {
-    font-size: 14px;
-    color: $text-primary;
-    font-weight: $font-weight-medium;
-  }
+.info-item__value {
+  font-size: 14px;
+  color: $text-primary;
+  font-weight: $font-weight-medium;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.job-select-wrap {
+  display: flex;
+  justify-content: center;
+  margin-top: $spacing-md;
+}
+
+.job-select-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: $primary;
+  border: none;
+  color: white;
+  font-size: $font-size-sm;
+  cursor: pointer;
+  font-family: $font-family-base;
+  padding: $spacing-sm $spacing-md;
+  border-radius: $border-radius;
+  box-shadow: $shadow-sm;
+  transition: opacity $transition-fast;
+  &:hover { opacity: 0.9; }
 }
 
 // 响应式适配
 @media (max-width: 768px) {
-  .profile-info-right {
-    flex-direction: column;
-    gap: $spacing-lg;
-  }
-
-  .info-vertical-divider {
-    width: 100%;
-    height: 1px;
-  }
-}
-
-@media (max-width: 480px) {
   .profile-info-card {
-    flex-direction: column;
+    grid-template-columns: 1fr;
   }
 
-  .profile-info-left {
-    flex: none;
-    border-right: none;
-    border-bottom: 1px dashed $border-color;
-    padding: $spacing-md;
-  }
-
-  .profile-info-right {
-    padding: $spacing-md;
+  .profile-info-col + .profile-info-col {
+    border-left: none;
+    border-top: 1px dashed $border-color;
   }
 }
 
