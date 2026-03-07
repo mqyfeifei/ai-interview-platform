@@ -147,12 +147,14 @@ export const getReport = async (reportId) => {
     return buildMockReport(reportId)
   }
   // 优先从 sessionStorage 读取（由 finishInterview 写入）
-  const cached = sessionStorage.getItem(`report_${reportId}`)
-  if (cached) {
-    return adaptBackendReport(JSON.parse(cached), reportId)
-  }
-  // 若缓存不存在（如页面刷新后），暂时返回空报告，待后端提供 GET 接口后补充
-  throw new Error('报告数据不存在，请勿刷新报告页面')
+  // const cached = sessionStorage.getItem(`report_${reportId}`)
+  // if (cached) {
+  //   return adaptBackendReport(JSON.parse(cached), reportId)
+  // }
+  // // 若缓存不存在（如页面刷新后），暂时返回空报告，待后端提供 GET 接口后补充
+  // throw new Error('报告数据不存在，请勿刷新报告页面')
+  const res = await request.get(`/reports/${reportId}`)
+  return res
 }
 
 

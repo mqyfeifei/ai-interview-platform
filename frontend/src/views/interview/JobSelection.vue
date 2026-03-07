@@ -240,7 +240,7 @@ async handleStart() {
   
   try {
     // 关键2：正确获取岗位数据库ID（优先后端映射的jobDbIdMap，兜底用constants里的dbId）
-    const jobDbId = this.jobDbIdMap[this.currentSelected.id] || this.currentSelected.dbId;
+    const jobDbId = this.jobDbIdMap[this.currentSelected.id] || this.currentSelected.dbId|| this.currentSelected.id;
     console.log('传递给 Vuex 的岗位数据库 ID:', jobDbId);
     
     // 关键3：先重置面试状态，再存储数据
