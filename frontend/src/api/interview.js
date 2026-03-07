@@ -149,7 +149,8 @@ export const sendAnswerStream = (sessionId, answer, { onChunk, onFinish, onStrea
   }).then(async (response) => {
     const reader = response.body.getReader()
     const decoder = new TextDecoder()
-
+    let fullText = ''      // ✅ 累积全部文本，防止标记被拆分到两个chunk
+    let isOver = false   // 逐块读取流式响应
     while (true) {
       const { done, value } = await reader.read()
       if (done) break
@@ -160,10 +161,18 @@ export const sendAnswerStream = (sessionId, answer, { onChunk, onFinish, onStrea
         try {
           const json = JSON.parse(line.slice(6))
           const chunk = json.chunk || ''
+          fullText += chunk
 
           if (chunk.includes('[INTERVIEW_OVER]')) {
-            onChunk(chunk.replace('[INTERVIEW_OVER]', ''))
-            onFinish && onFinish()
+            if (!isOver) {
+              isOver = true
+              // 把干净内容（去掉标记）推给UI
+              const cleanChunk = chunk.replace('[INTERVIEW_OVER]', '')
+              if (cleanChunk) onChunk(cleanChunk)
+              onFinish && onFinish()
+            }            
+            // onChunk(chunk.replace('[INTERVIEW_OVER]', ''))
+            
             return  // 提前退出，不再触发 onStreamEnd
           } else {
             onChunk(chunk)
@@ -171,8 +180,10 @@ export const sendAnswerStream = (sessionId, answer, { onChunk, onFinish, onStrea
         } catch { }
       }
     }
-    // ✅ 流正常结束（AI 继续追问），通知 store 关闭 loading
-    onStreamEnd && onStreamEnd()
+     // 流正常结束且没有 [INTERVIEW_OVER]，继续对话
+    if (!isOver) {
+      onStreamEnd && onStreamEnd()
+    }
   }).catch(onError)
 }
 
@@ -188,7 +199,10 @@ export const finishInterview = async (sessionId) => {
     return { reportId: 'mock_report_' + Date.now() }
   }
 
-  const res = await request.post(`/interviews/${sessionId}/finish`)
+  // const res = await request.post(`/interviews/${sessionId}/finish`)
+    const res = await request.post(`/interviews/${sessionId}/finish`, {}, {
+    timeout: 120000  // ← 单独给这个接口设置 120 秒，覆盖全局的 15 秒
+  })
   // 把后端报告存到 sessionStorage，供报告页读取（后端暂无 GET /report/:id 接口）
   sessionStorage.setItem(`report_${sessionId}`, JSON.stringify(res.data))
   
