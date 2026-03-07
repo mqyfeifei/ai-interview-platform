@@ -136,7 +136,10 @@
                 <div class="info-item">
                   <span class="info-item__icon">💼</span>
                   <span class="info-item__label">岗位</span>
-                  <span class="info-item__value">{{ currentDefaultJob ? currentDefaultJob.name : '未设置' }}</span>
+                  <span class="info-item__value">
+                    {{ currentDefaultJob ? currentDefaultJob.name : '未设置' }}
+                    <span v-if="currentDefaultJob" class="default-badge">默认岗位</span>
+                  </span>
                 </div>
               </div>
                 <div class="job-select-wrap">
@@ -201,8 +204,6 @@
         </button>
       </section>
 
-      <!-- 技术热榜推荐 -->
-      <TechHotList />
 
     </div>
 
@@ -427,14 +428,12 @@
 import { mapGetters, mapActions } from 'vuex'
 import { JOB_TYPES, GRADE_OPTIONS } from '@/utils/constants'
 import HelpGuideModal from '@/components/common/HelpGuideModal.vue'
-import TechHotList from '@/components/TechHotList.vue'
 import { ref } from 'vue';
 
 export default {
   name: 'PersonalCenter',
   components: {
     HelpGuideModal,
-    TechHotList
   },
   data() {
     return {
@@ -1128,6 +1127,16 @@ export default {
   }
 }
 
+.default-badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 2px 6px;
+  font-size: 10px;
+  color: #fff;
+  background: #3b82f6;
+  border-radius: 3px;
+}
+
 .avatar-edit-badge-lg {
   position: absolute;
   bottom: 0;
@@ -1210,7 +1219,7 @@ export default {
 
 .job-select-wrap {
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   margin-top: $spacing-md;
 }
 
