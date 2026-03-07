@@ -9,7 +9,8 @@ class Interview(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
     job_id = db.Column(db.Integer, db.ForeignKey('jobs.id'), nullable=False)
-    start_time = db.Column(db.DateTime, default=datetime.utcnow)
+    # Use local server time consistently with interview end_time writes.
+    start_time = db.Column(db.DateTime, default=datetime.now)
     end_time = db.Column(db.DateTime)
     total_score = db.Column(db.Integer)
     status = db.Column(db.String(20), default='in_progress')  # in_progress, completed

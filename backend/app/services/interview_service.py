@@ -54,7 +54,13 @@ class InterviewService:
     @staticmethod
     def start_interview(user_id, job_id):
         # 1. 创建面试记录
-        interview = Interview(user_id=user_id, job_id=job_id, status='in_progress', question_count=1)
+        interview = Interview(
+            user_id=user_id,
+            job_id=job_id,
+            status='in_progress',
+            question_count=1,
+            start_time=datetime.now()
+        )
         db.session.add(interview)
         db.session.commit()
 
