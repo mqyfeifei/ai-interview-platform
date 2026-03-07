@@ -6,7 +6,8 @@
 import request from '@/utils/request'
 
 const mockDelay = (ms = 600) => new Promise(resolve => setTimeout(resolve, ms))
-const USE_MOCK = process.env.VUE_APP_USE_MOCK !== 'false'
+// 临时强制关闭 mock 模式以便联调后端（调试完成后可改回或通过 env 控制）
+const USE_MOCK = false
 
 /**
  * 获取当前用户信息
@@ -57,7 +58,7 @@ export const changePassword = async (data) => {
     if (data.oldPassword !== '123456') throw new Error('原密码错误')
     return { success: true }
   }
-  return request.post('/v1/users/me/change-password', data)
+  return request.post('/users/me/change-password', data)
 }
 
 /**
@@ -69,7 +70,7 @@ export const updateDefaultJob = async (jobId) => {
     await mockDelay(400)
     return { defaultJob: jobId }
   }
-  return request.patch('/v1/users/me/preferences', { defaultJob: jobId })
+  return request.patch('/users/me/preferences', { defaultJob: jobId })
 }
 
 /**
@@ -86,6 +87,20 @@ export const uploadAvatar = async (formData) => {
   return request.post('/users/me/avatar', formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
   })
+}
+
+/**
+ * 绑定/更新手机号（已登录）
+ * @param {string} phone
+ */
+export const bindPhone = async (phone) => {
+  if (USE_MOCK) {
+    await mockDelay(700)
+    const p = String(phone || '').trim()
+    if (!/^1\d{10}$/.test(p)) throw new Error('手机号格式不正确')
+    return { phone: p }
+  }
+  return request.post('/users/me/bind-phone', { phone })
 }
 
 // =============================================

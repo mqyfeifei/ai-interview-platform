@@ -1,4 +1,3 @@
-
 <!--
   =============================================
   frontend/src/views/users/PersonalCenter.vue
@@ -156,7 +155,7 @@
       <!-- 账号安全 -->
       <section class="profile-section">
         <h2 class="section-title" style="margin-bottom: 12px">账号安全</h2>
-        <div class="menu-card">
+        <div class="menu-card menu-card--security">
           <button
             class="menu-item"
             v-for="item in securityMenu"
@@ -175,18 +174,17 @@
         </div>
       </section>
 
-      <!-- 关于 -->
+      <!-- 其它 -->
       <section class="profile-section">
-        <div class="menu-card">
-          <button class="menu-item" v-for="item in aboutMenu" :key="item.label" @click="item.action && item.action()">
+        <h2 class="section-title" style="margin-bottom: 12px">其它</h2>
+        <div class="menu-card menu-card--other">
+          <button class="menu-item" v-for="item in otherMenu" :key="item.label" @click="item.action && item.action()">
             <span class="menu-item__icon" :style="{ background: item.iconBg }">{{ item.icon }}</span>
             <div class="menu-item__content">
               <span class="menu-item__label">{{ item.label }}</span>
               <span class="menu-item__sub" v-if="item.sub">{{ item.sub }}</span>
             </div>
-            <svg class="menu-item__arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="9 18 15 12 9 6"/>
-            </svg>
+            <span class="menu-item__arrow" v-if="item.action">›</span>
           </button>
         </div>
       </section>
@@ -205,38 +203,43 @@
 
     </div>
 
+    <!-- 使用帮助指南弹窗 -->
+    <HelpGuideModal v-model="showHelpGuide" />
+
     <!-- 编辑信息弹窗 -->
     <transition name="modal">
-      <div v-if="showEditModal" class="modal-overlay" @click.self="showEditModal = false">
-        <div class="modal-sheet">
-          <div class="modal-header">
-            <h3>编辑个人信息</h3>
-            <button class="modal-close" @click="showEditModal = false">✕</button>
+      <div v-if="showEditModal" class="modal-overlay modal-overlay--center" @click.self="showEditModal = false">
+        <div class="modal-sheet edit-modal-sheet">
+          <div class="edit-modal-header">
+            <span class="edit-modal-title">
+              <span class="edit-modal-title-icon">📝</span>
+              编辑个人信息
+            </span>
+            <button class="edit-modal-close" @click="showEditModal = false">✕</button>
           </div>
-
-          <div class="modal-body">
+          <div class="edit-modal-body">
             <div class="form-group">
-              <label>昵称</label>
+              <label><span class="field-icon">👤</span>昵称</label>
               <input v-model="editForm.username" type="text" class="form-control" placeholder="请输入昵称" />
             </div>
+            <!-- 邮箱和手机号由其它流程维护，此处不允许直接编辑 -->
             <div class="form-group">
-              <label>学校</label>
+              <label><span class="field-icon">🏫</span>学校</label>
               <input v-model="editForm.school" type="text" class="form-control" placeholder="请输入学校名称" />
             </div>
             <div class="form-group">
-              <label>专业</label>
+              <label><span class="field-icon">📖</span>专业</label>
               <input v-model="editForm.major" type="text" class="form-control" placeholder="请输入专业名称" />
             </div>
             <div class="form-group">
-              <label>年级</label>
+              <label><span class="field-icon">📅</span>年级</label>
               <select v-model="editForm.grade" class="form-control form-select">
                 <option value="">选择年级</option>
                 <option v-for="g in gradeOptions" :key="g" :value="g">{{ g }}</option>
               </select>
             </div>
           </div>
-
-          <div class="modal-footer">
+          <div class="edit-modal-footer">
             <button class="btn btn-ghost" @click="showEditModal = false">取消</button>
             <button class="btn btn-primary" :disabled="savingInfo" @click="saveUserInfo">
               <span v-if="savingInfo" class="btn-spinner"></span>
@@ -249,31 +252,40 @@
 
     <!-- 修改密码弹窗 -->
     <transition name="modal">
-      <div v-if="showPasswordModal" class="modal-overlay" @click.self="showPasswordModal = false">
-        <div class="modal-sheet">
+      <div v-if="showPasswordModal" class="modal-overlay modal-overlay--center" @click.self="showPasswordModal = false">
+        <div class="modal-sheet password-sheet">
           <div class="modal-header">
-            <h3>修改密码</h3>
+            <div class="password-header">
+              <h3 class="password-header__title">修改密码</h3>
+              <p class="password-header__sub">为保障账号安全，请先验证当前密码</p>
+            </div>
             <button class="modal-close" @click="showPasswordModal = false">✕</button>
           </div>
 
           <div class="modal-body">
-            <div class="form-group">
-              <label>当前密码</label>
-              <input v-model="pwdForm.oldPassword" type="password" class="form-control" placeholder="请输入当前密码" />
-              <span v-if="pwdErrors.oldPassword" class="form-error">{{ pwdErrors.oldPassword }}</span>
+            <div class="password-card">
+              <div class="form-group">
+                <label>当前密码</label>
+                <input v-model="pwdForm.oldPassword" type="password" class="form-control" placeholder="请输入当前密码" autocomplete="current-password" />
+                <span v-if="pwdErrors.oldPassword" class="form-error">{{ pwdErrors.oldPassword }}</span>
+              </div>
+              <div class="form-group">
+                <label>新密码</label>
+                <input v-model="pwdForm.newPassword" type="password" class="form-control" placeholder="至少6位" autocomplete="new-password" />
+                <div class="form-hint">建议使用强度较高的密码</div>
+                <span v-if="pwdErrors.newPassword" class="form-error">{{ pwdErrors.newPassword }}</span>
+              </div>
+              <div class="form-group">
+                <label>确认新密码</label>
+                <input v-model="pwdForm.confirmPassword" type="password" class="form-control" placeholder="再次输入新密码" autocomplete="new-password" />
+                <span v-if="pwdErrors.confirmPassword" class="form-error">{{ pwdErrors.confirmPassword }}</span>
+              </div>
+
+              <div v-if="pwdError" class="global-error">{{ pwdError }}</div>
+              <div v-if="pwdSuccess" class="success-float" role="status" aria-live="polite">
+                <div class="success-tip success-tip--float">✅ 密码修改成功！</div>
+              </div>
             </div>
-            <div class="form-group">
-              <label>新密码</label>
-              <input v-model="pwdForm.newPassword" type="password" class="form-control" placeholder="至少6位" />
-              <span v-if="pwdErrors.newPassword" class="form-error">{{ pwdErrors.newPassword }}</span>
-            </div>
-            <div class="form-group">
-              <label>确认新密码</label>
-              <input v-model="pwdForm.confirmPassword" type="password" class="form-control" placeholder="再次输入新密码" />
-              <span v-if="pwdErrors.confirmPassword" class="form-error">{{ pwdErrors.confirmPassword }}</span>
-            </div>
-            <div v-if="pwdError" class="global-error">{{ pwdError }}</div>
-            <div v-if="pwdSuccess" class="success-tip">✅ 密码修改成功！</div>
           </div>
 
           <div class="modal-footer">
@@ -281,6 +293,60 @@
             <button class="btn btn-primary" :disabled="savingPwd" @click="savePassword">
               <span v-if="savingPwd" class="btn-spinner"></span>
               {{ savingPwd ? '保存中...' : '确认修改' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </transition>
+
+    <!-- 绑定手机弹窗 -->
+    <transition name="modal">
+      <div v-if="showBindPhoneModal" class="modal-overlay modal-overlay--center" @click.self="showBindPhoneModal = false">
+        <div class="modal-sheet phone-sheet">
+          <div class="modal-header">
+            <div class="phone-header">
+              <h3 class="phone-header__title">绑定手机</h3>
+              <p class="phone-header__sub">
+                {{ userInfo && userInfo.phone ? '你可以更新绑定手机号' : '绑定后可使用手机号登录' }}
+              </p>
+            </div>
+            <button class="modal-close" @click="showBindPhoneModal = false">✕</button>
+          </div>
+
+          <div class="modal-body">
+            <div class="phone-card">
+              <div class="phone-current" v-if="userInfo && userInfo.phone">
+                <span class="phone-current__label">当前绑定</span>
+                <span class="phone-current__value">{{ maskPhone(userInfo.phone) }}</span>
+              </div>
+
+              <div class="form-group">
+                <label>手机号</label>
+                <input
+                  v-model="bindPhoneForm.phone"
+                  type="tel"
+                  inputmode="numeric"
+                  class="form-control"
+                  placeholder="请输入 11 位手机号"
+                  maxlength="11"
+                  autocomplete="tel"
+                />
+                <div class="form-hint">仅支持中国大陆手机号（以 1 开头的 11 位数字）</div>
+                <span v-if="bindPhoneErrors.phone" class="form-error">{{ bindPhoneErrors.phone }}</span>
+              </div>
+
+              <div v-if="bindPhoneError" class="global-error">{{ bindPhoneError }}</div>
+              <div v-if="bindPhoneSuccess" class="success-float" role="status" aria-live="polite">
+                <div class="success-tip success-tip--float">✅ 手机号绑定成功！</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button class="btn btn-ghost" @click="showBindPhoneModal = false">取消</button>
+            <button class="btn btn-primary" :disabled="bindingPhone" @click="saveBindPhone">
+              <span v-if="bindingPhone" class="btn-spinner"></span>
+              {{ bindingPhone ? '绑定中...' : '确认绑定' }}
             </button>
           </div>
         </div>
@@ -335,32 +401,67 @@
         </div>
       </div>
     </transition>
+
+    <!-- 版本信息卡片弹窗 -->
+    <transition name="modal">
+      <div v-if="showVersionCard" class="modal-overlay version-modal" @click.self="showVersionCard = false">
+        <div class="modal-sheet version-card">
+          <div class="modal-header" style="justify-content: center; border-bottom: none; position: relative; width: 100%; padding: 0;">
+            <h3 style="margin: 0 auto; font-size: 16px; font-weight: 600;">版本信息</h3>
+            <button class="modal-close" @click="showVersionCard = false" style="position: absolute; right: 0; top: 0;">✕</button>
+          </div>
+          <div class="modal-body" style="width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center; padding: 0;">
+            <p class="version-card__text">当前版本：v1.0.0</p>
+            <p class="version-card__text">如需获取最新版本信息，请联系管理员。</p>
+          </div>
+        </div>
+      </div>
+    </transition>
   </div>
 </template>
 
 <script>
 import { mapGetters, mapActions } from 'vuex'
 import { JOB_TYPES, GRADE_OPTIONS } from '@/utils/constants'
+import HelpGuideModal from '@/components/common/HelpGuideModal.vue'
+import { ref } from 'vue';
 
 export default {
   name: 'PersonalCenter',
+  components: {
+    HelpGuideModal
+  },
   data() {
     return {
       showEditModal: false,
       showPasswordModal: false,
+      showBindPhoneModal: false,
       showJobPicker: false,
       showLogoutConfirm: false,
+      showHelpGuide: false,
       savingInfo: false,
       savingPwd: false,
+      bindingPhone: false,
       loggingOut: false,
+      // 编辑表单只包含后端 PUT /users/me 支持的字段
+      // 编辑表单只包含后端 PUT /users/me 支持的字段
       editForm: { username: '', school: '', major: '', grade: '' },
       pwdForm: { oldPassword: '', newPassword: '', confirmPassword: '' },
       pwdErrors: {},
       pwdError: '',
       pwdSuccess: false,
+
+      bindPhoneForm: { phone: '' },
+      bindPhoneErrors: {},
+      bindPhoneError: '',
+      bindPhoneSuccess: false,
+
       selectedJobId: null,
       gradeOptions: GRADE_OPTIONS.map(o => o.value),
-      allJobs: JOB_TYPES
+      allJobs: JOB_TYPES,
+
+      // 新增版本卡片弹窗的响应式变量
+      showVersionCard: ref(false)
     }
   },
   computed: {
@@ -456,16 +557,23 @@ export default {
           sub: this.userInfo && this.userInfo.phone ? '已绑定 ' + this.maskPhone(this.userInfo.phone) : '未绑定，绑定后可用手机登录',
           icon: '📱',
           iconBg: '#D1FAE5',
-          action: () => {}
+          action: () => { this.openBindPhoneModal() }
         }
       ]
     },
 
-    aboutMenu() {
+    otherMenu() {
       return [
-        { label: '使用帮助', sub: '查看操作指南', icon: '❓', iconBg: '#FEF3C7', action: () => {} },
-        { label: '意见反馈', sub: '告诉我们你的想法', icon: '💬', iconBg: '#F5F3FF', action: () => {} },
-        { label: '当前版本', sub: 'v1.0.0', icon: 'ℹ️', iconBg: '#F1F5F9', action: null }
+        { label: '帮助', icon: '❓', iconBg: 'linear-gradient(135deg, #FFD600 0%, #FF9800 100%)', sub: '查看平台使用指南', action: () => { this.showHelpGuide = true } },
+        {
+          label: '版本',
+          icon: 'ℹ️',
+          iconBg: 'linear-gradient(135deg, #2196F3 0%, #21CBF3 100%)',
+          sub: 'v1.0.0',
+          action: () => {
+            this.showVersionCard = true;
+          }
+        }
       ]
     }
   },
@@ -477,7 +585,7 @@ export default {
     this.syncUserInfo()
   },
   methods: {
-    ...mapActions('user', ['updateUserInfo', 'changePassword', 'updateDefaultJob', 'logout', 'fetchUserInfo', 'uploadAvatar']),
+    ...mapActions('user', ['updateUserInfo', 'changePassword', 'updateDefaultJob', 'logout', 'fetchUserInfo', 'uploadAvatar', 'bindPhone']),
 
     appendCacheBuster(url) {
       if (!url) return url
@@ -530,26 +638,45 @@ export default {
     },
 
     openEditModal() {
-      const u = this.userInfo || {}
+      const u = this.userInfo || {};
+      // only copy fields that are editable through the profile API
       this.editForm = {
         username: u.username || '',
         school: u.school || '',
         major: u.major || '',
         grade: u.grade || ''
-      }
-      this.showEditModal = true
+      };
+      this.showEditModal = true;
     },
 
     async saveUserInfo() {
-      if (!this.editForm.username.trim()) return
+      // 基本校验：昵称必填
+      if (!this.editForm.username || !String(this.editForm.username).trim()) {
+        alert('请输入昵称')
+        return
+      }
+
+      // 备注：邮箱和手机号不通过 PUT /users/me 更新。
+      // 手机有专门的绑定接口，邮箱暂时不支持在线修改。
+
+
       this.savingInfo = true
       try {
-        await this.updateUserInfo(this.editForm)
-        // 保存成功后从数据库同步最新数据
+        // 构建仅包含后端支持字段的 payload
+        const payload = {
+          username: this.editForm.username,
+          school: this.editForm.school,
+          major: this.editForm.major,
+          grade: this.editForm.grade
+        }
+        await this.updateUserInfo(payload)
+
+
+        // 刷新用户信息
         await this.syncUserInfo()
         this.showEditModal = false
       } catch (e) {
-        alert(e.message || '保存失败')
+        alert(e?.message || '保存失败')
       } finally {
         this.savingInfo = false
       }
@@ -561,6 +688,50 @@ export default {
       this.pwdError = ''
       this.pwdSuccess = false
       this.showPasswordModal = true
+    },
+
+    openBindPhoneModal() {
+      const current = this.userInfo && this.userInfo.phone ? String(this.userInfo.phone) : ''
+      this.bindPhoneForm = { phone: current }
+      this.bindPhoneErrors = {}
+      this.bindPhoneError = ''
+      this.bindPhoneSuccess = false
+      this.showBindPhoneModal = true
+    },
+
+    async saveBindPhone() {
+      this.bindPhoneErrors = {}
+      this.bindPhoneError = ''
+      this.bindPhoneSuccess = false
+
+      const phone = String(this.bindPhoneForm.phone || '').trim()
+      if (!phone) {
+        this.bindPhoneErrors.phone = '请输入手机号'
+        return
+      }
+      if (!/^1\d{10}$/.test(phone)) {
+        this.bindPhoneErrors.phone = '手机号格式不正确'
+        return
+      }
+
+      this.bindingPhone = true
+      try {
+        await this.bindPhone(phone)
+        // 再同步一次，确保显示后端最终数据
+        await this.syncUserInfo()
+        this.bindPhoneSuccess = true
+        setTimeout(() => { this.showBindPhoneModal = false }, 1200)
+      } catch (e) {
+        const msg = e?.message || '绑定失败'
+        // 手机号相关错误优先显示在输入框下方
+        if (/手机号|绑定/.test(msg)) {
+          this.bindPhoneErrors.phone = msg
+        } else {
+          this.bindPhoneError = msg
+        }
+      } finally {
+        this.bindingPhone = false
+      }
     },
 
     async savePassword() {
@@ -581,7 +752,13 @@ export default {
         this.pwdSuccess = true
         setTimeout(() => { this.showPasswordModal = false }, 1500)
       } catch (e) {
-        this.pwdError = e.message || '修改失败'
+        const msg = e?.message || '修改失败'
+        // 后端校验旧密码错误时，将提示显示在旧密码输入框下方
+        if (/旧密码|当前密码/.test(msg)) {
+          this.pwdErrors.oldPassword = msg
+        } else {
+          this.pwdError = msg
+        }
       } finally {
         this.savingPwd = false
       }
@@ -769,21 +946,121 @@ export default {
   color: $text-primary;
 }
 
+// 编辑按钮样式调整
 .edit-btn {
+  background: linear-gradient(90deg, #8e2de2 0%, #4a00e0 100%);
+  color: #fff;
+  border: none;
+  border-radius: 18px;
+  padding: 6px 20px;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: box-shadow 0.2s;
+  box-shadow: 0 2px 8px rgba(142, 45, 226, 0.10);
+  margin-left: 12px;
+}
+.edit-btn:hover {
+  box-shadow: 0 4px 16px rgba(142, 45, 226, 0.18);
+  opacity: 0.92;
+}
+
+// 编辑弹窗图片卡片风格
+.edit-modal-sheet {
+  min-width: 340px;
+  max-width: 440px;
+  padding: 0 0 18px 0;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 6px 32px rgba(76, 0, 153, 0.10);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: hidden;
+}
+.edit-modal-header {
+  width: 100%;
   display: flex;
   align-items: center;
-  gap: 4px;
-  background: $primary-bg;
+  justify-content: space-between;
+  background: linear-gradient(90deg, #8e2de2 0%, #4a00e0 100%);
+  padding: 22px 28px 16px 28px;
+}
+.edit-modal-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.edit-modal-title .edit-modal-title-icon {
+  font-size: 22px;
+}
+.edit-modal-close {
+  background: none;
   border: none;
-  border-radius: $border-radius-full;
-  padding: 6px $spacing-md;
-  font-size: $font-size-sm;
-  color: $primary;
-  font-weight: $font-weight-semibold;
+  font-size: 20px;
   cursor: pointer;
-  font-family: $font-family-base;
-  transition: background $transition-fast;
-  &:hover { background: darken(#EEF2FF, 4%); }
+  color: #fff;
+}
+.edit-modal-body {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 24px 28px 0 28px;
+}
+.edit-modal-footer {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+  padding: 0 24px;
+}
+
+/* compact form styling inside edit modal */
+.edit-modal-sheet {
+  min-width: 320px;
+  max-width: 420px;
+  padding: 0 0 14px 0;
+}
+.edit-modal-header {
+  padding: 16px 24px 12px 24px;
+}
+.edit-modal-title {
+  font-size: 16px;
+}
+.edit-modal-body {
+  padding: 20px 24px 0 24px;
+  gap: 10px;
+}
+.edit-modal-body .form-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.edit-modal-body .form-group label {
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  font-size: 13px;
+  letter-spacing: 0.03em;
+  margin: 0;
+  min-width: 64px;
+}
+.edit-modal-body .form-group .field-icon {
+  display: inline-block;
+  width: 18px;
+  text-align: center;
+  margin-right: 4px;
+  font-size: 16px;
+}
+.edit-modal-body .form-group input,
+.edit-modal-body .form-group select {
+  flex: 1;
+  padding: 6px 8px;
+  font-size: 14px;
 }
 
 // 新版个人信息卡片 - 左右布局
@@ -1052,6 +1329,52 @@ export default {
   border: 1px solid $border-color;
 }
 
+// 账号安全：双入口同一行（自适应，移动端不足时自动换行）
+.menu-card--security {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: $spacing-md;
+  padding: $spacing-md;
+  overflow: visible;
+
+  .menu-item {
+    border: 1px solid $border-color;
+    border-radius: $border-radius-lg;
+    background: white;
+    border-bottom: none;
+    padding: $spacing-md;
+
+    &:last-child { border-bottom: none; }
+    &:hover { background: $gray-50; }
+    &:active { background: $gray-100; }
+
+    .menu-item__arrow { color: $gray-400; }
+  }
+}
+
+// 其它板块卡片样式（与账号安全一致）
+.menu-card--other {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: $spacing-md;
+  padding: $spacing-md;
+  overflow: visible;
+
+  .menu-item {
+    border: 1px solid $border-color;
+    border-radius: $border-radius-lg;
+    background: white;
+    border-bottom: none;
+    padding: $spacing-md;
+
+    &:last-child { border-bottom: none; }
+    &:hover { background: $gray-50; }
+    &:active { background: $gray-100; }
+
+    .menu-item__arrow { color: $gray-400; }
+  }
+}
+
 .menu-item {
   width: 100%;
   display: flex;
@@ -1115,8 +1438,20 @@ export default {
   background: $bg-overlay;
   z-index: 200;
   display: flex;
-  align-items: flex-end;
+  align-items: flex-end; /* default bottom-aligned */
   justify-content: center;
+}
+
+// 居中弹窗（仅在需要时额外加类）
+.modal-overlay--center {
+  align-items: center;
+  padding: $spacing-base;
+}
+
+// 居中弹窗（仅在需要时额外加类）
+.modal-overlay--center {
+  align-items: center;
+  padding: $spacing-base;
 }
 
 .modal-sheet {
@@ -1216,6 +1551,133 @@ export default {
   text-align: center;
 }
 
+// 修改密码弹窗（局部优化，不影响其他弹窗）
+.password-sheet {
+  overflow: hidden;
+
+  .modal-header {
+    align-items: flex-start;
+  }
+
+  // 居中弹窗更适合四角圆角
+  border-radius: $border-radius-xl;
+}
+
+.password-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  &__title {
+    margin: 0;
+    font-size: $font-size-lg;
+    font-weight: $font-weight-bold;
+    color: $text-primary;
+  }
+
+  &__sub {
+    margin: 0;
+    font-size: $font-size-sm;
+    color: $text-muted;
+    line-height: $line-height-normal;
+  }
+}
+
+.password-card {
+  background: $gradient-primary-soft;
+  border: 1px solid $border-color;
+  border-radius: $border-radius-lg;
+  padding: $spacing-base;
+  position: relative;
+}
+
+.form-hint {
+  margin-top: 6px;
+  font-size: $font-size-xs;
+  color: $text-muted;
+}
+
+// 绑定手机弹窗（居中卡片）
+.phone-sheet {
+  overflow: hidden;
+  border-radius: $border-radius-xl;
+
+  .modal-header {
+    align-items: flex-start;
+  }
+}
+
+.phone-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  &__title {
+    margin: 0;
+    font-size: $font-size-lg;
+    font-weight: $font-weight-bold;
+    color: $text-primary;
+  }
+
+  &__sub {
+    margin: 0;
+    font-size: $font-size-sm;
+    color: $text-muted;
+    line-height: $line-height-normal;
+  }
+}
+
+.phone-card {
+  background: $gradient-primary-soft;
+  border: 1px solid $border-color;
+  border-radius: $border-radius-lg;
+  padding: $spacing-base;
+  position: relative;
+}
+
+.success-float {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: $spacing-base $spacing-base $spacing-xl;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.success-tip--float {
+  width: 100%;
+  max-width: 380px;
+  margin: 0;
+  box-shadow: $shadow-sm;
+}
+
+.phone-current {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: $spacing-md;
+  margin-bottom: $spacing-base;
+  border-radius: $border-radius-lg;
+  border: 1px dashed rgba(148, 163, 184, 0.7);
+  background: rgba(255,255,255,0.75);
+
+  &__label {
+    font-size: $font-size-xs;
+    color: $text-muted;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  &__value {
+    font-family: $font-family-mono;
+    font-size: $font-size-base;
+    font-weight: $font-weight-semibold;
+    color: $text-primary;
+  }
+}
+
 // 岗位选择列表
 .job-picker-body { padding-top: 0; }
 
@@ -1312,5 +1774,32 @@ export default {
 }
 .modal-leave-active .modal-sheet {
   animation: sheetOut 0.2s ease both;
+}
+
+.modal-overlay.version-modal {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.version-card {
+  min-width: 220px;
+  max-width: 320px;
+  min-height: 80px;
+  padding: 20px 18px 18px 18px;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.version-card__text {
+  font-size: 15px;
+  color: #333;
+  margin-bottom: 6px;
+  text-align: center;
 }
 </style>

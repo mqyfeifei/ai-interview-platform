@@ -59,14 +59,22 @@ request.interceptors.response.use(
   (error) => {
     // HTTP层错误处理
     if (error.response) {
-      const { status } = error.response
+      const { status, data } = error.response
       if (status === 401) {
         clearAuth()
         router.push({ name: 'Login' })
+        const msg = data?.message || data?.msg || '登录已过期，请重新登录'
+        return Promise.reject(new Error(msg))
       } else if (status === 403) {
         console.error('无权限访问')
       } else if (status === 500) {
         console.error('服务器内部错误')
+      }
+
+      // 尝试提取后端业务错误信息（后端常见格式：{ code, msg, message }）
+      const backendMsg = data?.message || data?.msg
+      if (backendMsg) {
+        return Promise.reject(new Error(backendMsg))
       }
     } else if (error.code === 'ECONNABORTED') {
       console.error('请求超时，请检查网络')
