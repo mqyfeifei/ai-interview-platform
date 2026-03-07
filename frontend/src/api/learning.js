@@ -314,8 +314,6 @@ export const getRecommendedResources = async () => {
 
     // 难度映射
     const diffMap = { easy: '初级', medium: '中级', hard: '高级' }
-    // 类型图标映射
-    const typeReadTime = { article: '8分钟', video: '30分钟', course: '45分钟', example: '15分钟', book: '习题杀手' }
 
     let result = data.map(item => ({
       id: item.id,
@@ -324,7 +322,8 @@ export const getRecommendedResources = async () => {
       summary: item.content ? item.content.slice(0, 100) + '...' : `针对您的薄弱环节推荐的${diffMap[item.difficulty] || ''}学习资源`,
       source: item.source || 'AI面试助手',
       tags: Array.isArray(item.tags) ? item.tags.slice(0, 3) : [],
-      readTime: typeReadTime[item.type] || '10分钟',
+      // 使用后端返回的 difficulty 作为“时间/难度”显示，前端不再默认持续时间
+      readTime: diffMap[item.difficulty] || item.difficulty || '中级',
       difficulty: diffMap[item.difficulty] || item.difficulty || '中级',
       relatedWeakness: null,
       bookmarked: bookmarks[item.id] || false,
