@@ -190,13 +190,6 @@
                 {{ typeIcon(res.type) }}
               </div>
               <span :class="['difficulty-badge', 'diff-' + res.difficulty]">{{ res.difficulty }}</span>
-              <span class="resource-card__time">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px">
-                  <circle cx="12" cy="12" r="10"/>
-                  <polyline points="12 6 12 12 16 14"/>
-                </svg>
-                {{ res.readTime }}
-              </span>
             </div>
 
             <!-- 标题 + 摘要 -->
@@ -1059,14 +1052,10 @@ export default {
   padding: 2px 8px; border-radius: $border-radius-full;
   &.diff-初级 { background: $success-bg; color: darken($success, 10%); }
   &.diff-中级 { background: $info-bg; color: $info; }
-  &.diff-高级 { background: $warning-bg; color: darken($warning, 20%); }
+  /* 高难度使用红色警示 */
+  &.diff-高级 { background: $danger-bg; color: $danger; }
 }
 
-.resource-card__time {
-  display: flex; align-items: center; gap: 3px;
-  font-size: $font-size-xs; color: $text-muted;
-  margin-left: auto;
-}
 
 .resource-card__title {
   font-size: $font-size-base; font-weight: $font-weight-bold;
