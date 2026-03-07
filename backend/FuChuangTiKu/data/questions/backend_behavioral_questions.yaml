@@ -1,79 +1,78 @@
 type: backend_behavioral_questions
 source:
-  - 面经库
+  - "面经库"
 items:
   - id: BE-BQ-001
     type: behavioral
-    question: 讲一次你推动跨团队协作并最终落地的经历。
-    tags: [协作, 沟通]
+    question: "讲一次你推动跨团队协作并最终落地的经历。"
+    tags: ["协作", "沟通"]
     difficulty: medium
-    source: 面经库
+    source: "面经库"
     status: draft
     key_points:
-      - 沟通强调寻找双赢局面的共赢心智
-      - 主动承担串联职责与组织推进的领导力
-      - 遇卡点能快速升级并合理撬动周边资源
+      - "沟通强调寻找双赢局面的共赢心智"
+      - "主动承担串联职责与组织推进的领导力"
+      - "遇卡点能快速升级并合理撬动周边资源"
   - id: BE-BQ-002
     type: behavioral
-    question: 讲一次你在高压下处理线上故障的经历。
-    tags: [抗压, 应急响应]
+    question: "讲一次你在高压下处理线上故障的经历。"
+    tags: ["抗压", "应急响应"]
     difficulty: medium
-    source: 面经库
+    source: "面经库"
     status: draft
   - id: BE-BQ-003
     type: behavioral
-    question: 讲一次你做技术决策被质疑，最后如何达成一致。
-    tags: [技术决策, 影响力]
+    question: "讲一次你做技术决策被质疑，最后如何达成一致。"
+    tags: ["技术决策", "影响力"]
     difficulty: medium
-    source: 面经库
+    source: "面经库"
     status: draft
   - id: BE-BQ-004
     type: behavioral
-    question: 讲一次你主导代码重构并显著改善质量的经历。
-    tags: [代码质量, 重构]
+    question: "讲一次你主导代码重构并显著改善质量的经历。"
+    tags: ["代码质量", "重构"]
     difficulty: medium
-    source: 面经库
+    source: "面经库"
     status: draft
   - id: BE-BQ-005
     type: behavioral
-    question: 讲一次项目延期风险出现后，你如何纠偏并按期交付。
-    tags: [项目管理, 风险控制]
+    question: "讲一次项目延期风险出现后，你如何纠偏并按期交付。"
+    tags: ["项目管理", "风险控制"]
     difficulty: medium
-    source: 面经库
+    source: "面经库"
     status: draft
   - id: BE-BQ-006
     type: behavioral
-    question: 讲一次你在信息不完整情况下做判断的经历。
-    tags: [不确定性, 决策]
+    question: "讲一次你在信息不完整情况下做判断的经历。"
+    tags: ["不确定性", "决策"]
     difficulty: hard
-    source: 面经库
+    source: "面经库"
     status: draft
   - id: BE-BQ-007
     type: behavioral
-    question: 讲一次你帮助低绩效同事成长的经历。
-    tags: [辅导, 团队建设]
+    question: "讲一次你帮助低绩效同事成长的经历。"
+    tags: ["辅导", "团队建设"]
     difficulty: medium
-    source: 面经库
+    source: "面经库"
     status: draft
   - id: BE-BQ-008
     type: behavioral
-    question: 讲一次你在需求频繁变动中仍保持稳定交付的经历。
-    tags: [需求管理, 交付]
+    question: "讲一次你在需求频繁变动中仍保持稳定交付的经历。"
+    tags: ["需求管理", "交付"]
     difficulty: medium
-    source: 面经库
+    source: "面经库"
     status: draft
   - id: BE-BQ-009
     type: behavioral
-    question: 讲一次你主动承担非职责范围工作并产生价值的经历。
-    tags: [主人翁精神, 责任心]
+    question: "讲一次你主动承担非职责范围工作并产生价值的经历。"
+    tags: ["主人翁精神", "责任心"]
     difficulty: easy
-    source: 面经库
+    source: "面经库"
     status: draft
   - id: BE-BQ-010
     type: behavioral
-    question: 讲一次失败经历，你如何复盘并避免再次发生。
-    tags: [复盘, 成长]
+    question: "讲一次失败经历，你如何复盘并避免再次发生。"
+    tags: ["复盘", "成长"]
     difficulty: easy
-    source: 面经库
+    source: "面经库"
     status: draft
-

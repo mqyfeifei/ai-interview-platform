@@ -1,114 +1,114 @@
-type: cv_scenario_design_questions
+type: "cv_scenario_design_questions"
 source:
-  - 技术博客
+  - "技术博客"
 items:
-  - id: CV-SQ-001
-    type: scenario_design
-    question: 设计一个工业流水线上的缺陷检测系统，缺陷样本极度稀缺且种类繁多，你会如何设计算法方案？
-    tags: [场景设计, 工业质检, 小样本学习]
-    difficulty: hard
-    source: 技术博客
-    status: draft
+  - id: "CV-SQ-001"
+    type: "scenario_design"
+    question: "设计一个工业流水线上的缺陷检测系统，缺陷样本极度稀缺且种类繁多，你会如何设计算法方案？"
+    tags: ["场景设计", "工业质检", "小样本学习"]
+    difficulty: "hard"
+    source: "技术博客"
+    status: "draft"
     key_points:
-      - 抛弃单纯依赖大量数据的监督学习思路，转向无监督异常检测（如基于重构的AutoEncoder、归一化流）
-      - 利用预训练模型提取特征，使用核心集（Coreset）或K-NN算法比对正常样本距离（如PatchCore算法）
-      - 结合传统CV算法（形态学处理）作为前置筛选或后处理增强鲁棒性
-  - id: CV-SQ-002
-    type: scenario_design
-    question: 设计一个高并发的视频流违规内容（如暴恐、色情）实时审核引擎，如何兼顾准确率与服务器成本？
-    tags: [视频分析, 架构设计, 工程落地]
-    difficulty: medium
-    source: 技术博客
-    status: draft
+      - "抛弃单纯依赖大量数据的监督学习思路，转向无监督异常检测（如基于重构的AutoEncoder、归一化流）"
+      - "利用预训练模型提取特征，使用核心集（Coreset）或K-NN算法比对正常样本距离（如PatchCore算法）"
+      - "结合传统CV算法（形态学处理）作为前置筛选或后处理增强鲁棒性"
+  - id: "CV-SQ-002"
+    type: "scenario_design"
+    question: "设计一个高并发的视频流违规内容（如暴恐、色情）实时审核引擎，如何兼顾准确率与服务器成本？"
+    tags: ["视频分析", "架构设计", "工程落地"]
+    difficulty: "medium"
+    source: "技术博客"
+    status: "draft"
     key_points:
-      - 抽帧策略优化：关键帧提取（感知哈希、镜头边界检测）代替逐帧推理
-      - 大小模型级联：先用极轻量的分类模型（如MobileNet）做海量粗筛，高置信度嫌疑帧再送入大模型（如ViT）精准判别
-      - 结合多模态：充分利用视频自带的音频（ASR转译+NLP文本审核）进行多维度交叉验证
-  - id: CV-SQ-003
-    type: scenario_design
-    question: 设计一个智慧零售超市的无感支付系统（基于多摄像头多目标跟踪与重识别 Re-ID）。
-    tags: [系统设计, Re-ID, 多目标跟踪]
-    difficulty: hard
-    source: 自己整理
-    status: draft
+      - "抽帧策略优化：关键帧提取（感知哈希、镜头边界检测）代替逐帧推理"
+      - "大小模型级联：先用极轻量的分类模型（如MobileNet）做海量粗筛，高置信度嫌疑帧再送入大模型（如ViT）精准判别"
+      - "结合多模态：充分利用视频自带的音频（ASR转译+NLP文本审核）进行多维度交叉验证"
+  - id: "CV-SQ-003"
+    type: "scenario_design"
+    question: "设计一个智慧零售超市的无感支付系统（基于多摄像头多目标跟踪与重识别 Re-ID）。"
+    tags: ["系统设计", "Re-ID", "多目标跟踪"]
+    difficulty: "hard"
+    source: "自己整理"
+    status: "draft"
     key_points:
-      - 跨镜头追踪（MTMC）：如何处理视角盲区和光照剧变下的行人特征匹配
-      - 结合姿态估计（Pose Estimation）与动作识别判断“拿取/放回”商品的行为
-      - 时空约束引擎与视觉-重力传感器多模态校验降低误扣费率
-  - id: CV-SQ-004
-    type: scenario_design
-    question: 设计一个复杂版面（包含印章遮挡、手写体、多栏排版）的医疗发票 OCR 提取系统。
-    tags: [OCR, 文档分析]
-    difficulty: medium
-    source: 自己整理
-    status: draft
+      - "跨镜头追踪（MTMC）：如何处理视角盲区和光照剧变下的行人特征匹配"
+      - "结合姿态估计（Pose Estimation）与动作识别判断“拿取/放回”商品的行为"
+      - "时空约束引擎与视觉-重力传感器多模态校验降低误扣费率"
+  - id: "CV-SQ-004"
+    type: "scenario_design"
+    question: "设计一个复杂版面（包含印章遮挡、手写体、多栏排版）的医疗发票 OCR 提取系统。"
+    tags: ["OCR", "文档分析"]
+    difficulty: "medium"
+    source: "自己整理"
+    status: "draft"
     key_points:
-      - 文本检测层：采用 DBNet 等能处理任意形状弯曲文本的检测器
-      - 文本识别层：采用 CRNN 或 SVTR 处理手写与印刷体混合
-      - 版面分析与信息抽取：结合 LayoutLM 等多模态模型融合视觉特征与文本位置坐标提 Key-Value 信息
-  - id: CV-SQ-005
-    type: scenario_design
-    question: 设计一个基于计算机视觉的智能垃圾分类系统，如何处理垃圾种类繁多且外观相似的挑战？
-    tags: [垃圾分类, 细粒度识别]
-    difficulty: medium
-    source: 自己整理
-    status: draft
+      - "文本检测层：采用 DBNet 等能处理任意形状弯曲文本的检测器"
+      - "文本识别层：采用 CRNN 或 SVTR 处理手写与印刷体混合"
+      - "版面分析与信息抽取：结合 LayoutLM 等多模态模型融合视觉特征与文本位置坐标提 Key-Value 信息"
+  - id: "CV-SQ-005"
+    type: "scenario_design"
+    question: "设计一个基于计算机视觉的智能垃圾分类系统，如何处理垃圾种类繁多且外观相似的挑战？"
+    tags: ["垃圾分类", "细粒度识别"]
+    difficulty: "medium"
+    source: "自己整理"
+    status: "draft"
     key_points:
-      - 细粒度分类：引入注意力机制（如SE模块）聚焦于区分性特征，提升相似类别的辨识度
-      - 多模态融合：结合重量传感器等非视觉信息辅助分类决策
-      - 数据增强与迁移学习：利用GAN生成稀缺类别样本，或从相关领域（如食品识别）迁移预训练模型提升泛化能力
-  - id: CV-SQ-006
-    type: scenario_design
-    question: 设计一个基于计算机视觉的智能停车场系统，如何实现车牌识别、空位检测与车辆跟踪的高效协同？
-    tags: [车牌识别, 空位检测, 多目标跟踪]
-    difficulty: medium
-    source: 自己整理
-    status: draft
+      - "细粒度分类：引入注意力机制（如SE模块）聚焦于区分性特征，提升相似类别的辨识度"
+      - "多模态融合：结合重量传感器等非视觉信息辅助分类决策"
+      - "数据增强与迁移学习：利用GAN生成稀缺类别样本，或从相关领域（如食品识别）迁移预训练模型提升泛化能力"
+  - id: "CV-SQ-006"
+    type: "scenario_design"
+    question: "设计一个基于计算机视觉的智能停车场系统，如何实现车牌识别、空位检测与车辆跟踪的高效协同？"
+    tags: ["车牌识别", "空位检测", "多目标跟踪"]
+    difficulty: "medium"
+    source: "自己整理"
+    status: "draft"
     key_points:
-      - 车牌识别：采用轻量级CNN+LSTM结构实现端到端车牌定位与字符识别
-      - 空位检测：利用语义分割模型（如DeepLab）实时分析停车位占用状态
-      - 协同跟踪：通过多目标跟踪算法（如SORT）关联车牌信息与空位状态，实现车辆入场、停放、离场全流程智能管理
-  - id: CV-SQ-007
-    type: scenario_design 
-    question: 设计一个基于计算机视觉的智能农业监测系统，如何实现作物生长状态评估与病虫害检测？
-    tags: [农业监测, 病虫害检测]
-    difficulty: medium
-    source: 自己整理
-    status: draft
+      - "车牌识别：采用轻量级CNN+LSTM结构实现端到端车牌定位与字符识别"
+      - "空位检测：利用语义分割模型（如DeepLab）实时分析停车位占用状态"
+      - "协同跟踪：通过多目标跟踪算法（如SORT）关联车牌信息与空位状态，实现车辆入场、停放、离场全流程智能管理"
+  - id: "CV-SQ-007"
+    type: "scenario_design"
+    question: "设计一个基于计算机视觉的智能农业监测系统，如何实现作物生长状态评估与病虫害检测？"
+    tags: ["农业监测", "病虫害检测"]
+    difficulty: "medium"
+    source: "自己整理"
+    status: "draft"
     key_points:
-      - 作物生长评估：利用多光谱图像分析植被指数（如NDVI）监测作物健康状况
-      - 病虫害检测：采用目标检测模型（如YOLOv5）识别叶片上的病斑或虫害特征
-      - 时空分析：结合时间序列数据分析作物生长趋势与病虫害发展规律，提供精准农业决策支持
-  - id: CV-SQ-008
-    type: scenario_design
-    question: 设计一个基于计算机视觉的智能健身镜系统，如何实现动作识别、姿态纠正与个性化训练建议？
-    tags: [动作识别, 姿态估计, 个性化推荐]
-    difficulty: medium
-    source: 自己整理
-    status: draft
+      - "作物生长评估：利用多光谱图像分析植被指数（如NDVI）监测作物健康状况"
+      - "病虫害检测：采用目标检测模型（如YOLOv5）识别叶片上的病斑或虫害特征"
+      - "时空分析：结合时间序列数据分析作物生长趋势与病虫害发展规律，提供精准农业决策支持"
+  - id: "CV-SQ-008"
+    type: "scenario_design"
+    question: "设计一个基于计算机视觉的智能健身镜系统，如何实现动作识别、姿态纠正与个性化训练建议？"
+    tags: ["动作识别", "姿态估计", "个性化推荐"]
+    difficulty: "medium"
+    source: "自己整理"
+    status: "draft"
     key_points:
-      - 动作识别：采用3D卷积网络（如C3D）或时空图卷积网络（ST-GCN）分析用户动作序列
-      - 姿态纠正：利用OpenPose等姿态估计模型实时反馈用户关节角度偏差并提供纠正建议
-      - 个性化训练：结合用户历史数据与目标设定，利用协同过滤或强化学习算法推荐适合的训练计划与动作组合
-  - id: CV-SQ-009
-    type: scenario_design
-    question: 设计一个基于计算机视觉的智能安防系统，如何实现异常行为检测与实时报警？
-    tags: [安防, 异常检测]
-    difficulty: medium
-    source: 自己整理
-    status: draft
+      - "动作识别：采用3D卷积网络（如C3D）或时空图卷积网络（ST-GCN）分析用户动作序列"
+      - "姿态纠正：利用OpenPose等姿态估计模型实时反馈用户关节角度偏差并提供纠正建议"
+      - "个性化训练：结合用户历史数据与目标设定，利用协同过滤或强化学习算法推荐适合的训练计划与动作组合"
+  - id: "CV-SQ-009"
+    type: "scenario_design"
+    question: "设计一个基于计算机视觉的智能安防系统，如何实现异常行为检测与实时报警？"
+    tags: ["安防", "异常检测"]
+    difficulty: "medium"
+    source: "自己整理"
+    status: "draft"
     key_points:
-      - 异常行为定义：通过分析正常行为模式（如行走、停留）建立基线，利用孤立森林等无监督算法检测偏离基线的异常行为（如奔跑、打斗）
-      - 多摄像头协同：结合多视角数据进行跨镜头跟踪与行为分析，提升检测准确率
-      - 实时报警：设计高效的事件触发机制，确保在检测到异常行为时能够迅速通知安保人员并提供相关视频证据
-  - id: CV-SQ-010
-    type: scenario_design     
-    question: 设计一个基于计算机视觉的智能餐厅点餐系统，如何实现菜品识别与个性化推荐？
-    tags: [餐厅点餐, 菜品识别, 个性化推荐 ]
-    difficulty: medium        
-    source: 自己整理
-    status: draft
+      - "异常行为定义：通过分析正常行为模式（如行走、停留）建立基线，利用孤立森林等无监督算法检测偏离基线的异常行为（如奔跑、打斗）"
+      - "多摄像头协同：结合多视角数据进行跨镜头跟踪与行为分析，提升检测准确率"
+      - "实时报警：设计高效的事件触发机制，确保在检测到异常行为时能够迅速通知安保人员并提供相关视频证据"
+  - id: "CV-SQ-010"
+    type: "scenario_design"
+    question: "设计一个基于计算机视觉的智能餐厅点餐系统，如何实现菜品识别与个性化推荐？"
+    tags: ["餐厅点餐", "菜品识别", "个性化推荐"]
+    difficulty: "medium"
+    source: "自己整理"
+    status: "draft"
     key_points:
-      - 菜品识别：采用卷积神经网络（如ResNet）结合注意力机制实现高准确率的菜品分类
-      - 个性化推荐：基于用户历史点餐数据与口味偏好，利用协同过滤或深度学习模型推荐菜品
-      - 用户交互设计：通过触摸屏或语音交互提供便捷的点餐体验，并结合视觉反馈提升用户满意度
+      - "菜品识别：采用卷积神经网络（如ResNet）结合注意力机制实现高准确率的菜品分类"
+      - "个性化推荐：基于用户历史点餐数据与口味偏好，利用协同过滤或深度学习模型推荐菜品"
+      - "用户交互设计：通过触摸屏或语音交互提供便捷的点餐体验，并结合视觉反馈提升用户满意度"
