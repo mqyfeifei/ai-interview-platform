@@ -282,6 +282,9 @@
 
     </div>
 
+    <!-- 使用帮助指南（首次登录自动弹出一次） -->
+    <HelpGuideModal v-model="showHelpGuide" @dismiss="markHelpGuideShown" />
+
     <!-- 岗位确认弹窗 -->
     <transition name="modal-fade">
       <div class="modal-overlay" v-if="showConfirmModal" @click.self="closeConfirmModal">
@@ -325,9 +328,13 @@ import { mapGetters, mapActions } from 'vuex'
 import { getDashboardStats } from '@/api/user'
 import { getTrendingTopics } from '@/api/job'
 import { JOB_TYPES } from '@/utils/constants'
+import HelpGuideModal from '@/components/common/HelpGuideModal.vue'
 
 export default {
   name: 'DashboardPage',
+  components: {
+    HelpGuideModal
+  },
   data() {
     return {
       stats: {
@@ -375,7 +382,11 @@ export default {
       selectedJob: null,
       // 实时热榜数据
       trendingTopics: [],
-      trendingLoading: false
+      trendingLoading: false,
+
+      // 使用帮助指南（首次登录自动弹出一次）
+      showHelpGuide: false,
+      helpGuideStorageKey: ''
     }
   },
   computed: {
@@ -584,13 +595,60 @@ export default {
       return this.hotQuestions
     }
   },
+  watch: {
+    isLoggedIn: {
+      immediate: true,
+      handler(val) {
+        if (val) this.maybeAutoShowHelpGuide()
+      }
+    }
+  },
   async created() {
     this.loadStats()
     this.loadTrendingTopics()
+    this.maybeAutoShowHelpGuide()
   },
   methods: {
     ...mapActions('user', ['fetchUserInfo']),
     ...mapActions('interview', ['selectJob']),
+
+    getHelpGuideUserKey() {
+      const u = this.userInfo || {}
+      return u.id ?? u.user_id ?? u.userId ?? u.uid ?? u.email ?? null
+    },
+
+    computeHelpGuideStorageKey() {
+      const userKey = this.getHelpGuideUserKey()
+      if (!userKey) return ''
+      return `ai-interview-platform:helpGuideShown:${userKey}`
+    },
+
+    maybeAutoShowHelpGuide() {
+      if (!this.isLoggedIn) return
+
+      const storageKey = this.computeHelpGuideStorageKey()
+      if (!storageKey) return
+      this.helpGuideStorageKey = storageKey
+
+      try {
+        const shown = window.localStorage.getItem(storageKey)
+        if (shown === '1') return
+      } catch (e) {
+        // localStorage 不可用时不阻断功能；仍允许弹出
+      }
+
+      this.showHelpGuide = true
+    },
+
+    markHelpGuideShown() {
+      const storageKey = this.helpGuideStorageKey || this.computeHelpGuideStorageKey()
+      if (!storageKey) return
+      try {
+        window.localStorage.setItem(storageKey, '1')
+      } catch (e) {
+        // ignore
+      }
+    },
 
     async loadStats() {
       // 未登录时不加载数据
