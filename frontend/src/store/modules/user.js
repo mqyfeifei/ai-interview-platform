@@ -4,7 +4,7 @@
 // =============================================
 
 import { login, register, logout } from '@/api/auth'
-import { getUserInfo, updateUserInfo, changePassword, updateDefaultJob, uploadAvatar } from '@/api/user'
+import { getUserInfo, updateUserInfo, changePassword, updateDefaultJob, uploadAvatar, bindPhone } from '@/api/user'
 import { setToken, getToken, clearAuth, getCachedUser, setCachedUser } from '@/utils/auth'
 
 const state = () => ({
@@ -117,6 +117,23 @@ const actions = {
       commit('UPDATE_USER_INFO', { avatar: res.avatarUrl || res.avatar_url, avatarUrl: res.avatarUrl || res.avatar_url, avatar_url: res.avatarUrl || res.avatar_url })
     }
     return res
+  },
+
+  // 绑定/更新手机号
+  async bindPhone({ commit }, phone) {
+    commit('SET_LOADING', true)
+    try {
+      const res = await bindPhone(phone)
+      // 后端返回通常是完整 user；mock 返回可能是 { phone }
+      if (res && (res.id || res.username || res.email)) {
+        commit('SET_USER_INFO', res)
+      } else {
+        commit('UPDATE_USER_INFO', { phone })
+      }
+      return res
+    } finally {
+      commit('SET_LOADING', false)
+    }
   },
 
   // 退出登录
