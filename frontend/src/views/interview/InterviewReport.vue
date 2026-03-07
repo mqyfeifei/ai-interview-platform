@@ -247,7 +247,8 @@ export default {
   data() {
     return {
       loading: true,
-      analysisLoading: false,   // ← 新增：逐题点评单独加载状态
+      analysisLoading: false,   // 逐题点评单独加载状态
+      analysisLoaded: false,   // 记录是否已请求过，避免重复调用
       report: null,
       expandedItems: [],
       animatedScore: 0,
@@ -311,7 +312,7 @@ export default {
         })
 
         // 3. 异步加载逐题 AI 点评，不阻塞报告主体渲染
-        this.loadAnalysis()
+        // this.loadAnalysis()
       } catch (e) {
         console.error('加载报告失败', e)
       } finally {
@@ -351,6 +352,7 @@ export default {
         console.warn('逐题点评加载失败', e)
       } finally {
         this.analysisLoading = false
+        this.analysisLoaded = true // 无论成功失败都标记已请求过
       }
     },
 
@@ -418,14 +420,30 @@ export default {
       resizeObs.observe(this.$refs.radarChart)
     },
 
+    // 点击单题展开时，若该题无点评且未请求过则触发
     toggleQuestion(id) {
       const idx = this.expandedItems.indexOf(id)
-      if (idx === -1) this.expandedItems.push(id)
-      else this.expandedItems.splice(idx, 1)
+      if (idx === -1) {
+        this.expandedItems.push(id)
+        // 展开时：该题还没有点评 && 整体未请求过 && 当前不在加载中 → 触发
+        const q = this.report.questions.find(q => q.id === id)
+        if (q && !q.comment && !this.analysisLoaded && !this.analysisLoading) {
+          this.loadAnalysis()
+        }
+      } else {
+        this.expandedItems.splice(idx, 1)
+      }
     },
+    // 点击"全部展开"时，若未请求过则统一触发一次
     toggleAllQuestions() {
-      if (this.allExpanded) this.expandedItems = []
-      else this.expandedItems = this.report.questions.map(q => q.id)
+      if (this.allExpanded) {
+        this.expandedItems = []
+      } else {
+        this.expandedItems = this.report.questions.map(q => q.id)
+        if (!this.analysisLoaded && !this.analysisLoading) {
+          this.loadAnalysis()
+        }
+      }
     },
     scoreClass(score) {
       if (score >= 85) return 'score-excellent'
