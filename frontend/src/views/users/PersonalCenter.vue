@@ -201,6 +201,9 @@
         </button>
       </section>
 
+      <!-- 技术热榜推荐 -->
+      <TechHotList />
+
     </div>
 
     <!-- 使用帮助指南弹窗 -->
@@ -424,12 +427,14 @@
 import { mapGetters, mapActions } from 'vuex'
 import { JOB_TYPES, GRADE_OPTIONS } from '@/utils/constants'
 import HelpGuideModal from '@/components/common/HelpGuideModal.vue'
+import TechHotList from '@/components/TechHotList.vue'
 import { ref } from 'vue';
 
 export default {
   name: 'PersonalCenter',
   components: {
-    HelpGuideModal
+    HelpGuideModal,
+    TechHotList
   },
   data() {
     return {
@@ -523,7 +528,8 @@ export default {
       const startCreated = new Date(created.getFullYear(), created.getMonth(), created.getDate())
 
       const msPerDay = 24 * 60 * 60 * 1000
-      const days = Math.floor((startToday.getTime() - startCreated.getTime()) / msPerDay)
+      // 包含当天，差值加1
+      const days = Math.floor((startToday.getTime() - startCreated.getTime()) / msPerDay) + 1
       return Math.max(0, days)
     },
 

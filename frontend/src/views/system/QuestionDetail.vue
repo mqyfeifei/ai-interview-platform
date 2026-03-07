@@ -86,15 +86,6 @@
       </div>
     </template>
 
-    <!-- 底部操作 -->
-    <div class="bottom-actions">
-      <button class="action-btn action-btn--primary" @click="$router.push('/interview/select')">
-        <span>🎯 开始面试练习</span>
-      </button>
-      <button class="action-btn action-btn--secondary" @click="$router.back()">
-        返回首页
-      </button>
-    </div>
   </div>
 </template>
 
