@@ -374,7 +374,8 @@ export default {
         { key: 'all', label: '全部', icon: '🌐' },
         { key: 'article', label: '文章', icon: '📄' },
         { key: 'video', label: '视频', icon: '🎬' },
-        { key: 'book', label: '书籍', icon: '📖' },
+        // "book" 类型已统一为 "course"（课程）
+        { key: 'course', label: '书籍', icon: '📖' },
         { key: 'bookmarked', label: '收藏', icon: '⭐' }
       ]
     }
@@ -401,7 +402,9 @@ export default {
       if (this.activeTypeFilter === 'bookmarked') {
         list = list.filter(r => r.bookmarked)
       } else if (this.activeTypeFilter !== 'all') {
-        list = list.filter(r => r.type === this.activeTypeFilter)
+        // 兼容后端可能仍返回 type='book' 的情况，把它映射到 course
+        const filterType = this.activeTypeFilter === 'course' ? 'course' : this.activeTypeFilter
+        list = list.filter(r => (r.type === filterType) || (filterType === 'course' && r.type === 'book'))
       }
       // 短板筛选
       if (this.activeWeaknessFilter) {
@@ -694,7 +697,8 @@ export default {
     },
 
     typeIcon(type) {
-      const map = { article: '📄', video: '🎬', book: '📖', example: '⭐', bookmarked: '⭐' }
+      // 兼容老数据：book 也视为 course
+      const map = { article: '📄', video: '🎬', book: '📖', course: '📖', example: '⭐', bookmarked: '⭐' }
       return map[type] || '📚'
     },
 
@@ -713,16 +717,7 @@ export default {
     },
 
     goToResource(res) {
-      // 书籍类型提示购买
-      if (res.type === 'book') {
-        this.$message({
-          type: 'info',
-          message: '📖 该书籍需要自行购买，可在各大电商平台（Amazon、京东、当当等）搜索查看',
-          duration: 4000
-        })
-        return
-      }
-
+      // 之前 book 类型被认为需要购买，现在全部视为在线课程
       if (res.url) {
         window.open(res.url, '_blank', 'noopener')
       } else {
