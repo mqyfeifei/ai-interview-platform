@@ -168,6 +168,7 @@ class InterviewService:
             interview.status = 'evaluating'
         db.session.commit()
 
+# 写报告逻辑
     @staticmethod
     def finish_interview(interview_id):
         """结束面试并生成详尽评价写入数据库"""

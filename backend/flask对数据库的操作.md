@@ -80,7 +80,7 @@ docker logs interview_db
 
 ```Bash
 # 假设你在 backend 目录下，且已激活虚拟环境
-python init_data.py
+python data_create_and_import.py
 ```
 或者在 Docker 容器内运行（如果后端也是容器化的）：
 
@@ -88,7 +88,7 @@ python init_data.py
 # 进入后端容器
 docker exec -it <后端容器ID> /bin/bash
 # 执行脚本
-python init_data.py
+python data_create_and_import.py
 ```
 
 
