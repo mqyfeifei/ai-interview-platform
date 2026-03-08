@@ -718,15 +718,13 @@ export default {
     async confirmStartInterview() {
       if (!this.selectedJob) return
       
-      // 保存选中的岗位
-      this.selectJob(this.selectedJob)
-      this.closeConfirmModal()
+      const job = this.selectedJob  // 先保存引用
+      this.closeConfirmModal()       // 关闭弹窗（会把 selectedJob 置 null）
       
-      // 直接跳转到面试页面开始面试
-      this.$router.push({
-        name: 'InterviewChat',
-        query: { jobId: this.selectedJob.id }
-      })
+      await this.$store.dispatch('interview/resetInterview')
+      this.$store.commit('interview/SET_JOB_DB_ID', job.id)  // 用保存的引用
+      await this.$store.dispatch('interview/selectJob', job)
+      this.$router.push('/interview/session')
     },
 
     selectJobAndStart(job) {
