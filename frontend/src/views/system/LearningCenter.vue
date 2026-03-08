@@ -282,7 +282,7 @@
               </div>
               <div class="resource-modal__header-text">
                 <span :class="['difficulty-badge', 'diff-' + (selectedResource.difficulty || '')]">{{ selectedResource.difficulty }}</span>
-                <span class="resource-modal__time">⏱ {{ selectedResource.readTime }}</span>
+                
               </div>
               <button class="resource-modal__close" @click="closeResource">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
