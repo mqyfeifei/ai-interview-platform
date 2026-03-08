@@ -103,20 +103,12 @@ async submitAnswer({ commit, state, dispatch }, answerText) {
     onChunk(chunk) {
       commit('APPEND_AI_CHUNK', chunk)
     },
-        // ✅ 新增：流正常结束（继续对话），只关闭 loading，等待用户输入
+       
     onStreamEnd() {
       commit('SET_LOADING', false)
       commit('MARK_STREAM_DONE')
-
-      const next = state.questionIndex + 1 // AI 正常回复完毕，题号 +1
-      const total = state.currentSession?.totalQuestions || 10
-      // 兜底：超出总题数则自动结束，不再递增
-        if (next > total) {
-          dispatch('endInterview')
-        } else {
-          commit('SET_QUESTION_INDEX', next)
-        }
-      },
+      commit('SET_QUESTION_INDEX', state.questionIndex + 1)
+    },
     onFinish() {
       commit('SET_LOADING', false)
       commit('MARK_STREAM_DONE')
@@ -168,8 +160,8 @@ const getters = {
   currentSession: s => s.currentSession,
   messages: s => s.messages,
   questionIndex: s => s.questionIndex,
-  totalQuestions: s => s.currentSession?.totalQuestions || 10,
-  progressText: s => `${s.questionIndex} / ${s.currentSession?.totalQuestions || 10}`,
+  totalQuestions: s => s.currentSession?.totalQuestions ,
+  progressText: s => `${s.questionIndex} / ${s.currentSession?.totalQuestions}`,
   isFinished: s => s.isFinished,
   isEnding: s => s.isEnding,
   reportId: s => s.reportId,
