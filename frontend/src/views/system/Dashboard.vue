@@ -320,8 +320,7 @@
 <script>
 import { mapGetters, mapActions } from 'vuex'
 import { getDashboardStats } from '@/api/user'
-import { getTrendingTopics } from '@/api/job'
-import { JOB_TYPES } from '@/utils/constants'
+import { fetchJobs, fetchPopularJobs, getTrendingTopics } from '@/api/job'
 import HelpGuideModal from '@/components/common/HelpGuideModal.vue'
 
 export default {
@@ -331,6 +330,7 @@ export default {
   },
   data() {
     return {
+      jobs: [],
       stats: {
         totalInterviews: 0,
         avgScore: 0,
@@ -350,6 +350,7 @@ export default {
           coding: 0,
           learning: 0
         }
+
       },
       dailyTips: [
         '回答时采用 STAR 法则（情境-任务-行动-结果），让回答更有结构和说服力。',
@@ -419,13 +420,12 @@ export default {
 
     defaultJobName() {
       if (!this.defaultJob) return ''
-      const job = JOB_TYPES.find(j => j.id === this.defaultJob)
+      const job = this.jobs.find(j => String(j.id) === String(this.defaultJob))
       return job ? job.name : ''
     },
 
-    // 热门岗位前3个
     topHotJobs() {
-      return JOB_TYPES.slice(0, 3)
+      return this.jobs.slice(0, 3)
     },
 
     statCards() {
@@ -598,6 +598,7 @@ export default {
     }
   },
   async created() {
+    this.loadJobs() 
     this.loadStats()
     this.loadTrendingTopics()
     this.maybeAutoShowHelpGuide()
@@ -610,6 +611,33 @@ export default {
       const u = this.userInfo || {}
       return u.id ?? u.user_id ?? u.userId ?? u.uid ?? u.email ?? null
     },
+    async loadJobs() {
+  try {
+    // 优先用热门岗位填充快捷标签，失败则回退到全量列表前3个
+    const popular = await fetchPopularJobs()
+    if (popular && popular.length > 0) {
+      this.jobs = popular.map(j => ({
+        ...j,
+        icon: j.icon_url || '💼',
+        techStack: j.tech_stack || [],
+        color: j.color || '#888',
+        colorBg: j.color_bg || '#f3f3f3',
+      }))
+    } else {
+      const all = await fetchJobs()
+      this.jobs = (all || []).slice(0, 3).map(j => ({
+        ...j,
+        icon: j.icon_url || '💼',
+        techStack: j.tech_stack || [],
+        color: j.color || '#888',
+        colorBg: j.color_bg || '#f3f3f3',
+      }))
+    }
+  } catch (e) {
+    console.warn('加载岗位失败', e)
+    this.jobs = []
+  }
+},
 
     computeHelpGuideStorageKey() {
       const userKey = this.getHelpGuideUserKey()
@@ -1151,7 +1179,7 @@ export default {
   align-items: center;
   gap: 6px;
   padding: 10px 16px;
-  background: var(--tag-bg, #F3F4F6);
+  background: var(--tag-bg, #f8faff);
   border: 1px solid transparent;
   border-radius: $border-radius-lg;
   cursor: pointer;

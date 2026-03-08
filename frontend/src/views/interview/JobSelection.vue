@@ -185,7 +185,7 @@ export default {
         { key: 'all', label: '全部岗位' },
         { key: 'popular', label: '热门岗位' }
       ],
-      jobDbIdMap: {},
+
       jobs: [], // 后端岗位数据
       popularIds: [] // 热门岗位 id 顺序，前端用于排序与标记
       ,cardColors: [
@@ -330,17 +330,6 @@ export default {
       }
     },
 
-// async handleStart() {
-//   const job = this.selectedJob
-//   console.log('开始面试，选择的岗位:', job)
-//   const dbId = this.jobDbIdMap[job.id] || job.dbId  // 优先用后端返回的，兜底用constants里的
-//   await this.$store.dispatch('interview/selectJob', job)
-//   await this.$store.dispatch('interview/resetInterview')
-//   // 把 dbId 也存到 store，后续 startSession 用
-//   this.$store.commit('interview/SET_JOB_DB_ID', dbId)
-//   this.$router.push('/interview/session')
-// },
-
 // JobSelection.vue 的 handleStart 方法完整修复版
 async handleStart() {
   //  关键1：校验选中的岗位是否存在
@@ -354,8 +343,7 @@ async handleStart() {
       return;
     }
   try {
-    // 关键2：正确获取岗位数据库ID（优先后端映射的jobDbIdMap，兜底用constants里的dbId）
-    const jobDbId = this.jobDbIdMap[this.currentSelected.id] || this.currentSelected.dbId|| this.currentSelected.id;
+    const jobDbId = this.currentSelected.id;
     console.log('传递给 Vuex 的岗位数据库 ID:', jobDbId);
     
     // 关键3：先重置面试状态，再存储数据
