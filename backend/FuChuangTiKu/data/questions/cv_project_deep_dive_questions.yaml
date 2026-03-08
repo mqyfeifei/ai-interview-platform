@@ -1,115 +1,114 @@
-type: cv_project_deep_dive_questions
+type: "cv_project_deep_dive_questions"
 source:
-  - 面经库
+  - "面经库"
 items:
-  - id: CV-PQ-001
-    type: project_deep_dive
-    question: 介绍一个你做过的目标检测/图像分割相关的实际落地项目。你是如何解决实际业务场景中数据极度不平衡（如长尾分布、缺陷样本稀缺）问题的？
-    tags: [项目挖掘, 样本不平衡, 落地经验]
-    difficulty: hard
-    source: 面经库
-    status: draft
+  - id: "CV-PQ-001"
+    type: "project_deep_dive"
+    question: "介绍一个你做过的目标检测/图像分割相关的实际落地项目。你是如何解决实际业务场景中数据极度不平衡（如长尾分布、缺陷样本稀缺）问题的？"
+    tags: ["项目挖掘", "样本不平衡", "落地经验"]
+    difficulty: "hard"
+    source: "面经库"
+    status: "draft"
     key_points:
-      - 能否讲清业务场景中的数据痛点（如正常样本多，异常样本少）
-      - 是否掌握数据级别增强策略（如重采样、Copy-Paste、生成对抗网络或扩散模型生成伪数据）
-      - 是否在算法/损失函数层面做过针对性优化（如Focal Loss、无监督/半监督异常检测方案）
-  - id: CV-PQ-002
-    type: project_deep_dive
-    question: 在你的视觉模型落地部署过程中，做过哪些轻量化与推理加速工作？如果遇到了某些算子在推理引擎（如TensorRT/NCNN）中不支持的情况，你是如何解决的？
-    tags: [模型部署, 性能优化, 算子替换]
-    difficulty: hard
-    source: 面经库
-    status: draft
+      - "能否讲清业务场景中的数据痛点（如正常样本多，异常样本少）"
+      - "是否掌握数据级别增强策略（如重采样、Copy-Paste、生成对抗网络或扩散模型生成伪数据）"
+      - "是否在算法/损失函数层面做过针对性优化（如Focal Loss、无监督/半监督异常检测方案）"
+  - id: "CV-PQ-002"
+    type: "project_deep_dive"
+    question: "在你的视觉模型落地部署过程中，做过哪些轻量化与推理加速工作？如果遇到了某些算子在推理引擎（如TensorRT/NCNN）中不支持的情况，你是如何解决的？"
+    tags: ["模型部署", "性能优化", "算子替换"]
+    difficulty: "hard"
+    source: "面经库"
+    status: "draft"
     key_points:
-      - 具备工程化意识，能说清剪枝、蒸馏或量化（FP16/INT8）的具体实践与精度对齐损失
-      - 熟悉模型转换流程（如 PyTorch -> ONNX -> TensorRT）
-      - 解决算子不支持的方案（如修改网络层用等价基础算子拼装、编写自定义 Plugin/Custom Op 插件）
-  - id: CV-PQ-003
-    type: project_deep_dive
-    question: 很多CV模型在开源数据集上表现很好，但在你们的实际业务场景中泛化能力较差（比如光照变化、相机角度不同）。你在项目中是如何应对这种 Domain Shift（域偏移）问题的？
-    tags: [泛化能力, 数据处理, 鲁棒性]
-    difficulty: medium
-    source: 面经库
-    status: draft
+      - "具备工程化意识，能说清剪枝、蒸馏或量化（FP16/INT8）的具体实践与精度对齐损失"
+      - "熟悉模型转换流程（如 PyTorch -> ONNX -> TensorRT）"
+      - "解决算子不支持的方案（如修改网络层用等价基础算子拼装、编写自定义 Plugin/Custom Op 插件）"
+  - id: "CV-PQ-003"
+    type: "project_deep_dive"
+    question: "很多CV模型在开源数据集上表现很好，但在你们的实际业务场景中泛化能力较差（比如光照变化、相机角度不同）。你在项目中是如何应对这种 Domain Shift（域偏移）问题的？"
+    tags: ["泛化能力", "数据处理", "鲁棒性"]
+    difficulty: "medium"
+    source: "面经库"
+    status: "draft"
     key_points:
-      - 提及丰富的数据增强手段（色彩抖动、随机遮挡、模拟各种光照/模糊）
-      - 介绍数据闭环系统的建设（发现Bad Case -> 挖掘回流 -> 重新标注 -> 增量训练）
-      - 提及领域自适应（Domain Adaptation）相关的技术尝试
-  - id: CV-PQ-004
-    type: project_deep_dive
-    question: 在你的目标检测项目中，针对特定场景的数据极度匮乏，你设计了哪些有效的数据增强或合成策略？
-    tags: [数据增强, 样本不平衡]
-    difficulty: hard
-    source: 自己整理
-    status: draft
+      - "提及丰富的数据增强手段（色彩抖动、随机遮挡、模拟各种光照/模糊）"
+      - "介绍数据闭环系统的建设（发现Bad Case -> 挖掘回流 -> 重新标注 -> 增量训练）"
+      - "提及领域自适应（Domain Adaptation）相关的技术尝试"
+  - id: "CV-PQ-004"
+    type: "project_deep_dive"
+    question: "在你的目标检测项目中，针对特定场景的数据极度匮乏，你设计了哪些有效的数据增强或合成策略？"
+    tags: ["数据增强", "样本不平衡"]
+    difficulty: "hard"
+    source: "自己整理"
+    status: "draft"
     key_points:
-      - 讲述几何变换、颜色抖动等基础增强的局限性
-      - 引入CutMix、Mosaic或Copy-Paste等高级增强策略解决背景复杂与小目标问题
-      - 提到利用GAN或扩散模型（Diffusion）生成垂类缺陷样本的创新尝试及其实际收益
-  - id: CV-PQ-005
-    type: project_deep_dive
-    question: 请详细说明你项目中使用的模型轻量化及端侧部署的全链路流程。
-    tags: [模型压缩, 边缘计算部署]
-    difficulty: hard
-    source: 自己整理
-    status: draft
+      - "讲述几何变换、颜色抖动等基础增强的局限性"
+      - "引入CutMix、Mosaic或Copy-Paste等高级增强策略解决背景复杂与小目标问题"
+      - "提到利用GAN或扩散模型（Diffusion）生成垂类缺陷样本的创新尝试及其实际收益"
+  - id: "CV-PQ-005"
+    type: "project_deep_dive"
+    question: "请详细说明你项目中使用的模型轻量化及端侧部署的全链路流程。"
+    tags: ["模型压缩", "边缘计算部署"]
+    difficulty: "hard"
+    source: "自己整理"
+    status: "draft"
     key_points:
-      - 阐述剪枝（Pruning）或量化（PTQ/QAT，如INT8量化）的具体操作与精度对齐损失
-      - 讲解由 PyTorch 转 ONNX 再转 TensorRT/NCNN 过程中遇到的算子不支持（Unsupported Op）问题的解决思路
-      - 最终端侧的 CPU/GPU 内存占用与推理耗时收益对比
-  - id: CV-PQ-006
-    type: project_deep_dive
-    question: 在你的CV项目中，是否遇到过模型在特定类别或特定环境下表现不佳的情况？你是如何定位问题并进行针对性优化的？
-    tags: [模型诊断, 定位问题, 针对性优化]
-    difficulty: medium
-    source: 自己整理
-    status: draft
+      - "阐述剪枝（Pruning）或量化（PTQ/QAT，如INT8量化）的具体操作与精度对齐损失"
+      - "讲解由 PyTorch 转 ONNX 再转 TensorRT/NCNN 过程中遇到的算子不支持（Unsupported Op）问题的解决思路"
+      - "最终端侧的 CPU/GPU 内存占用与推理耗时收益对比"
+  - id: "CV-PQ-006"
+    type: "project_deep_dive"
+    question: "在你的CV项目中，是否遇到过模型在特定类别或特定环境下表现不佳的情况？你是如何定位问题并进行针对性优化的？"
+    tags: ["模型诊断", "定位问题", "针对性优化"]
+    difficulty: "medium"
+    source: "自己整理"
+    status: "draft"
     key_points:
-      - 是否有系统地进行过错误分析（Error Analysis），定位到具体类别或环境的性能瓶颈
-      - 是否尝试过针对性的数据增强（如针对小目标、夜间场景的增强）或算法改进（如引入注意力机制提升特定类别的特征表达）
-      - 优化后的效果是否有量化的提升（如特定类别AP提升了多少）
-  - id: CV-PQ-007
-    type: project_deep_dive
-    question: 你在CV项目中是否有过与传统CV算法（如形态学处理、边缘检测）结合使用的经历？请举例说明这种结合是如何提升模型性能或鲁棒性的。
-    tags: [传统CV算法, 模型增强]
-    difficulty: medium
-    source: 自己整理
-    status: draft
+      - "是否有系统地进行过错误分析（Error Analysis），定位到具体类别或环境的性能瓶颈"
+      - "是否尝试过针对性的数据增强（如针对小目标、夜间场景的增强）或算法改进（如引入注意力机制提升特定类别的特征表达）"
+      - "优化后的效果是否有量化的提升（如特定类别AP提升了多少）"
+  - id: "CV-PQ-007"
+    type: "project_deep_dive"
+    question: "你在CV项目中是否有过与传统CV算法（如形态学处理、边缘检测）结合使用的经历？请举例说明这种结合是如何提升模型性能或鲁棒性的。"
+    tags: ["传统CV算法", "模型增强"]
+    difficulty: "medium"
+    source: "自己整理"
+    status: "draft"
     key_points:
-      - 是否有过将传统CV算法作为前处理（如形态学处理去噪）或后处理（如边缘检测辅助定位）的实践
-      - 这种结合是否解决了某些特定场景下的性能瓶颈（如小目标漏检、复杂背景干扰）
-      - 是否有量化的性能提升数据支持（如AP提升了多少，误检率降低了多少）
-  - id: CV-PQ-008
-    type: project_deep_dive
-    question: 在你的CV项目中，是否有过使用多模态数据（如结合视觉与传感器数据）来提升模型性能的经历？请举例说明多模态融合的具体方法和效果。
-    tags: [多模态融合, 传感器数据]
-    difficulty: medium
-    source: 自己整理
-    status: draft
+      - "是否有过将传统CV算法作为前处理（如形态学处理去噪）或后处理（如边缘检测辅助定位）的实践"
+      - "这种结合是否解决了某些特定场景下的性能瓶颈（如小目标漏检、复杂背景干扰）"
+      - "是否有量化的性能提升数据支持（如AP提升了多少，误检率降低了多少）"
+  - id: "CV-PQ-008"
+    type: "project_deep_dive"
+    question: "在你的CV项目中，是否有过使用多模态数据（如结合视觉与传感器数据）来提升模型性能的经历？请举例说明多模态融合的具体方法和效果。"
+    tags: ["多模态融合", "传感器数据"]
+    difficulty: "medium"
+    source: "自己整理"
+    status: "draft"
     key_points:
-      - 是否有过将视觉数据与其他模态数据（如重量传感器、IMU等）进行融合的实践
-      - 这种多模态融合是否解决了某些特定场景下的性能瓶颈（如相似外观的垃圾分类）
-      - 是否有量化的性能提升数据支持（如分类准确率提升了多少，误检率降低了多少）
-  - id: CV-PQ-009
-    type: project_deep_dive
-    question: 你在CV项目中是否有过使用领域自适应（Domain Adaptation）技术来提升模型泛化能力的经历？请举例说明你是如何实施领域自适应的，以及取得了什么效果。
-    tags: [领域自适应, 泛化能力]
-    difficulty: medium
-    source: 自己整理
-    status: draft
+      - "是否有过将视觉数据与其他模态数据（如重量传感器、IMU等）进行融合的实践"
+      - "这种多模态融合是否解决了某些特定场景下的性能瓶颈（如相似外观的垃圾分类）"
+      - "是否有量化的性能提升数据支持（如分类准确率提升了多少，误检率降低了多少）"
+  - id: "CV-PQ-009"
+    type: "project_deep_dive"
+    question: "你在CV项目中是否有过使用领域自适应（Domain Adaptation）技术来提升模型泛化能力的经历？请举例说明你是如何实施领域自适应的，以及取得了什么效果。"
+    tags: ["领域自适应", "泛化能力"]
+    difficulty: "medium"
+    source: "自己整理"
+    status: "draft"
     key_points:
-      - 是否有过使用领域自适应技术（如DANN、MMD、Adversarial Training）来提升模型在新环境下的性能的实践
-      - 这种领域自适应是否解决了某些特定场景下的性能瓶颈（如光照变化导致的检测性能下降）
-      - 是否有量化的性能提升数据支持（如AP提升了多少，误检率降低了多少）
-  - id: CV-PQ-010
-    type: project_deep_dive
-    question: 在你的CV项目中，是否有过使用生成对抗网络（GAN）或扩散模型（Diffusion）来生成合成数据的经历？请举例说明你是如何使用这些技术来增强训练数据的，以及取得了什么效果。
-    tags: [GAN, 扩散模型, 数据增强]
-    difficulty: medium
-    source: 自己整理
-    status: draft
+      - "是否有过使用领域自适应技术（如DANN、MMD、Adversarial Training）来提升模型在新环境下的性能的实践"
+      - "这种领域自适应是否解决了某些特定场景下的性能瓶颈（如光照变化导致的检测性能下降）"
+      - "是否有量化的性能提升数据支持（如AP提升了多少，误检率降低了多少）"
+  - id: "CV-PQ-010"
+    type: "project_deep_dive"
+    question: "在你的CV项目中，是否有过使用生成对抗网络（GAN）或扩散模型（Diffusion）来生成合成数据的经历？请举例说明你是如何使用这些技术来增强训练数据的，以及取得了什么效果。"
+    tags: ["GAN", "扩散模型", "数据增强"]
+    difficulty: "medium"
+    source: "自己整理"
+    status: "draft"
     key_points:
-      - 是否有过使用GAN或扩散模型生成合成数据来增强训练集的实践
-      - 这种生成数据是否解决了某些特定场景下的性能瓶颈（如长尾类别样本不足）
-      - 是否有量化的性能提升数据支持（如特定类别AP提升了多少，误检率降低了多少）
-      
+      - "是否有过使用GAN或扩散模型生成合成数据来增强训练集的实践"
+      - "这种生成数据是否解决了某些特定场景下的性能瓶颈（如长尾类别样本不足）"
+      - "是否有量化的性能提升数据支持（如特定类别AP提升了多少，误检率降低了多少）"
