@@ -451,10 +451,10 @@ export default {
       if (score >= 60) return 'score-average'
       return 'score-poor'
     },
-    formatDuration(duration) {
-      if (!duration) return '--'
+    formatDuration(seconds) {
+      if (!seconds) return '--'
       
-      const seconds = Math.floor(duration / 1000)
+    
       const mins = Math.floor(seconds / 60)
       const secs = seconds % 60
       if (mins === 0) return `${secs}秒`        // 不足1分钟只显示秒

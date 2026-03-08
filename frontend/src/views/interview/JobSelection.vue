@@ -1,3 +1,15 @@
+.job-grid.job-grid-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px 14px;
+}
+
+@media (max-width: 700px) {
+  .job-grid.job-grid-2col {
+    grid-template-columns: 1fr;
+    gap: 14px 0;
+  }
+}
 <!--
   =============================================
   frontend/src/views/interview/JobSelection.vue
@@ -50,16 +62,20 @@
       </div>
 
       <!-- 岗位列表 -->
-      <div v-if="filteredJobs.length > 0" class="job-grid">
+      <div v-if="filteredJobs.length > 0" class="job-grid job-grid-2col">
         <div
           v-for="(job, idx) in filteredJobs"
           :key="job.id"
           class="job-card"
           :class="{
             selected: currentSelected && currentSelected.id === job.id,
-            'job-card--default': defaultJobId === job.id
+            'job-card--default': normalizedDefaultJobId && normalizedDefaultJobId === String(job.id)
           }"
-          :style="{ animationDelay: idx * 0.06 + 's' }"
+          :style="{
+            animationDelay: idx * 0.06 + 's',
+            borderColor: cardColors[idx % cardColors.length].main,
+            background: cardColors[idx % cardColors.length].bg
+          }"
           @click="toggleSelect(job)"
         >
           <!-- 选中勾 -->
@@ -68,45 +84,41 @@
               <polyline points="20 6 9 17 4 12"/>
             </svg>
           </div>
-
-          <!-- 图标 -->
-          <div class="job-card__icon-wrap" :style="{ background: job.colorBg }">
-            <span class="job-card__icon">{{ job.icon }}</span>
+          <!-- 热门岗位筛选时显示TOP标记，左下角圆角徽章，金银铜色 -->
+          <div v-if="activeFilter === 'popular' && job.popularRank && job.popularRank <= 3"
+               :class="['job-card__rank-badge', 'top-badge', 'top-badge-' + job.popularRank]">
+            <span>TOP{{ job.popularRank }}</span>
           </div>
 
-          <!-- 信息 -->
-          <div class="job-card__header">
-            <h3 class="job-card__name">{{ job.name }}</h3>
-            <span :class="['level-badge', 'level-' + job.level]">{{ job.level }}</span>
+
+          <!-- 精简卡片内容 -->
+          <div class="job-card__mainrow">
+            <div v-if="job.icon" class="job-card__icon-wrap" :style="{ background: job.colorBg }">
+              <span class="job-card__icon">{{ job.icon }}</span>
+            </div>
+            <div class="job-card__info">
+              <h3 v-if="job.name" class="job-card__name">{{ job.name }}</h3>
+              <div v-if="typeof job.avg_score === 'number'" class="job-card__avgrow">
+                <span class="avg-label">面试均分</span>
+                <span class="avg-value" :style="{ color: job.color }">{{ job.avg_score }}</span>
+              </div>
+            </div>
+          </div>
+          <p v-if="job.description" class="job-card__desc">{{ job.description }}</p>
+          <div v-if="Array.isArray(job.techStack) && job.techStack.length" class="job-card__stack">
+            <span v-for="tech in job.techStack" :key="tech" class="stack-tag" :style="getTechStyle(tech)">{{ tech }}</span>
           </div>
 
-          <p class="job-card__desc">{{ job.description }}</p>
-
-          <!-- 技术栈 -->
-          <div class="job-card__stack">
-            <span v-for="tech in job.techStack.slice(0, 4)" :key="tech" class="stack-tag">
-              {{ tech }}
-            </span>
-          </div>
-
-          <!-- 默认岗位操作放在灰色分界线上方 -->
-          <div class="job-card__default">
-            <button
-              v-if="defaultJobId !== job.id"
-              class="btn-set-default"
-              @click.stop="setDefault(job)"
-            >设为默认</button>
+          <!-- 默认岗位操作，固定右下角 -->
+          <div class="job-card__default fixed-default-btn">
+            <button v-if="normalizedDefaultJobId !== String(job.id)" class="btn-set-default" @click.stop="setDefault(job)">设为默认</button>
             <span v-else class="default-badge">默认岗位</span>
           </div>
 
-          <!-- 底部：题型 + 均分 -->
+          <!-- 底部：题型（如有） -->
           <div class="job-card__footer">
-            <div class="job-card__types">
+            <div v-if="Array.isArray(job.questionTypes) && job.questionTypes.length" class="job-card__types">
               <span v-for="t in job.questionTypes.slice(0, 2)" :key="t" class="type-tag">{{ t }}</span>
-            </div>
-            <div class="job-card__avg">
-              <span class="avg-label">均分</span>
-              <span class="avg-value" :style="{ color: job.color }">{{ job.avgScore }}</span>
             </div>
           </div>
         </div>
@@ -158,7 +170,7 @@
 </template>
 
 <script>
-import { JOB_TYPES } from '@/utils/constants'
+
 
 export default {
   name: 'JobSelection',
@@ -171,75 +183,110 @@ export default {
       voiceMode: false,
       filterTabs: [
         { key: 'all', label: '全部岗位' },
-        { key: '中级', label: '中级' },
-        { key: '高级', label: '高级' }
+        { key: 'popular', label: '热门岗位' }
       ],
-      jobDbIdMap: {}
+      jobDbIdMap: {},
+      jobs: [], // 后端岗位数据
+      popularIds: [] // 热门岗位 id 顺序，前端用于排序与标记
+      ,cardColors: [
+        { main: '#3b82f6', bg: 'linear-gradient(135deg, #e0eaff 0%, #f5faff 100%)' },
+        { main: '#f59e42', bg: 'linear-gradient(135deg, #fff3e0 0%, #fffaf5 100%)' },
+        { main: '#10b981', bg: 'linear-gradient(135deg, #e0fff3 0%, #f5fffa 100%)' },
+        { main: '#6366f1', bg: 'linear-gradient(135deg, #e0e7ff 0%, #f5f7ff 100%)' },
+        { main: '#f43f5e', bg: 'linear-gradient(135deg, #ffe0e7 0%, #fff5f7 100%)' },
+        { main: '#fbbf24', bg: 'linear-gradient(135deg, #fffbe0 0%, #fffdf5 100%)' },
+        { main: '#06b6d4', bg: 'linear-gradient(135deg, #e0faff 0%, #f5fdff 100%)' },
+        { main: '#8b5cf6', bg: 'linear-gradient(135deg, #ede9fe 0%, #fafaff 100%)' }
+      ]
     }
   },
   computed: {
     filteredJobs() {
-      let jobs = JOB_TYPES
-      if (this.activeFilter !== 'all') {
-        jobs = jobs.filter(j => j.level === this.activeFilter)
+      let jobs = this.jobs
+      if (this.activeFilter === 'popular') {
+        // 保持热门顺序
+        jobs = this.popularIds.map(id => jobs.find(j => j.id === id)).filter(Boolean)
       }
       if (this.searchQuery.trim()) {
         const q = this.searchQuery.toLowerCase()
         jobs = jobs.filter(j =>
-          j.name.toLowerCase().includes(q) ||
-          j.techStack.some(t => t.toLowerCase().includes(q)) ||
-          j.description.toLowerCase().includes(q)
+          (j.name && j.name.toLowerCase().includes(q)) ||
+          (Array.isArray(j.techStack) && j.techStack.some(t => t.toLowerCase().includes(q))) ||
+          (j.description && j.description.toLowerCase().includes(q))
         )
       }
       return jobs
     },
-    defaultJobId() {
-      return this.$store.getters['user/defaultJob']
+    // ensure comparison is done with strings to avoid type mismatch
+    normalizedDefaultJobId() {
+      const id = this.$store.getters['user/defaultJob']
+      return id != null ? String(id) : null
     }
   },
-created() {
-  // 核心修改1：将异步逻辑封装到 async 函数中并立即执行
-  const initJobs = async () => {
-    try {
-      const { fetchJobs } = await import('@/api/job')
-      const jobs = await fetchJobs()
-      console.log('后端岗位列表:', jobs)
-      if (jobs && jobs.length) {
-        // 用后端返回的name匹配前端的JOB_TYPES，建立 frontKey→dbId 映射
-        const nameToKey = {
-          'Java后端开发': 'java-backend',
-          '前端开发': 'web-frontend',
-          'Python算法工程师': 'python-algorithm',
-          '全栈开发工程师': 'fullstack',
-          'Android开发': 'android',
-          'DevOps工程师': 'devops'
-        }
-        jobs.forEach(j => {
-          const key = nameToKey[j.name]
-          if (key) this.jobDbIdMap[key] = j.id
-        })
-        
-        console.log('岗位列表加载成功，jobDbIdMap:', this.jobDbIdMap)
-      }
-    } catch (e) {
-      console.warn('加载岗位列表失败，使用本地 dbId 兜底', e)
-    }
 
+  watch: {
+    activeFilter(newVal) {
+      if (newVal === 'popular') {
+        this.refreshPopular()
+      }
+    }
+  },
+  async created() {
+    try {
+      const { fetchJobs, fetchJobAvgScores, fetchPopularJobs } = await import('@/api/job')
+      let jobs = await fetchJobs()
+      // 先获取均分数据
+      let avgList = []
+      try {
+        avgList = await fetchJobAvgScores()
+      } catch (_) {
+        avgList = []
+      }
+      const avgMap = {}
+      avgList.forEach(a => { if (a.id != null) avgMap[a.id] = a.avg_score })
+
+      // 同步加载热门岗位
+      let popular = []
+      try {
+        popular = await fetchPopularJobs()
+      } catch (_) {
+        popular = []
+      }
+      this.popularIds = (popular || []).map(p => p.id)
+
+      // 字段适配：后端 tech_stack → techStack, icon_url → icon
+      jobs = (jobs || []).map(j => ({
+        ...j,
+        techStack: j.tech_stack || [],
+        icon: j.icon_url || '💼',
+        // 兼容 level/questionTypes，后端可补充
+        level: j.level || '',
+        avg_score: avgMap[j.id] != null ? avgMap[j.id] : (j.avg_score || 0),
+        questionTypes: j.question_types || [],
+        color: j.color || '#888',
+        colorBg: j.color_bg || '#f3f3f3'
+      }))
+      // 为前端添加排名字段
+      jobs.forEach(j => {
+        const idx = this.popularIds.indexOf(j.id)
+        j.popularRank = idx >= 0 ? idx + 1 : null
+      })
+      this.jobs = jobs
+    } catch (e) {
+      this.jobs = []
+      console.warn('加载岗位列表失败', e)
+    }
     // 回显 store 中已选岗位 或 用户默认岗位
     const storeJob = this.$store.getters['interview/selectedJob']
     if (storeJob) {
       this.currentSelected = storeJob
     } else {
-      const defaultJobId = this.$store.getters['user/defaultJob']
+      const defaultJobId = this.normalizedDefaultJobId
       if (defaultJobId) {
-        this.currentSelected = JOB_TYPES.find(j => j.id === defaultJobId) || null
+        this.currentSelected = this.jobs.find(j => String(j.id) === defaultJobId) || null
       }
     }
-  }
-
-  // 核心修改2：立即执行异步初始化函数
-  initJobs()
-},
+  },
   methods: {
     toggleSelect(job) {
       this.currentSelected = this.currentSelected?.id === job.id ? null : job
@@ -252,6 +299,34 @@ created() {
       } catch (err) {
         console.error('设置默认岗位失败', err)
         // quietly fail, could show toast later if needed
+      }
+    },
+
+    async refreshPopular() {
+      try {
+        const { fetchPopularJobs } = await import('@/api/job')
+        const popular = await fetchPopularJobs()
+        this.popularIds = (popular || []).map(p => p.id)
+        this.jobs.forEach(j => {
+          const idx = this.popularIds.indexOf(j.id)
+          j.popularRank = idx >= 0 ? idx + 1 : null
+        })
+      } catch (e) {
+        console.warn('刷新热门岗位失败', e)
+      }
+    },
+
+    getTechStyle(tech) {
+      // simple deterministic pastel color based on tech name
+      const colors = ['#e0f7fa', '#e8f5e9', '#fff3e0', '#f3e5f5', '#e1f5fe', '#fbe9e7']
+      let hash = 0
+      for (let i = 0; i < tech.length; i++) {
+        hash = (hash * 31 + tech.charCodeAt(i)) & 0xffffffff
+      }
+      const idx = Math.abs(hash) % colors.length
+      return {
+        background: colors[idx],
+        color: '#333'
       }
     },
 
@@ -327,6 +402,191 @@ async handleStart() {
   background: #3b82f6;
   border-radius: 3px;
 }
+
+.job-grid.job-grid-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px 14px;
+}
+.job-card {
+  position: relative;
+  min-height: 80px;
+  padding: 10px 8px 32px 8px;
+  margin-bottom: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px 0 rgba(0,0,0,0.04);
+  border: 2px solid #e5e7eb;
+  transition: box-shadow 0.2s, border-color 0.2s;
+  background: #fff;
+}
+.job-card__default.fixed-default-btn {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  margin: 0;
+  text-align: right;
+  z-index: 3;
+}
+.btn-set-default {
+  font-size: 11px;
+  color: #3b82f6;
+  background: transparent;
+  border: 1px solid #3b82f6;
+  border-radius: 3px;
+  padding: 2px 6px;
+  cursor: pointer;
+}
+.btn-set-default:hover {
+  background: #3b82f6;
+  color: #fff;
+}
+.job-card__rank-badge.top-badge {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  font-size: 11px;
+  font-weight: bold;
+  min-width: 36px;
+  height: 22px;
+  /* badge sits in the lower-left corner with rounded right side */
+  border-radius: 12px 12px 0 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  box-shadow: 0 2px 6px 0 rgba(0,0,0,0.08);
+}
+.top-badge-1 {
+  background: linear-gradient(135deg, #ffd700 60%, #ffecb3 100%);
+  color: #222;
+}
+.top-badge-2 {
+  background: linear-gradient(135deg, #c0c0c0 60%, #f5f5f5 100%);
+  color: #222;
+}
+.top-badge-3 {
+  background: linear-gradient(135deg, #cd7f32 60%, #ffe0b2 100%);
+  color: #222;
+}
+@media (max-width: 700px) {
+  .job-card__default.fixed-default-btn {
+    right: 6px;
+    bottom: 6px;
+  }
+  .job-card {
+    padding-bottom: 36px;
+  }
+}
+.job-card__mainrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.job-card__icon-wrap {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  background: #f3f3f3;
+}
+.job-card__footer-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+.job-card__default {
+  position: static;
+  margin: 0;
+  text-align: right;
+}
+.btn-set-default {
+  font-size: 11px;
+  color: #3b82f6;
+  background: transparent;
+  border: 1px solid #3b82f6;
+  border-radius: 3px;
+  padding: 2px 6px;
+  cursor: pointer;
+}
+.btn-set-default:hover {
+  background: #3b82f6;
+  color: #fff;
+}/* duplicate badge styles removed; colors handled by .top-badge-1/2/3 above */
+.job-card.selected {
+  box-shadow: 0 4px 16px 0 rgba(59,130,246,0.10);
+  border-color: #3b82f6;
+}
+.job-card--default {
+  border-color: #3b82f6;
+}
+.job-card__mainrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.job-card__icon-wrap {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  background: #f3f3f3;
+}
+.job-card__info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.job-card__name {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+.job-card__avgrow {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  margin-top: 2px;
+}
+.job-card__desc {
+  font-size: 12px;
+  color: #666;
+  margin: 4px 0 0 0;
+  line-height: 1.5;
+  min-height: 0;
+}
+.job-card__stack {
+  margin-top: 2px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+}
+.stack-tag {
+  background: #f1f5f9;
+  color: #64748b;
+  font-size: 10px;
+  border-radius: 3px;
+  padding: 1px 6px;
+}
+
+.job-card__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 4px;
+}
+/* legacy badge definition no longer needed */
 .job-card__default .btn-set-default {
   font-size: 11px;
   color: #3b82f6;
@@ -350,7 +610,11 @@ async handleStart() {
 .page-header {
   background: $gradient-primary;
   padding: 52px $spacing-base $spacing-lg;
-  position: relative;
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  /* expose header height for other elements */
+  --header-height: 200px; /* adjust if actual height differs */
   overflow: hidden;
 
   &::before {
@@ -432,14 +696,24 @@ async handleStart() {
 // ---- Body ----
 .page-body {
   padding: $spacing-base;
+  /* header height plus a spacer so tabs sit in the gap */
+  padding-top: calc(var(--header-height) + $spacing-base + var(--filter-height, 48px));
 }
 
 .filter-tabs {
+  --filter-height: 48px;
   display: flex;
-  gap: $spacing-sm;
-  margin-bottom: $spacing-base;
+  /*gap: $spacing-sm;*/
+  margin-top: 0;
   overflow-x: auto;
   padding-bottom: 2px;
+  /* 通过 sticky 保持在头部下方，初始位置由 page-body padding 定义 */
+  position: sticky;
+  top: var(--header-height);
+  left: 0;
+  right: 0;
+  background: transparent; /* 透明背景 */
+  z-index: 29;
   &::-webkit-scrollbar { display: none; }
 }
 
@@ -447,7 +721,7 @@ async handleStart() {
   padding: 7px $spacing-base;
   border-radius: $border-radius-full;
   border: 1.5px solid $border-color;
-  background: white;
+  background: transparent; /* 改为透明 */
   font-size: $font-size-sm;
   font-weight: $font-weight-medium;
   color: $text-secondary;
@@ -462,9 +736,10 @@ async handleStart() {
 
 // ---- 岗位网格 ----
 .job-grid {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: $spacing-md;
+
 }
 
 .job-card {
@@ -528,7 +803,8 @@ async handleStart() {
 
   &__footer {
     display: flex; align-items: center; justify-content: space-between;
-    padding-top: $spacing-md; border-top: 1px solid $gray-100;
+    padding-top: $spacing-md; /* border-top removed to eliminate divider line */
+    border-top: none;
   }
   &__types { display: flex; gap: $spacing-xs; }
   &__avg { display: flex; align-items: center; gap: 4px; }

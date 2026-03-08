@@ -14,6 +14,26 @@ export const fetchJobs = async () => {
 }
 
 /**
+ * 获取岗位均分（用于前端展示）
+ * 返回格式：[{ id, avg_score, interview_count, user_count }, ...]
+ */
+export const fetchJobAvgScores = async () => {
+  if (USE_MOCK) return []
+  const res = await request.get('/jobs/avg-scores')
+  return res
+}
+
+/**
+ * 获取热门岗位（按用户默认选择数排名）
+ * 返回数组与 /jobs 接口结构相同，前端仅需要 id 和 name
+ */
+export const fetchPopularJobs = async () => {
+  if (USE_MOCK) return []
+  const res = await request.get('/jobs/popular')
+  return res
+}
+
+/**
  * 获取多平台聚合技术热榜（掘金多分类 + Dev.to）
  * @param {string} jobId - 岗位key
  * @param {number} limit - 返回条数
