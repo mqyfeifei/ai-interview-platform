@@ -696,9 +696,10 @@ async handleStart() {
 // ---- Body ----
 .page-body {
   padding: $spacing-base;
-  /* header height plus a spacer so tabs sit in the gap */
+  /* header height plus spacer and tab height so content sits below fixed tabs */
   padding-top: calc(var(--header-height) + $spacing-base + var(--filter-height, 48px));
 }
+
 
 .filter-tabs {
   --filter-height: 48px;
@@ -707,22 +708,21 @@ async handleStart() {
   margin-top: 0;
   overflow-x: auto;
   padding-bottom: 2px;
-  /* 通过 sticky 保持在头部下方，初始位置由 page-body padding 定义 */
-  position: sticky;
-  top: var(--header-height);
-  left: 0;
-  right: 0;
-  background: transparent; /* 透明背景 */
-  z-index: 29;
+  /* 固定浮动在头部与内容之间 */
+  position: fixed;
+  top: calc(var(--header-height) + $spacing-base); /* 在留白区显示 */
+  left: $spacing-base; /* 靠左显示 */
+  z-index: 40;
+  background: transparent; /* 浮层透明 */
   &::-webkit-scrollbar { display: none; }
 }
 
 .filter-tab {
-  padding: 7px $spacing-base;
+  padding: 4px 12px;
   border-radius: $border-radius-full;
-  border: 1.5px solid $border-color;
+  border: 1px solid $border-color;
   background: transparent; /* 改为透明 */
-  font-size: $font-size-sm;
+  font-size: $font-size-xs;
   font-weight: $font-weight-medium;
   color: $text-secondary;
   cursor: pointer;
@@ -739,6 +739,7 @@ async handleStart() {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: $spacing-md;
+  margin-top: $spacing-lg; /* 顶部留白 */
 
 }
 
