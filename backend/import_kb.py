@@ -15,8 +15,8 @@ from app.models.learning import KnowledgeTag, Resource
 
 # 知识库 YAML 文件的相对路径配置
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-QUESTIONS_YAML_PATH = os.path.join(BASE_DIR, 'backend', 'FuChuangTiKu', 'FuChuangTiKu', 'data', 'questions', 'technical_interview_questions.yaml')
-KNOWLEDGE_POINTS_YAML_PATH = os.path.join(BASE_DIR, 'backend','FuChuangTiKu', 'FuChuangTiKu', 'data', 'knowledge_points',
+QUESTIONS_YAML_PATH = os.path.join(BASE_DIR, 'backend', 'clean_data', 'FuChuangTiKu', 'data', 'questions', 'technical_interview_questions.yaml')
+KNOWLEDGE_POINTS_YAML_PATH = os.path.join(BASE_DIR, 'backend','clean_data', 'FuChuangTiKu', 'data', 'knowledge_points',
                                           'java_backend_knowledge_points.yaml')
 
 # 资源类型映射字典
