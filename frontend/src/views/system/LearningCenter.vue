@@ -101,14 +101,19 @@
 
       <!-- 技能短板分析 -->
       <section class="section">
-        <div class="section-header">
+        <div class="section-header clickable weakness-header" @click="toggleWeakness">
           <h2 class="section-title">
             <span class="section-title__icon">🎯</span>
             技能短板
+            <span class="weakness-count">{{ (weaknesses || []).length }} 项待提升</span>
           </h2>
-          <span class="weakness-count">{{ (weaknesses || []).length }} 项待提升</span>
+          <svg class="collapse-icon" :class="{ open: showWeaknessSection }" viewBox="0 0 24 24">
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
         </div>
 
+        <transition name="collapse">
+        <div v-if="showWeaknessSection">
         <div class="weakness-cloud">
           <span
             v-for="w in weaknesses"
@@ -143,20 +148,27 @@
           <span class="legend-dot" style="background:#10B981;margin-left:12px" />良好 (70-90)
           <span class="legend-dot" style="background:#6366F1;margin-left:12px" />优秀 (≥90)
         </div>
+        </div> <!-- end collapsible wrapper -->
+        </transition>
       </section>
 
       <!-- 个性化推荐 -->
       <section class="section">
-        <div class="section-header">
+        <div class="section-header clickable resource-header" @click="toggleResources">
           <h2 class="section-title">
             <span class="section-title__icon">💡</span>
             推荐学习资源
           </h2>
-          <span v-if="activeWeaknessFilter" class="filter-chip" @click="clearWeaknessFilter">
+          <span v-if="activeWeaknessFilter" class="filter-chip" @click.stop="clearWeaknessFilter">
             {{ activeWeaknessFilter }} ✕
           </span>
+          <svg class="collapse-icon" :class="{ open: showResourceSection }" viewBox="0 0 24 24">
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
         </div>
 
+        <transition name="collapse">
+        <div v-if="showResourceSection">
         <!-- 类型筛选 -->
         <div class="type-filters">
           <button
@@ -180,7 +192,7 @@
           <div
             v-for="(res, idx) in filteredRecommendations"
             :key="res.id"
-            :class="['resource-card', { 'resource-card--completed': res.completed }]"
+            :class="['resource-card', { 'resource-card--completed': res.completed, 'match-weakness': activeWeaknessFilter && (res.relatedWeakness === activeWeaknessFilter || (res.tags || []).includes(activeWeaknessFilter)) }]"
             :style="{ animationDelay: idx * 0.05 + 's' }"
             @click="openResource(res)"
           >
@@ -252,6 +264,8 @@
           <p>暂无匹配的学习资源</p>
           <button class="btn btn-ghost btn-sm" @click="activeTypeFilter = 'all'; clearWeaknessFilter()">清空筛选</button>
         </div>
+        </div> <!-- end showResourceSection wrapper -->
+        </transition>
       </section>
 
     </div>
@@ -351,6 +365,9 @@ export default {
       activeCurveTab: 'overall',
       activeTypeFilter: 'all',
       activeWeaknessFilter: null,
+      // collapse flags for sections
+      showWeaknessSection: false,
+      showResourceSection: false,
       chartInstance: null,
       weaknessChartInstance: null,
       showResourceDetail: false,
@@ -401,7 +418,17 @@ export default {
       }
       // 短板筛选
       if (this.activeWeaknessFilter) {
-        list = list.filter(r => r.relatedWeakness === this.activeWeaknessFilter || (r.tags || []).includes(this.activeWeaknessFilter))
+        const tag = this.activeWeaknessFilter
+        list = list.filter(r => {
+          // exact relatedWeakness match
+          if (r.relatedWeakness === tag) return true
+          // any tag equals or contains the weakness text
+          if ((r.tags || []).some(t => t === tag || t.includes(tag))) return true
+          // fallback: try matching title/summary body text
+          if (r.title && r.title.includes(tag)) return true
+          if (r.summary && r.summary.includes(tag)) return true
+          return false
+        })
       }
       // 排序：未完成的在前，已完成的在后（带动画效果）
       return [...list].sort((a, b) => {
@@ -417,12 +444,14 @@ export default {
     }
   },
   mounted() {
-    
     this.initECharts()
+    this.updateHeights()
+    window.addEventListener('resize', this.updateHeights)
   },
   beforeUnmount() {
     if (this.chartInstance) { this.chartInstance.dispose(); this.chartInstance = null }
     if (this.weaknessChartInstance) { this.weaknessChartInstance.dispose(); this.weaknessChartInstance = null }
+    window.removeEventListener('resize', this.updateHeights)
   },
   watch: {
     growthData(newVal) {
@@ -437,6 +466,39 @@ export default {
   },
   methods: {
     ...mapActions('learning', ['toggleBookmark', 'markCompleted', 'updateTaskStatus']),
+    toggleWeakness() {
+      const opening = !this.showWeaknessSection;
+      this.showWeaknessSection = opening;
+      if (!opening) {
+        // dispose existing chart when collapsing so it will be recreated
+        if (this.weaknessChartInstance && !this.weaknessChartInstance.isDisposed()) {
+          this.weaknessChartInstance.dispose();
+        }
+        this.weaknessChartInstance = null;
+      }
+      this.$nextTick(() => {
+        this.updateHeights();
+        if (opening && this.enableCharts && this.weaknesses && this.weaknesses.length) {
+          // second tick to ensure DOM layout is complete
+          this.$nextTick(() => {
+            this.safeRenderWeaknessChart();
+          });
+        }
+      });
+    },
+    toggleResources() {
+      this.showResourceSection = !this.showResourceSection;
+      this.$nextTick(() => this.updateHeights());
+    },
+
+    updateHeights() {
+      this.$nextTick(() => {
+        const header = this.$el.querySelector('.page-header');
+        if (header) {
+          header.style.setProperty('--header-height', header.offsetHeight + 'px');
+        }
+      });
+    },
 
     async initECharts() {
       if (!this.enableCharts) return
@@ -501,14 +563,14 @@ export default {
 
       let xData, scoreData, dateData, seriesName
       if (isOverall) {
-        xData = (overall || []).map(d => d.label || d.date)
         scoreData = (overall || []).map(d => d.score)
-        dateData = (overall || []).map(d => d.date || '')
+        dateData = (overall || []).map(d => d.date || d.label || '')
+        xData = dateData
         seriesName = '综合得分'
       } else {
-        xData = dates || []
         scoreData = (dimensions && dimensions[this.activeCurveTab]) || []
         dateData = realDates || dates || []
+        xData = dateData
         seriesName = dimLabels[this.activeCurveTab] || this.activeCurveTab
       }
 
@@ -538,19 +600,19 @@ export default {
           textStyle: { color: '#F8FAFC', fontSize: 12, fontFamily: "'Noto Sans SC'" },
           formatter: params => {
             const p = params[0]
-            const idx = p.dataIndex
-            const date = dateData[idx] || ''
-            return `<div style="padding:4px 8px">${p.name}${date ? ' (' + date + ')' : ''}<br/><b style="font-size:16px;color:${color}">${p.value}</b> 分</div>`
+            return `<div style="padding:4px 8px"><b style="font-size:16px;color:${color}">${p.value}</b> 分</div>`
           }
         },
         xAxis: {
           type: 'category', data: xData,
+          name: '日期', nameLocation: 'middle', nameGap: 30,
           axisLine: { lineStyle: { color: '#E2E8F0' } },
           axisTick: { show: false },
           axisLabel: { color: '#94A3B8', fontSize: 11, fontFamily: "'Noto Sans SC'" }
         },
         yAxis: {
           type: 'value', min: yMin, max: yMax, splitNumber: 4,
+          name: '成绩', nameLocation: 'middle', nameGap: 44, nameTextStyle: { color: '#94A3B8', fontSize: 12 },
           axisLabel: { color: '#94A3B8', fontSize: 11 },
           splitLine: { lineStyle: { color: '#F1F5F9', type: 'dashed' } },
           axisLine: { show: false }, axisTick: { show: false }
@@ -674,7 +736,19 @@ export default {
     },
 
     filterByWeakness(weakness) {
-      this.activeWeaknessFilter = this.activeWeaknessFilter === weakness.tag ? null : weakness.tag
+      const tag = weakness.tag
+      this.activeWeaknessFilter = this.activeWeaknessFilter === tag ? null : tag
+      if (this.activeWeaknessFilter) {
+        // 展开推荐资源区并滚动到资源列表，提升交互感
+        this.showResourceSection = true
+        this.$nextTick(() => {
+          this.updateHeights()
+          const el = this.$el.querySelector('.resource-list')
+          if (el && el.scrollIntoView) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+          }
+        })
+      }
     },
 
     clearWeaknessFilter() {
@@ -779,7 +853,7 @@ export default {
 // ---- Body ----
 .page-body { padding: $spacing-base; }
 
-.section { margin-bottom: $spacing-xl; }
+.section { margin-bottom: $spacing-lg; }
 
 .section-header {
   display: flex; align-items: center; justify-content: space-between;
@@ -928,7 +1002,6 @@ export default {
 }
 
 // ---- 技能短板 ----
-.weakness-count { font-size: $font-size-sm; color: $text-muted; }
 
 .weakness-cloud {
   display: flex; flex-wrap: wrap; gap: $spacing-sm;
@@ -974,6 +1047,92 @@ export default {
 .weakness-legend {
   display: flex; align-items: center;
   font-size: $font-size-xs; color: $text-muted;
+}
+
+.weakness-count {
+  color: $danger; /* red */
+  margin-left: $spacing-sm;
+  font-weight: $font-weight-semibold;
+  font-size: $font-size-xs;
+}
+
+/* collapsible headers */
+.section-header.clickable {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $spacing-md $spacing-lg; /* 增大内边距提升高度 */
+  min-height: 56px;
+  background: $primary-bg; /* subtle theme color */
+  border: 1px solid $primary;
+  border-radius: $border-radius-lg;
+  transition: background $transition-fast, box-shadow $transition-fast, border-color $transition-fast, color $transition-fast;
+  color: $primary;
+}
+.section-header.clickable:hover {
+  background: lighten($primary-bg, 6%);
+  box-shadow: $shadow-sm;
+  border-color: darken($primary, 10%);
+}
+.section-header.clickable.open {
+  background: $primary;
+  border-color: $primary;
+  color: white;
+}
+.section-header.clickable.open:hover {
+  background: darken($primary, 7%);
+}
+
+/* specific header colors */
+.weakness-header {
+  background: #EFF8FF; /* very light blue */
+  border-color: #7EC8FF; /* soft blue */
+  color: #1E40AF; /* blue-900 text */
+}
+.weakness-header:hover {
+  background: #D1F1FF; /* hover: deeper light blue */
+  border-color: #3B82F6;
+}
+.weakness-header.open {
+  background: #2563EB; /* open: deeper blue */
+  border-color: #2563EB;
+  color: white;
+}
+
+.resource-header {
+  background: #FBF5FF; /* very light purple */
+  border-color: #D8B4FF; /* soft purple */
+  color: #6B21A8; /* purple-900 text */
+}
+.resource-header:hover {
+  background: #F0E6FF; /* hover: deeper light purple */
+  border-color: #A855F7;
+}
+.resource-header.open {
+  background: #7C3AED; /* open: deeper purple */
+  border-color: #7C3AED;
+  color: white;
+}
+.collapse-icon {
+  width: 18px; height: 18px;
+  margin-left: $spacing-sm;
+  transition: transform $transition-fast;
+  stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+}
+.collapse-icon.open { transform: rotate(180deg); }
+
+/* collapse transition */
+.collapse-enter-active, .collapse-leave-active {
+  transition: max-height 0.3s ease, opacity 0.3s ease;
+}
+.collapse-enter-from, .collapse-leave-to {
+  max-height: 0;
+  opacity: 0;
+}
+.collapse-enter-to, .collapse-leave-from {
+  max-height: 1000px;
+  opacity: 1;
 }
 
 .legend-dot {
@@ -1028,6 +1187,12 @@ export default {
     background: $gray-50;
     border-color: $success-bg;
   }
+}
+
+.resource-card.match-weakness {
+  border-color: #3B82F6;
+  box-shadow: 0 8px 24px rgba(59,130,246,0.08);
+  transform: translateY(-2px);
 }
 
 .resource-card__top {
