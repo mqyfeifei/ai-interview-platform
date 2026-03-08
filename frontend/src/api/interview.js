@@ -135,6 +135,7 @@ export const sendAnswer = async (sessionId, answer) => {
 // ---- 新增：SSE 流式聊天（替换原 sendAnswer）----
 // 原 sendAnswer 返回 { reply, nextQuestion, isFinished }
 // 后端是 SSE 流，通过 fetch 手动处理，检测 [INTERVIEW_OVER] 标记
+// api/interview.js  sendAnswerStream
 export const sendAnswerStream = (sessionId, answer, { onChunk, onFinish, onStreamEnd, onError }) => {
   const API_BASE = process.env.VUE_APP_API_BASE_URL || '/api/v1'
   const token = localStorage.getItem('ai_interview_token')
@@ -149,38 +150,45 @@ export const sendAnswerStream = (sessionId, answer, { onChunk, onFinish, onStrea
   }).then(async (response) => {
     const reader = response.body.getReader()
     const decoder = new TextDecoder()
-    let fullText = ''      // ✅ 累积全部文本，防止标记被拆分到两个chunk
-    let isOver = false   // 逐块读取流式响应
+    let buffer = ''       // ✅ 用 buffer 拼接不完整的 SSE 行
+    let fullText = ''
+    let isOver = false
+
     while (true) {
       const { done, value } = await reader.read()
       if (done) break
 
-      const rawChunk = decoder.decode(value, { stream: true })
-      const lines = rawChunk.split('\n').filter(l => l.startsWith('data: '))
+      // ✅ 把本次字节追加到 buffer，而不是直接 split
+      buffer += decoder.decode(value, { stream: true })
+
+      // 按完整行切割，保留末尾不完整的部分留到下次
+      const lines = buffer.split('\n')
+      buffer = lines.pop()   // 最后一段可能不完整，留给下次
+
       for (const line of lines) {
+        if (!line.startsWith('data: ')) continue
         try {
           const json = JSON.parse(line.slice(6))
           const chunk = json.chunk || ''
           fullText += chunk
 
-          if (chunk.includes('[INTERVIEW_OVER]') && !isOver) {
-            if (!isOver) {
-              isOver = true
-              // 把干净内容（去掉标记）推给UI
-              const cleanChunk = chunk.replace('[INTERVIEW_OVER]', '')
-              if (cleanChunk) onChunk(cleanChunk)
-              onFinish && onFinish()
-            }            
-            // onChunk(chunk.replace('[INTERVIEW_OVER]', ''))
-            
+          // ✅ 用 fullText 判断，不再用单个 chunk
+          if (!isOver && fullText.includes('[INTERVIEW_OVER]')) {
+            isOver = true
+            // 把干净内容（去掉标记）推给 UI
+            const cleanChunk = chunk.replace('[INTERVIEW_OVER]', '')
+            if (cleanChunk) onChunk(cleanChunk)
+            setTimeout(() => { onFinish && onFinish() }, 3000)
             return  // 提前退出，不再触发 onStreamEnd
-          } else {
+          }
+
+          if (!isOver) {
             onChunk(chunk)
           }
-        } catch { }
+        } catch { /* JSON 解析失败跳过 */ }
       }
     }
-     // 流正常结束且没有 [INTERVIEW_OVER]，继续对话
+
     if (!isOver) {
       onStreamEnd && onStreamEnd()
     }
