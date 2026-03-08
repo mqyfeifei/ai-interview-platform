@@ -7,8 +7,9 @@
 <template>
   <div class="history-page">
     <!-- 顶部 Header -->
-    <div class="page-header">
-      <div class="page-header__top">
+      <div class="page-header" :style="{ left: isDesktop ? sidebarWidth + 'px' : '0', right: '0' }">
+        <div class="page-container">
+        <div class="page-header__top">
         <div class="page-header__text">
           <h1>历史记录</h1>
           <p>共 {{ totalCount }} 次面试练习</p>
@@ -43,12 +44,7 @@
         />
         <button v-if="searchQuery" class="search-box__clear" @click="searchQuery = ''">✕</button>
       </div>
-    </div>
-
-    <!-- 主体 -->
-    <div class="page-body">
-
-      <!-- 岗位筛选 -->
+      <!-- 筛选条放在头部容器中 -->
       <div class="filter-row">
         <div class="filter-tabs">
           <button
@@ -58,8 +54,6 @@
             @click="activeJobFilter = tab.key"
           >{{ tab.label }}</button>
         </div>
-
-        <!-- 排序 -->
         <div class="sort-select-wrap">
           <select v-model="sortOrder" class="sort-select">
             <option value="desc">最新优先</option>
@@ -73,6 +67,11 @@
           </svg>
         </div>
       </div>
+      </div>
+    </div>
+
+    <!-- 主体 -->
+    <div class="page-body">
 
       <!-- 加载中 -->
       <div v-if="loading" class="loading-wrap">
@@ -206,7 +205,10 @@ export default {
       page: 1,
       searchQuery: '',
       activeJobFilter: 'all',
-      sortOrder: 'desc'
+      sortOrder: 'desc',
+      // header height handled via CSS variable
+      sidebarWidth: 0,
+      isDesktop: false
     }
   },
   computed: {
@@ -281,7 +283,38 @@ export default {
   async created() {
     await this.loadList()
   },
+  mounted() {
+    this.updateHeights()
+    this.updateSidebarWidth()
+    window.addEventListener('resize', this.onWindowResize)
+  },
+  watch: {
+    $route() {
+      this.$nextTick(() => {
+        this.updateSidebarWidth()
+        this.updateHeights()
+      })
+    }
+  },
+  beforeDestroy() {
+    window.removeEventListener('resize', this.onWindowResize)
+  },
   methods: {
+    onWindowResize() {
+      this.updateSidebarWidth()
+      this.updateHeights()
+    },
+
+    updateSidebarWidth() {
+      this.isDesktop = window.innerWidth >= 1024
+      if (this.isDesktop) {
+        const side = document.querySelector('.app-shell__side') || document.querySelector('.side-nav')
+        const w = side ? Math.round(side.getBoundingClientRect().width) : 0
+        this.sidebarWidth = w
+      } else {
+        this.sidebarWidth = 0
+      }
+    },
     async loadList() {
       this.loading = true
       try {
@@ -355,6 +388,15 @@ export default {
       const m = String(d.getMonth() + 1).padStart(2, '0')
       const day = String(d.getDate()).padStart(2, '0')
       return `${y}-${m}-${day}`
+    },
+
+    updateHeights() {
+      this.$nextTick(() => {
+        const header = this.$el.querySelector('.page-header')
+        if (header) {
+          header.style.setProperty('--header-height', header.offsetHeight + 'px')
+        }
+      })
     }
   }
 }
@@ -371,8 +413,12 @@ export default {
 .page-header {
   background: $gradient-primary;
   padding: 52px $spacing-base $spacing-lg;
-  position: relative;
+  /* header sticks at top; height exposed via CSS variable for other elements */
+  position: sticky;
+  top: 0; left: 0; right: 0;
+  z-index: 40;
   overflow: hidden;
+  --header-height: 0px; /* updated dynamically by script */
 
   &::before {
     content: '';
@@ -450,13 +496,30 @@ export default {
 }
 
 // ---- Body ----
-.page-body { padding: $spacing-base; }
+.page-body {
+  padding: $spacing-base;
+  /* 内容顶端从整个头部容器底部开始 */
+  padding-top: var(--header-height);
+}
 
 .filter-row {
   display: flex; align-items: center;
   justify-content: space-between;
   gap: $spacing-sm;
-  margin-bottom: $spacing-base;
+  margin-top: $spacing-base; /* 与搜索框间距 */
+  background: radial-gradient(circle, rgba(255,255,255,0.07) 0%, transparent 70%);
+  padding: 0 $spacing-base; /* 两边水平内边距 */
+  /* 默认占满父级 container 宽度 */
+  width: 100%;
+  box-sizing: border-box;
+  /* 不再固定，作为 header 的一部分呈现 */
+}
+
+/* PC端样式：在较宽屏幕上加入左右边距以避开侧边栏 */
+@media (min-width: 1024px) {
+  .filter-row {
+    /* desktop offset handled by inline left/right binding */
+  }
 }
 
 .filter-tabs {
@@ -473,7 +536,7 @@ export default {
   font-family: $font-family-base; transition: all $transition-fast;
   white-space: nowrap; flex-shrink: 0;
 
-  &.active { background: $primary; border-color: $primary; color: white; }
+  &.active { background: $primary-bg; border-color: $primary; color: $primary; }
   &:not(.active):hover { border-color: $primary; color: $primary; }
 }
 
