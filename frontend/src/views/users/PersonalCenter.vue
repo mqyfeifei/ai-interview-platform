@@ -387,7 +387,7 @@
 
     <!-- 退出确认弹窗 -->
     <transition name="modal">
-      <div v-if="showLogoutConfirm" class="modal-overlay" @click.self="showLogoutConfirm = false">
+      <div v-if="showLogoutConfirm" class="modal-overlay modal-overlay--center" @click.self="showLogoutConfirm = false">
         <div class="modal-sheet modal-sheet--sm">
           <div class="modal-header">
             <h3>退出登录</h3>
@@ -1473,7 +1473,7 @@ export default {
   width: 100%;
   max-width: $max-content-width;
   background: white;
-  border-radius: $border-radius-xl $border-radius-xl 0 0;
+  border-radius: $border-radius-xl;
   max-height: 80vh;
   overflow-y: auto;
 
