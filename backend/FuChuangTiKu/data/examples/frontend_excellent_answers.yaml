@@ -1,34 +1,34 @@
-type: frontend_excellent_answer_examples
+type: "frontend_excellent_answer_examples"
 source:
-  - 自己整理
+  - "自己整理"
 items:
-  - id: FE-EX-T-001
-    type: technical
-    question: 详细说一下前端跨域问题以及解决方案。
-    framework: 原理-常见方案对比-企业级最佳实践
+  - id: "FE-EX-T-001"
+    type: "technical"
+    question: "详细说一下前端跨域问题以及解决方案。"
+    framework: "原理-常见方案对比-企业级最佳实践"
     answer: |
       跨域本质是浏览器的同源策略（协议、域名、端口必须完全一致）对 AJAX 请求的安全限制。
       常见方案：1. JSONP（只支持 GET，已淘汰）；2. CORS（最官方，通过服务端设置 Access-Control-Allow-Origin，需区分简单请求与预检请求）；3. 代理代理（Proxy）。
       企业实战中最常用的是本地开发配置 Webpack/Vite Proxy 解决，上预发和生产环境走 Nginx 反向代理保证同源，少数开放接口才使用 CORS。
-    status: draft
+    status: "draft"
 
-  - id: FE-EX-P-001
-    type: project_deep_dive
-    question: 说说项目中你做的首屏性能优化？
-    framework: STAR
+  - id: "FE-EX-P-001"
+    type: "project_deep_dive"
+    question: "说说项目中你做的首屏性能优化？"
+    framework: "STAR"
     answer: |
       S：我们后台管理系统随着模块增加，首屏加载飙升到了 3.5s 以上（白屏时间长）。
       T：目标是降低加载时长，目标在 1.5s 以内。
       A：1. 使用 `webpack-bundle-analyzer` 分析后，抽出 element-plus 等大图库使用 CDN。2. 路由懒加载配置动态 import，代码按需做 SplitChunks 分包。3. 开启 Gzip 压缩。4. 对骨架屏 (Skeleton) 进行预渲染，优化用户体验。
       R：打包体积缩减了 45%，LCP (Largest Contentful Paint) 指标降至 1.2s，整体体验明显顺滑。
-    status: draft
-  
-  - id: FE-EX-S-001
-    type: scenario_design
-    question: 大文件分片上传如何设计与实现？
-    framework: 拆解步骤-核心技术点-异常处理
+    status: "draft"
+
+  - id: "FE-EX-S-001"
+    type: "scenario_design"
+    question: "大文件分片上传如何设计与实现？"
+    framework: "拆解步骤-核心技术点-异常处理"
     answer: |
       主流程设计：前端使用 File.slice 切解文件，使用 SparkMD5 计算 hash 代替文件名以实现秒传和断点续传。
       核心技术：1. Web Worker 中开启子线程计算 hash 防卡顿；2. 封装 Promise.all 控制最大并发请求数 (例如 6) 以防网络堵塞。
       异常流：后端记录已传分片索引以支持断网重传，全部传完后前端主动发起 merge 合并请求。
-    status: draft
+    status: "draft"

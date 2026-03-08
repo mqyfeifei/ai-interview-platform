@@ -1,347 +1,347 @@
 type: backend_technical_interview_questions
 source:
-  - 牛客网
-  - CSDN
+  - "牛客网"
+  - "CSDN"
 items:
   - id: BE-TQ-001
     type: technical
-    question: JVM 内存结构由哪些区域组成？各自作用是什么？
-    tags: [JVM, 内存模型]
+    question: "JVM 内存结构由哪些区域组成？各自作用是什么？"
+    tags: ["JVM", "内存模型"]
     difficulty: medium
-    source: 牛客网
+    source: "牛客网"
     status: draft
     key_points:
-      - 程序计数器(线程私有)
-      - 虚拟机栈/本地方法栈(线程私有)
-      - 堆(线程共享，对象分配)
-      - 方法区/元空间(线程共享，类信息/常量池)
+      - "程序计数器(线程私有)"
+      - "虚拟机栈/本地方法栈(线程私有)"
+      - "堆(线程共享，对象分配)"
+      - "方法区/元空间(线程共享，类信息/常量池)"
   - id: BE-TQ-002
     type: technical
-    question: Java 对象在堆中的创建流程（类加载、分配、初始化、引用）是怎样的？
-    tags: [JVM, 对象创建]
+    question: "Java 对象在堆中的创建流程（类加载、分配、初始化、引用）是怎样的？"
+    tags: ["JVM", "对象创建"]
     difficulty: medium
-    source: CSDN
+    source: "CSDN"
     status: draft
     key_points:
-      - 类加载检查
-      - 分配内存(指针碰撞/空闲列表)
-      - 初始化零值
-      - 设置对象头
-      - 执行<init>方法
+      - "类加载检查"
+      - "分配内存(指针碰撞/空闲列表)"
+      - "初始化零值"
+      - "设置对象头"
+      - "执行<init>方法"
   - id: BE-TQ-003
     type: technical
-    question: 常见垃圾回收算法（标记清除、复制、标记整理）有什么区别？
-    tags: [JVM, GC]
+    question: "常见垃圾回收算法（标记清除、复制、标记整理）有什么区别？"
+    tags: ["JVM", "GC"]
     difficulty: medium
-    source: 牛客网
+    source: "牛客网"
     status: draft
     key_points:
-      - 标记清除(产生内存碎片)
-      - 复制(适合年轻代，浪费一半空间)
-      - 标记整理(适合老年代，无碎片但较慢)
+      - "标记清除(产生内存碎片)"
+      - "复制(适合年轻代，浪费一半空间)"
+      - "标记整理(适合老年代，无碎片但较慢)"
   - id: BE-TQ-004
     type: technical
-    question: CMS 与 G1 的核心差异是什么？线上如何选择？
-    tags: [JVM, GC, 调优]
+    question: "CMS 与 G1 的核心差异是什么？线上如何选择？"
+    tags: ["JVM", "GC", "调优"]
     difficulty: hard
-    source: CSDN
+    source: "CSDN"
     status: draft
     key_points:
-      - CMS注重低延迟和并发，使用标记清除算法
-      - G1注重可预测停顿时间，将内存划分为Region，整体标记整理，局部复制
+      - "CMS注重低延迟和并发，使用标记清除算法"
+      - "G1注重可预测停顿时间，将内存划分为Region，整体标记整理，局部复制"
   - id: BE-TQ-005
     type: technical
-    question: 类加载机制（双亲委派）为什么能保证安全性？
-    tags: [JVM, 类加载]
+    question: "类加载机制（双亲委派）为什么能保证安全性？"
+    tags: ["JVM", "类加载"]
     difficulty: medium
-    source: 牛客网
+    source: "牛客网"
     status: draft
     key_points:
-      - 保证沙箱安全机制
-      - 防止核心类(如java.lang.String)被恶意篡改
-      - 避免类的重复加载
+      - "保证沙箱安全机制"
+      - "防止核心类(如java.lang.String)被恶意篡改"
+      - "避免类的重复加载"
   - id: BE-TQ-006
     type: technical
-    question: `volatile` 的可见性和有序性如何实现？为什么不保证原子性？
-    tags: [并发, JMM]
+    question: "`volatile` 的可见性和有序性如何实现？为什么不保证原子性？"
+    tags: ["并发", "JMM"]
     difficulty: hard
-    source: CSDN
+    source: "CSDN"
     status: draft
     key_points:
-      - 利用内存屏障保证可见性和有序性
-      - 禁止指令重排
-      - 无法保证复合操作的原子性(需加锁)
+      - "利用内存屏障保证可见性和有序性"
+      - "禁止指令重排"
+      - "无法保证复合操作的原子性(需加锁)"
   - id: BE-TQ-007
     type: technical
-    question: `synchronized` 锁升级过程（偏向锁、轻量级锁、重量级锁）是什么？
-    tags: [并发, 锁机制]
+    question: "`synchronized` 锁升级过程（偏向锁、轻量级锁、重量级锁）是什么？"
+    tags: ["并发", "锁机制"]
     difficulty: hard
-    source: 牛客网
+    source: "牛客网"
     status: draft
     key_points:
-      - 无锁
-      - 偏向锁(记录线程ID)
-      - 轻量级锁(CAS自旋)
-      - 重量级锁(依赖OS互斥量)
+      - "无锁"
+      - "偏向锁(记录线程ID)"
+      - "轻量级锁(CAS自旋)"
+      - "重量级锁(依赖OS互斥量)"
   - id: BE-TQ-008
     type: technical
-    question: `ReentrantLock` 相比 `synchronized` 的优势与适用场景？
-    tags: [并发, 锁机制]
+    question: "`ReentrantLock` 相比 `synchronized` 的优势与适用场景？"
+    tags: ["并发", "锁机制"]
     difficulty: medium
-    source: CSDN
+    source: "CSDN"
     status: draft
     key_points:
-      - 支持可中断获取锁
-      - 支持公平锁与非公平锁切换
-      - 可绑定多个Condition对象
-      - 底层基于AQS实现
+      - "支持可中断获取锁"
+      - "支持公平锁与非公平锁切换"
+      - "可绑定多个Condition对象"
+      - "底层基于AQS实现"
   - id: BE-TQ-009
     type: technical
-    question: 线程池参数（core、max、queue、reject）如何配置？
-    tags: [并发, 线程池]
+    question: "线程池参数（core、max、queue、reject）如何配置？"
+    tags: ["并发", "线程池"]
     difficulty: medium
-    source: 牛客网
+    source: "牛客网"
     status: draft
     key_points:
-      - 核心线程数(corePoolSize)
-      - 最大线程数(maximumPoolSize)
-      - 救急线程存活时间(keepAliveTime)
-      - 任务阻塞队列(workQueue)
-      - 拒绝策略(handler)
+      - "核心线程数(corePoolSize)"
+      - "最大线程数(maximumPoolSize)"
+      - "救急线程存活时间(keepAliveTime)"
+      - "任务阻塞队列(workQueue)"
+      - "拒绝策略(handler)"
   - id: BE-TQ-010
     type: technical
-    question: 线上出现线程池任务堆积时你会怎么排查？
-    tags: [并发, 排障]
+    question: "线上出现线程池任务堆积时你会怎么排查？"
+    tags: ["并发", "排障"]
     difficulty: hard
-    source: CSDN
+    source: "CSDN"
     status: draft
     key_points:
-      - 查看监控和日志确认为何堆积
-      - 利用jstack/arthas排查死锁或慢执行(如慢查询/外部接口超时)
-      - 检查队列长度与线程数配置是否合理
-      - 临时扩容或服务降级
+      - "查看监控和日志确认为何堆积"
+      - "利用jstack/arthas排查死锁或慢执行(如慢查询/外部接口超时)"
+      - "检查队列长度与线程数配置是否合理"
+      - "临时扩容或服务降级"
   - id: BE-TQ-011
     type: technical
-    question: `HashMap` 在 JDK1.7 与 JDK1.8 的实现差异有哪些？
-    tags: [集合, HashMap]
+    question: "`HashMap` 在 JDK1.7 与 JDK1.8 的实现差异有哪些？"
+    tags: ["集合", "HashMap"]
     difficulty: medium
-    source: 牛客网
+    source: "牛客网"
     status: draft
     key_points:
-      - 1.8底层变为数组+链表+红黑树(提速查询)
-      - 头插法改为尾插法(杜绝多线程死链)
-      - 扩容时通过高低位重新散列，无须重新计算hash
+      - "1.8底层变为数组+链表+红黑树(提速查询)"
+      - "头插法改为尾插法(杜绝多线程死链)"
+      - "扩容时通过高低位重新散列，无须重新计算hash"
   - id: BE-TQ-012
     type: technical
-    question: `ConcurrentHashMap` 如何保证并发安全与性能平衡？
-    tags: [集合, 并发]
+    question: "`ConcurrentHashMap` 如何保证并发安全与性能平衡？"
+    tags: ["集合", "并发"]
     difficulty: hard
-    source: CSDN
+    source: "CSDN"
     status: draft
     key_points:
-      - 1.7使用分段锁(Segment)降低冲突
-      - 1.8使用Node数组+CAS+Synchronized，锁粒度细化到拉链头结点
-      - 大幅提升并发写性能
+      - "1.7使用分段锁(Segment)降低冲突"
+      - "1.8使用Node数组+CAS+Synchronized，锁粒度细化到拉链头结点"
+      - "大幅提升并发写性能"
   - id: BE-TQ-013
     type: technical
-    question: 为什么重写了 `equals` 必须重写 `hashCode`？
-    tags: [Java基础, 集合]
+    question: "为什么重写了 `equals` 必须重写 `hashCode`？"
+    tags: ["Java基础", "集合"]
     difficulty: easy
-    source: 牛客网
+    source: "牛客网"
     status: draft
     key_points:
-      - 为了保证对象放入基于Hash的集合(如HashMap/HashSet)时能正确定位
-      - 确保逻辑上相等的对象拥有相同的散列值以便及时覆盖或去重
+      - "为了保证对象放入基于Hash的集合(如HashMap/HashSet)时能正确定位"
+      - "确保逻辑上相等的对象拥有相同的散列值以便及时覆盖或去重"
   - id: BE-TQ-014
     type: technical
-    question: MySQL InnoDB 的聚簇索引和二级索引有什么区别？
-    tags: [MySQL, 索引]
+    question: "MySQL InnoDB 的聚簇索引和二级索引有什么区别？"
+    tags: ["MySQL", "索引"]
     difficulty: medium
-    source: CSDN
+    source: "CSDN"
     status: draft
     key_points:
-      - 聚簇索引(主键索引)叶子节点存储完整的数据行
-      - 二级索引(非主键索引)叶子节点仅存储对应的主键值
-      - 二级索引查询可能需要进行回表操作(扫两次B+树)
+      - "聚簇索引(主键索引)叶子节点存储完整的数据行"
+      - "二级索引(非主键索引)叶子节点仅存储对应的主键值"
+      - "二级索引查询可能需要进行回表操作(扫两次B+树)"
   - id: BE-TQ-015
     type: technical
-    question: 索引失效常见场景有哪些？如何规避？
-    tags: [MySQL, SQL优化]
+    question: "索引失效常见场景有哪些？如何规避？"
+    tags: ["MySQL", "SQL优化"]
     difficulty: medium
-    source: 牛客网
+    source: "牛客网"
     status: draft
     key_points:
-      - 最左前缀法则被打破
-      - 索引列发生隐式类型转换或使用了函数
-      - LIKE使用了模糊的左前缀(如'%abc')
-      - OR条件中包含非索引列
+      - "最左前缀法则被打破"
+      - "索引列发生隐式类型转换或使用了函数"
+      - "LIKE使用了模糊的左前缀(如'%abc')"
+      - "OR条件中包含非索引列"
   - id: BE-TQ-016
     type: technical
-    question: 事务隔离级别及其可能出现的并发问题（脏读、不可重复读、幻读）。
-    tags: [MySQL, 事务]
+    question: "事务隔离级别及其可能出现的并发问题（脏读、不可重复读、幻读）。"
+    tags: ["MySQL", "事务"]
     difficulty: medium
-    source: CSDN
+    source: "CSDN"
     status: draft
     key_points:
-      - 读未提交(脏读)
-      - 读已提交(不可重复读)
-      - 可重复读(幻读，MySQL通过MVCC及间隙锁部分解决)
-      - 串行化(性能最差)
+      - "读未提交(脏读)"
+      - "读已提交(不可重复读)"
+      - "可重复读(幻读，MySQL通过MVCC及间隙锁部分解决)"
+      - "串行化(性能最差)"
   - id: BE-TQ-017
     type: technical
-    question: MVCC 的实现原理（版本链、ReadView）是什么？
-    tags: [MySQL, MVCC]
+    question: "MVCC 的实现原理（版本链、ReadView）是什么？"
+    tags: ["MySQL", "MVCC"]
     difficulty: hard
-    source: 牛客网
+    source: "牛客网"
     status: draft
     key_points:
-      - 记录隐藏列(trx_id, roll_pointer)
-      - undo log形成的历史版本链
-      - ReadView机制(活跃事务列表/可见性规则判断)
+      - "记录隐藏列(trx_id, roll_pointer)"
+      - "undo log形成的历史版本链"
+      - "ReadView机制(活跃事务列表/可见性规则判断)"
   - id: BE-TQ-018
     type: technical
-    question: MySQL 慢查询你一般如何定位与优化？
-    tags: [MySQL, 性能优化]
+    question: "MySQL 慢查询你一般如何定位与优化？"
+    tags: ["MySQL", "性能优化"]
     difficulty: medium
-    source: CSDN
+    source: "CSDN"
     status: draft
     key_points:
-      - 开启慢查询日志抓取超长SQL
-      - 使用EXPLAIN分析执行计划(关注type, key, extra等字段)
-      - 检查是否发生全表扫描、未使用索引或文件排序现象
-      - 针对性加联合索引或重写SQL
+      - "开启慢查询日志抓取超长SQL"
+      - "使用EXPLAIN分析执行计划(关注type, key, extra等字段)"
+      - "检查是否发生全表扫描、未使用索引或文件排序现象"
+      - "针对性加联合索引或重写SQL"
   - id: BE-TQ-019
     type: technical
-    question: Redis 常见数据结构及典型业务场景是什么？
-    tags: [Redis, 缓存]
+    question: "Redis 常见数据结构及典型业务场景是什么？"
+    tags: ["Redis", "缓存"]
     difficulty: easy
-    source: 牛客网
+    source: "牛客网"
     status: draft
     key_points:
-      - String(缓存/计数/分布式锁)
-      - Hash(对象存储/购物车)
-      - List(消息队列/最新列表)
-      - Set(去重/标签/交并补集)
-      - ZSet(排行榜/延时队列)
+      - "String(缓存/计数/分布式锁)"
+      - "Hash(对象存储/购物车)"
+      - "List(消息队列/最新列表)"
+      - "Set(去重/标签/交并补集)"
+      - "ZSet(排行榜/延时队列)"
   - id: BE-TQ-020
     type: technical
-    question: Redis 缓存击穿、穿透、雪崩分别如何解决？
-    tags: [Redis, 高并发]
+    question: "Redis 缓存击穿、穿透、雪崩分别如何解决？"
+    tags: ["Redis", "高并发"]
     difficulty: medium
-    source: CSDN
+    source: "CSDN"
     status: draft
     key_points:
-      - 缓存击穿：热点Key失效导致穿透(方案：互斥锁或逻辑过期)
-      - 缓存穿透：查不存在的数据(方案：布隆过滤器或缓存空对象)
-      - 缓存雪崩：大面积失效(方案：TTL加随机值/集群高可用/限流降级)
+      - "缓存击穿：热点Key失效导致穿透(方案：互斥锁或逻辑过期)"
+      - "缓存穿透：查不存在的数据(方案：布隆过滤器或缓存空对象)"
+      - "缓存雪崩：大面积失效(方案：TTL加随机值/集群高可用/限流降级)"
   - id: BE-TQ-021
     type: technical
-    question: Redis 持久化 RDB 与 AOF 的区别与取舍？
-    tags: [Redis, 持久化]
+    question: "Redis 持久化 RDB 与 AOF 的区别与取舍？"
+    tags: ["Redis", "持久化"]
     difficulty: medium
-    source: 牛客网
+    source: "牛客网"
     status: draft
     key_points:
-      - RDB生成快照体量小、恢复快，但会丢失最近数据
-      - AOF记录命令完整性高，但文件大、重写开销大、恢复慢
-      - 推荐混合持久化架构结合两者优点
+      - "RDB生成快照体量小、恢复快，但会丢失最近数据"
+      - "AOF记录命令完整性高，但文件大、重写开销大、恢复慢"
+      - "推荐混合持久化架构结合两者优点"
   - id: BE-TQ-022
     type: technical
-    question: Spring IOC 与 AOP 的核心实现机制分别是什么？
-    tags: [Spring, IOC, AOP]
+    question: "Spring IOC 与 AOP 的核心实现机制分别是什么？"
+    tags: ["Spring", "IOC", "AOP"]
     difficulty: medium
-    source: CSDN
+    source: "CSDN"
     status: draft
     key_points:
-      - IOC通过反射和控制反转解耦，配合三级缓存解决循环依赖机制
-      - AOP通过动态代理(JDK代理/CGLIB)实现非侵入式的切面增强
+      - "IOC通过反射和控制反转解耦，配合三级缓存解决循环依赖机制"
+      - "AOP通过动态代理(JDK代理/CGLIB)实现非侵入式的切面增强"
   - id: BE-TQ-023
     type: technical
-    question: Spring 事务传播行为有哪些？实际开发最常见坑是什么？
-    tags: [Spring, 事务]
+    question: "Spring 事务传播行为有哪些？实际开发最常见坑是什么？"
+    tags: ["Spring", "事务"]
     difficulty: hard
-    source: 牛客网
+    source: "牛客网"
     status: draft
     key_points:
-      - REQUIRED(默认,加入当前事务)
-      - REQUIRES_NEW(挂起当前,新建独立事务)
-      - 常见坑：内部方法调用((this.调用))导致代理失效事务不生效
-      - 异常被catch吞掉未向外抛出
+      - "REQUIRED(默认,加入当前事务)"
+      - "REQUIRES_NEW(挂起当前,新建独立事务)"
+      - "常见坑：内部方法调用((this.调用))导致代理失效事务不生效"
+      - "异常被catch吞掉未向外抛出"
   - id: BE-TQ-024
     type: technical
-    question: Spring Boot 自动配置原理（`@EnableAutoConfiguration`）是什么？
-    tags: [SpringBoot, 自动配置]
+    question: "Spring Boot 自动配置原理（`@EnableAutoConfiguration`）是什么？"
+    tags: ["SpringBoot", "自动配置"]
     difficulty: medium
-    source: CSDN
+    source: "CSDN"
     status: draft
     key_points:
-      - 核心注解@EnableAutoConfiguration
-      - 通过@Import加载SPI机制定义的类
-      - 扫描META-INF/spring.factories或依赖加载按条件(@ConditionalOnClass等)装配
+      - "核心注解@EnableAutoConfiguration"
+      - "通过@Import加载SPI机制定义的类"
+      - "扫描META-INF/spring.factories或依赖加载按条件(@ConditionalOnClass等)装配"
   - id: BE-TQ-025
     type: technical
-    question: 你如何设计幂等接口，防止重复提交？
-    tags: [系统设计, 幂等]
+    question: "你如何设计幂等接口，防止重复提交？"
+    tags: ["系统设计", "幂等"]
     difficulty: medium
-    source: 牛客网
+    source: "牛客网"
     status: draft
     key_points:
-      - 数据库建立唯一索引兜底
-      - 利用Redis的SETNX(互斥锁)检查防重
-      - 前端防抖及Token票据流机制(申请Token->带Token提交->服务端销毁票据)
+      - "数据库建立唯一索引兜底"
+      - "利用Redis的SETNX(互斥锁)检查防重"
+      - "前端防抖及Token票据流机制(申请Token->带Token提交->服务端销毁票据)"
   - id: BE-TQ-026
     type: technical
-    question: 分布式锁常见实现（Redis、数据库、ZK）及优缺点？
-    tags: [分布式, 锁]
+    question: "分布式锁常见实现（Redis、数据库、ZK）及优缺点？"
+    tags: ["分布式", "锁"]
     difficulty: hard
-    source: CSDN
+    source: "CSDN"
     status: draft
     key_points:
-      - Redis：性能极高，配合Redisson看门狗解决超时问题
-      - ZK：基于临时顺序节点与Watch机制，可靠性高但有网络开销
-      - 数据库：实现简单(排他锁/唯一键)，并发性能差不易做高可用
+      - "Redis：性能极高，配合Redisson看门狗解决超时问题"
+      - "ZK：基于临时顺序节点与Watch机制，可靠性高但有网络开销"
+      - "数据库：实现简单(排他锁/唯一键)，并发性能差不易做高可用"
   - id: BE-TQ-027
     type: technical
-    question: 消息队列如何保证消息不丢失、不重复、顺序消费？
-    tags: [MQ, 一致性]
+    question: "消息队列如何保证消息不丢失、不重复、顺序消费？"
+    tags: ["MQ", "一致性"]
     difficulty: hard
-    source: 牛客网
+    source: "牛客网"
     status: draft
     key_points:
-      - 不丢失：生产者确认机制(Confirm)、MQ持久化存储、消费者手动ACK验证
-      - 不重复：下游消费者业务端实现强幂等性防范
-      - 顺序：保证数据发往同一分区(Partition)及单线程顺序消费
+      - "不丢失：生产者确认机制(Confirm)、MQ持久化存储、消费者手动ACK验证"
+      - "不重复：下游消费者业务端实现强幂等性防范"
+      - "顺序：保证数据发往同一分区(Partition)及单线程顺序消费"
   - id: BE-TQ-028
     type: technical
-    question: 微服务中如何实现服务注册发现与负载均衡？
-    tags: [微服务, 服务治理]
+    question: "微服务中如何实现服务注册发现与负载均衡？"
+    tags: ["微服务", "服务治理"]
     difficulty: medium
-    source: CSDN
+    source: "CSDN"
     status: draft
     key_points:
-      - 服务注册发现：通过注册中心(Nacos/Eureka)及其心跳和健康检查机制
-      - 负载均衡：通过客户端(Ribbon/LoadBalancer)从服务列表获取后执行轮询/随机/一致性Hash策略选取
+      - "服务注册发现：通过注册中心(Nacos/Eureka)及其心跳和健康检查机制"
+      - "负载均衡：通过客户端(Ribbon/LoadBalancer)从服务列表获取后执行轮询/随机/一致性Hash策略选取"
   - id: BE-TQ-029
     type: technical
-    question: API 网关在后端架构中的作用是什么？
-    tags: [微服务, 网关]
+    question: "API 网关在后端架构中的作用是什么？"
+    tags: ["微服务", "网关"]
     difficulty: easy
-    source: 牛客网
+    source: "牛客网"
     status: draft
     key_points:
-      - 统一请求入口及路由转发
-      - 统一鉴权(JWT/OAuth2)拦截
-      - 全局限流、熔断及参数校验控制
-      - 协议转换(如HTTP代理到内网RPC通讯)
+      - "统一请求入口及路由转发"
+      - "统一鉴权(JWT/OAuth2)拦截"
+      - "全局限流、熔断及参数校验控制"
+      - "协议转换(如HTTP代理到内网RPC通讯)"
   - id: BE-TQ-030
     type: technical
-    question: 线上 Full GC 频繁时，你的排查和优化步骤是什么？
-    tags: [JVM, 线上排障]
+    question: "线上 Full GC 频繁时，你的排查和优化步骤是什么？"
+    tags: ["JVM", "线上排障"]
     difficulty: hard
-    source: CSDN
+    source: "CSDN"
     status: draft
     key_points:
-      - 排查内存泄漏风险(ThreadLocal/静态集合没清理)
-      - 利用Arthas/jmap定位是否有大对象突发
-      - MetaSpace元空间是否被打满
-      - 检查System.gc()现象或结合监控优化堆内外大小比
+      - "排查内存泄漏风险(ThreadLocal/静态集合没清理)"
+      - "利用Arthas/jmap定位是否有大对象突发"
+      - "MetaSpace元空间是否被打满"
+      - "检查System.gc()现象或结合监控优化堆内外大小比"

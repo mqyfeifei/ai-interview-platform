@@ -1,112 +1,112 @@
 type: backend_project_deep_dive_questions
 source:
-  - 面经库
+  - "面经库"
 items:
   - id: BE-PQ-001
     type: project_deep_dive
-    question: 请介绍你项目的业务背景、目标用户、核心指标和当前阶段。
-    tags: [项目背景, 业务理解]
+    question: "请介绍你项目的业务背景、目标用户、核心指标和当前阶段。"
+    tags: ["项目背景", "业务理解"]
     difficulty: easy
-    source: 面经库
+    source: "面经库"
     status: draft
     key_points:
-      - 清晰的STAR法则描述
-      - 说清痛点和业务背景
-      - 能够明确自己的贡献所带来的具体量化业务指标(如QPS带来多大提升，成本降了多少)
+      - "清晰的STAR法则描述"
+      - "说清痛点和业务背景"
+      - "能够明确自己的贡献所带来的具体量化业务指标(如QPS带来多大提升，成本降了多少)"
   - id: BE-PQ-002
     type: project_deep_dive
-    question: 你在项目中负责的模块边界是什么？如何与上下游协作？
-    tags: [职责边界, 协作]
+    question: "你在项目中负责的模块边界是什么？如何与上下游协作？"
+    tags: ["职责边界", "协作"]
     difficulty: easy
-    source: 面经库
+    source: "面经库"
     status: draft
     key_points:
-      - 厘清自身的职责和开发边界
-      - 清晰展示出如何与上游(网关/端)和下游(DBA/基础架构)协作
-      - 展现出主动承担及突破边界的加分项
+      - "厘清自身的职责和开发边界"
+      - "清晰展示出如何与上游(网关/端)和下游(DBA/基础架构)协作"
+      - "展现出主动承担及突破边界的加分项"
   - id: BE-PQ-003
     type: project_deep_dive
-    question: 系统整体架构是怎样的？请画出关键调用链路。
-    tags: [系统架构, 调用链]
+    question: "系统整体架构是怎样的？请画出关键调用链路。"
+    tags: ["系统架构", "调用链"]
     difficulty: medium
-    source: 面经库
+    source: "面经库"
     status: draft
     key_points:
-      - 具备全局视野，能画清楚合理的系统分层架构(接入、逻辑、数据)
-      - 流畅讲述一次核心请求(如一次下单)从端到端打通的完成链路图
+      - "具备全局视野，能画清楚合理的系统分层架构(接入、逻辑、数据)"
+      - "流畅讲述一次核心请求(如一次下单)从端到端打通的完成链路图"
   - id: BE-PQ-004
     type: project_deep_dive
-    question: 你们为什么选择当前技术栈？有哪些备选方案，如何权衡？
-    tags: [技术选型, 权衡]
+    question: "你们为什么选择当前技术栈？有哪些备选方案，如何权衡？"
+    tags: ["技术选型", "权衡"]
     difficulty: medium
-    source: 面经库
+    source: "面经库"
     status: draft
     key_points:
-      - 体现出技术雷达深度(不仅只知道这个)
-      - 展现选型的妥协与权衡(基于团队熟悉度、交付周期、社区活跃度等客观对比)
+      - "体现出技术雷达深度(不仅只知道这个)"
+      - "展现选型的妥协与权衡(基于团队熟悉度、交付周期、社区活跃度等客观对比)"
   - id: BE-PQ-005
     type: project_deep_dive
-    question: 项目中遇到过最复杂的线上问题是什么？如何定位与修复？
-    tags: [线上问题, 排障]
+    question: "项目中遇到过最复杂的线上问题是什么？如何定位与修复？"
+    tags: ["线上问题", "排障"]
     difficulty: hard
-    source: 面经库
+    source: "面经库"
     status: draft
     key_points:
-      - 复杂度的真实性(死锁、并发异常、内存泄漏、脏数据穿透等)
-      - 排障工具的使用熟练度(SkyWalking链路/Arthas)
-      - 根因分析到位并形成修复反馈闭环(如沉淀为Code Review规范)
+      - "复杂度的真实性(死锁、并发异常、内存泄漏、脏数据穿透等)"
+      - "排障工具的使用熟练度(SkyWalking链路/Arthas)"
+      - "根因分析到位并形成修复反馈闭环(如沉淀为Code Review规范)"
   - id: BE-PQ-006
     type: project_deep_dive
-    question: 你如何做性能优化？优化前后数据对比如何？
-    tags: [性能优化, 指标]
+    question: "你如何做性能优化？优化前后数据对比如何？"
+    tags: ["性能优化", "指标"]
     difficulty: medium
-    source: 面经库
+    source: "面经库"
     status: draft
     key_points:
-      - 通过火焰图或压测发现热点函数的切入点
-      - 实施了分步骤优化(如：加缓存、改异步、SQL加索引)
-      - 拥有前后对照的量化数据(例如响应时间从2s降低到300ms)
+      - "通过火焰图或压测发现热点函数的切入点"
+      - "实施了分步骤优化(如：加缓存、改异步、SQL加索引)"
+      - "拥有前后对照的量化数据(例如响应时间从2s降低到300ms)"
   - id: BE-PQ-007
     type: project_deep_dive
-    question: 你们如何保证接口幂等、数据一致性与事务正确性？
-    tags: [一致性, 幂等]
+    question: "你们如何保证接口幂等、数据一致性与事务正确性？"
+    tags: ["一致性", "幂等"]
     difficulty: hard
-    source: 面经库
+    source: "面经库"
     status: draft
     key_points:
-      - 保证了多次重试请求依然一致的幂等设计(Token/唯一键)
-      - 使用正确的手段保证事务(分布式事务如RocketMQ事务消息或Seata)
-      - 资金/库存等敏感数据的并发锁兜底机制
+      - "保证了多次重试请求依然一致的幂等设计(Token/唯一键)"
+      - "使用正确的手段保证事务(分布式事务如RocketMQ事务消息或Seata)"
+      - "资金/库存等敏感数据的并发锁兜底机制"
   - id: BE-PQ-008
     type: project_deep_dive
-    question: 项目中的缓存策略是什么？如何处理缓存与数据库双写一致性？
-    tags: [缓存, 一致性]
+    question: "项目中的缓存策略是什么？如何处理缓存与数据库双写一致性？"
+    tags: ["缓存", "一致性"]
     difficulty: hard
-    source: 面经库
+    source: "面经库"
     status: draft
     key_points:
-      - 明确采用双写还是CacheAside(先写DB再删缓存)策略
-      - 面对并发或异常导致脏数据的对策(基于Binlog同步更新、延时双删)
-      - 讲述如何面对极端突发流量(热点分散/多级缓存)
+      - "明确采用双写还是CacheAside(先写DB再删缓存)策略"
+      - "面对并发或异常导致脏数据的对策(基于Binlog同步更新、延时双删)"
+      - "讲述如何面对极端突发流量(热点分散/多级缓存)"
   - id: BE-PQ-009
     type: project_deep_dive
-    question: 你们的监控告警体系如何设计？关键 SLI/SLO 指标有哪些？
-    tags: [可观测性, 监控]
+    question: "你们的监控告警体系如何设计？关键 SLI/SLO 指标有哪些？"
+    tags: ["可观测性", "监控"]
     difficulty: medium
-    source: 面经库
+    source: "面经库"
     status: draft
     key_points:
-      - 全链路监控(Tracing)机制能快速追踪链路节点
-      - 完备的Metrics度量设计(TP99, 错误率, Http状态码监控)
-      - 合理的告警层级及阈值，防止狼来了效应导致团队脱敏
+      - "全链路监控(Tracing)机制能快速追踪链路节点"
+      - "完备的Metrics度量设计(TP99, 错误率, Http状态码监控)"
+      - "合理的告警层级及阈值，防止狼来了效应导致团队脱敏"
   - id: BE-PQ-010
     type: project_deep_dive
-    question: 如果让你重做一次该项目，你会如何重构架构与流程？
-    tags: [复盘, 架构演进]
+    question: "如果让你重做一次该项目，你会如何重构架构与流程？"
+    tags: ["复盘", "架构演进"]
     difficulty: medium
-    source: 面经库
+    source: "面经库"
     status: draft
     key_points:
-      - 展示出了反思与成长的能力，体现'没有完美架构只有不断演进的架构'认知
-      - 找出系统当下的债务(技术债/架构债/流程债)
-      - 规划出明确的解耦和演化(如降级机制、缓存前置、底座重构等)路径
+      - "展示出了反思与成长的能力，体现'没有完美架构只有不断演进的架构'认知"
+      - "找出系统当下的债务(技术债/架构债/流程债)"
+      - "规划出明确的解耦和演化(如降级机制、缓存前置、底座重构等)路径"

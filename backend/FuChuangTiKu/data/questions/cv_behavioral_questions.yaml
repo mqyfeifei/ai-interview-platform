@@ -1,115 +1,114 @@
-type: cv_behavioral_questions
+type: "cv_behavioral_questions"
 source:
-  - 面经库
+  - "面经库"
 items:
-  - id: CV-BQ-001
-    type: behavioral
-    question: 在复现某篇前沿CV论文时，如果你发现无论如何调参都达不到论文声称的精度，你会怎么处理？
-    tags: [抗压, 问题解决]
-    difficulty: medium
-    source: 面经库
-    status: draft
+  - id: "CV-BQ-001"
+    type: "behavioral"
+    question: "在复现某篇前沿CV论文时，如果你发现无论如何调参都达不到论文声称的精度，你会怎么处理？"
+    tags: ["抗压", "问题解决"]
+    difficulty: "medium"
+    source: "面经库"
+    status: "draft"
     key_points:
-      - 展现严谨的排查逻辑：核对数据集处理细节、损失函数实现及超参数设置
-      - 主动寻求突破：查看作者开源的Issue，或者发邮件向作者请教
-      - 妥协与产出：评估业务时间线，若无法复现则基于现有最优结果尝试引入业务Trick，不钻牛角尖
-  - id: CV-BQ-002
-    type: behavioral
-    question: 当产品经理要求模型精度达到99%，但受限于当前算力和数据质量，你认为最多只能做到95%时，你如何与PM沟通？
-    tags: [跨部门沟通, 期望管理]
-    difficulty: medium
-    source: 面经库
-    status: draft
+      - "展现严谨的排查逻辑：核对数据集处理细节、损失函数实现及超参数设置"
+      - "主动寻求突破：查看作者开源的Issue，或者发邮件向作者请教"
+      - "妥协与产出：评估业务时间线，若无法复现则基于现有最优结果尝试引入业务Trick，不钻牛角尖"
+  - id: "CV-BQ-002"
+    type: "behavioral"
+    question: "当产品经理要求模型精度达到99%，但受限于当前算力和数据质量，你认为最多只能做到95%时，你如何与PM沟通？"
+    tags: ["跨部门沟通", "期望管理"]
+    difficulty: "medium"
+    source: "面经库"
+    status: "draft"
     key_points:
-      - 避免纯技术视角的对抗，理解业务指标设定背后的商业逻辑
-      - 提供量化数据支撑：展示当前数据分布的bad case，说明数据标注瓶颈或模型天花板
-      - 提出折中或替代方案：例如在阈值策略上做权衡（保高召回或高准确），或引入人工兜底机制
-  - id: CV-BQ-003
-    type: behavioral
-    question: 讲一次你与数据标注团队在标注标准上产生严重分歧，最后如何解决的经历。
-    tags: [团队协作, 数据管理]
-    difficulty: medium
-    source: 自己整理
-    status: draft
+      - "避免纯技术视角的对抗，理解业务指标设定背后的商业逻辑"
+      - "提供量化数据支撑：展示当前数据分布的bad case，说明数据标注瓶颈或模型天花板"
+      - "提出折中或替代方案：例如在阈值策略上做权衡（保高召回或高准确），或引入人工兜底机制"
+  - id: "CV-BQ-003"
+    type: "behavioral"
+    question: "讲一次你与数据标注团队在标注标准上产生严重分歧，最后如何解决的经历。"
+    tags: ["团队协作", "数据管理"]
+    difficulty: "medium"
+    source: "自己整理"
+    status: "draft"
     key_points:
-      - 强调数据一致性对CV模型的重要性，不推诿责任
-      - 展现出制定清晰、量化的标注Rule（SOP）和Bad Case图谱的能力
-      - 引入预标注模型或交叉验证机制降低人工争议的闭环思维
-  - id: CV-BQ-004
-    type: behavioral
-    question: 当你在研究一个前沿CV算法但迟迟无法达到落地要求的FPS（帧率）时，你如何做取舍？
-    tags: [工程落地, 权衡]
-    difficulty: medium
-    source: 自己整理
-    status: draft
+      - "强调数据一致性对CV模型的重要性，不推诿责任"
+      - "展现出制定清晰、量化的标注Rule（SOP）和Bad Case图谱的能力"
+      - "引入预标注模型或交叉验证机制降低人工争议的闭环思维"
+  - id: "CV-BQ-004"
+    type: "behavioral"
+    question: "当你在研究一个前沿CV算法但迟迟无法达到落地要求的FPS（帧率）时，你如何做取舍？"
+    tags: ["工程落地", "权衡"]
+    difficulty: "medium"
+    source: "自己整理"
+    status: "draft"
     key_points:
-      - 展现学术研究与工业落地的思维转换（精度 vs 速度的权衡）
-      - 主动降级方案：如采用轻量级主干网络（MobileNet/ShuffleNet）或进行知识蒸馏
-      - 结合硬件侧优化（TensorRT/量化）寻找工程突破口的务实态度
-  - id: CV-BQ-005
-    type: behavioral
-    question: 讲一次模型在线上遇到“数据漂移”（Concept Drift）导致性能急剧下降，你的应急与修复过程。
-    tags: [线上问题, 模型监控]
-    difficulty: hard
-    source: 自己整理
-    status: draft
+      - "展现学术研究与工业落地的思维转换（精度 vs 速度的权衡）"
+      - "主动降级方案：如采用轻量级主干网络（MobileNet/ShuffleNet）或进行知识蒸馏"
+      - "结合硬件侧优化（TensorRT/量化）寻找工程突破口的务实态度"
+  - id: "CV-BQ-005"
+    type: "behavioral"
+    question: "讲一次模型在线上遇到“数据漂移”（Concept Drift）导致性能急剧下降，你的应急与修复过程。"
+    tags: ["线上问题", "模型监控"]
+    difficulty: "hard"
+    source: "自己整理"
+    status: "draft"
     key_points:
-      - 建立线上输入分布监控与置信度异常告警机制的敏锐度
-      - 快速回滚或启用规则兜底止损的应急处理
-      - 建立影子模式（Shadow Mode）和数据飞轮，实现长尾数据的自动收集与模型迭代重训
-  - id: CV-BQ-006
-    type: behavioral  
-    question: 你在CV项目中遇到过最棘手的团队冲突是什么？你是如何调解的？
-    tags: [团队管理, 冲突调解]
-    difficulty: hard
-    source: 自己整理
-    status: draft
+      - "建立线上输入分布监控与置信度异常告警机制的敏锐度"
+      - "快速回滚或启用规则兜底止损的应急处理"
+      - "建立影子模式（Shadow Mode）和数据飞轮，实现长尾数据的自动收集与模型迭代重训"
+  - id: "CV-BQ-006"
+    type: "behavioral"
+    question: "你在CV项目中遇到过最棘手的团队冲突是什么？你是如何调解的？"
+    tags: ["团队管理", "冲突调解"]
+    difficulty: "hard"
+    source: "自己整理"
+    status: "draft"
     key_points:
-      - 以身作则保持冷静，倾听双方诉求，避免情绪化对抗
-      - 引导回归问题本质，聚焦于数据和模型的客观事实而非个人观点
-      - 寻求双赢的解决方案，如引入第三方专家评审或制定新的实验验证方案打破僵局
-  - id: CV-BQ-007
-    type: behavioral
-    question: 你如何看待CV领域的伦理问题，比如隐私泄露、算法偏见等？你在项目中是如何应对这些挑战的？
-    tags: [伦理, 社会责任]
-    difficulty: hard
-    source: 自己整理
-    status: draft
+      - "以身作则保持冷静，倾听双方诉求，避免情绪化对抗"
+      - "引导回归问题本质，聚焦于数据和模型的客观事实而非个人观点"
+      - "寻求双赢的解决方案，如引入第三方专家评审或制定新的实验验证方案打破僵局"
+  - id: "CV-BQ-007"
+    type: "behavioral"
+    question: "你如何看待CV领域的伦理问题，比如隐私泄露、算法偏见等？你在项目中是如何应对这些挑战的？"
+    tags: ["伦理", "社会责任"]
+    difficulty: "hard"
+    source: "自己整理"
+    status: "draft"
     key_points:
-      - 展现对CV技术潜在负面影响的敏感度和责任感
-      - 强调数据隐私保护措施（如数据脱敏、差分隐私）和算法公平性评估（如偏见检测工具Fairness Indicators）
-      - 主动推动团队建立伦理审查机制，确保技术发展与社会价值观的协调统一
-  - id: CV-BQ-008
-    type: behavioral
-    question: 你在CV项目中有没有遇到过“技术债务”？你是如何识别和管理它的？
-    tags: [技术债务, 项目管理]
-    difficulty: hard
-    source: 自己整理
-    status: draft
+      - "展现对CV技术潜在负面影响的敏感度和责任感"
+      - "强调数据隐私保护措施（如数据脱敏、差分隐私）和算法公平性评估（如偏见检测工具Fairness Indicators）"
+      - "主动推动团队建立伦理审查机制，确保技术发展与社会价值观的协调统一"
+  - id: "CV-BQ-008"
+    type: "behavioral"
+    question: "你在CV项目中有没有遇到过“技术债务”？你是如何识别和管理它的？"
+    tags: ["技术债务", "项目管理"]
+    difficulty: "hard"
+    source: "自己整理"
+    status: "draft"
     key_points:
-      - 识别技术债务的能力：如代码质量下降、模型复杂度过高、缺乏文档等
-      - 展现主动沟通和说服能力，向团队和管理层说明技术债务的风险和长期成本
-      - 制定清晰的偿还计划，如定期重构、引入自动化测试覆盖、优化数据管道等措施逐步消除技术债务
-  - id: CV-BQ-009
-    type: behavioral
-    question: 你在CV项目中有没有遇到过“技术孤岛”？你是如何打破它的？
-    tags: [技术孤岛, 跨部门协作]
-    difficulty: hard
-    source: 自己整理
-    status: draft
+      - "识别技术债务的能力：如代码质量下降、模型复杂度过高、缺乏文档等"
+      - "展现主动沟通和说服能力，向团队和管理层说明技术债务的风险和长期成本"
+      - "制定清晰的偿还计划，如定期重构、引入自动化测试覆盖、优化数据管道等措施逐步消除技术债务"
+  - id: "CV-BQ-009"
+    type: "behavioral"
+    question: "你在CV项目中有没有遇到过“技术孤岛”？你是如何打破它的？"
+    tags: ["技术孤岛", "跨部门协作"]
+    difficulty: "hard"
+    source: "自己整理"
+    status: "draft"
     key_points:
-      - 识别技术孤岛的能力：如某个模块或算法只有特定人员理解和维护，缺乏文档和知识共享
-      - 展现主动沟通和协作能力，推动团队内部的知识分享和交叉培训
-      - 引入代码审查、文档规范和定期技术分享会等机制促进团队整体技术水平的提升和信息流通
-  - id: CV-BQ-010
-    type: behavioral
-    question: 你在CV项目中有没有遇到过“技术迷茫期”？你是如何走出它的？
-    tags: [技术迷茫, 自我驱动]
-    difficulty: hard
-    source: 自己整理
-    status: draft
+      - "识别技术孤岛的能力：如某个模块或算法只有特定人员理解和维护，缺乏文档和知识共享"
+      - "展现主动沟通和协作能力，推动团队内部的知识分享和交叉培训"
+      - "引入代码审查、文档规范和定期技术分享会等机制促进团队整体技术水平的提升和信息流通"
+  - id: "CV-BQ-010"
+    type: "behavioral"
+    question: "你在CV项目中有没有遇到过“技术迷茫期”？你是如何走出它的？"
+    tags: ["技术迷茫", "自我驱动"]
+    difficulty: "hard"
+    source: "自己整理"
+    status: "draft"
     key_points:
-      - 识别技术迷茫的能力：如对前沿算法缺乏清晰理解，或者面对复杂问题无从下手
-      - 展现自我驱动和学习能力，主动寻找资源（如论文、开源代码、社区讨论）来提升自己的技术水平
-      - 寻求导师或同事的指导，或者通过参与相关项目积累实战经验来逐步走出迷茫期
-  
+      - "识别技术迷茫的能力：如对前沿算法缺乏清晰理解，或者面对复杂问题无从下手"
+      - "展现自我驱动和学习能力，主动寻找资源（如论文、开源代码、社区讨论）来提升自己的技术水平"
+      - "寻求导师或同事的指导，或者通过参与相关项目积累实战经验来逐步走出迷茫期"
