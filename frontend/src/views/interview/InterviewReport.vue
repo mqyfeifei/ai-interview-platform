@@ -103,9 +103,6 @@
                 </div>
                 <div class="dim-score-item__right">
                   <span class="dim-score-item__score" :style="{ color: dim.color }">{{ dim.score }}</span>
-                  <span class="dim-vs-avg" :class="dim.score >= dim.avg ? 'above' : 'below'">
-                    {{ dim.score >= dim.avg ? '+' : '' }}{{ dim.score - dim.avg }}
-                  </span>
                 </div>
               </div>
             </div>
@@ -724,14 +721,6 @@ export default {
     height: 100%; border-radius: 3px;
     transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
   }
-}
-
-.dim-vs-avg {
-  font-size: $font-size-xs; font-weight: $font-weight-semibold;
-  padding: 1px 5px; border-radius: $border-radius-full;
-
-  &.above { background: $success-bg; color: darken($success, 10%); }
-  &.below { background: $danger-bg; color: $danger; }
 }
 
 // 亮点
