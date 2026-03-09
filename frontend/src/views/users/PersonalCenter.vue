@@ -137,8 +137,8 @@
                   <span class="info-item__icon">💼</span>
                   <span class="info-item__label">岗位</span>
                   <span class="info-item__value">
-                    {{ currentDefaultJob ? currentDefaultJob.name : '未设置' }}
-                    <span v-if="currentDefaultJob" class="default-badge">默认岗位</span>
+                    {{ defaultJobDisplayName }}
+                    <span v-if="currentDefaultJob || defaultJobName" class="default-badge">默认岗位</span>
                   </span>
                 </div>
               </div>
@@ -469,7 +469,7 @@ export default {
     }
   },
   computed: {
-    ...mapGetters('user', ['userInfo', 'userName', 'defaultJob']),
+    ...mapGetters('user', ['userInfo', 'userName', 'defaultJob', 'defaultJobId', 'defaultJobName']),
 
     avatarLetter() {
       return (this.userName || '用').charAt(0)
@@ -510,7 +510,14 @@ export default {
     currentDefaultJob() {
       const jobId = this.defaultJob
       if (!jobId) return null
-      return JOB_TYPES.find(j => j.id === jobId) || null
+      // backend may return either the string identifier (e.g. 'java-backend')
+      // or a numeric dbId; handle both cases
+      return JOB_TYPES.find(j => j.id === jobId || String(j.dbId) === String(jobId)) || null
+    },
+    defaultJobDisplayName() {
+      if (this.currentDefaultJob) return this.currentDefaultJob.name
+      if (this.defaultJobName) return this.defaultJobName
+      return '未设置'
     },
 
     memberDays() {

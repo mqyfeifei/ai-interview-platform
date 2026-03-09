@@ -286,6 +286,7 @@ export default {
   mounted() {
     this.updateHeights()
     this.updateSidebarWidth()
+    this.scrollToTopContent()
     window.addEventListener('resize', this.onWindowResize)
   },
   watch: {
@@ -293,6 +294,7 @@ export default {
       this.$nextTick(() => {
         this.updateSidebarWidth()
         this.updateHeights()
+        this.scrollToTopContent()
       })
     }
   },
@@ -313,6 +315,17 @@ export default {
         this.sidebarWidth = w
       } else {
         this.sidebarWidth = 0
+      }
+    },
+
+    // when entering page, move viewport down so header doesn't cover first record
+    scrollToTopContent() {
+      const header = this.$el.querySelector('.page-header')
+      if (header) {
+        const h = header.offsetHeight
+        if (window.scrollY < h) {
+          window.scrollTo({ top: h, behavior: 'auto' })
+        }
       }
     },
     async loadList() {
@@ -498,8 +511,8 @@ export default {
 // ---- Body ----
 .page-body {
   padding: $spacing-base;
-  /* 内容顶端从整个头部容器底部开始 */
-  padding-top: var(--header-height);
+  /* 给出一定间距，但不需要完整头部高度 */
+  padding-top: $spacing-base;
 }
 
 .filter-row {

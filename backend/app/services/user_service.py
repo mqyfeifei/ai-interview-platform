@@ -255,7 +255,11 @@ class UserService:
             "avatar_url": user.avatar_url,
             "avatar": user.avatar_url,
             "avatarUrl": user.avatar_url,
+            # 原来的 front-end key（如 "java-backend"），可能为 null
             "defaultJob": default_job_key,
+            # 原始数据库关联ID以及真实岗位名称
+            "defaultJobId": user.default_job_id,
+            "defaultJobName": user.default_job.name if user.default_job else None,
             "created_at": user.created_at.isoformat() if user.created_at else None,
             "createdAt": user.created_at.isoformat() if user.created_at else None,
             "totalInterviews": dashboard_stats["totalInterviews"],
