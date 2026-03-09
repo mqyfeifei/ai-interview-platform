@@ -69,3 +69,13 @@ def finish_learning_record():
         return jsonify({"code": 200, "data": res, "msg": "success"})
     except Exception as e:
         return jsonify({"code": 500, "msg": str(e)})
+
+@learning_bp.route('/records/completed', methods=['GET'])
+def get_completed_records():
+    """查询某用户所有已完成的学习资源 ID 列表"""
+    user_id = request.args.get('user_id', type=int)
+    try:
+        ids = LearningService.get_completed_resource_ids(user_id)
+        return jsonify({"code": 200, "data": ids, "msg": "success"})
+    except Exception as e:
+        return jsonify({"code": 500, "msg": str(e)})
