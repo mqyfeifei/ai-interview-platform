@@ -158,14 +158,16 @@
       <div v-if="isSending" class="transcribing-tip">
         📡 语音发送中，请稍候...
       </div>
+
+
       <div class="input-row">
         <!-- 语音按钮 -->
         <button
           :class="['voice-btn', { active: isRecording }]"
           @click="toggleRecording"
-          :disabled="isFinished || isLoading"
-          :title="isRecording ? '停止录音' : '语音输入'"
-        >
+          :disabled="isFinished || isLoading || !voiceMode"
+          :title="!voiceMode ? '文字面试模式下不支持语音输入' : isRecording ? '停止录音' : '语音输入'"
+          >
           <svg v-if="!isRecording" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
             <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
@@ -282,7 +284,7 @@ import { mapGetters, mapActions } from 'vuex'
 import { marked } from 'marked'
 // marked.setOptions({ breaks: false })  
 
-const QUESTION_TIME_LIMIT = 120 // 每题时限（秒）
+// const QUESTION_TIME_LIMIT = 120 // 每题时限（秒）
 
 export default {
   name: 'InterviewSession',
@@ -294,7 +296,7 @@ export default {
       showEndConfirm: false,
       endingInterview: false,
       // 计时相关
-      questionTimer: QUESTION_TIME_LIMIT,
+      questionTimer: 300,
       timerInterval: null,
       recordingInterval: null,
       // 语音识别
@@ -316,7 +318,9 @@ export default {
       'isEnding', 
       'totalQuestions', 'isFinished', 'isLoading', 'reportId','voiceMode'  
     ]),
-
+    questionTimeLimit() {
+      return this.voiceMode ? 180 : 300  // 语音3分钟，文字5分钟
+    },
     progressBarStyle() {
       return {
         width: this.progressWidth + '%',
@@ -348,7 +352,7 @@ export default {
     },
 
     progressOffset() {
-      return this.progressCircle * (1 - this.questionTimer / QUESTION_TIME_LIMIT)
+      return this.progressCircle * (1 - this.questionTimer / this.questionTimeLimit)
     },
     hasStreamingMessage() {
   return this.messages.some(m => m.streaming  && m.content.length > 0)
@@ -362,6 +366,7 @@ export default {
     }
     // 如果没有进行中的会话，启动
     if (!this.$store.getters['interview/currentSession']) {
+      this.questionTimer = this.questionTimeLimit
       await this.startSession()
     }
     this.startQuestionTimer()
@@ -374,7 +379,7 @@ export default {
     // 切换到新问题时重置计时器
     questionIndex(newVal, oldVal) {
       if (newVal !== oldVal) {
-        this.questionTimer = QUESTION_TIME_LIMIT
+        this.questionTimer = this.questionTimeLimit
       }
     },
     // isEnding 一旦为 true 立即停止计时器（不等 reportId）
@@ -455,7 +460,7 @@ isFinished(val) {
       this.inputText = ''
       this.resetTextarea()
       // 重置题目计时
-      this.questionTimer = QUESTION_TIME_LIMIT
+      this.questionTimer = this.questionTimeLimit
       await this.submitAnswer(text)
     },
     goToReport() {
@@ -515,14 +520,14 @@ renderMarkdown(text) {
       // isLoading 或 isTranscribing 时跳过，等流结束后计时器已被 watch(questionIndex) 重置
       if (this.isLoading || this.isFinished || this.isTranscribing) {
         // 还原为0，等 loading 结束后下次 tick 不会再触发（因为 watch questionIndex 会重置为120）
-        this.questionTimer = 0
+        this.questionTimer = this.questionTimeLimit
         return
       }
       const text = this.inputText.trim() || '（超时，跳过此题）'
       this.inputText = ''
       this.resetTextarea()
       // 提交前先重置计时器，submitAnswer 完成后 watch(questionIndex) 也会重置
-      this.questionTimer = QUESTION_TIME_LIMIT
+      this.questionTimer = this.questionTimeLimit
       this.submitAnswer(text)
     },
 
@@ -933,6 +938,24 @@ renderMarkdown(text) {
     background: $danger; border-color: $danger; color: white;
     animation: recordPulse 1.5s ease-in-out infinite;
   }
+    &:disabled:not(.active) {
+    opacity: 0.35;
+    cursor: not-allowed;
+    pointer-events: none;  // title tooltip 在 pointer-events:none 时不显示，去掉这行改用 cursor
+    cursor: not-allowed;
+  }
+}
+
+.text-mode-tip {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: $font-size-xs;
+  color: $text-muted;
+  background: rgba(0,0,0,0.04);
+  border-radius: $border-radius-sm;
+  padding: 4px $spacing-md;
+  margin-bottom: 6px;
 }
 
 @keyframes recordPulse {
