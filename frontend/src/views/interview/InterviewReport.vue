@@ -171,7 +171,7 @@
                     Q{{ idx + 1 }}
                     <span v-if="q.isFollowUp" class="followup-tag">追问</span>
                   </div>
-                  <p class="q-text">{{ q.question }}</p>
+                  <p class="q-text" v-html="renderMarkdown(q.question)" />
                 </div>
                 <div class="question-item__right">
                   <svg class="q-chevron" :class="{ rotated: expandedItems.includes(q.id) }"
@@ -193,7 +193,7 @@
                       <!-- 该题点评还在加载中 -->
                       <span v-if="analysisLoading && !q.comment" class="comment-loading-badge">生成中...</span>
                     </p>
-                    <p v-if="q.comment" class="detail-content">{{ q.comment }}</p>
+                    <p v-if="q.comment" class="detail-content" v-html="renderMarkdown(q.comment)" />
                     <p v-else-if="!analysisLoading" class="detail-content detail-content--muted">暂无点评</p>
                     <div v-else class="comment-skeleton">
                       <div class="comment-skeleton__line" />
@@ -234,7 +234,7 @@
 <script>
 import { getReport, getReplyAnalysis } from '@/api/report'
 import { INTERVIEW_DIMENSIONS } from '@/utils/constants'
-
+import { marked } from 'marked'
 let echarts = null
 const DIMENSION_COLORS = ['#4338CA', '#10B981', '#F59E0B', '#3B82F6', '#8B5CF6']
 
@@ -316,6 +316,10 @@ export default {
         })
       }
     },
+    renderMarkdown(text) {
+      if (!text) return ''
+      return marked.parse(text)
+    },
 
     // 确保 echarts 已加载，修复竞态问题
     async ensureECharts() {
@@ -392,8 +396,8 @@ export default {
               value: dims.map(d => d.avg),
               name: '平均水平',
               areaStyle: { color: 'rgba(148,163,184,0.15)' },
-              lineStyle: { color: '#CBD5E1', width: 1.5, type: 'dashed' },
-              itemStyle: { color: '#CBD5E1' }, symbol: 'circle', symbolSize: 4
+              lineStyle: { color: '#b2b9c2', width: 1.5, type: 'dashed' },
+              itemStyle: { color: '#b2b9c2' }, symbol: 'circle', symbolSize: 4
             },
             {
               value: dims.map(d => d.score),
@@ -404,8 +408,8 @@ export default {
                   { offset: 1, color: 'rgba(124,58,237,0.15)' }
                 ])
               },
-              lineStyle: { color: '#4338CA', width: 2.5 },
-              itemStyle: { color: '#4338CA', borderColor: 'white', borderWidth: 2 },
+              lineStyle: { color: '#685ddf', width: 2.4 },
+              itemStyle: { color: '#685ddf', borderColor: 'white', borderWidth: 2 },
               symbol: 'circle', symbolSize: 7
             }
           ],
@@ -665,14 +669,16 @@ export default {
 
 .legend-item {
   display: flex; align-items: center; gap: 5px;
-  font-size: $font-size-xs; color: $text-secondary;
+  font-size: $font-size-xs; 
+  color: $text-secondary;
+  // color: $text-secondary;
 
   &::before {
     content: '';
     width: 20px; height: 3px; border-radius: 2px;
   }
-  &--you::before { background: #4338CA; }
-  &--avg::before { background: #CBD5E1; border-top: 1px dashed #CBD5E1; }
+  &--you::before { background: #685ddf; }
+  &--avg::before { background: #b2b9c2; border-top: 1px dashed #b2b9c2; }
 }
 
 // 雷达图卡片
@@ -835,6 +841,14 @@ export default {
   .expanded & { -webkit-line-clamp: unset; }
 }
 
+.q-text, .detail-content {
+  :deep(strong) { font-weight: 500; color: #1f1974; }
+  :deep(code) {
+    background: $gray-100; border-radius: 3px;
+    padding: 1px 5px; font-size: 0.9em; color: $primary;
+  }
+  :deep(p) { margin: 0; }
+}
 .q-score {
   font-family: $font-family-display;
   font-size: $font-size-lg; font-weight: $font-weight-extrabold;
@@ -905,7 +919,7 @@ export default {
 
   &--primary { background: $gradient-primary; color: white; box-shadow: $shadow-primary; }
   &--outline { background: white; border: 1.5px solid $primary; color: $primary; }
-  &--ghost { background: white; border: 1.5px solid $border-color; color: $text-secondary; }
+  &--ghost { background: white; border: 1.5px solid $primary; color: $primary;  }
 
   &:hover { transform: translateY(-2px); box-shadow: $shadow-md; }
   &:active { transform: scale(0.97); }
