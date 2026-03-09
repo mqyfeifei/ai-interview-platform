@@ -280,34 +280,97 @@
     <HelpGuideModal v-model="showHelpGuide" @dismiss="markHelpGuideShown" />
 
     <!-- 岗位确认弹窗 -->
+    <!-- 岗位确认弹窗 -->
     <transition name="modal-fade">
       <div class="modal-overlay" v-if="showConfirmModal" @click.self="closeConfirmModal">
-        <div class="confirm-modal">
-          <div class="confirm-modal__header">
-            <span class="confirm-modal__icon">{{ selectedJob?.icon }}</span>
-            <h3 class="confirm-modal__title">确认开始面试</h3>
+        <div class="modal-sheet">
+
+          <!-- 顶部渐变头 -->
+          <div class="modal-header-bar">
+            <h2 class="modal-header-title">准备好了吗？</h2>
+            <p class="modal-header-sub">热门岗位 · {{ selectedJob?.name }} · {{ voiceMode ? '语音面试' : '文字面试' }}</p>
           </div>
-          <div class="confirm-modal__body">
-            <p class="confirm-modal__text">你即将开始的面试岗位是：</p>
-            <div class="confirm-modal__job">
-              <div class="confirm-modal__job-info">
-                <p class="confirm-modal__job-name">{{ selectedJob?.name }}</p>
-                <p class="confirm-modal__job-desc">{{ selectedJob?.description }}</p>
-              </div>
+
+          <div class="modal-body">
+            <!-- 面试模式标签 -->
+            <div class="interview-mode-tag" :class="voiceMode ? 'mode-voice' : 'mode-text'">
+              <svg v-if="voiceMode" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px">
+                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+              </svg>
+              <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+              </svg>
+              {{ voiceMode ? '语音模式 · 每题 3 分钟' : '文字模式 · 每题 5 分钟' }}
             </div>
-            <div class="confirm-modal__tips">
-              <p>💡 面试时长约10-15分钟</p>
-              <p>🎯 AI将根据岗位特点进行提问</p>
+
+            <!-- 语音/文字切换 -->
+            <div class="mode-switch-row">
+              <button
+                :class="['mode-switch-btn', { active: !voiceMode }]"
+                @click="voiceMode = false"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+                文字面试
+              </button>
+              <button
+                :class="['mode-switch-btn', { active: voiceMode }]"
+                @click="voiceMode = true"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px">
+                  <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                  <line x1="12" y1="19" x2="12" y2="23"/>
+                  <line x1="8" y1="23" x2="16" y2="23"/>
+                </svg>
+                语音面试
+              </button>
+            </div>
+
+            <!-- 注意事项 -->
+            <ul class="rules-list">
+              <li>
+                <span class="rule-dot rule-dot--blue" />
+                AI 将逐题提问，请认真作答，回答后 AI 可能追问
+              </li>
+              <li>
+                <span class="rule-dot rule-dot--purple" />
+                每题均有时间限制，超时将自动跳题
+              </li>
+              <li v-if="voiceMode">
+                <span class="rule-dot rule-dot--green" />
+                语音模式下 AI 回答完毕后将自动开始录音
+              </li>
+              <li v-else>
+                <span class="rule-dot rule-dot--green" />
+                使用 Enter 发送回答，Shift+Enter 换行
+              </li>
+              <li>
+                <span class="rule-dot rule-dot--orange" />
+                面试结束后将生成专属评估报告，可在历史记录中查看
+              </li>
+            </ul>
+
+            <div class="modal-actions">
+              <button class="btn-cancel" @click="closeConfirmModal">再想想</button>
+              <button class="btn-confirm" @click="confirmStartInterview">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                  stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px">
+                  <polygon points="5 3 19 12 5 21 5 3"/>
+                </svg>
+                开始面试
+              </button>
             </div>
           </div>
-          <div class="confirm-modal__footer">
-            <button class="confirm-modal__btn confirm-modal__btn--cancel" @click="closeConfirmModal">
-              取消
-            </button>
-            <button class="confirm-modal__btn confirm-modal__btn--confirm" @click="confirmStartInterview">
-              开始面试
-            </button>
-          </div>
+
         </div>
       </div>
     </transition>
@@ -372,6 +435,7 @@ export default {
       // 弹窗状态
       showConfirmModal: false,
       selectedJob: null,
+      voiceMode: false, 
       // 实时热榜数据
       trendingTopics: [],
       trendingLoading: false,
@@ -722,6 +786,7 @@ export default {
       
       await this.$store.dispatch('interview/resetInterview')
       this.$store.commit('interview/SET_JOB_DB_ID', job.id)  // 用保存的引用
+      this.$store.commit('interview/SET_VOICE_MODE', this.voiceMode)
       await this.$store.dispatch('interview/selectJob', job)
       this.$router.push('/interview/session')
     },
@@ -1665,6 +1730,128 @@ export default {
   }
 }
 
+
+// ---- 弹窗（与 JobSelection 统一） ----
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(15, 10, 40, 0.6);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16px;
+}
+
+.modal-sheet {
+  width: 100%; max-width: 480px;
+  background: white;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 8px 40px rgba(67, 56, 202, 0.25);
+  animation: sheetIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes sheetIn {
+  from { opacity: 0; transform: translateY(20px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.modal-header-bar {
+  background: linear-gradient(135deg, #4338ca 0%, #7c3aed 100%);
+  padding: 28px 24px 20px;
+  text-align: center;
+}
+.modal-header-title { font-size: 20px; font-weight: 700; color: white; margin: 0 0 4px; }
+.modal-header-sub   { font-size: 13px; color: rgba(255,255,255,0.7); margin: 0; }
+
+.modal-body { padding: 20px 24px 28px; }
+
+.interview-mode-tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 14px; border-radius: 20px;
+  font-size: 12px; font-weight: 600; margin-bottom: 14px;
+
+  &.mode-voice { background: rgba(67,56,202,0.08); color: #4338ca; border: 1px solid rgba(67,56,202,0.2); }
+  &.mode-text  { background: rgba(124,58,237,0.08); color: #7c3aed; border: 1px solid rgba(124,58,237,0.2); }
+}
+
+.mode-switch-row {
+  display: flex; gap: 10px; margin-bottom: 18px;
+}
+
+.mode-switch-btn {
+  flex: 1; height: 40px;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  border-radius: 20px;
+  border: 1.5px solid #e5e7eb;
+  background: white; color: #6b7280;
+  font-size: 13px; font-weight: 500;
+  cursor: pointer; transition: all 0.2s;
+  font-family: $font-family-base;
+
+  &.active {
+    border-color: #4338ca;
+    background: rgba(67,56,202,0.07);
+    color: #4338ca;
+    font-weight: 600;
+  }
+  &:not(.active):hover { border-color: #c4b5fd; color: #4338ca; }
+}
+
+.rules-list {
+  list-style: none; padding: 0; margin: 0 0 22px;
+  display: flex; flex-direction: column; gap: 11px;
+
+  li {
+    display: flex; align-items: flex-start; gap: 10px;
+    font-size: 13px; color: #374151; line-height: 1.5;
+  }
+}
+
+.rule-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  flex-shrink: 0; margin-top: 4px;
+  &--blue   { background: #3b82f6; }
+  &--purple { background: #7c3aed; }
+  &--green  { background: #10b981; }
+  &--orange { background: #f59e0b; }
+}
+
+.modal-actions {
+  display: flex; gap: 12px;
+}
+
+.btn-cancel {
+  flex: 0 0 80px; height: 48px;
+  border-radius: 24px;
+  border: 1.5px solid #e5e7eb;
+  background: white; color: #6b7280;
+  font-size: 14px; font-weight: 500;
+  cursor: pointer; font-family: $font-family-base;
+  transition: all 0.2s;
+  &:hover { border-color: #d1d5db; background: #f9fafb; }
+}
+
+.btn-confirm {
+  flex: 1; height: 48px;
+  border-radius: 24px; border: none;
+  background: linear-gradient(135deg, #4338ca 0%, #7c3aed 100%);
+  color: white; font-size: 15px; font-weight: 700;
+  cursor: pointer; display: flex; align-items: center;
+  justify-content: center; gap: 8px;
+  font-family: $font-family-base;
+  box-shadow: 0 4px 16px rgba(67,56,202,0.4);
+  transition: all 0.2s;
+  &:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(67,56,202,0.5); }
+  &:active { transform: scale(0.98); }
+}
+
+.modal-fade-enter-active { animation: sheetIn 0.3s ease both; }
+.modal-fade-leave-active { transition: opacity 0.2s ease; }
+.modal-fade-leave-to    { opacity: 0; }
+
 // ==================== 响应式适配 ====================
 // 移动端适配 (小于 768px)
 @media (max-width: 767px) {
@@ -1845,171 +2032,9 @@ export default {
   }
 }
 
-// 确认弹窗样式
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  backdrop-filter: blur(4px);
-}
-
-.confirm-modal {
-  background: white;
-  border-radius: 16px;
-  padding: 28px;
-  width: 90%;
-  max-width: 380px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
-  
-  &__header {
-    text-align: center;
-    margin-bottom: 20px;
-  }
-
-  
-  &__icon {
-    width: 64px;
-    height: 64px;
-    background: linear-gradient(135deg, #6366f1, #818cf8);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 16px;
-    font-size: 28px;
-    color: white;
-  }
-  
-  &__job{
-
-    font-size: 16px;
-    font-weight: 600;
-    color: #4f46e5;
-    margin-bottom: 5px;
-    margin-top: 5px;
-  }
-  &__title {
-    font-size: 20px;
-    font-weight: 600;
-    color: #1a1a2e;
-    margin: 0;
-  }
-  
-  &__body {
-    text-align: center;
-    margin-bottom: 24px;
-  }
-  
-  &__message {
-    font-size: 14px;
-    color: #64748b;
-    margin-bottom: 16px;
-  }
-  
-  &__job-info {
-    background: linear-gradient(135deg, #eef2ff, #e0e7ff);
-    border-radius: 12px;
-    padding: 16px;
-  }
-  
-  &__job-name {
-    font-size: 18px;
-    font-weight: 600;
-    color: #6366f1;
-    margin-bottom: 8px;
-  }
-  
-  &__job-desc {
-    font-size: 13px;
-    color: #64748b;
-  }
-  
-  &__footer {
-    display: flex;
-    gap: 12px;
-  }
-  
-  &__btn {
-    flex: 1;
-    padding: 14px 20px;
-    border-radius: 12px;
-    font-size: 15px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    border: none;
-    
-    &--cancel {
-      background: #f5f5f5;
-      color: #64748b;
-      
-      &:hover {
-        background: #ebebeb;
-      }
-    }
-    
-    &--confirm {
-      background: linear-gradient(135deg, #6366f1, #4f46e5);
-      color: white;
-      
-      &:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
-      }
-    }
-  }
-}
-
-// 弹窗动画
-.modal-enter-active,
-.modal-leave-active {
-  transition: opacity 0.3s ease;
-  
-  .confirm-modal {
-    transition: transform 0.3s ease, opacity 0.3s ease;
-  }
-}
-
-.modal-enter-from,
-.modal-leave-to {
-  opacity: 0;
-  
-  .confirm-modal {
-    transform: scale(0.9) translateY(20px);
-    opacity: 0;
-  }
-}
 
 // 弹窗移动端适配
 @media (max-width: 768px) {
-  .confirm-modal {
-    padding: 24px;
-    
-    &__icon {
-      width: 56px;
-      height: 56px;
-      font-size: 24px;
-    }
-    
-    &__title {
-      font-size: 18px;
-    }
-    
-    &__job-name {
-      font-size: 16px;
-    }
-    
-    &__btn {
-      padding: 12px 16px;
-      font-size: 14px;
-    }
-  }
+
 }
 </style>
