@@ -438,7 +438,11 @@ export default {
     },
 
     filteredRecommendations() {
+      // 基础列表
       let list = this.recommendations || []
+      // 根据新需求：如果资源已经完成且未被收藏，则不显示
+      list = list.filter(r => !(r.completed && !r.bookmarked))
+
       // 收藏筛选
       if (this.activeTypeFilter === 'bookmarked') {
         list = list.filter(r => r.bookmarked)
