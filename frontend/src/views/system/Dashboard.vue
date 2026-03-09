@@ -243,7 +243,7 @@
         <div class="question-list" v-if="!trendingLoading">
           <div class="question-card" v-for="(q, idx) in displayHotQuestions" :key="idx" @click="goToQuestionDetail(q)">
             <div class="question-card__top">
-              <span class="question-card__tag" :style="{ background: q.tagBg, color: q.tagColor }">{{ q.tag }}</span>
+              <!-- tag removed per requirement: no backend/frontend/global labels -->
               <span class="question-card__source" v-if="q.sourceLabel">{{ q.sourceLabel }}</span>
             </div>
             <p class="question-card__text">{{ q.text || q.title }}</p>
@@ -254,12 +254,8 @@
             </div>
           </div>
         </div>
-        <div class="question-list question-list--loading" v-else>
-          <div class="question-card question-card--skeleton" v-for="i in 3" :key="i">
-            <span class="skeleton-tag"></span>
-            <p class="skeleton-text"></p>
-            <div class="skeleton-meta"></div>
-          </div>
+        <div v-else class="trending-spinner-wrap">
+          <div class="spinner"></div>
         </div>
       </section>
 
@@ -583,7 +579,11 @@ export default {
         return this.trendingTopics.slice(0, 9).map(item => ({
           ...item,
           text: item.title || item.text,
-          isTrending: true
+          isTrending: true,
+          // drop tag fields; frontend ignores them now
+          tag: undefined,
+          tagBg: undefined,
+          tagColor: undefined
         }))
       }
       return this.hotQuestions
@@ -2004,4 +2004,26 @@ export default {
     }
   }
 }
+
+/* spinner for trending loading */
+.trending-spinner-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 24px 0;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #eee;
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 </style>
