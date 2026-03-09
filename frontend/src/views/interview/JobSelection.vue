@@ -69,7 +69,7 @@
           class="job-card"
           :class="{
             selected: currentSelected && currentSelected.id === job.id,
-            'job-card--default': normalizedDefaultJobId && normalizedDefaultJobId === String(job.id)
+            'job-card--default': normalizedDefaultJobId && (normalizedDefaultJobId === String(job.id) || normalizedDefaultJobId === String(job.dbId))
           }"
           :style="{
             animationDelay: idx * 0.06 + 's',
@@ -111,7 +111,7 @@
 
           <!-- 默认岗位操作，固定右下角 -->
           <div class="job-card__default fixed-default-btn">
-            <button v-if="normalizedDefaultJobId !== String(job.id)" class="btn-set-default" @click.stop="setDefault(job)">设为默认</button>
+            <button v-if="normalizedDefaultJobId !== String(job.id) && normalizedDefaultJobId !== String(job.dbId)" class="btn-set-default" @click.stop="setDefault(job)">设为默认</button>
             <span v-else class="default-badge">默认岗位</span>
           </div>
 
@@ -219,7 +219,11 @@ export default {
     },
     // ensure comparison is done with strings to avoid type mismatch
     normalizedDefaultJobId() {
-      const id = this.$store.getters['user/defaultJob']
+      // prefer explicit numeric id if backend provided one
+      let id = this.$store.getters['user/defaultJobId']
+      if (id == null) {
+        id = this.$store.getters['user/defaultJob']
+      }
       return id != null ? String(id) : null
     }
   },
@@ -280,28 +284,42 @@ export default {
       this.jobs = []
       console.warn('加载岗位列表失败', e)
     }
-    // 回显 store 中已选岗位 或 用户默认岗位
-    const storeJob = this.$store.getters['interview/selectedJob']
-    if (storeJob) {
-      this.currentSelected = storeJob
-    } else {
-      const defaultJobId = this.normalizedDefaultJobId
-      if (defaultJobId) {
-        this.currentSelected = this.jobs.find(j => String(j.id) === defaultJobId) || null
-      }
-    }
+    // 初始应用默认岗位（或 interview store 中已选岗位）
+    this.applyDefaultJob()
 
-    // 如果后续用户信息更新（例如登录后异步获取），自动应用默认岗位
+    // 如果用户信息或岗位列表后续发生变化，同样重新应用
     this.$watch(
       () => this.normalizedDefaultJobId,
-      newId => {
-        if (!storeJob && newId && this.jobs.length) {
-          this.currentSelected = this.jobs.find(j => String(j.id) === newId) || null
-        }
+      () => {
+        this.applyDefaultJob()
+      }
+    )
+    this.$watch(
+      () => this.jobs,
+      () => {
+        this.applyDefaultJob()
       }
     )
   },
   methods: {
+    // ensure selection reflects either interview-store choice or the configured default
+    applyDefaultJob() {
+      const storeJob = this.$store.getters['interview/selectedJob']
+      if (storeJob) {
+        this.currentSelected = storeJob
+        return
+      }
+      const defaultJobId = this.normalizedDefaultJobId
+      if (defaultJobId && this.jobs.length) {
+        const found = this.jobs.find(j => String(j.id) === defaultJobId || String(j.dbId) === defaultJobId)
+        if (found) {
+          this.currentSelected = found
+          return
+        }
+      }
+      // else keep currentSelected unchanged
+    },
+
     toggleSelect(job) {
       this.currentSelected = this.currentSelected?.id === job.id ? null : job
     },

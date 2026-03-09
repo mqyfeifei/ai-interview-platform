@@ -99,7 +99,14 @@ const actions = {
   // 更新默认岗位
   async updateDefaultJob({ commit }, jobId) {
     const result = await updateDefaultJob(jobId)
-    commit('UPDATE_USER_INFO', { defaultJob: jobId })
+    // backend returns { defaultJob, default_job_id, job_name }
+    const patch = {}
+    if (result && result.defaultJob !== undefined) patch.defaultJob = result.defaultJob
+    if (result && result.default_job_id !== undefined) patch.defaultJobId = result.default_job_id
+    if (result && result.job_name !== undefined) patch.defaultJobName = result.job_name
+    // fallback to client value if response missing
+    if (patch.defaultJob === undefined) patch.defaultJob = jobId
+    commit('UPDATE_USER_INFO', patch)
     return result
   },
 
@@ -154,6 +161,9 @@ const getters = {
   userName: state => state.userInfo?.username || '用户',
   userAvatar: state => state.userInfo?.avatar || null,
   defaultJob: state => state.userInfo?.defaultJob || null,
+  // new getters expose numeric id and name (useful when defaultJob key is absent)
+  defaultJobId: state => state.userInfo?.defaultJobId || null,
+  defaultJobName: state => state.userInfo?.defaultJobName || null,
   isLoading: state => state.loading
 }
 
