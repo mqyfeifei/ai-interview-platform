@@ -224,7 +224,8 @@ export default {
         const j = arr[i]
         try {
           const key = this.computeJobKey(j)
-          const label = (j.name || '').replace('开发', '').replace('工程师', '')
+          // 使用数据库中的完整名称作为筛选标签，避免去掉关键字导致误解
+          const label = j.name || ''
           tabs.push({ key, label })
         } catch (e) {
           console.error('jobFilterTabs item error', j, e)
@@ -237,7 +238,15 @@ export default {
       let arr = [...this.list]
 
       if (this.activeJobFilter !== 'all') {
-        arr = arr.filter(r => r.jobId === this.activeJobFilter)
+        arr = arr.filter(r => {
+          let key = r.jobId
+          if (!key) {
+            // try match against jobs list by name to get correct key
+            const jobRec = (this.jobs || []).find(j => j.name === r.jobName)
+            key = jobRec ? this.computeJobKey(jobRec) : this.computeJobKey({ name: r.jobName })
+          }
+          return key === this.activeJobFilter
+        })
       }
 
       if (this.searchQuery.trim()) {
