@@ -212,13 +212,18 @@ export const getRecommendedResources = async () => {
       }
     })
     // 新增：补充那些虽然未收藏但属于 completedSet 的资源
+    // 但根据新规则，如果资源已经完成且没有被收藏，则不应该再展示，
+    // 因此只有当它被收藏时才从缓存中补回来
     completedSet.forEach(id => {
       if (!existingIds.has(id)) {
         const cached = _getCachedItem(id)
         if (cached) {
-          cached.completed = true
-          additions.push(cached)
-          existingIds.add(id)
+          // 只有收藏的资源才允许显示，即便它已完成
+          if (bookmarks[id]) {
+            cached.completed = true
+            additions.push(cached)
+            existingIds.add(id)
+          }
         }
       }
     })
