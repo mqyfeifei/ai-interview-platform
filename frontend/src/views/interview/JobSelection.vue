@@ -232,6 +232,10 @@ export default {
     }
   },
   async created() {
+    // make sure user info (including defaultJob) is available
+    if (!this.$store.getters['user/userInfo']) {
+      await this.$store.dispatch('user/fetchUserInfo')
+    }
     try {
       const { fetchJobs, fetchJobAvgScores, fetchPopularJobs } = await import('@/api/job')
       let jobs = await fetchJobs()
@@ -286,6 +290,16 @@ export default {
         this.currentSelected = this.jobs.find(j => String(j.id) === defaultJobId) || null
       }
     }
+
+    // 如果后续用户信息更新（例如登录后异步获取），自动应用默认岗位
+    this.$watch(
+      () => this.normalizedDefaultJobId,
+      newId => {
+        if (!storeJob && newId && this.jobs.length) {
+          this.currentSelected = this.jobs.find(j => String(j.id) === newId) || null
+        }
+      }
+    )
   },
   methods: {
     toggleSelect(job) {
