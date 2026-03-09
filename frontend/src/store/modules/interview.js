@@ -61,8 +61,10 @@ const mutations = {
     if (last) {
       last.streaming = false
       last.content = cleanContent(last.content)
+
     }
   },
+
   SET_LOADING(state, v) { state.isLoading = v },
   SET_ELAPSED(state, v) { state.elapsedSeconds = v },
   RESET_INTERVIEW(state) {
