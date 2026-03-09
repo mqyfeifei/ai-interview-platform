@@ -8,7 +8,7 @@
     <!-- 顶部状态栏 -->
     <header class="interview-header">
       <div class="interview-header__left">
-        <button class="header-end-btn" @click="showBackConfirm = true">
+        <button class="header-end-btn" @click="isFinished ? handleBack() : showBackConfirm = true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="15 18 9 12 15 6"/>
           </svg>
@@ -19,8 +19,9 @@
           </span>
           <div>
             <p class="job-info__name">{{ selectedJob ? selectedJob.name : '模拟面试' }}</p>
-            <p class="job-info__progress">
-              <span v-if="voiceMode" class="voice-mode-badge">
+            <!-- 替换为（仅保留语音模式徽标，删除题数） -->
+            <p v-if="voiceMode" class="job-info__progress">
+              <span class="voice-mode-badge">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
                   stroke-linecap="round" stroke-linejoin="round" style="width:10px;height:10px">
                   <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
@@ -28,7 +29,7 @@
                 </svg>
                 语音模式
               </span>
-              问题 {{ questionIndex }} / {{ totalQuestions }}</p>
+            </p>
           </div>
         </div>
       </div>
@@ -41,7 +42,7 @@
             <circle
               cx="20" cy="20" r="15"
               fill="none"
-              :stroke="timerWarning ? '#EF4444' : '#4338CA'"
+              :stroke="timerWarning ? '#EF4444' : '#7C6FF7'"
               stroke-width="3"
               stroke-linecap="round"
               :stroke-dasharray="progressCircle"
@@ -56,7 +57,7 @@
         </div>
 
         <!-- 结束按钮 -->
-        <button class="end-btn" @click="showEndConfirm = true">结束</button>
+        <button class="end-btn" @click="showEndConfirm = true" :disabled="isFinished || isEnding">结束</button>
       </div>
     </header>
 
@@ -131,8 +132,12 @@
       <div v-if="isFinished" class="session-end-tip">
         <div class="session-end-tip__icon">🎉</div>
         <p class="session-end-tip__title">面试已完成</p>
-        <p class="session-end-tip__sub">正在生成评估报告，请稍候...</p>
-        <div class="session-end-tip__spinner" />
+        <p class="session-end-tip__sub">面试报告已生成，且已保存在历史记录中</p>
+            <transition name="fade">
+            <button class="view-report-btn" @click="goToReport">
+              查看面试报告 →
+            </button>
+          </transition>
       </div>
 
       <div style="height: 16px;" />
@@ -218,7 +223,7 @@
           <h2 class="ending-title">面试已结束</h2>
           <p class="ending-sub">AI 正在为你生成专属评估报告...</p>
           <div class="ending-progress-track">
-            <div class="ending-progress-fill" />
+            <div class="ending-progress-fill" :style="progressBarStyle"/>
           </div>
           <p class="ending-hint">通常需要 10 ~ 30 秒，请勿关闭页面</p>
           <transition name="fade">
@@ -238,7 +243,7 @@
             <div class="confirm-icon">⚠️</div>
             <h3 class="confirm-title">确认结束面试？</h3>
             <p class="confirm-desc">
-              当前进度 {{ questionIndex }}/{{ totalQuestions }} 题，结束后将立即生成面试报告。
+              结束后将立即生成面试报告。
             </p>
             <div class="confirm-actions">
               <button class="btn btn-ghost" @click="showEndConfirm = false">继续面试</button>
@@ -275,6 +280,7 @@
 <script>
 import { mapGetters, mapActions } from 'vuex'
 import { marked } from 'marked'
+// marked.setOptions({ breaks: false })  
 
 const QUESTION_TIME_LIMIT = 120 // 每题时限（秒）
 
@@ -299,6 +305,7 @@ export default {
       showBackConfirm: false,
       showEndingOverlay: false,
       reportReady: false,        // 报告已生成完毕
+      progressWidth: 0,  
       isSending: false
     }
   },
@@ -310,6 +317,15 @@ export default {
       'totalQuestions', 'isFinished', 'isLoading', 'reportId','voiceMode'  
     ]),
 
+    progressBarStyle() {
+      return {
+        width: this.progressWidth + '%',
+        // 跑到100%时加个短暂过渡，视觉上有个"冲刺"感
+        transition: this.progressWidth === 100
+          ? 'width 0.4s ease-in-out'
+          : 'none'
+      }
+    },
     userAvatarLetter() {
       return (this.userName || '我').charAt(0)
     },
@@ -352,6 +368,7 @@ export default {
   },
   beforeUnmount() {
     this.clearTimers()
+    if (this._progressTimer) clearInterval(this._progressTimer)
   },
   watch: {
     // 切换到新问题时重置计时器
@@ -365,29 +382,29 @@ export default {
       if (val) {
         this.clearTimers()
         this.showEndingOverlay = true  
+        this.startProgressBar() 
       }
     },
-    // 面试结束时跳转报告页
-    // isFinished(val) {
-    //   if (val) {
-    //     this.clearTimers()
-    //     // 报告生成完毕，直接关掉遮罩，不跳转
-    //     this.showEndingOverlay = false
-    //   }
-    // },
 
-    isFinished(val) {
+isFinished(val) {
   if (val) {
-    this.clearTimers()
-    this.showEndingOverlay = true
+    // showEndingOverlay 已由 isEnding 设好，这里只处理按钮逻辑
+    const tryShowButton = (reportId) => {
+      if (!reportId) return
+      // 停掉爬行 timer，冲到 100%，0.4s 后显示按钮
+      if (this._progressTimer) {
+        clearInterval(this._progressTimer)
+        this._progressTimer = null
+      }
+      this.progressWidth = 100
+      setTimeout(() => { this.reportReady = true }, 400)
+    }
+
     if (this.reportId) {
-      this.reportReady = true
+      tryShowButton(this.reportId)
     } else {
       const unwatch = this.$watch('reportId', (id) => {
-        if (id) {
-          unwatch()
-          this.reportReady = true
-        }
+        if (id) { unwatch(); tryShowButton(id) }
       })
     }
   }
@@ -411,7 +428,27 @@ export default {
   methods: {
     ...mapActions('interview', ['startSession', 'submitAnswer', 'endInterview']),
 
-    // ---- 发送回答 ----
+    // methods 中新增
+    startProgressBar() {
+      const DURATION = 20000   // 20s 跑到 95%
+      const TARGET = 95
+      const INTERVAL = 100     // 每 100ms 更新一次
+      const step = TARGET / (DURATION / INTERVAL)
+
+      this.progressWidth = 0
+      if (this._progressTimer) clearInterval(this._progressTimer)
+
+      this._progressTimer = setInterval(() => {
+        if (this.progressWidth < TARGET) {
+          this.progressWidth = Math.min(this.progressWidth + step, TARGET)
+        } else {
+          // 到 95% 后停住，等 reportReady
+          clearInterval(this._progressTimer)
+          this._progressTimer = null
+        }
+      }, INTERVAL)
+    },
+        // ---- 发送回答 ----
     async handleSend() {
       const text = this.inputText.trim()
       if (!text || this.isLoading || this.isFinished || this.isTranscribing) return // ✅ 新增：转写中禁止发送
@@ -440,10 +477,22 @@ export default {
       this.showBackConfirm = false
       this.$router.replace('/interview/select')
     },
-  renderMarkdown(text) {
-    if (!text) return ''
-    return marked.parse(text)
-  },
+renderMarkdown(text) {
+  if (!text) return '';
+  marked.setOptions({ breaks: false });
+  const cleaned = text
+    .replace(/\r\n|\r/g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+  let html = marked.parse(cleaned);
+  html = html
+    .replace(/<p><br\s*\/?><\/p>/gi, '')
+    .replace(/<p>\s*<\/p>/gi, '')
+    .replace(/<br\s*\/?>\s*(<\/p>)/gi, '$1')
+    // 去掉 li 内部多余的 <p> 包裹（这是大量空白的核心原因）
+    .replace(/<li>\s*<p>([\s\S]*?)<\/p>\s*<\/li>/gi, '<li>$1</li>');
+  return html;
+},
     // ---- 计时器 ----
     startQuestionTimer() {
       this.clearTimers()
@@ -579,7 +628,7 @@ export default {
   height: 100vh;
   display: flex;
   flex-direction: column;
-  background: #F8FAFC;
+  background: #e9ecff;
   overflow: hidden;
 }
 
@@ -590,7 +639,7 @@ export default {
   justify-content: space-between;
   padding: 0 $spacing-base;
   height: 60px;
-  background: white;
+  background: #b9caff;
   border-bottom: 1px solid $border-color;
   box-shadow: $shadow-sm;
   flex-shrink: 0;
@@ -662,6 +711,11 @@ export default {
   cursor: pointer; font-family: $font-family-base;
   transition: all $transition-fast;
   &:hover { background: $danger-bg; }
+    &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
 }
 
 // ---- 消息流 ----
@@ -688,11 +742,12 @@ export default {
 .message-item {
   display: flex;
   gap: $spacing-sm;
-  align-items: flex-end;
+  align-items: flex-start; 
   animation: msgIn 0.3s ease both;
 
   &--user {
-    flex-direction: row-reverse;
+      flex-direction: row;
+      justify-content: flex-end;  // 靠右排列，头像自然在气泡右边
   }
 }
 
@@ -717,12 +772,8 @@ export default {
   display: flex; flex-direction: column; gap: 4px;
   max-width: calc(100% - 80px);
 
-  .message-item--user {
-  flex-direction: row-reverse;
-  align-items: flex-start;  // ← 改为 flex-start，头像贴顶
-}
-
-  .message-item--ai & { align-items: flex-start; }
+  .message-item--user & { align-items: flex-end; }  // 时间戳、气泡靠右对齐
+  .message-item--ai &   { align-items: flex-start; }
 }
 
 .followup-badge {
@@ -737,16 +788,17 @@ export default {
   padding: $spacing-md $spacing-base;
   border-radius: $border-radius-lg;
   max-width: 100%;
-
-  &--ai {
-    background: white;
-    border: 1px solid $border-color;
-    border-bottom-left-radius: $border-radius-sm;
-    box-shadow: $shadow-sm;
-  }
+&--ai {
+  background: #F5F6FF;
+  border: 1px solid #DDE1F9;
+  border-bottom-left-radius: $border-radius-sm;
+  box-shadow: $shadow-sm;
+  padding: $spacing-base $spacing-lg;  // 上下16px，左右20px
+}
 
   &--user {
-    background: $gradient-primary;
+    background: linear-gradient(135deg, #7C6FF7 0%, #A78BFA 100%);
+    box-shadow: 0 2px 12px rgba(124, 111, 247, 0.25);
     color: white;
     border-bottom-right-radius: $border-radius-sm;
     box-shadow: $shadow-primary;
@@ -764,8 +816,9 @@ export default {
 }
 
 .message-time {
+  padding: 2px 4px 0 4px; 
   font-size: $font-size-xs; color: $text-muted;
-  padding: 0 4px;
+  // padding: 0 4px;
 }
 
 // AI 思考动画
@@ -808,21 +861,14 @@ export default {
   &__icon { font-size: 36px; }
   &__title { font-size: $font-size-lg; font-weight: $font-weight-bold; color: $text-primary; }
   &__sub { font-size: $font-size-sm; color: $text-muted; }
-  &__spinner {
-    width: 24px; height: 24px; border-radius: 50%;
-    border: 3px solid $primary-bg;
-    border-top-color: $primary;
-    animation: spin 0.8s linear infinite;
-    margin-top: $spacing-sm;
-  }
 }
 
 @keyframes spin { to { transform: rotate(360deg); } }
 
 // ---- 输入区域 ----
 .input-area {
-  background: white;
-  border-top: 1px solid $border-color;
+  background: #ccd4ff;
+  border-top: 1px solid #DDE1F9;
   padding: $spacing-sm $spacing-base;
   padding-bottom: calc(#{$spacing-sm} + env(safe-area-inset-bottom));
   box-shadow: 0 -4px 16px rgba(0,0,0,0.06);
@@ -876,7 +922,7 @@ export default {
 .voice-btn {
   width: 44px; height: 44px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  border: 1.5px solid $border-color; background: white;
+  border: 1.5px solid #b6bce8;
   cursor: pointer; flex-shrink: 0;
   transition: all $transition-base;
   color: $text-secondary;
@@ -905,7 +951,7 @@ export default {
   max-height: 120px;
   padding: 11px $spacing-md;
   padding-right: $spacing-md;
-  border: 1.5px solid $border-color;
+  border: 1.5px solid #CDD2F5;
   border-radius: $border-radius;
   font-family: $font-family-base;
   font-size: $font-size-base;
@@ -913,7 +959,7 @@ export default {
   color: $text-primary;
   resize: none;
   outline: none;
-  background: $gray-50;
+  background: #F3F4FF;
   transition: all $transition-base;
   display: block;
 
@@ -1056,7 +1102,7 @@ export default {
   height: 100%;
   background: linear-gradient(90deg, #818cf8, #c4b5fd);
   border-radius: 2px;
-  animation: progress-slide 25s linear forwards;
+  width: 0; 
 }
 .ending-hint {
   font-size: 11px;
@@ -1113,24 +1159,56 @@ export default {
 }
 
 
-.markdown-body {
+::v-deep .markdown-body {
   font-size: $font-size-base;
-  line-height: $line-height-relaxed;
+  line-height: 1.6;
   color: $text-primary;
   word-break: break-word;
 
-  p { margin: 0 0 8px; &:last-child { margin-bottom: 0; } }
-  strong { font-weight: $font-weight-semibold; }
+  // 段落间距压缩
+  p {
+    margin: 0 0 4px !important;
+    &:last-child { margin-bottom: 0 !important; }
+  }
+
+  strong { font-weight: $font-weight-semibold; color: #3730A3; }
+
+  // 列表整体间距
+  ul, ol {
+    padding-left: 20px;
+    margin: 4px 0 !important;
+  }
+
+  // 列表项间距
+  li {
+    margin-bottom: 2px !important;
+    line-height: 1.6;
+    // 消灭 li 内 p 标签造成的额外空间
+    > p { margin: 0 !important; display: inline; }
+  }
+
+  // 嵌套列表
+  li > ul, li > ol {
+    margin: 2px 0 !important;
+  }
+
   code {
     background: $gray-100; border-radius: 4px;
     padding: 1px 5px; font-family: $font-family-mono; font-size: 13px;
   }
   pre {
     background: $gray-100; border-radius: 8px;
-    padding: 10px 12px; overflow-x: auto; margin: 8px 0;
+    padding: 10px 12px; overflow-x: auto; margin: 6px 0;
     code { background: none; padding: 0; }
   }
-  ul, ol { padding-left: 18px; margin: 6px 0; }
-  li { margin-bottom: 4px; }
+
+  // 标题压缩
+  h1, h2, h3, h4 {
+    margin: 6px 0 4px !important;
+    font-weight: $font-weight-semibold;
+  }
+
+  // 分隔线
+  hr { margin: 8px 0 !important; border-color: $border-color; }
 }
 </style>
