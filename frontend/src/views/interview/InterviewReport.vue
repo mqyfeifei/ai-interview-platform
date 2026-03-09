@@ -39,6 +39,7 @@
             <span class="job-badge">{{ report.jobName }}</span>
             <span class="date-text">{{ formatDateTime(report.createdAt) }}</span>
           </div>
+          <div class="hero-score-block">
           <div class="score-circle-wrap">
             <svg class="score-circle-svg" viewBox="0 0 180 180">
               <circle cx="90" cy="90" r="76" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="10"/>
@@ -55,24 +56,40 @@
             <span class="grade-badge" :class="'grade-' + grade.key">{{ grade.label }}</span>
             <span class="grade-desc">{{ grade.desc }}</span>
           </div>
+          </div>
           <div class="hero-stats">
             <div class="hero-stat">
-              <span class="hero-stat__icon">⏱️</span>
               <span class="hero-stat__value">{{ formatDuration(report.duration) }}</span>
               <span class="hero-stat__label">面试时长</span>
             </div>
             <div class="hero-stat-divider" />
             <div class="hero-stat">
-              <span class="hero-stat__icon">📝</span>
               <span class="hero-stat__value">{{ report.questions ? report.questions.length : 0 }}</span>
               <span class="hero-stat__label">回答题目</span>
             </div>
             <div class="hero-stat-divider" />
             <div class="hero-stat">
-              <span class="hero-stat__icon">🔄</span>
               <span class="hero-stat__value">{{ followUpCount }}</span>
               <span class="hero-stat__label">追问次数</span>
             </div>
+            <!-- 新增：亮点数 -->
+<!-- <div class="hero-stat-divider" />
+<div class="hero-stat">
+  <span class="hero-stat__value">{{ report.highlights ? report.highlights.length : 0 }}</span>
+  <span class="hero-stat__label">回答亮点</span>
+</div> -->
+
+<!-- 新增：待提升数 -->
+<!-- <div class="hero-stat-divider" />
+<div class="hero-stat">
+  <span class="hero-stat__value">{{ report.improvements ? report.improvements.length : 0 }}</span>
+  <span class="hero-stat__label">待提升项</span>
+</div> -->
+<!-- <div class="hero-stat">
+  <span class="hero-stat__value">{{ formatDateTime(report.createdAt) }}</span>
+  <span class="hero-stat__label">面试时间</span>
+</div>
+<div class="hero-stat-divider" /> -->
           </div>
         </div>
       </div>
@@ -115,7 +132,7 @@
           <div class="highlight-list">
             <div v-for="(h, i) in report.highlights" :key="i" class="highlight-item" :style="{ animationDelay: i * 0.08 + 's' }">
               <div class="highlight-item__dot" />
-              <p>{{ h }}</p>
+              <p v-html="renderMarkdown(h)" />
             </div>
           </div>
         </section>
@@ -127,7 +144,7 @@
             <div v-for="(imp, i) in report.improvements" :key="i" class="improvement-item" :style="{ animationDelay: i * 0.08 + 's' }">
               <div class="improvement-item__header">
                 <span class="improvement-item__num">{{ i + 1 }}</span>
-                <p class="improvement-item__point">{{ imp.point }}</p>
+                <p class="improvement-item__point" v-html="renderMarkdown(imp.point)" />
               </div>
               <div v-if="imp.resource" class="improvement-item__resource" @click="$router.push('/learning')">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;flex-shrink:0">
@@ -385,7 +402,7 @@ export default {
           shape: 'circle', splitNumber: 4,
           center: ['50%', '50%'], radius: '68%',
           axisName: { color: '#475569', fontSize: 11 },
-          splitArea: { areaStyle: { color: ['rgba(67,56,202,0.02)', 'rgba(67,56,202,0.04)', 'rgba(67,56,202,0.06)', 'rgba(67,56,202,0.08)'] } },
+          splitArea: { areaStyle: { color: ['rgba(67,56,202,0.04)', 'rgba(67,56,202,0.05)', 'rgba(67,56,202,0.07)', 'rgba(67,56,202,0.09)'] } },
           axisLine: { lineStyle: { color: '#E2E8F0' } },
           splitLine: { lineStyle: { color: '#E2E8F0' } }
         },
@@ -404,12 +421,12 @@ export default {
               name: '本次表现',
               areaStyle: {
                 color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                  { offset: 0, color: 'rgba(67,56,202,0.35)' },
+                  { offset: 0, color: 'rgba(67,56,202,0.25)' },
                   { offset: 1, color: 'rgba(124,58,237,0.15)' }
                 ])
               },
               lineStyle: { color: '#685ddf', width: 2.4 },
-              itemStyle: { color: '#685ddf', borderColor: 'white', borderWidth: 2 },
+              itemStyle: { color: '#685ddf', borderColor: 'white', borderWidth: 1 },
               symbol: 'circle', symbolSize: 7
             }
           ],
@@ -632,11 +649,12 @@ export default {
   padding: $spacing-md $spacing-xl;
   width: 100%;
   justify-content: space-around;
+
 }
+
 
 .hero-stat {
   display: flex; flex-direction: column; align-items: center; gap: 3px;
-  &__icon { font-size: 18px; }
   &__value { font-family: $font-family-display; font-size: $font-size-xl; font-weight: $font-weight-bold; color: white; }
   &__label { font-size: $font-size-xs; color: rgba(255,255,255,0.55); }
 }
@@ -686,6 +704,24 @@ export default {
   background: white; border-radius: $border-radius-lg;
   padding: $spacing-base; box-shadow: $shadow-sm;
   border: 1px solid $border-color;
+   
+  @media (min-width: 1024px) {
+    display: flex;
+    align-items: center;
+    // gap: $spacing-4xl;
+     gap: 10%;
+    .radar-chart {
+      width: 300px;      // 固定雷达图宽度
+      flex-shrink: 0;
+      margin-bottom: 0;  // 覆盖原来的 margin-bottom
+      margin-left: $spacing-2xl;
+    }
+
+    .dimension-scores {
+      flex: 1;
+        margin-right: $spacing-3xl;  
+    }
+  }
 }
 
 .radar-chart {
@@ -848,6 +884,19 @@ export default {
     padding: 1px 5px; font-size: 0.9em; color: $primary;
   }
   :deep(p) { margin: 0; }
+}
+
+.highlight-item, .improvement-item__point {
+  :deep(strong) { font-weight: 600; color: #1f1974; }
+  :deep(code) {
+    background: $gray-100; border-radius: 3px;
+    padding: 1px 5px; font-size: 0.9em; color: $primary;
+  }
+  :deep(p) { margin: 0; }
+  :deep(ol), :deep(ul) {
+    margin: 4px 0 0 16px;
+    li { margin-bottom: 2px; }
+  }
 }
 .q-score {
   font-family: $font-family-display;
