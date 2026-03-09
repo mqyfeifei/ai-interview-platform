@@ -57,7 +57,15 @@ class LearningService:
 
     @staticmethod
     def get_personalized_recommendations(user_id, limit=5):
-        """基于技能短板的向量，在资源库中进行检索推荐"""
+        """基于技能短板的向量，在资源库中进行检索推荐
+
+        除了返回推荐资源外，还会计算每个资源的完成状态（从
+        UserLearning 表中读取）。注意：为了避免重复给用户同一
+        条资源推送，默认会把已完成的资源排除出查询结果，但
+        依然会在返回的结果中带上 completed 字段（通常为 False）。
+        前端可以另外调用 /records/completed 接口获取全部已完成
+        资源的 id，并决定是否把它们从缓存中补回列表中。
+        """
         # 1. 找出最薄弱的知识点文本
         weaknesses = LearningService.get_weaknesses(user_id, limit=3)
         if not weaknesses:
@@ -77,6 +85,9 @@ class LearningService:
         if completed_ids:
             query = query.filter(~Resource.id.in_(completed_ids))
 
+        # 确保结果唯一，防止数据库中存在重复记录或者 join 导致的重复
+        query = query.group_by(Resource.id)
+
         recommended_resources = query.order_by(Resource.embedding.l2_distance(target_vector)).limit(limit).all()
 
         results = []
@@ -89,9 +100,17 @@ class LearningService:
                 "content": r.content,
                 "source": r.source,
                 "difficulty": r.difficulty,
-                "tags": r.tags
+                "tags": r.tags,
+                # 前端需要这个字段来在已经加载的资源中显示徽章
+                "completed": r.id in completed_ids
             })
         return results
+
+    @staticmethod
+    def get_completed_resource_ids(user_id):
+        """返回指定用户所有已完成资源的 ID 列表"""
+        records = UserLearning.query.filter_by(user_id=user_id, status='completed').all()
+        return [rec.resource_id for rec in records]
 
     @staticmethod
     def start_learning(user_id, resource_id):

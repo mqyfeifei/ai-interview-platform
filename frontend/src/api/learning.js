@@ -101,23 +101,72 @@ export const getWeaknessTags = async () => {
 export const getWeaknesses = getWeaknessTags
 
 /**
+ * 从后端查询当前用户已完成的资源 ID 列表
+ */
+export const getCompletedResourceIds = async () => {
+  try {
+    const cached = localStorage.getItem('ai_interview_user')
+    const userId = cached ? (JSON.parse(cached).id || JSON.parse(cached).user_id) : null
+    if (!userId) {
+      console.warn('[Completed] 未找到用户ID')
+      return []
+    }
+    const data = await request.get('/learning/records/completed', { params: { user_id: userId } })
+    if (Array.isArray(data)) {
+      // 保持 localStorage 和服务器一致
+      localStorage.setItem('learning_completed', JSON.stringify(data))
+      return data
+    }
+    return []
+  } catch (err) {
+    console.warn('[Completed] 请求失败', err)
+    // 回退到 localStorage，以便离线时仍能显示徽章
+    try {
+      return JSON.parse(localStorage.getItem('learning_completed') || '[]')
+    } catch (_) {
+      return []
+    }
+  }
+}
+
+/**
  * 获取推荐学习资源（基于后端向量检索 + 薄弱知识点匹配）
  * 后端返回: [{id, title, type, source, difficulty}, ...]
  * 前端补全展示所需字段
  */
 export const getRecommendedResources = async () => {
   try {
-    // 从 localStorage 中缓存的书签和完成信息
+    // 从 localStorage 中缓存的书签信息
     const bookmarks = JSON.parse(localStorage.getItem('learning_bookmarks') || '{}')
-    const completed = JSON.parse(localStorage.getItem('learning_completed') || '[]')
 
-    // always use backend recommendation endpoint
-    const cached = localStorage.getItem('ai_interview_user')
-    const userId = cached ? (JSON.parse(cached).id || JSON.parse(cached).user_id) : null
+    // 当前用户 id
+    const cachedUser = localStorage.getItem('ai_interview_user')
+    const userId = cachedUser ? (JSON.parse(cachedUser).id || JSON.parse(cachedUser).user_id) : null
     if (!userId) {
       console.warn('[Recommendations] 未找到用户ID，无法加载推荐')
       return []
     }
+
+    // 从服务器获取已完成资源列表（优先级高于本地缓存）
+    const serverCompleted = await getCompletedResourceIds()
+    // 防御性：确保是数组
+    const completedIds = Array.isArray(serverCompleted) ? serverCompleted : []
+
+    // 如果后端请求失败，则回退到 localStorage 里的数据
+    let localCompleted = []
+    try {
+      localCompleted = JSON.parse(localStorage.getItem('learning_completed') || '[]')
+    } catch (_) { }
+
+    // 合并两个来源
+    const completedSet = new Set([...completedIds, ...localCompleted])
+
+    // 始终把后端列表写回本地，以保证刷新后也能使用
+    try {
+      localStorage.setItem('learning_completed', JSON.stringify(Array.from(completedSet)))
+    } catch (_) { }
+
+    // always use backend recommendation endpoint
     const data = await request.get('/learning/recommendations', {
       params: { user_id: userId, limit: 10 }
     })
@@ -140,14 +189,15 @@ export const getRecommendedResources = async () => {
       difficulty: diffMap[item.difficulty] || item.difficulty || '中级',
       relatedWeakness: null,
       bookmarked: bookmarks[item.id] || false,
-      completed: completed.includes(item.id) || false,
+      // 如果后端本身返回 completed 字段优先使用，否则由 completedSet 决定
+      completed: item.completed || completedSet.has(item.id),
       url: item.url || null
     }))
 
     // 缓存新拿到的资源
     _updateCacheWithList(result)
 
-    // 如果有已收藏但本次列表不含的资源，从缓存补出来；纯完成但未收藏的仍保持隐藏
+    // 如果有已收藏或已完成但本次列表不含的资源，从缓存补出来
     const existingIds = new Set(result.map(r => r.id))
     const additions = []
     Object.keys(bookmarks).forEach(id => {
@@ -155,13 +205,34 @@ export const getRecommendedResources = async () => {
         const cached = _getCachedItem(id)
         if (cached) {
           cached.bookmarked = true
-          cached.completed = completed.includes(id)
+          cached.completed = completedSet.has(id)
           additions.push(cached)
           existingIds.add(id)
         }
       }
     })
+    // 新增：补充那些虽然未收藏但属于 completedSet 的资源
+    // 但根据新规则，如果资源已经完成且没有被收藏，则不应该再展示，
+    // 因此只有当它被收藏时才从缓存中补回来
+    completedSet.forEach(id => {
+      if (!existingIds.has(id)) {
+        const cached = _getCachedItem(id)
+        if (cached) {
+          // 只有收藏的资源才允许显示，即便它已完成
+          if (bookmarks[id]) {
+            cached.completed = true
+            additions.push(cached)
+            existingIds.add(id)
+          }
+        }
+      }
+    })
     if (additions.length) result = result.concat(additions)
+
+    // 最终去重，防止极端情况下同一个资源被重复添加
+    const uniqueMap = new Map()
+    result.forEach(item => { uniqueMap.set(item.id, item) })
+    result = Array.from(uniqueMap.values())
 
     return result
   } catch (err) {
