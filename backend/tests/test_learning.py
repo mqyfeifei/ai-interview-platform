@@ -115,6 +115,9 @@ def run_learning_test():
     print("\n[2] 正在基于短板动态生成向量，并在数据库中检索最相关的推荐资源...")
     res = client.get(f'/api/v1/learning/recommendations?user_id={user_id}&limit=3')
     recs = res.get_json().get('data', [])
+    # 校验：返回的推荐列表中不应包含相同 ID 的重复项
+    ids = [r['id'] for r in recs]
+    assert len(ids) == len(set(ids)), "推荐列表包含重复资源ID"
     for i, r in enumerate(recs):
         print(f"  ⭐ 推荐结果 {i + 1}: 《{r['title']}》 (类型: {r['type']})")
 
@@ -142,6 +145,13 @@ def run_learning_test():
     finish_data = res.get_json().get('data', {})
     print(f"  ✅ 接口返回结算信息: {finish_data['msg']}, 本次学习真实耗时: {finish_data.get('time_spent_seconds')} 秒")
 
+    # 4.5 新增测试：查询后端已完成列表
+    print("\n[4.5] 调用 /records/completed 接口检查已完成的数据是否包含刚标记的资源...")
+    res2 = client.get(f'/api/v1/learning/records/completed?user_id={user_id}')
+    completed_list = res2.get_json().get('data', [])
+    print(f"  ✅ 已完成 ID 列表: {completed_list}")
+    assert target_resource_id in completed_list, "完成的资源 ID 应该出现在 completed 接口返回中"
+
     with app.app_context():
         record = UserLearning.query.filter_by(user_id=user_id, resource_id=target_resource_id).first()
         print(
@@ -151,6 +161,9 @@ def run_learning_test():
     print("\n[5] 再次请求推荐资源列表，验证【已学完的资源】是否被自动过滤...")
     res = client.get(f'/api/v1/learning/recommendations?user_id={user_id}&limit=3')
     new_recs = res.get_json().get('data', [])
+    # 再次校验去重逻辑
+    new_ids = [r['id'] for r in new_recs]
+    assert len(new_ids) == len(set(new_ids)), "新一轮推荐列表包含重复资源ID"
     for i, r in enumerate(new_recs):
         print(f"  ⭐ 最新推荐 {i + 1}: 《{r['title']}》")
         if r['id'] == target_resource_id:

@@ -114,7 +114,7 @@
 
         <transition name="collapse">
         <div v-if="showWeaknessSection">
-        <div class="weakness-cloud">
+        <div v-if="weaknesses && weaknesses.length" class="weakness-cloud">
           <span
             v-for="w in weaknesses"
             :key="w.id"
@@ -126,23 +126,32 @@
           </span>
         </div>
 
-        <!-- 掌握度可视化图 -->
-        <div class="weakness-chart-card" v-if="enableCharts">
-          <div class="weakness-chart-header">
-            <span class="weakness-chart-title">📊 掌握度分布</span>
-            <span class="weakness-chart-hint">数值越低 = 越需提升</span>
+        <!-- 掌握度可视化（简单横条） -->
+        <template v-if="weaknesses && weaknesses.length">
+          <div class="weakness-chart-card">
+            <div class="weakness-chart-header">
+              <span class="weakness-chart-title">📊 掌握度分布</span>
+              <span class="weakness-chart-hint">数值越低 = 越需提升</span>
+            </div>
+            <div class="weakness-bar-list">
+              <div v-for="w in sortedWeaknesses" :key="w.id" class="weakness-bar-item" :data-percentage="w.mastery_level || 0">
+                <div class="weakness-bar-label">{{ w.tag || w.name || '未知' }}</div>
+                <div class="weakness-bar">
+                  <div class="weakness-bar__fill" 
+                       :style="{ width: (w.mastery_level || 0) + '%', background: getColor(w.mastery_level) }" />
+                </div>
+              </div>
+            </div>
           </div>
-          <div ref="weaknessChart" class="weakness-chart" :style="{ height: Math.max(180, (weaknesses || []).length * 36 + 24) + 'px' }" />
-          <div v-if="!weaknesses || weaknesses.length === 0" class="chart-empty chart-loading--overlay">
-            <span style="font-size:36px">📊</span>
-            <p>暂无短板数据</p>
-          </div>
-        </div>
-        <div class="weakness-chart-card chart-card--disabled" v-else>
-          <p>掌握度可视化图表暂时关闭，您仍可通过上面的短板标签进行学习资源筛选。</p>
+        </template>
+
+        <!-- 如果没有短板，显示空态提示 -->
+        <div v-if="(!weaknesses || weaknesses.length === 0) && showWeaknessSection" class="empty-state-wrap">
+          <span style="font-size:48px">📊</span>
+          <p>暂无短板数据</p>
         </div>
 
-        <div class="weakness-legend">
+        <div v-if="weaknesses && weaknesses.length" class="weakness-legend">
           <span class="legend-dot" style="background:#EF4444" />薄弱 (&lt;40)
           <span class="legend-dot" style="background:#F59E0B;margin-left:12px" />一般 (40-70)
           <span class="legend-dot" style="background:#10B981;margin-left:12px" />良好 (70-90)
@@ -236,7 +245,7 @@
               </button>
 
               <button
-                v-if="!res.completed"
+                v-if="activeTypeFilter === 'bookmarked' && !res.completed"
                 class="action-complete"
                 @click.stop="handleComplete(res)"
               >
@@ -245,7 +254,7 @@
                 </svg>
                 标记完成
               </button>
-              <span v-else class="action-done">
+              <span v-else-if="activeTypeFilter === 'bookmarked'" class="action-done">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <polyline points="20 6 9 17 4 12"/>
                 </svg>
@@ -292,9 +301,11 @@
             <!-- 标题 -->
             <h2 class="resource-modal__title">{{ selectedResource.title }}</h2>
 
-            <!-- 来源 -->
+            <!-- 所属模块和知识点 -->
             <div class="resource-modal__source">
-              <span>来源：{{ selectedResource.source || '未知' }}</span>
+              <template v-for="(line, idx) in resourceInfoLines" :key="idx">
+                <div>{{ line }}</div>
+              </template>
               <span v-if="selectedResource.relatedWeakness" class="resource-modal__weakness">
                 ⚡ 针对短板：{{ selectedResource.relatedWeakness }}
               </span>
@@ -302,7 +313,7 @@
 
             <!-- 摘要/内容 -->
             <div class="resource-modal__content">
-              <p>{{ selectedResource.summary || '暂无详细内容' }}</p>
+              <p>{{ cleanSummary || '暂无详细内容' }}</p>
             </div>
 
             <!-- 标签 -->
@@ -324,12 +335,6 @@
               >
                 {{ selectedResource.bookmarked ? '★ 已收藏' : '☆ 收藏' }}
               </button>
-              <button
-                v-if="!selectedResource.completed"
-                class="modal-btn modal-btn--success"
-                @click="handleComplete(selectedResource); closeResource()"
-              >✓ 标记完成</button>
-              <span v-else class="modal-done-label">✓ 已完成</span>
             </div>
           </div>
         </div>
@@ -369,7 +374,6 @@ export default {
       showWeaknessSection: false,
       showResourceSection: false,
       chartInstance: null,
-      weaknessChartInstance: null,
       showResourceDetail: false,
       selectedResource: {},
       curveTabs: [
@@ -404,6 +408,33 @@ export default {
     planProgressPct() {
       if (!this.totalTaskCount) return 0
       return Math.round(this.completedTaskCount / this.totalTaskCount * 100)
+    },
+    sortedWeaknesses() {
+      if (!this.weaknesses) return []
+      return [...this.weaknesses]
+        .filter(w => w.mastery_level !== undefined && w.mastery_level !== null)
+        .sort((a, b) => a.mastery_level - b.mastery_level)
+    },
+    resourceInfoLines() {
+      const text = this.selectedResource.summary || this.selectedResource.content || ''
+      const parts = text.split('|').map(p => p.trim())
+      const lines = []
+      parts.forEach(p => {
+        if (p.startsWith('所属模块')) {
+          lines.push(p.replace(/^所属模块[:：]\s*/, ''))
+        }
+        if (p.startsWith('知识点')) {
+          lines.push(p.replace(/^知识点[:：]\s*/, ''))
+        }
+      })
+      return lines
+    },
+    cleanSummary() {
+      let txt = this.selectedResource.summary || this.selectedResource.content || ''
+      // 去掉领域和来源及其前后的分隔符
+      txt = txt.replace(/领域[:：][^|]+\|?/g, '')
+      txt = txt.replace(/来源[:：][^|]+/g, '')
+      return txt.trim().replace(/^\||\|$/g, '')
     },
 
     filteredRecommendations() {
@@ -450,7 +481,6 @@ export default {
   },
   beforeUnmount() {
     if (this.chartInstance) { this.chartInstance.dispose(); this.chartInstance = null }
-    if (this.weaknessChartInstance) { this.weaknessChartInstance.dispose(); this.weaknessChartInstance = null }
     window.removeEventListener('resize', this.updateHeights)
   },
   watch: {
@@ -459,32 +489,13 @@ export default {
     },
     activeCurveTab() {
       if (echarts && this.growthData && this.enableCharts) this.safeRenderChart()
-    },
-    weaknesses(newVal) {
-      if (newVal && newVal.length && echarts && this.enableCharts) this.safeRenderWeaknessChart()
     }
   },
   methods: {
     ...mapActions('learning', ['toggleBookmark', 'markCompleted', 'updateTaskStatus']),
     toggleWeakness() {
-      const opening = !this.showWeaknessSection;
-      this.showWeaknessSection = opening;
-      if (!opening) {
-        // dispose existing chart when collapsing so it will be recreated
-        if (this.weaknessChartInstance && !this.weaknessChartInstance.isDisposed()) {
-          this.weaknessChartInstance.dispose();
-        }
-        this.weaknessChartInstance = null;
-      }
-      this.$nextTick(() => {
-        this.updateHeights();
-        if (opening && this.enableCharts && this.weaknesses && this.weaknesses.length) {
-          // second tick to ensure DOM layout is complete
-          this.$nextTick(() => {
-            this.safeRenderWeaknessChart();
-          });
-        }
-      });
+      this.showWeaknessSection = !this.showWeaknessSection;
+      this.$nextTick(() => this.updateHeights());
     },
     toggleResources() {
       this.showResourceSection = !this.showResourceSection;
@@ -499,7 +510,9 @@ export default {
         }
       });
     },
-
+    getColor(v) {
+      return v < 40 ? '#EF4444' : v < 70 ? '#F59E0B' : v < 90 ? '#10B981' : '#6366F1'
+    },
     async initECharts() {
       if (!this.enableCharts) return
       if (!echarts) {
@@ -510,9 +523,8 @@ export default {
           return
         }
       }
-      // ECharts 加载完成后，如果数据已经就绪，则触发渲染
+      // ECharts 加载完成后，折线图可能渲染
       if (this.growthData) this.safeRenderChart()
-      if (this.weaknesses && this.weaknesses.length) this.safeRenderWeaknessChart()
     },
 
     /**
@@ -530,15 +542,7 @@ export default {
       this.renderChart()
     },
 
-    safeRenderWeaknessChart(retries = 0) {
-      const el = this.$refs.weaknessChart
-      if (!el || !echarts || retries > 10) return
-      if (el.clientWidth === 0 || el.clientHeight === 0) {
-        requestAnimationFrame(() => this.safeRenderWeaknessChart(retries + 1))
-        return
-      }
-      this.renderWeaknessChart()
-    },
+
 
     renderChart() {
       const el = this.$refs.lineChart
@@ -605,14 +609,12 @@ export default {
         },
         xAxis: {
           type: 'category', data: xData,
-          name: '日期', nameLocation: 'middle', nameGap: 30,
           axisLine: { lineStyle: { color: '#E2E8F0' } },
           axisTick: { show: false },
           axisLabel: { color: '#94A3B8', fontSize: 11, fontFamily: "'Noto Sans SC'" }
         },
         yAxis: {
           type: 'value', min: yMin, max: yMax, splitNumber: 4,
-          name: '成绩', nameLocation: 'middle', nameGap: 44, nameTextStyle: { color: '#94A3B8', fontSize: 12 },
           axisLabel: { color: '#94A3B8', fontSize: 11 },
           splitLine: { lineStyle: { color: '#F1F5F9', type: 'dashed' } },
           axisLine: { show: false }, axisTick: { show: false }
@@ -643,93 +645,7 @@ export default {
       this.activeCurveTab = key
     },
 
-    renderWeaknessChart() {
-      const el = this.$refs.weaknessChart
-      if (!echarts || !el) return
-      if (el.clientWidth === 0 || el.clientHeight === 0) return
-      const list = this.weaknesses || []
-      if (!list.length) return
 
-      // 复用实例或创建新实例（使用 markRaw 避免被 Vue3 响应式代理）
-      if (!this.weaknessChartInstance || this.weaknessChartInstance.isDisposed()) {
-        this.weaknessChartInstance = markRaw(echarts.init(el))
-        new ResizeObserver(() => { if (this.weaknessChartInstance && !this.weaknessChartInstance.isDisposed()) this.weaknessChartInstance.resize() }).observe(el)
-      }
-
-      // 按掌握度升序排列（最弱排最上方）
-      const sorted = [...list]
-        .filter(w => w.mastery_level !== undefined && w.mastery_level !== null)
-        .sort((a, b) => a.mastery_level - b.mastery_level)
-      if (!sorted.length) return
-
-      const names = sorted.map(w => w.tag || w.name || '未知')
-      const values = sorted.map(w => w.mastery_level)
-      const getColor = v => v < 40 ? '#EF4444' : v < 70 ? '#F59E0B' : v < 90 ? '#10B981' : '#6366F1'
-
-      this.weaknessChartInstance.setOption({
-        backgroundColor: 'transparent',
-        grid: { top: 8, right: 50, bottom: 8, left: 90 },
-        tooltip: {
-          show: true,
-          trigger: 'axis',
-          confine: true,
-          triggerOn: 'mousemove|click',
-          axisPointer: { type: 'shadow' },
-          backgroundColor: '#1E293B',
-          borderColor: 'transparent',
-          textStyle: { color: '#F8FAFC', fontSize: 12, fontFamily: "'Noto Sans SC'" },
-          formatter: params => {
-            const p = params[params.length - 1]
-            const label = p.value < 40 ? '薄弱' : p.value < 70 ? '一般' : p.value < 90 ? '良好' : '优秀'
-            const c = getColor(p.value)
-            return `<div style="padding:4px 8px">${p.name}<br/>掌握度 <b style="font-size:16px;color:${c}">${p.value}%</b> <span style="color:#94A3B8">(${label})</span></div>`
-          }
-        },
-        xAxis: {
-          type: 'value', max: 100, min: 0,
-          axisLabel: { show: false },
-          splitLine: { show: false },
-          axisLine: { show: false },
-          axisTick: { show: false }
-        },
-        yAxis: {
-          type: 'category',
-          data: names,
-          inverse: true,
-          axisLine: { show: false },
-          axisTick: { show: false },
-          axisLabel: {
-            color: '#475569', fontSize: 12,
-            width: 78, overflow: 'truncate',
-            fontFamily: "'Noto Sans SC'"
-          }
-        },
-        series: [
-          {
-            type: 'bar', z: 1,
-            data: names.map(() => 100),
-            barWidth: 14, barGap: '-100%',
-            itemStyle: { color: '#F1F5F9', borderRadius: [0, 7, 7, 0] },
-            silent: true, animation: false
-          },
-          {
-            type: 'bar', z: 2,
-            data: values.map(v => ({
-              value: v,
-              itemStyle: { color: getColor(v), borderRadius: [0, 7, 7, 0] }
-            })),
-            barWidth: 14,
-            label: {
-              show: true, position: 'right',
-              color: '#64748B', fontSize: 11, fontWeight: 'bold',
-              formatter: '{c}%'
-            },
-            animationDuration: 1000,
-            animationEasing: 'cubicOut'
-          }
-        ]
-      }, true)
-    },
 
     async toggleTask(task) {
       await this.updateTaskStatus({ taskId: task.id, done: !task.done })
@@ -976,6 +892,42 @@ export default {
   box-shadow: $shadow-sm; border: 1px solid $border-color;
   padding: $spacing-base; margin-bottom: $spacing-md;
   overflow: hidden;
+}
+
+/* 使用与面试报告页相同的横向进度条样式 */
+.weakness-bar-list {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+}
+.weakness-bar-item {}
+.weakness-bar-label {
+  font-size: $font-size-sm;
+  color: $text-primary;
+  margin-bottom: 4px;
+}
+.weakness-bar {
+  height: 8px; background: $gray-100; border-radius: 4px; overflow: hidden;
+}
+.weakness-bar__fill {
+  height: 100%; border-radius: 4px;
+  transition: width 1s cubic-bezier(0.4,0,0.2,1);
+  cursor: pointer;
+}
+.weakness-bar-item {
+  position: relative;
+}
+.weakness-bar-item:hover::before {
+  content: attr(data-percentage) '%';
+  position: absolute;
+  top: -18px; left: 0;
+  background: rgba(0,0,0,0.65);
+  color: white;
+  padding: 2px 6px;
+  font-size: 10px;
+  border-radius: 3px;
+  white-space: nowrap;
+  pointer-events: none;
 }
 
 .weakness-chart-header {
