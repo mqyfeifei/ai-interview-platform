@@ -1,7 +1,7 @@
 <template>
   <aside class="side-nav">
     <div class="side-nav__brand" @click="$router.push('/dashboard')">
-      <div class="brand-logo">AI</div>
+      <img class="brand-logo" src="@/assets/logo.png" alt="AI面试助手" />
       <div class="brand-text">
         <p class="brand-title">AI面试助手</p>
         <p class="brand-sub">智能练习平台</p>
@@ -72,14 +72,15 @@ export default {
   border-right: 1px solid $border-color;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  padding: $spacing-xl $spacing-base;
+  padding:  $spacing-xl $spacing-xl;
   box-shadow: $shadow-sm;
 
   &__brand {
     display: flex;
     align-items: center;
-    gap: $spacing-md;
-    margin-bottom: $spacing-2xl;
+    gap:  $spacing-2xl;
+    margin-bottom: $spacing-4xl;
+    margin-top: $spacing-base;
     cursor: pointer;
   }
 
@@ -135,26 +136,21 @@ export default {
 .brand-logo {
   width: 40px;
   height: 40px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: $gradient-primary;
-  color: $text-white;
-  font-size: $font-size-md;
-  font-family: $font-family-display;
-  font-weight: $font-weight-bold;
+  border-radius: 50%;
+  object-fit: cover;
   box-shadow: $shadow-primary;
+  transform: scale(1.9) ; 
+  // 不需要 background、color 等文字相关样式
 }
 
 .brand-title {
-  font-size: $font-size-lg;
+  font-size: 22px;
   font-weight: $font-weight-bold;
   color: $text-primary;
 }
 
 .brand-sub {
-  font-size: $font-size-sm;
+  font-size: 14px;
   color: $text-muted;
 }
 </style>
