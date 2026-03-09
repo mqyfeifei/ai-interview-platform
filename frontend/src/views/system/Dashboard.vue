@@ -112,7 +112,7 @@
                 class="job-tag" 
                 v-for="job in topHotJobs" 
                 :key="job.id"
-                :style="{ '--tag-color': job.color, '--tag-bg': job.colorBg }"
+                :style="{ '--tag-color': job.color, '--tag-bg': job.colorBg, '--tag-hover-bg': job.colorHoverBg }"
                 @click="showJobConfirm(job)"
               >
                 <span class="job-tag__icon">{{ job.icon }}</span>
@@ -286,9 +286,6 @@
           <div class="confirm-modal__body">
             <p class="confirm-modal__text">你即将开始的面试岗位是：</p>
             <div class="confirm-modal__job">
-              <span class="confirm-modal__job-icon" :style="{ background: selectedJob?.colorBg }">
-                {{ selectedJob?.icon }}
-              </span>
               <div class="confirm-modal__job-info">
                 <p class="confirm-modal__job-name">{{ selectedJob?.name }}</p>
                 <p class="confirm-modal__job-desc">{{ selectedJob?.description }}</p>
@@ -621,7 +618,8 @@ export default {
         icon: j.icon_url || '💼',
         techStack: j.tech_stack || [],
         color: j.color || '#888',
-        colorBg: j.color_bg || '#f3f3f3',
+        colorBg: j.color_bg || 'rgba(139, 92, 246, 0.1)',
+        colorHoverBg: j.color_hover_bg || 'rgba(139, 92, 246, 0.2)',
       }))
     } else {
       const all = await fetchJobs()
@@ -630,7 +628,8 @@ export default {
         icon: j.icon_url || '💼',
         techStack: j.tech_stack || [],
         color: j.color || '#888',
-        colorBg: j.color_bg || '#f3f3f3',
+        colorBg: j.color_bg || 'rgba(139, 92, 246, 0.1)',
+        colorHoverBg: j.color_hover_bg || 'rgba(139, 92, 246, 0.2)',
       }))
     }
   } catch (e) {
@@ -1177,7 +1176,7 @@ export default {
   align-items: center;
   gap: 6px;
   padding: 10px 16px;
-  background: var(--tag-bg, #f8faff);
+  background: var(--tag-bg, #c8cad2);
   border: 1px solid transparent;
   border-radius: $border-radius-lg;
   cursor: pointer;
@@ -1873,6 +1872,7 @@ export default {
     text-align: center;
     margin-bottom: 20px;
   }
+
   
   &__icon {
     width: 64px;
@@ -1887,6 +1887,14 @@ export default {
     color: white;
   }
   
+  &__job{
+
+    font-size: 16px;
+    font-weight: 600;
+    color: #4f46e5;
+    margin-bottom: 5px;
+    margin-top: 5px;
+  }
   &__title {
     font-size: 20px;
     font-weight: 600;
