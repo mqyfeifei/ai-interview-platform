@@ -238,19 +238,24 @@
     </transition>
 
     <!-- 结束确认弹窗 -->
+
     <transition name="modal">
       <div v-if="showEndConfirm" class="modal-overlay" @click.self="showEndConfirm = false">
         <div class="modal-sheet">
-          <div class="modal-body-centered">
-            <div class="confirm-icon">⚠️</div>
-            <h3 class="confirm-title">确认结束面试？</h3>
-            <p class="confirm-desc">
-              结束后将立即生成面试报告。
-            </p>
-            <div class="confirm-actions">
-              <button class="btn btn-ghost" @click="showEndConfirm = false">继续面试</button>
-              <button class="btn btn-danger" :disabled="endingInterview" @click="handleEnd">
-                <span v-if="endingInterview" class="btn-spinner btn-spinner--danger" />
+          <div class="modal-header-bar modal-header-bar--danger">
+            <h2 class="modal-header-title">确认结束面试？</h2>
+            <p class="modal-header-sub">结束后将立即生成面试报告</p>
+          </div>
+          <div class="modal-body">
+            <ul class="rules-list">
+              <li><span class="rule-dot rule-dot--orange" />当前面试进度将被保存</li>
+              <li><span class="rule-dot rule-dot--blue" />AI 将根据你的回答生成专属评估报告</li>
+              <li><span class="rule-dot rule-dot--purple" />报告生成通常需要 10 ~ 30 秒</li>
+            </ul>
+            <div class="modal-actions">
+              <button class="btn-cancel" @click="showEndConfirm = false">继续面试</button>
+              <button class="btn-confirm btn-confirm--danger" :disabled="endingInterview" @click="handleEnd">
+                <span v-if="endingInterview" class="btn-spinner" />
                 {{ endingInterview ? '结束中...' : '确认结束' }}
               </button>
             </div>
@@ -258,19 +263,23 @@
         </div>
       </div>
     </transition>
-        <!-- 返回确认弹窗 -->
-        <transition name="modal">
+    <!-- 返回确认弹窗 -->
+    <transition name="modal">
       <div v-if="showBackConfirm" class="modal-overlay" @click.self="showBackConfirm = false">
         <div class="modal-sheet">
-          <div class="modal-body-centered">
-            <div class="confirm-icon">🚪</div>
-            <h3 class="confirm-title">确认离开面试？</h3>
-            <p class="confirm-desc">
-              离开后本次面试进度将丢失，不会生成报告。
-            </p>
-            <div class="confirm-actions">
-              <button class="btn btn-ghost" @click="showBackConfirm = false">继续面试</button>
-              <button class="btn btn-danger" @click="handleBack">确认离开</button>
+          <div class="modal-header-bar modal-header-bar--danger">
+            <h2 class="modal-header-title">确认离开面试？</h2>
+            <p class="modal-header-sub">离开后本次面试进度将丢失</p>
+          </div>
+          <div class="modal-body">
+            <ul class="rules-list">
+              <li><span class="rule-dot rule-dot--danger" />本次面试记录不会被保存</li>
+              <li><span class="rule-dot rule-dot--orange" />不会生成面试报告</li>
+              <li><span class="rule-dot rule-dot--blue" />可随时重新开始新的面试</li>
+            </ul>
+            <div class="modal-actions">
+              <button class="btn-cancel" @click="showBackConfirm = false">继续面试</button>
+              <button class="btn-confirm btn-confirm--danger" @click="handleBack">确认离开</button>
             </div>
           </div>
         </div>
@@ -1026,30 +1035,99 @@ renderMarkdown(text) {
   padding: $spacing-xl;
 }
 
+
+// ---- 弹窗（统一风格） ----
 .modal-sheet {
   background: white;
-  border-radius: $border-radius-xl;
-  width: 100%; max-width: 320px;
+  border-radius: 24px;
+  width: 100%; max-width: 360px;
   overflow: hidden;
-  box-shadow: $shadow-lg;
+  box-shadow: 0 8px 40px rgba(67, 56, 202, 0.2);
+  animation: sheetIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 
-.modal-body-centered {
-  padding: $spacing-2xl $spacing-xl;
+@keyframes sheetIn {
+  from { opacity: 0; transform: translateY(20px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.modal-header-bar {
+  background: linear-gradient(135deg, #4338ca 0%, #7c3aed 100%);
+  padding: 24px 24px 18px;
   text-align: center;
+
+  // &--danger {
+  //   background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+  // }
+}
+.modal-header-title { font-size: 18px; font-weight: 700; color: white; margin: 0 0 4px; }
+.modal-header-sub   { font-size: 12px; color: rgba(255,255,255,0.7); margin: 0; }
+
+.modal-body { padding: 18px 20px 24px; }
+
+.rules-list {
+  list-style: none; padding: 0; margin: 0 0 20px;
+  display: flex; flex-direction: column; gap: 10px;
+
+  li {
+    display: flex; align-items: flex-start; gap: 10px;
+    font-size: 13px; color: #374151; line-height: 1.5;
+  }
 }
 
-.confirm-icon { font-size: 40px; margin-bottom: $spacing-md; }
-.confirm-title {
-  font-family: $font-family-display;
-  font-size: $font-size-xl; font-weight: $font-weight-bold;
-  color: $text-primary; margin-bottom: $spacing-sm;
+.rule-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  flex-shrink: 0; margin-top: 4px;
+  &--blue   { background: #5495ff; }
+  &--purple { background: #9d65fe; }
+  &--green  { background: #61fdc9; }
+  &--orange { background: #f7b84c; }
+  &--danger { background: #fb7474; }
 }
-.confirm-desc { font-size: $font-size-sm; color: $text-secondary; line-height: $line-height-relaxed; margin-bottom: $spacing-xl; }
 
-.confirm-actions {
-  display: flex; gap: $spacing-md;
-  .btn { flex: 1; height: 46px; display: flex; align-items: center; justify-content: center; gap: $spacing-sm; }
+.modal-actions {
+  display: flex; gap: 10px;
+}
+
+.btn-cancel {
+  flex: 0 0 80px; height: 46px;
+  border-radius: 23px;
+  border: 1.5px solid #e5e7eb;
+  background: white; color: #6b7280;
+  font-size: 14px; font-weight: 500;
+  cursor: pointer; font-family: $font-family-base;
+  transition: all 0.2s;
+  &:hover { border-color: #d1d5db; background: #f9fafb; }
+}
+
+.btn-confirm {
+  flex: 1; height: 46px;
+  border-radius: 23px; border: none;
+  background: linear-gradient(135deg, #4338ca 0%, #7c3aed 100%);
+  color: white; font-size: 14px; font-weight: 700;
+  cursor: pointer; display: flex; align-items: center;
+  justify-content: center; gap: 8px;
+  font-family: $font-family-base;
+  box-shadow: 0 4px 14px rgba(67, 56, 202, 0.35);
+  transition: all 0.2s;
+
+  &--danger {
+    background: linear-gradient(135deg, #ef6e6e 0%, #f963a9 100%);
+    box-shadow: 0 4px 14px rgba(220, 38, 38, 0.655);
+    &:hover { box-shadow: 0 6px 20px rgba(220, 38, 38, 0.45); }
+  }
+
+  &:hover { transform: translateY(-1px); }
+  &:active { transform: scale(0.98); }
+  &:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+}
+
+.btn-spinner {
+  width: 14px; height: 14px;
+  border: 2px solid rgba(255,255,255,0.35);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
 }
 
 .btn-spinner {

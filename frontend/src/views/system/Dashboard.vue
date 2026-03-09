@@ -1813,10 +1813,11 @@ export default {
 .rule-dot {
   width: 8px; height: 8px; border-radius: 50%;
   flex-shrink: 0; margin-top: 4px;
-  &--blue   { background: #3b82f6; }
-  &--purple { background: #7c3aed; }
-  &--green  { background: #10b981; }
-  &--orange { background: #f59e0b; }
+  &--blue   { background: #5495ff; }
+  &--purple { background: #9d65fe; }
+  &--green  { background: #61fdc9; }
+  &--orange { background: #f7b84c; }
+
 }
 
 .modal-actions {
