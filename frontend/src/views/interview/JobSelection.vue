@@ -20,7 +20,7 @@
     <!-- 顶部Header -->
     <div class="page-header">
       <div class="header-inner">
-        <button class="back-btn" @click="$router.back()">
+        <button class="back-btn" @click="$router.push('/dashboard')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="15 18 9 12 15 6"/>
           </svg>
@@ -157,7 +157,7 @@
           <span>语音面试</span>
         </label>
 
-        <button class="start-btn" @click="handleStart">
+        <button class="start-btn" @click="showStartConfirm = true">
           <span class="start-btn__main">开始面试</span>
           <span class="start-btn__sub">{{ currentSelected.name }}</span>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -166,6 +166,71 @@
         </button>
       </div>
     </transition>
+
+    <!-- 开始面试确认弹窗 -->
+<transition name="modal">
+  <div v-if="showStartConfirm" class="modal-overlay" @click.self="showStartConfirm = false">
+    <div class="modal-sheet">
+      <!-- 顶部装饰条 -->
+      <div class="modal-header-bar">
+        <h2 class="modal-header-title">准备好了吗？</h2>
+        <p class="modal-header-sub">{{ currentSelected?.name }} · {{ voiceMode ? '语音面试' : '文字面试' }}</p>
+      </div>
+
+      <div class="modal-body">
+        <!-- 面试模式标签 -->
+        <div class="interview-mode-tag" :class="voiceMode ? 'mode-voice' : 'mode-text'">
+          <svg v-if="voiceMode" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px">
+            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+          </svg>
+          <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          </svg>
+          {{ voiceMode ? '语音模式 · 每题 3 分钟' : '文字模式 · 每题 5 分钟' }}
+        </div>
+
+        <!-- 注意事项列表 -->
+        <ul class="rules-list">
+          <li>
+            <span class="rule-dot rule-dot--blue" />
+            AI 将逐题提问，请认真作答，回答后 AI 可能追问
+          </li>
+          <li>
+            <span class="rule-dot rule-dot--purple" />
+            每题均有时间限制，超时将自动跳题
+          </li>
+          <li v-if="voiceMode">
+            <span class="rule-dot rule-dot--green" />
+            语音模式下 AI 回答完毕后将自动开始录音
+          </li>
+          <li v-else>
+            <span class="rule-dot rule-dot--green" />
+            使用 Enter 发送回答，Shift+Enter 换行
+          </li>
+          <li>
+            <span class="rule-dot rule-dot--orange" />
+            面试结束后将生成专属评估报告，可在历史记录中查看
+          </li>
+        </ul>
+
+        <div class="modal-actions">
+          <button class="btn-cancel" @click="showStartConfirm = false">再想想</button>
+          <button class="btn-confirm" @click="confirmStart">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+              stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px">
+              <polygon points="5 3 19 12 5 21 5 3"/>
+            </svg>
+            开始面试
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</transition>
   </div>
 </template>
 
@@ -174,6 +239,7 @@
 
 export default {
   name: 'JobSelection',
+  
   data() {
     return {
       searchQuery: '',
@@ -181,6 +247,7 @@ export default {
       currentSelected: null,
       rememberChoice: false,
       voiceMode: false,
+      showStartConfirm: false,
       filterTabs: [
         { key: 'all', label: '全部岗位' },
         { key: 'popular', label: '热门岗位' }
@@ -362,6 +429,7 @@ export default {
       }
     },
 
+
 // JobSelection.vue 的 handleStart 方法完整修复版
 async handleStart() {
   //  关键1：校验选中的岗位是否存在
@@ -394,7 +462,11 @@ async handleStart() {
         alert('启动面试失败，请重试！');
       }
     }
-}
+},
+    async confirmStart() {
+      this.showStartConfirm = false
+      await this.handleStart() // 原有逻辑不动
+    },
   }
 }
 </script>
@@ -634,7 +706,7 @@ async handleStart() {
   top: 0;
   z-index: 30;
   /* expose header height for other elements */
-  --header-height: 200px; /* adjust if actual height differs */
+  // --header-height: 200px; /* adjust if actual height differs */
   overflow: hidden;
 
   &::before {
@@ -716,24 +788,20 @@ async handleStart() {
 // ---- Body ----
 .page-body {
   padding: $spacing-base;
-  /* header height plus spacer and tab height so content sits below fixed tabs */
-  padding-top: calc(var(--header-height) + $spacing-base + var(--filter-height, 48px));
+  padding-top: $spacing-base; // ← 去掉复杂的 calc，恢复正常
 }
 
-
 .filter-tabs {
-  --filter-height: 48px;
   display: flex;
-  /*gap: $spacing-sm;*/
-  margin-top: 0;
+  gap: $spacing-sm;
   overflow-x: auto;
-  padding-bottom: 2px;
-  /* 固定浮动在头部与内容之间 */
-  position: fixed;
-  top: calc(var(--header-height) + $spacing-base); /* 在留白区显示 */
-  left: $spacing-base; /* 靠左显示 */
-  z-index: 40;
-  background: transparent; /* 浮层透明 */
+  padding-bottom: $spacing-sm;
+  margin-bottom: $spacing-base;
+  position: sticky;        // ← 改：sticky 跟随滚动但不遮挡
+  top: 0;                  // ← 吸顶但只在 page-body 滚动容器内
+  z-index: 20;
+  background: $bg-page;    // ← 加背景色防透底
+  padding-top: $spacing-sm;
   &::-webkit-scrollbar { display: none; }
 }
 
@@ -750,8 +818,9 @@ async handleStart() {
   transition: all $transition-fast;
   white-space: nowrap;
 
-  &.active { background: $primary; border-color: $primary; color: white; box-shadow: 0 4px 12px rgba(67,56,202,0.3); }
-  &:not(.active):hover { border-color: $primary; color: $primary; }
+  &.active { background: $primary; border-color: $primary; color: rgb(255, 255, 255); box-shadow: 0 4px 12px rgba(67,56,202,0.3); }
+  &:not(.active):hover { border-color: $primary; color: $primary; box-shadow: 0 2px 8px rgba(67,56,202,0.15); }
+  &:not(.active){ border-color: rgba(27, 21, 109, 0.6); color:rgba(49, 40, 164, 0.7); }
 }
 
 // ---- 岗位网格 ----
@@ -759,7 +828,7 @@ async handleStart() {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: $spacing-md;
-  margin-top: $spacing-lg; /* 顶部留白 */
+  margin-top: 0 /* 顶部留白 */
 
 }
 
@@ -949,4 +1018,118 @@ async handleStart() {
     font-weight: $font-weight-semibold;
   }
 }
+
+
+
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(15, 10, 40, 0.6);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 200;
+  display: flex; align-items: center;    // 从底部弹出，符合移动端习惯
+  justify-content: center;
+  padding: 0 16px;  
+}
+
+.modal-sheet {
+  width: 100%; max-width: 480px;
+  background: white;
+  border-radius: 24px; 
+  overflow: hidden;
+  box-shadow: 0 -8px 40px rgba(67, 56, 202, 0.2);
+  animation: sheetUp 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes sheetUp {
+  from { opacity: 0; transform: translateY(20px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.modal-header-bar {
+  background: linear-gradient(135deg, #4338ca 0%, #7c3aed 100%);
+  padding: 28px 24px 20px;
+  text-align: center;
+  position: relative;
+}
+.modal-header-title {
+  font-size: 20px; font-weight: 700; color: white; margin: 0 0 4px;
+}
+.modal-header-sub {
+  font-size: 13px; color: rgba(255,255,255,0.7); margin: 0;
+}
+
+.modal-body {
+  padding: 20px 24px 28px;
+}
+
+.interview-mode-tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 14px; border-radius: 20px;
+  font-size: 12px; font-weight: 600; margin-bottom: 16px;
+
+  &.mode-voice {
+    background: rgba(67, 56, 202, 0.08);
+    color: #4338ca;
+    border: 1px solid rgba(67, 56, 202, 0.2);
+  }
+  &.mode-text {
+    background: rgba(124, 58, 237, 0.08);
+    color: #7c3aed;
+    border: 1px solid rgba(124, 58, 237, 0.2);
+  }
+}
+
+.rules-list {
+  list-style: none; padding: 0; margin: 0 0 24px;
+  display: flex; flex-direction: column; gap: 12px;
+
+  li {
+    display: flex; align-items: flex-start; gap: 10px;
+    font-size: 13px; color: #374151; line-height: 1.5;
+  }
+}
+
+.rule-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  flex-shrink: 0; margin-top: 4px;
+  &--blue   { background: #5495ff; }
+  &--purple { background: #9d65fe; }
+  &--green  { background: #61fdc9; }
+  &--orange { background: #f7b84c; }
+}
+
+.modal-actions {
+  display: flex; gap: 12px;
+}
+
+.btn-cancel {
+  flex: 0 0 80px; height: 48px;
+  border-radius: 24px;
+  border: 1.5px solid #e5e7eb;
+  background: white; color: #6b7280;
+  font-size: 14px; font-weight: 500;
+  cursor: pointer; transition: all 0.2s;
+  font-family: $font-family-base;
+  &:hover { border-color: #d1d5db; background: #f9fafb; }
+}
+
+.btn-confirm {
+  flex: 1; height: 48px;
+  border-radius: 24px; border: none;
+  background: linear-gradient(135deg, #4338ca 0%, #7c3aed 100%);
+  color: white; font-size: 15px; font-weight: 700;
+  cursor: pointer; display: flex; align-items: center;
+  justify-content: center; gap: 8px;
+  font-family: $font-family-base;
+  box-shadow: 0 4px 16px rgba(67, 56, 202, 0.4);
+  transition: all 0.2s;
+  &:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(67, 56, 202, 0.5); }
+  &:active { transform: scale(0.98); }
+}
+
+// 弹窗动画
+.modal-enter-active { animation: overlayIn 0.3s ease both; }
+.modal-leave-active { animation: overlayIn 0.2s ease reverse both; }
+@keyframes overlayIn { from { opacity: 0; } to { opacity: 1; } }
 </style>

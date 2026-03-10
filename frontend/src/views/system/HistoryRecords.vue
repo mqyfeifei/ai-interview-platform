@@ -190,7 +190,7 @@
 
 <script>
 import { getHistoryList } from '@/api/report'
-import { JOB_TYPES } from '@/utils/constants'
+import { fetchJobs } from '@/api/job'  // 从后端获取岗位列表
 
 const PAGE_SIZE = 10
 
@@ -199,6 +199,7 @@ export default {
   data() {
     return {
       list: [],
+      jobs: [],          // 所有已注册岗位
       total: 0,
       loading: true,
       loadingMore: false,
@@ -213,13 +214,23 @@ export default {
   },
   computed: {
     jobFilterTabs() {
-      // 动态生成出现过的岗位筛选Tab
-      const appeared = [...new Set(this.list.map(r => r.jobId))]
       const tabs = [{ key: 'all', label: '全部' }]
-      appeared.forEach(id => {
-        const info = JOB_TYPES.find(j => j.id === id)
-        if (info) tabs.push({ key: id, label: info.icon + ' ' + info.name.replace('开发', '').replace('工程师', '') })
-      })
+      let arr = this.jobs
+      if (!Array.isArray(arr)) {
+        console.warn('HistoryRecords: jobs payload is not array', arr)
+        arr = []
+      }
+      for (let i = 0; i < arr.length; i++) {
+        const j = arr[i]
+        try {
+          const key = this.computeJobKey(j)
+          // 使用数据库中的完整名称作为筛选标签，避免去掉关键字导致误解
+          const label = j.name || ''
+          tabs.push({ key, label })
+        } catch (e) {
+          console.error('jobFilterTabs item error', j, e)
+        }
+      }
       return tabs
     },
 
@@ -227,7 +238,15 @@ export default {
       let arr = [...this.list]
 
       if (this.activeJobFilter !== 'all') {
-        arr = arr.filter(r => r.jobId === this.activeJobFilter)
+        arr = arr.filter(r => {
+          let key = r.jobId
+          if (!key) {
+            // try match against jobs list by name to get correct key
+            const jobRec = (this.jobs || []).find(j => j.name === r.jobName)
+            key = jobRec ? this.computeJobKey(jobRec) : this.computeJobKey({ name: r.jobName })
+          }
+          return key === this.activeJobFilter
+        })
       }
 
       if (this.searchQuery.trim()) {
@@ -281,7 +300,7 @@ export default {
     }
   },
   async created() {
-    await this.loadList()
+    await Promise.all([this.loadList(), this.loadJobs()])
   },
   mounted() {
     this.updateHeights()
@@ -354,7 +373,15 @@ export default {
         this.loadingMore = false
       }
     },
-
+    async loadJobs() {
+      try {
+        const all = await fetchJobs()
+        this.jobs = Array.isArray(all) ? all : []
+      } catch (e) {
+        console.warn('加载岗位列表失败', e)
+        this.jobs = []
+      }
+    },
     clearFilters() {
       this.searchQuery = ''
       this.activeJobFilter = 'all'
@@ -364,8 +391,26 @@ export default {
       this.$router.push(`/interview/report/${record.id}`)
     },
 
+    // 根据岗位名称推断前端使用的 key，与后端 _job_to_front_key 同步
+    computeJobKey(job) {
+      if (!job) return null
+      const name = (job.name || '').toLowerCase()
+      if (name.includes('java')) return 'java-backend'
+      if (name.includes('前端') || name.includes('frontend') || name.includes('web')) return 'web-frontend'
+      if (name.includes('python') || name.includes('算法')) return 'python-algorithm'
+      if (name.includes('全栈')) return 'fullstack'
+      if (name.includes('android')) return 'android'
+      if (name.includes('devops')) return 'devops'
+      if (name.includes('视觉') || name.includes('cv')) return 'cv'
+      return String(job.id)
+    },
+
     jobInfo(jobId) {
-      return JOB_TYPES.find(j => j.id === jobId) || { icon: '🎯', colorBg: '#EEF2FF' }
+      const info = (this.jobs || []).find(j => this.computeJobKey(j) === jobId)
+      if (info) {
+        return { icon: info.icon || '🎯', colorBg: info.colorBg || '#EEF2FF' }
+      }
+      return { icon: '🎯', colorBg: '#EEF2FF' }
     },
 
     scoreColor(score) {
