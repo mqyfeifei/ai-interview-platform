@@ -21,7 +21,16 @@ const state = () => ({
 const mutations = {
   SET_GROWTH_DATA(state, data) { state.growthData = data },
   SET_WEAKNESSES(state, data) { state.weaknesses = Array.isArray(data) ? data : [] },
-  SET_RECOMMENDATIONS(state, data) { state.recommendations = Array.isArray(data) ? data : [] },
+  SET_RECOMMENDATIONS(state, data) {
+    if (Array.isArray(data)) {
+      // 去重，以 id 为准
+      const map = new Map()
+      data.forEach(item => { map.set(item.id, item) })
+      state.recommendations = Array.from(map.values())
+    } else {
+      state.recommendations = []
+    }
+  },
   SET_DAILY_PLAN(state, data) { state.dailyPlan = data },
   SET_LOADING(state, v) { state.loading = v },
   SET_ACTIVE_FILTER(state, v) { state.activeFilter = v },
