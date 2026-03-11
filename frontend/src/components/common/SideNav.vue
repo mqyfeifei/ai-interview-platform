@@ -156,8 +156,8 @@ export default {
 }
 
 .brand-sub {
-  font-size: 11px;
-  color: #8795da;             // 淡紫色，比 $text-muted 更有品牌感
+  font-size: 10px;
+  color: #7d8ac9;             // 淡紫色，比 $text-muted 更有品牌感
   letter-spacing: 0.2px;
   margin-top: 1px;
 }
