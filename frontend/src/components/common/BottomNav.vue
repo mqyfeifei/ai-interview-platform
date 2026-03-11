@@ -68,7 +68,7 @@ export default {
   width: 100%;
   max-width: $max-content-width;
   height: $bottom-nav-height;
-  background: rgba(255, 255, 255, 0.96);
+  background: rgba(230, 234, 254, 0.95);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-top: 1px solid $border-color;

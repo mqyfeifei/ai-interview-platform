@@ -42,7 +42,7 @@ export default {
   justify-content: space-between;
   height: $top-nav-height;
   padding: 0 $spacing-base;
-  background: rgba(255,255,255,0.95);
+  background: rgba(230, 234, 254, 0);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border-bottom: 1px solid $border-color;

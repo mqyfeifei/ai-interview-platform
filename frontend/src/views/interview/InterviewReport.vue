@@ -513,7 +513,7 @@ export default {
   display: flex; align-items: center; justify-content: space-between;
   height: $top-nav-height;
   padding: 0 $spacing-base;
-  background: rgba(255,255,255,0.95);
+  background: rgb(219, 225, 254);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid $border-color;
   box-shadow: $shadow-sm;
