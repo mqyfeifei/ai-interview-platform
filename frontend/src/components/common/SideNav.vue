@@ -5,7 +5,7 @@
       <img class="brand-logo" src="@/assets/logo1.jpg" alt="码上offer" />
       <div class="brand-text">
         <p class="brand-title">码上offer</p>
-        <p class="brand-sub">AI面试智能练习平台</p>
+        <p class="brand-sub">AI模拟面试与能力提升软件</p>
       </div>
     </div>
 
@@ -69,7 +69,7 @@ export default {
 .side-nav {
   height: 100%;
   min-height: 100vh;
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(230, 234, 254, 0.95);
   border-right: 1px solid $border-color;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
