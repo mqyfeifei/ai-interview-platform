@@ -1,10 +1,11 @@
 <template>
   <aside class="side-nav">
     <div class="side-nav__brand" @click="$router.push('/dashboard')">
-      <img class="brand-logo" src="@/assets/logo.png" alt="AI面试助手" />
+      <!-- <img class="brand-logo" src="@/assets/logo5.png" alt="码上offer" /> -->
+      <img class="brand-logo" src="@/assets/logo1.jpg" alt="码上offer" />
       <div class="brand-text">
-        <p class="brand-title">AI面试助手</p>
-        <p class="brand-sub">智能练习平台</p>
+        <p class="brand-title">码上offer</p>
+        <p class="brand-sub">AI面试智能练习平台</p>
       </div>
     </div>
 
@@ -134,23 +135,30 @@ export default {
 }
 
 .brand-logo {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;        // 改成圆角方形，像 App 图标
   object-fit: cover;
-  box-shadow: $shadow-primary;
-  transform: scale(1.9) ; 
-  // 不需要 background、color 等文字相关样式
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);  // 紫色光晕，更融合
+  transform: scale(1.5);            // 去掉 scale(1.9)
+  flex-shrink: 0;
+  
 }
 
 .brand-title {
-  font-size: 22px;
-  font-weight: $font-weight-bold;
-  color: $text-primary;
+  font-size: 20px;
+  font-weight: 800;
+  background: linear-gradient(135deg, #4f51be 0%, #6644b4 50%, #3629c4 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.3px;
 }
 
 .brand-sub {
-  font-size: 14px;
-  color: $text-muted;
+  font-size: 11px;
+  color: #8795da;             // 淡紫色，比 $text-muted 更有品牌感
+  letter-spacing: 0.2px;
+  margin-top: 1px;
 }
 </style>

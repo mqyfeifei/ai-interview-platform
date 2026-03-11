@@ -67,24 +67,24 @@
               <span class="hero-stat__value">{{ report.questions ? report.questions.length : 0 }}</span>
               <span class="hero-stat__label">回答题目</span>
             </div>
-            <div class="hero-stat-divider" />
+            <!-- <div class="hero-stat-divider" />
             <div class="hero-stat">
               <span class="hero-stat__value">{{ followUpCount }}</span>
               <span class="hero-stat__label">追问次数</span>
-            </div>
+            </div> -->
             <!-- 新增：亮点数 -->
-<!-- <div class="hero-stat-divider" />
+<div class="hero-stat-divider" />
 <div class="hero-stat">
   <span class="hero-stat__value">{{ report.highlights ? report.highlights.length : 0 }}</span>
   <span class="hero-stat__label">回答亮点</span>
-</div> -->
+</div>
 
 <!-- 新增：待提升数 -->
-<!-- <div class="hero-stat-divider" />
+<div class="hero-stat-divider" />
 <div class="hero-stat">
   <span class="hero-stat__value">{{ report.improvements ? report.improvements.length : 0 }}</span>
   <span class="hero-stat__label">待提升项</span>
-</div> -->
+</div>
 <!-- <div class="hero-stat">
   <span class="hero-stat__value">{{ formatDateTime(report.createdAt) }}</span>
   <span class="hero-stat__label">面试时间</span>
