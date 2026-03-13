@@ -99,7 +99,7 @@ const router = createRouter({
 // ---- 全局路由守卫 ----
 router.beforeEach((to, from, next) => {
   // 设置页面标题
-  document.title = to.meta.title ? `${to.meta.title} - AI面试助手` : 'AI面试助手'
+  document.title = to.meta.title ? `${to.meta.title} - 码上offer` : '码上offer'
 
   const requiresAuth = to.meta.requiresAuth !== false
 

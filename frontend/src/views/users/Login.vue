@@ -16,7 +16,7 @@
       <div class="brand-panel">
         <div class="brand-inner">
           <div class="brand-mark">
-            <span class="brand-mark__name">AI面试助手</span>
+            <span class="brand-mark__name">码上offer</span>
           </div>
           <p class="brand-tagline">用 AI 驱动模拟面试<br>让你从容应对每一次挑战</p>
           <div class="brand-pills">
@@ -31,7 +31,7 @@
       <div class="glass-card">
         <div class="mobile-logo">
           <span>🎯</span>
-          <span>AI面试助手</span>
+          <span>码上offer</span>
         </div>
 
         <div class="card-header">
