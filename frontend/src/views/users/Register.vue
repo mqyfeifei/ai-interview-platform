@@ -16,7 +16,7 @@
       <div class="brand-panel">
         <div class="brand-inner">
           <div class="brand-mark">
-            <span class="brand-mark__name">AI面试助手</span>
+            <span class="brand-mark__name">码上offer</span>
           </div>
           <p class="brand-tagline">开启你的<br>AI面试训练之旅</p>
 
@@ -36,7 +36,7 @@
       <div class="glass-card">
         <div class="mobile-logo">
           <span>🎯</span>
-          <span>AI面试助手</span>
+          <span>码上offer</span>
         </div>
 
         <!-- 步骤指示器 -->
@@ -367,7 +367,8 @@ export default {
         submitData.real_name = submitData.realName
         delete submitData.realName
         await this.register(submitData)
-        this.$router.push('/interview/select')
+        // this.$router.push('/interview/select')
+        this.$router.push('/')
       } catch (err) {
         this.globalError = err.message || '注册失败，请稍后重试'
       } finally {
