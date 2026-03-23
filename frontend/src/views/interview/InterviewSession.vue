@@ -61,154 +61,157 @@
       </div>
     </header>
 
-    <!-- 消息流 -->
-    <div class="messages-container" ref="messagesContainer">
-      <!-- 面试开始提示 -->
-      <div class="messages-inner"> 
-        <div class="session-start-tip">
-          <div class="session-start-tip__line" />
-          <span>面试正式开始</span>
-          <div class="session-start-tip__line" />
-        </div>
-      </div>
-
-      <!-- 消息气泡 -->
-      <transition-group name="message" tag="div" class="messages-list">
-        <div
-          v-for="msg in messages"
-          :key="msg.id"
-          :class="['message-item', 'message-item--' + msg.role]"
-          v-show="!(msg.role === 'ai' && msg.streaming && !msg.content)"
-          >
-          <!-- AI 头像 -->
-          <div v-if="msg.role === 'ai'" class="message-avatar message-avatar--ai">
-            <span>🤖</span>
+    <!-- <div class="interview-body page-container"> -->
+      <!-- 消息流 -->
+      <div class="messages-container page-container" ref="messagesContainer">
+        <!-- 面试开始提示 -->
+        <div class="messages-inner"> 
+          <div class="session-start-tip">
+            <div class="session-start-tip__line" />
+            <span>面试正式开始</span>
+            <div class="session-start-tip__line" />
           </div>
+        </div>
 
-          <div class="message-bubble-wrap">
-            <!-- 追问标识 -->
-            <div v-if="msg.isFollowUp" class="followup-badge">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px">
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-              </svg>
-              追问
+        <!-- 消息气泡 -->
+        <transition-group name="message" tag="div" class="messages-list">
+          <div
+            v-for="msg in messages"
+            :key="msg.id"
+            :class="['message-item', 'message-item--' + msg.role]"
+            v-show="!(msg.role === 'ai' && msg.streaming && !msg.content)"
+            >
+            <!-- AI 头像 -->
+            <div v-if="msg.role === 'ai'" class="message-avatar message-avatar--ai">
+              <span>🤖</span>
             </div>
 
-            <div :class="['message-bubble', 'message-bubble--' + msg.role]" v-show="msg.content">
-            <div
-              v-if="msg.role === 'ai'"
-              class="message-text markdown-body"
-              v-html="renderMarkdown(msg.content)"
+            <div class="message-bubble-wrap">
+              <!-- 追问标识 -->
+              <div v-if="msg.isFollowUp" class="followup-badge">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                </svg>
+                追问
+              </div>
+
+              <div :class="['message-bubble', 'message-bubble--' + msg.role]" v-show="msg.content">
+              <div
+                v-if="msg.role === 'ai'"
+                class="message-text markdown-body"
+                v-html="renderMarkdown(msg.content)"
+              />
+              <p v-else class="message-text">{{ msg.content }}</p>
+              </div>
+
+              <span class="message-time" v-show="msg.content">{{ formatTime(msg.timestamp) }}</span>
+            </div>
+
+            <!-- 用户头像 -->
+            <div v-if="msg.role === 'user'" class="message-avatar message-avatar--user">
+              <img v-if="userAvatarUrl" :src="userAvatarUrl" class="avatar-img" alt="avatar" />
+              <span v-else>{{ userAvatarLetter }}</span>
+            </div>
+          </div>
+        </transition-group>
+
+        <!-- AI 思考中动画 -->
+        <transition name="fade">
+          <div v-if="isLoading && !hasStreamingMessage" class="message-item message-item--ai thinking-row">
+            <div class="message-avatar message-avatar--ai">
+              <span>🤖</span>
+            </div>
+            <div class="thinking-bubble">
+              <span class="thinking-dot" />
+              <span class="thinking-dot" />
+              <span class="thinking-dot" />
+            </div>
+          </div>
+        </transition>
+
+        <!-- 面试结束提示 -->
+        <div v-if="isFinished" class="session-end-tip">
+          <div class="session-end-tip__icon">🎉</div>
+          <p class="session-end-tip__title">面试已完成</p>
+          <p class="session-end-tip__sub">面试报告已生成，且已保存在历史记录中</p>
+              <transition name="fade">
+              <button class="view-report-btn" @click="goToReport">
+                查看面试报告 →
+              </button>
+            </transition>
+        </div>
+
+        <div style="height: 16px;" />
+      </div>
+
+      <!-- 底部输入区 -->
+      <div class="input-area" :class="{ disabled: isFinished || isLoading }">
+        <!-- 语音状态提示条 -->
+        <transition name="slide-up">
+          <div v-if="isRecording" class="recording-bar">
+            <div class="recording-bar__wave">
+              <span v-for="n in 5" :key="n" class="wave-bar" :style="{ animationDelay: n * 0.1 + 's' }" />
+            </div>
+            <span class="recording-bar__text">正在录音... 再次点击麦克风停止</span>
+            <span class="recording-bar__time">{{ recordingTime }}s</span>
+          </div>
+        </transition>
+        <div v-if="isSending" class="transcribing-tip">
+          📡 语音发送中，请稍候...
+        </div>
+
+
+        <div class="input-row">
+          <!-- 语音按钮 -->
+          <button
+            :class="['voice-btn', { active: isRecording }]"
+            @click="toggleRecording"
+            :disabled="isFinished || isLoading || !voiceMode"
+            :title="!voiceMode ? '文字面试模式下不支持语音输入' : isRecording ? '停止录音' : '语音输入'"
+            >
+            <svg v-if="!isRecording" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+              <line x1="12" y1="19" x2="12" y2="23"/>
+              <line x1="8" y1="23" x2="16" y2="23"/>
+            </svg>
+            <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="6" y="6" width="12" height="12" rx="2"/>
+            </svg>
+          </button>
+
+
+
+          <!-- 文本输入框 -->
+          <div class="textarea-wrapper">
+            <textarea
+              ref="inputRef"
+              v-model="inputText"
+              :placeholder="isLoading ? 'AI 正在思考中...' : '在此输入你的回答，支持换行...'"
+              :disabled="isFinished || isLoading"
+              class="input-textarea"
+              rows="1"
+              @keydown.enter.exact.prevent="handleSend"
+              @input="autoResize"
             />
-            <p v-else class="message-text">{{ msg.content }}</p>
-            </div>
-
-            <span class="message-time" v-show="msg.content">{{ formatTime(msg.timestamp) }}</span>
+            <span class="input-hint">Enter 发送 · Shift+Enter 换行</span>
           </div>
 
-          <!-- 用户头像 -->
-          <div v-if="msg.role === 'user'" class="message-avatar message-avatar--user">
-            <img v-if="userAvatarUrl" :src="userAvatarUrl" class="avatar-img" alt="avatar" />
-            <span v-else>{{ userAvatarLetter }}</span>
-          </div>
-        </div>
-      </transition-group>
-
-      <!-- AI 思考中动画 -->
-      <transition name="fade">
-        <div v-if="isLoading && !hasStreamingMessage" class="message-item message-item--ai thinking-row">
-          <div class="message-avatar message-avatar--ai">
-            <span>🤖</span>
-          </div>
-          <div class="thinking-bubble">
-            <span class="thinking-dot" />
-            <span class="thinking-dot" />
-            <span class="thinking-dot" />
-          </div>
-        </div>
-      </transition>
-
-      <!-- 面试结束提示 -->
-      <div v-if="isFinished" class="session-end-tip">
-        <div class="session-end-tip__icon">🎉</div>
-        <p class="session-end-tip__title">面试已完成</p>
-        <p class="session-end-tip__sub">面试报告已生成，且已保存在历史记录中</p>
-            <transition name="fade">
-            <button class="view-report-btn" @click="goToReport">
-              查看面试报告 →
-            </button>
-          </transition>
-      </div>
-
-      <div style="height: 16px;" />
-    </div>
-
-    <!-- 底部输入区 -->
-    <div class="input-area" :class="{ disabled: isFinished || isLoading }">
-      <!-- 语音状态提示条 -->
-      <transition name="slide-up">
-        <div v-if="isRecording" class="recording-bar">
-          <div class="recording-bar__wave">
-            <span v-for="n in 5" :key="n" class="wave-bar" :style="{ animationDelay: n * 0.1 + 's' }" />
-          </div>
-          <span class="recording-bar__text">正在录音... 再次点击麦克风停止</span>
-          <span class="recording-bar__time">{{ recordingTime }}s</span>
-        </div>
-      </transition>
-      <div v-if="isSending" class="transcribing-tip">
-        📡 语音发送中，请稍候...
-      </div>
-
-
-      <div class="input-row">
-        <!-- 语音按钮 -->
-        <button
-          :class="['voice-btn', { active: isRecording }]"
-          @click="toggleRecording"
-          :disabled="isFinished || isLoading || !voiceMode"
-          :title="!voiceMode ? '文字面试模式下不支持语音输入' : isRecording ? '停止录音' : '语音输入'"
+          <!-- 发送按钮 -->
+          <button
+            :class="['send-btn', { ready: inputText.trim() && !isLoading && !isFinished }]"
+            :disabled="!inputText.trim() || isLoading || isFinished"
+            @click="handleSend"
           >
-          <svg v-if="!isRecording" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
-            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-            <line x1="12" y1="19" x2="12" y2="23"/>
-            <line x1="8" y1="23" x2="16" y2="23"/>
-          </svg>
-          <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="6" y="6" width="12" height="12" rx="2"/>
-          </svg>
-        </button>
-
-
-
-        <!-- 文本输入框 -->
-        <div class="textarea-wrapper">
-          <textarea
-            ref="inputRef"
-            v-model="inputText"
-            :placeholder="isLoading ? 'AI 正在思考中...' : '在此输入你的回答，支持换行...'"
-            :disabled="isFinished || isLoading"
-            class="input-textarea"
-            rows="1"
-            @keydown.enter.exact.prevent="handleSend"
-            @input="autoResize"
-          />
-          <span class="input-hint">Enter 发送 · Shift+Enter 换行</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="22" y1="2" x2="11" y2="13"/>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+            </svg>
+          </button>
         </div>
-
-        <!-- 发送按钮 -->
-        <button
-          :class="['send-btn', { ready: inputText.trim() && !isLoading && !isFinished }]"
-          :disabled="!inputText.trim() || isLoading || isFinished"
-          @click="handleSend"
-        >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="22" y1="2" x2="11" y2="13"/>
-            <polygon points="22 2 15 22 11 13 2 9 22 2"/>
-          </svg>
-        </button>
       </div>
-    </div>
+
+    <!-- </div> -->
 
         <!-- ↓ 新增：面试结束/报告生成中 遮罩 -->
     <transition name="ending-fade">
@@ -716,6 +719,17 @@ renderMarkdown(text) {
 
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 
+
+// .interview-body {
+//   flex: 1;                    // ← 占满剩余高度
+//   display: flex;              // ← 内部继续 flex 列布局
+//   flex-direction: column;
+//   overflow: hidden;           // ← 防止撑破父容器
+//   min-height: 0;              // ← flex 子元素必须加，否则 flex:1 不生效
+//   padding: 0;
+//   animation: fadeSlideUp 0.4s ease both;
+// }
+
 .end-btn {
   padding: 7px $spacing-md;
   border-radius: $border-radius-full;
@@ -736,7 +750,7 @@ renderMarkdown(text) {
 .messages-container {
   flex: 1;
   overflow-y: auto;
-  padding: $spacing-base;
+  padding: 0;
   scroll-behavior: smooth;
 
   &::-webkit-scrollbar { width: 3px; }

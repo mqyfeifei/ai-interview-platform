@@ -1,73 +1,106 @@
-// =============================================
-// frontend/src/App.vue
-
 <template>
   <div id="app-root" class="app-shell">
-    <!-- 根据路由元信息控制侧边栏显示 -->
-    <SideNav 
-      v-if="!route.meta.hideNavigation && !route.meta.hideSideNav" 
-      class="app-shell__side" 
+
+    <!-- PC端顶部导航 -->
+    <TopNav
+      v-if="isPC && !route.meta.hideNavigation && !route.meta.hideSideNav"
+      class="app-shell__topnav"
     />
 
-    <main class="app-shell__main" :class="{ 'no-nav': hideAllNav }">
-      <router-view v-slot="{ Component, route }">
-        <transition name="page" mode="out-in">
-          <component :is="Component" :key="route.path" />
-        </transition>
-      </router-view>
-    </main>
+    <div class="app-shell__body" :class="{ 'no-nav': hideAllNav }">
+      <!-- 移动端侧边栏（宽屏时隐藏） -->
+      <SideNav
+        v-if="!isPC && !route.meta.hideNavigation && !route.meta.hideSideNav"
+        class="app-shell__side"
+      />
 
-    <!-- 根据路由元信息控制底部导航显示 -->
-    <BottomNav 
-      v-if="!route.meta.hideNavigation && !route.meta.hideBottomNav" 
-      class="app-shell__bottom" 
+      <main class="app-shell__main">
+        <router-view v-slot="{ Component, route }">
+          <transition name="page" mode="out-in">
+            <component :is="Component" :key="route.path" />
+          </transition>
+        </router-view>
+      </main>
+    </div>
+
+    <!-- 移动端底部导航 -->
+    <BottomNav
+      v-if="!isPC && !route.meta.hideNavigation && !route.meta.hideBottomNav"
+      class="app-shell__bottom"
     />
+
   </div>
 </template>
 
 <script>
 import BottomNav from '@/components/common/BottomNav.vue'
 import SideNav from '@/components/common/SideNav.vue'
-import { computed } from 'vue'
+import TopNav from '@/components/common/TopNav.vue'
+import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 
 export default {
   name: 'App',
   components: {
     SideNav,
-    BottomNav
+    BottomNav,
+    TopNav
   },
   setup() {
     const route = useRoute()
-    
-    const hideAllNav = computed(() => {
-      return route.meta.hideNavigation === true
-    })
-    
-    return {
-      route,
-      hideAllNav
-    }
+
+    // 响应式判断是否 PC 端
+    const isPC = ref(window.innerWidth >= 1024)
+    const onResize = () => { isPC.value = window.innerWidth >= 1024 }
+    onMounted(() => window.addEventListener('resize', onResize))
+    onUnmounted(() => window.removeEventListener('resize', onResize))
+
+    const hideAllNav = computed(() => route.meta.hideNavigation === true)
+
+    return { route, hideAllNav, isPC }
   }
 }
 </script>
 
 <style lang="scss">
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
 #app-root {
   width: 100%;
   min-height: 100vh;
 }
 
+// =============================================
+// 移动端默认布局
+// =============================================
 .app-shell {
-  display: block;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+
+  &__topnav {
+    display: none; // 移动端隐藏
+  }
+
+  &__body {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+  }
 
   &__side {
     display: none;
   }
 
   &__main {
+    flex: 1;
     min-height: 100vh;
     padding-bottom: $bottom-nav-height;
+    overflow-y: auto;
   }
 
   &__bottom {
@@ -75,27 +108,35 @@ export default {
   }
 }
 
+// =============================================
+// PC端布局（≥ 1024px）
+// =============================================
 @media (min-width: 1024px) {
   .app-shell {
-    /* PC端全屏布局，无边距 */
-    width: 100vw;
+    flex-direction: column; // 顶部导航 + 下方内容纵向排列
     height: 100vh;
-    overflow: hidden; /* 禁用外层滚动 */
-    display: flex;
-    margin: 0;
-    padding: 0;
+    overflow: hidden;
+
+    &__topnav {
+      display: flex; // PC端显示顶部导航
+      flex-shrink: 0;
+    }
+
+    &__body {
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+    }
 
     &__side {
-      display: block;
-      width: 256px; /* 侧边栏宽度 */
-      flex-shrink: 0;
-      overflow-y: auto; /* 侧边栏内容过多时可内部滚动 */
+      display: none !important; // PC端侧边栏隐藏
     }
 
     &__main {
       flex: 1;
+      min-height: 0;
       height: 100%;
-      overflow-y: auto; /* 主内容区域独立滚动 */
+      overflow-y: auto;
       padding-bottom: 0;
     }
 
@@ -105,37 +146,42 @@ export default {
   }
 }
 
-// 页面切换过渡
+// =============================================
+// 页面切换动画
+// =============================================
 .page-enter-active {
-  animation: pageEnter 0.3s ease both;
+  animation: pageEnter 0.25s ease both;
 }
 .page-leave-active {
-  animation: pageLeave 0.2s ease both;
+  animation: pageLeave 0.15s ease both;
 }
 
 @keyframes pageEnter {
-  from { opacity: 0; transform: translateY(12px); }
+  from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+
 @keyframes pageLeave {
-  from { opacity: 1; transform: translateY(0); }
-  to   { opacity: 0; transform: translateY(-8px); }
+  from { opacity: 1; }
+  to   { opacity: 0; }
 }
 
 
-
-.app-shell__main {
-  min-height: 100vh;
-  padding-bottom: $bottom-nav-height;
-  
-  &.no-nav {
-    padding-bottom: 0;
-  }
+// =============================================
+// 全局页面内容容器（所有页面通用）
+// =============================================
+.page-container {
+  width: 90%;
+  max-width: 1300px;   // 最大宽度，参考第二张图的感觉
+  margin: 24px auto;      // 水平居中
+  padding: 24px 28px;  // 上下内边距 + 左右内边距
+  box-sizing: border-box;
 }
 
-@media (min-width: 1024px) {
-  .app-shell__main.no-nav {
-    // PC端无导航时的样式调整
+// 移动端缩小内边距
+@media (max-width: 767px) {
+  .page-container {
+    padding: 16px 16px;
   }
 }
 </style>

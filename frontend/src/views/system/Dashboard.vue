@@ -5,139 +5,73 @@
   ============================================= -->
 <template>
   <div class="dashboard-page">
-    
-    <!-- 顶部渐变Header -->
-    <div class="dashboard-header">
-      
-      <div class="header-content">
-        <div class="header-top">
-          <div class="greeting">
-            <p class="greeting__time">{{ timeGreeting }}</p>
-            <!-- 未登录状态 -->
-            <template v-if="!isLoggedIn">
-              <h1 class="greeting__name">你好，访客 👋</h1>
-              <p class="greeting__hint">登录后开始你的面试学习之旅</p>
-              <button class="login-btn" @click="$router.push('/login')">
-                <span>立即登录</span>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="9 18 15 12 9 6"/>
-                </svg>
-              </button>
-            </template>
-            <!-- 已登录状态 -->
-            <template v-else>
-              <h1 class="greeting__name">{{ userName }} 👋</h1>
-            </template>
-          </div>
-
-          <!-- 已登录：头像 -->
-          <div class="header-avatar" v-if="isLoggedIn" @click="$router.push('/profile')">
-            <img v-if="userInfo && userInfo.avatar" :src="resolvedAvatarSrc" alt="头像" />
-            <span v-else class="avatar-fallback">{{ avatarLetter }}</span>
-          </div>
-        </div>
-
-        <!-- 最近面试卡片 - 仅登录用户显示 -->
-        <div class="recent-score-card" v-if="isLoggedIn && stats.lastInterviewScore">
-          <div class="recent-score-card__left">
-            <p class="recent-score-card__label">上次面试</p>
-            <p class="recent-score-card__job">{{ stats.lastInterviewJob }}</p>
-            <p class="recent-score-card__date">{{ formatDate(stats.lastInterviewAt) }}</p>
-          </div>
-          <div class="recent-score-card__right">
-            <div class="score-ring">
-              <svg viewBox="0 0 60 60">
-                <circle cx="30" cy="30" r="24" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="5"/>
-                <circle
-                  cx="30" cy="30" r="24"
-                  fill="none"
-                  stroke="white"
-                  stroke-width="5"
-                  stroke-linecap="round"
-                  :stroke-dasharray="scoreCircumference"
-                  :stroke-dashoffset="scoreOffset"
-                  transform="rotate(-90 30 30)"
-                  style="transition: stroke-dashoffset 1.2s cubic-bezier(0.4,0,0.2,1)"
-                />
-              </svg>
-              <span class="score-ring__value">{{ stats.lastInterviewScore }}</span>
-            </div>
-            <div
-              class="score-trend"
-              :class="stats.scoreImprovement >= 0 ? 'up' : 'down'"
-              v-if="stats.scoreImprovement !== undefined && stats.scoreImprovement !== 0"
-            >
-              <span>{{ stats.scoreImprovement >= 0 ? '↑' : '↓' }}</span>
-              <span>{{ Math.abs(stats.scoreImprovement) }}分</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- 无面试记录 - 仅登录用户显示 -->
-        <div class="no-interview-card" v-else-if="isLoggedIn">
-          <span class="no-interview-card__icon">🎯</span>
-          <div>
-            <p class="no-interview-card__title">开始你的第一次面试</p>
-            <p class="no-interview-card__sub">AI面试官已就位，随时开始练习</p>
-          </div>
-        </div>
-      </div>
-    </div>
 
     <!-- 主内容区 -->
-    <div class="dashboard-body">
-      <!-- 数据概览 - 仅登录用户显示 -->
-      <div class="stats-row" v-if="isLoggedIn">
-        <div class="stats-card" v-for="s in statCards" :key="s.label">
-          <span class="stats-card__icon">{{ s.icon }}</span>
-          <span class="stats-card__value">{{ s.value }}</span>
-          <span class="stats-card__label">{{ s.label }}</span>
-        </div>
-      </div>
+    <div class="dashboard-body page-container">
 
-      <!-- 快速开始 - 全新卡片式设计 -->
-      <section class="section quick-start-section">
-        <div class="quick-start-card">
-          <div class="quick-start-card__bg"></div>
-          <div class="quick-start-card__content">
-            <div class="quick-start-card__header">
-              <span class="quick-start-card__icon">🚀</span>
-              <h2 class="quick-start-card__title">开始模拟面试</h2>
-            </div>
-            <p class="quick-start-card__desc">AI面试官已就位，选择岗位立即开始</p>
-            
-            <!-- 热门岗位标签 -->
-            <div class="hot-job-tags">
-              <button 
-                class="job-tag" 
-                v-for="job in topHotJobs" 
-                :key="job.id"
-                :style="{ '--tag-color': job.color, '--tag-bg': job.colorBg, '--tag-hover-bg': job.colorHoverBg }"
-                @click="showJobConfirm(job)"
-              >
-                <span class="job-tag__icon">{{ job.icon }}</span>
-                <span class="job-tag__name">{{ job.name.replace('开发', '').replace('工程师', '') }}</span>
-              </button>
-              <button class="job-tag job-tag--more" @click="$router.push('/interview/select')">
-                <span class="job-tag__icon">📋</span>
-                <span class="job-tag__name">更多岗位</span>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="job-tag__arrow">
-                  <polyline points="6 9 12 15 18 9"/>
-                </svg>
-              </button>
-            </div>
+      <div class="hero-layout">
 
-            <!-- 开始面试按钮 -->
-            <button class="start-interview-btn" @click="startInterview">
-              <span>开始面试</span>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="9 18 15 12 9 6"/>
-              </svg>
-            </button>
+        <!-- 左：问候+数据卡片 -->
+        <div class="hero-card">
+          <div class="hero-card__greet">
+            <h2 class="hero-greet">{{ timeGreeting }}，{{ isLoggedIn ? userName : '访客' }} </h2>
+            <span class="hero-date">{{ heroDate }}</span>
+          </div>
+          <div class="hero-stats" v-if="isLoggedIn">
+            <div class="hero-stat">
+              <span class="hero-stat__val">{{ stats.totalInterviews || 0 }}</span>
+              <span class="hero-stat__lbl">练习次数</span>
+            </div>
+            <div class="hero-stat__sep" />
+            <div class="hero-stat">
+              <span class="hero-stat__val">{{ stats.avgScore || '--' }}</span>
+              <span class="hero-stat__lbl">平均得分</span>
+            </div>
+            <div class="hero-stat__sep" />
+            <div class="hero-stat">
+              <span class="hero-stat__val hero-stat__val--accent">{{ stats.lastInterviewScore || '--' }}</span>
+              <span class="hero-stat__lbl">最近得分</span>
+            </div>
+            <div class="hero-stat__sep" />
+            <div class="hero-stat">
+              <span class="hero-stat__val">{{ streakDays }}</span>
+              <span class="hero-stat__lbl">连续天数</span>
+            </div>
           </div>
         </div>
-      </section>
 
+        <!-- 右：开始面试卡片 -->
+        <div class="start-card">
+          <div class="start-card__header">
+            <div>
+              <h2 class="start-card__title">开始模拟面试</h2>
+              <p class="start-card__desc">AI 面试官已就位，选择岗位立即开始</p>
+            </div>
+          </div>
+          <div class="start-card__jobs">
+            <button
+              class="job-chip"
+              v-for="job in topHotJobs"
+              :key="job.id"
+              @click="showJobConfirm(job)"
+            >
+              <span>{{ job.icon }}</span>
+              <span>{{ job.name.replace('开发','').replace('工程师','') }}</span>
+            </button>
+            <button class="job-chip job-chip--more" @click="$router.push('/interview/select')">
+              📋 更多岗位
+            </button>
+          </div>
+          <button class="start-btn" @click="startInterview">
+            开始面试
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+              stroke-linecap="round" stroke-linejoin="round" width="15" height="15">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </button>
+        </div>
+
+      </div>
       <!-- 双栏布局：能力雷达 + 学习动态/成就 -->
       <section class="section two-column-section" v-if="isLoggedIn">
         <!-- 左侧：能力雷达图预览 -->
@@ -274,8 +208,6 @@
 
     <!-- 使用帮助指南（首次登录自动弹出一次） -->
     <HelpGuideModal v-model="showHelpGuide" @dismiss="markHelpGuideShown" />
-
-    <!-- 岗位确认弹窗 -->
     <!-- 岗位确认弹窗 -->
     <transition name="modal-fade">
       <div class="modal-overlay" v-if="showConfirmModal" @click.self="closeConfirmModal">
@@ -370,6 +302,7 @@
         </div>
       </div>
     </transition>
+
   </div>
 </template>
 
@@ -408,6 +341,12 @@ export default {
         }
 
       },
+      platformFeatures: [
+  { icon: '🤖', title: 'AI智能面试官', desc: '基于大语言模型，真实模拟面试场景' },
+  { icon: '📊', title: '多维能力评估', desc: '从专业知识、逻辑、表达等多维度分析' },
+  { icon: '📈', title: '个性化学习路径', desc: 'AI分析薄弱点，智能推荐学习内容' },
+  { icon: '🎯', title: '精准题库覆盖', desc: '覆盖Java、前端、Python等热门方向' },
+],
       dailyTips: [
         '回答时采用 STAR 法则（情境-任务-行动-结果），让回答更有结构和说服力。',
         '面试前10分钟快速回顾项目亮点，准备2-3个"失败经历+如何改进"的故事。',
@@ -442,6 +381,11 @@ export default {
     }
   },
   computed: {
+    heroDate() {
+  const d = new Date()
+  const days = ['周日','周一','周二','周三','周四','周五','周六']
+  return `${d.getMonth()+1}月${d.getDate()}日 ${days[d.getDay()]}`
+},
     ...mapGetters('user', ['userInfo', 'userName', 'defaultJob', 'isLoggedIn']),
 
     timeGreeting() {
@@ -483,14 +427,6 @@ export default {
 
     topHotJobs() {
       return this.jobs.slice(0, 3)
-    },
-
-    statCards() {
-      return [
-        { icon: '🎯', value: this.stats.totalInterviews || 0, label: '练习次数' },
-        { icon: '⭐', value: this.stats.avgScore || '--', label: '平均得分' },
-        { icon: '🔥', value: this.stats.weeklyPractice || 0, label: '本周练习' }
-      ]
     },
 
     scoreCircumference() {
@@ -831,45 +767,11 @@ export default {
   padding-bottom: $bottom-nav-height;
 }
 
-// 顶部 Header
-.dashboard-header {
-  background: $gradient-primary;
-  padding: 0;
-  position: relative;
-  overflow: hidden;
 
-  &::before {
-    content: '';
-    position: absolute;
-    width: 300px; height: 300px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%);
-    top: -80px; right: -60px;
-    pointer-events: none;
-  }
-  &::after {
-    content: '';
-    position: absolute;
-    width: 200px; height: 200px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(124,58,237,0.3) 0%, transparent 70%);
-    bottom: -40px; left: -40px;
-    pointer-events: none;
-  }
-}
+// =============================================
+// Hero 标题+数据合并区
+// =============================================
 
-.header-content {
-  position: relative;
-  z-index: 1;
-  padding: 52px $spacing-base $spacing-xl;
-}
-
-.header-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: $spacing-lg;
-}
 
 .greeting {
   &__time {
@@ -891,254 +793,187 @@ export default {
   }
 }
 
-// 未登录时的登录按钮
-.login-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 12px;
-  padding: 10px 20px;
-  background: rgba(255,255,255,0.2);
-  border: 1px solid rgba(255,255,255,0.3);
-  border-radius: $border-radius-lg;
-  color: white;
-  font-size: $font-size-base;
-  font-weight: $font-weight-semibold;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  backdrop-filter: blur(10px);
-
-  svg {
-    width: 16px;
-    height: 16px;
-  }
-
-  &:hover {
-    background: rgba(255,255,255,0.3);
-    transform: translateX(2px);
-  }
-
-  &:active {
-    transform: scale(0.98);
-  }
-}
-
-.header-avatar {
-  width: 46px;
-  height: 46px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.15);
-  border: 2px solid rgba(255,255,255,0.3);
-  overflow: hidden;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-
-  img { width: 100%; height: 100%; object-fit: cover; }
-}
-
-.avatar-fallback {
-  font-size: $font-size-xl;
-  font-weight: $font-weight-bold;
-  color: white;
-}
-
-// 最近面试卡片
-.recent-score-card {
-  background: rgba(255,255,255,0.12);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255,255,255,0.2);
-  border-radius: $border-radius-lg;
-  padding: $spacing-base;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-
-  &__left { flex: 1; }
-  &__label {
-    font-size: $font-size-xs;
-    color: rgba(255,255,255,0.55);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    margin-bottom: 4px;
-  }
-  &__job {
-    font-weight: $font-weight-semibold;
-    color: white;
-    font-size: $font-size-base;
-    margin-bottom: 3px;
-  }
-  &__date { font-size: $font-size-xs; color: rgba(255,255,255,0.5); }
-
-  &__right {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-  }
-}
-
-.score-ring {
-  position: relative;
-  width: 60px;
-  height: 60px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  svg { position: absolute; inset: 0; width: 100%; height: 100%; }
-
-  &__value {
-    font-family: $font-family-display;
-    font-size: $font-size-xl;
-    font-weight: $font-weight-extrabold;
-    color: white;
-    position: relative;
-    z-index: 1;
-  }
-}
-
-.score-trend {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  font-size: $font-size-xs;
-  font-weight: $font-weight-semibold;
-  padding: 2px 8px;
-  border-radius: $border-radius-full;
-
-  &.up { background: rgba(16,185,129,0.25); color: #6ee7b7; }
-  &.down { background: rgba(239,68,68,0.25); color: #fca5a5; }
-}
-
-.no-interview-card {
-  background: rgba(255,255,255,0.12);
-  border: 1px solid rgba(255,255,255,0.2);
-  border-radius: $border-radius-lg;
-  padding: $spacing-base;
-  display: flex;
-  align-items: center;
-  gap: $spacing-md;
-
-  &__icon { font-size: 32px; }
-  &__title { font-weight: $font-weight-semibold; color: white; font-size: $font-size-base; }
-  &__sub { font-size: $font-size-xs; color: rgba(255,255,255,0.6); margin-top: 3px; }
-}
-
-// 未登录用户 - 功能亮点
-.guest-features {
-  display: flex;
-  justify-content: space-around;
-  margin-top: $spacing-lg;
-  padding: $spacing-md 0;
-
-  &__item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 6px;
-  }
-
-  &__icon {
-    font-size: 24px;
-    width: 44px;
-    height: 44px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(255,255,255,0.15);
-    border-radius: 50%;
-  }
-
-  &__text {
-    font-size: $font-size-xs;
-    color: rgba(255,255,255,0.85);
-    font-weight: $font-weight-medium;
-  }
-}
-
-// 未登录用户引导区
-.guest-intro {
-  display: grid;
-  grid-template-columns: repeat(1, 1fr);
-  gap: $spacing-md;
-  margin-bottom: $spacing-xl;
-
-  @media (min-width: 480px) {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-.intro-card {
-  background: white;
-  border-radius: $border-radius-lg;
-  padding: $spacing-lg;
-  text-align: center;
-  box-shadow: $shadow;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: $shadow-lg;
-  }
-
-  &__icon {
-    font-size: 36px;
-    margin-bottom: $spacing-sm;
-  }
-
-  &__title {
-    font-family: $font-family-display;
-    font-size: $font-size-base;
-    font-weight: $font-weight-bold;
-    color: $text-primary;
-    margin-bottom: $spacing-xs;
-  }
-
-  &__desc {
-    font-size: $font-size-sm;
-    color: $text-secondary;
-    line-height: 1.5;
-  }
-}
-
 // 主体
 .dashboard-body {
-  padding: $spacing-base;
+  padding: 0;
   animation: fadeSlideUp 0.4s ease both;
 }
 
-// 统计行
-.stats-row {
+
+// =============================================
+// Hero 左右布局
+// =============================================
+.hero-layout {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: $spacing-sm;
-  margin-bottom: $spacing-xl;
-  margin-top: -($spacing-base);
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+
+  @media (max-width: 767px) {
+    grid-template-columns: 1fr;
+  }
 }
 
-.stats-card {
-  background: white;
-  border-radius: $border-radius;
-  padding: $spacing-md $spacing-sm;
+// 左：问候卡片
+.hero-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 20px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+
+  &__greet {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+}
+
+.hero-greet {
+  font-size: 17px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+.hero-date {
+  font-size: 13px;
+  color: #9ca3af;
+}
+
+.hero-stats {
+  display: flex;
+  align-items: center;
+}
+
+.hero-stat {
   display: flex;
   flex-direction: column;
   align-items: center;
+  padding: 0 20px;
   gap: 4px;
-  box-shadow: $shadow;
 
-  &__icon { font-size: 22px; }
-  &__value {
-    font-family: $font-family-display;
-    font-size: $font-size-2xl;
-    font-weight: $font-weight-extrabold;
-    color: $text-primary;
+  // 第一个不要左边距
+  &:first-child { padding-left: 0; }
+
+  &__val {
+    font-size: 22px;
+    font-weight: 700;
+    color: #111827;
     line-height: 1;
+    font-family: $font-family-display;
+
+    &--accent { color: #6366f1; }
   }
-  &__label { font-size: $font-size-xs; color: $text-muted; }
+
+  &__lbl {
+    font-size: 11px;
+    color: #9ca3af;
+    white-space: nowrap;
+  }
+
+  &__sep {
+    width: 1px;
+    height: 28px;
+    background: #e5e7eb;
+    flex-shrink: 0;
+  }
 }
+
+// 右：开始面试卡片
+.start-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+
+  &__header {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  &__title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #111827;
+    margin: 0 0 4px;
+  }
+
+  &__desc {
+    font-size: 13px;
+    color: #6b7280;
+    margin: 0;
+  }
+
+  &__jobs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+}
+
+.job-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #f9fafb;
+  font-size: 13px;
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+  font-family: $font-family-base;
+  transition: all 0.15s;
+
+  &:hover {
+    border-color: #6366f1;
+    color: #6366f1;
+    background: #eef2ff;
+  }
+
+  &--more {
+    border-style: dashed;
+    color: #6b7280;
+    &:hover { border-color: #6366f1; color: #6366f1; background: #eef2ff; }
+  }
+}
+
+.start-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: #6366f1;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: $font-family-base;
+  transition: all 0.2s;
+  align-self: flex-start; // 不要撑满宽度
+
+  &:hover {
+    background: #4f46e5;
+    transform: translateY(-1px);
+  }
+}
+
+
 
 // Section
 .section {
@@ -1158,178 +993,8 @@ export default {
   color: $text-primary;
 }
 
-.section-more {
-  font-size: $font-size-sm;
-  color: $primary;
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-weight: $font-weight-medium;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  font-family: $font-family-base;
-}
 
-// 快速开始卡片 - 全新设计
-.quick-start-section {
-  margin-bottom: $spacing-xl;
-}
 
-.quick-start-card {
-  position: relative;
-  background: white;
-  border-radius: $border-radius-xl;
-  padding: $spacing-lg;
-  box-shadow: $shadow-lg;
-  overflow: hidden;
-  border: 1px solid rgba(99, 102, 241, 0.1);
-
-  &__bg {
-    position: absolute;
-    top: -50px;
-    right: -50px;
-    width: 200px;
-    height: 200px;
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(139, 92, 246, 0.05) 100%);
-    border-radius: 50%;
-    pointer-events: none;
-  }
-
-  &__content {
-    position: relative;
-    z-index: 1;
-  }
-
-  &__header {
-    display: flex;
-    align-items: center;
-    gap: $spacing-sm;
-    margin-bottom: $spacing-xs;
-  }
-
-  &__icon {
-    font-size: 28px;
-  }
-
-  &__title {
-    font-size: $font-size-xl;
-    font-weight: $font-weight-bold;
-    color: $text-primary;
-    font-family: $font-family-display;
-  }
-
-  &__desc {
-    font-size: $font-size-sm;
-    color: $text-secondary;
-    margin-bottom: $spacing-lg;
-    padding-left: 2px;
-  }
-}
-
-// 热门岗位标签
-.hot-job-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: $spacing-sm;
-  margin-bottom: $spacing-lg;
-}
-
-.job-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 10px 16px;
-  background: var(--tag-bg, #c8cad2);
-  border: 1px solid transparent;
-  border-radius: $border-radius-lg;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-family: $font-family-base;
-
-  &:hover {
-    border-color: var(--tag-color, $primary);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  }
-
-  &:active {
-    transform: scale(0.98);
-  }
-
-  &__icon {
-    font-size: 18px;
-  }
-
-  &__name {
-    font-size: $font-size-sm;
-    font-weight: $font-weight-medium;
-    color: $text-primary;
-  }
-
-  &__arrow {
-    width: 12px;
-    height: 12px;
-    color: $text-muted;
-    margin-left: 2px;
-  }
-
-  // 更多岗位样式
-  &--more {
-    background: linear-gradient(135deg, #EEF2FF 0%, #F5F3FF 100%);
-    border: 1px dashed rgba(99, 102, 241, 0.3);
-
-    .job-tag__name {
-      color: $primary;
-    }
-
-    &:hover {
-      border-color: $primary;
-      border-style: solid;
-      background: linear-gradient(135deg, #E0E7FF 0%, #EDE9FE 100%);
-    }
-  }
-}
-
-// 开始面试按钮
-.start-interview-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: $spacing-sm;
-  width: 100%;
-  padding: 14px $spacing-lg;
-  background: $gradient-primary;
-  border: none;
-  border-radius: $border-radius-lg;
-  color: white;
-  font-size: $font-size-base;
-  font-weight: $font-weight-semibold;
-  cursor: pointer;
-  transition: all 0.25s ease;
-  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.35);
-  font-family: $font-family-base;
-
-  svg {
-    width: 18px;
-    height: 18px;
-    transition: transform 0.2s ease;
-  }
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(99, 102, 241, 0.45);
-
-    svg {
-      transform: translateX(3px);
-    }
-  }
-
-  &:active {
-    transform: translateY(0);
-  }
-}
 
 // 双栏布局
 .two-column-section {
@@ -1619,18 +1284,6 @@ export default {
   color: $text-primary;
 }
 
-.section-more {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  font-size: $font-size-sm;
-  color: $primary;
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-weight: $font-weight-medium;
-  font-family: $font-family-base;
-}
 
 .question-list {
   display: flex;
@@ -1924,23 +1577,6 @@ export default {
     
     &__text {
       font-size: $font-size-xs;
-    }
-  }
-
-  // 统计行
-  .stats-row {
-    gap: $spacing-xs;
-  }
-
-  .stats-card {
-    padding: $spacing-sm;
-    
-    &__value {
-      font-size: $font-size-xl;
-    }
-    
-    &__icon {
-      font-size: 18px;
     }
   }
 }

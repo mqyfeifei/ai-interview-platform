@@ -42,7 +42,7 @@
       </div>
     </div>
 
-    <div class="profile-body">
+    <div class="profile-body page-container">
       <!-- 个人信息 -->
       <section class="profile-section">
         <div class="section-header">
@@ -937,7 +937,7 @@ export default {
 
 // 内容区
 .profile-body {
-  padding: $spacing-base;
+  padding: 0;
   animation: fadeSlideUp 0.4s ease both;
 }
 
