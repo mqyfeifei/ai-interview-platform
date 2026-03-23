@@ -7,12 +7,8 @@
 <template>
   <div class="learning-page">
     <!-- 顶部 Header -->
-    <div class="page-header">
+    <!-- <div class="page-header">
       <div class="page-header__inner">
-        <div class="page-header__text">
-          <h1>学习中心</h1>
-          <p>持续学习，突破短板</p>
-        </div>
         <div class="page-header__badge" v-if="dailyPlan">
           <span class="progress-badge">
             {{ completedTaskCount }}/{{ totalTaskCount }}
@@ -20,7 +16,7 @@
           </span>
         </div>
       </div>
-    </div>
+    </div> -->
 
     <!-- 主体 -->
     <div class="page-body page-container">
@@ -29,7 +25,6 @@
       <section class="section" v-if="dailyPlan">
         <div class="section-header">
           <h2 class="section-title">
-            <span class="section-title__icon">📅</span>
             今日学习计划
           </h2>
           <span class="plan-date">{{ todayLabel }}</span>
@@ -71,7 +66,6 @@
       <section class="section">
         <div class="section-header">
           <h2 class="section-title">
-            <span class="section-title__icon">📈</span>
             能力成长曲线
           </h2>
         </div>
@@ -103,7 +97,6 @@
       <section class="section">
         <div class="section-header clickable weakness-header" @click="toggleWeakness">
           <h2 class="section-title">
-            <span class="section-title__icon">🎯</span>
             技能短板
             <span class="weakness-count">{{ (weaknesses || []).length }} 项待提升</span>
           </h2>
@@ -165,7 +158,6 @@
       <section class="section">
         <div class="section-header clickable resource-header" @click="toggleResources">
           <h2 class="section-title">
-            <span class="section-title__icon">💡</span>
             推荐学习资源
           </h2>
           <span v-if="activeWeaknessFilter" class="filter-chip" @click.stop="clearWeaknessFilter">
@@ -347,7 +339,6 @@
 <script>
 import { markRaw } from 'vue'
 import { mapGetters, mapActions } from 'vuex'
-// import { INTERVIEW_DIMENSIONS } from '@/utils/constants'
 
 // 图表渲染总开关
 // 如再次出现浏览器侧 ECharts 报错，可临时改为 false 关闭图表，仅保留其它学习功能
@@ -739,20 +730,6 @@ export default {
     top: -80px; right: -60px; pointer-events: none;
   }
 
-  &__inner {
-    display: flex; align-items: flex-start;
-    justify-content: space-between;
-    position: relative; z-index: 1;
-  }
-
-  &__text {
-    h1 {
-      font-family: $font-family-display;
-      font-size: $font-size-2xl; font-weight: $font-weight-extrabold;
-      color: white; margin-bottom: 4px;
-    }
-    p { font-size: $font-size-sm; color: rgba(255,255,255,0.65); }
-  }
 }
 
 .progress-badge {
@@ -783,7 +760,6 @@ export default {
 .section-title {
   display: flex; align-items: center; gap: $spacing-sm;
   font-size: $font-size-lg; font-weight: $font-weight-bold; color: $text-primary;
-  &__icon { font-size: 18px; }
 }
 
 // ---- 每日计划 ----
