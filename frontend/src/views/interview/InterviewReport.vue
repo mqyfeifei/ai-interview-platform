@@ -95,7 +95,7 @@
       </div>
 
       <!-- 内容区 -->
-      <div class="report-body">
+      <div class="report-body page-container">
 
         <!-- 能力雷达图 -->
         <section class="report-section">
@@ -663,7 +663,7 @@ export default {
 
 // ---- 报告主体 ----
 .report-body {
-  padding: $spacing-base;
+  padding: 0;
   animation: fadeSlideUp 0.4s ease both;
 }
 

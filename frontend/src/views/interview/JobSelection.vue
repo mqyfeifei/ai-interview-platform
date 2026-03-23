@@ -50,7 +50,7 @@
     </div>
 
     <!-- 主体 -->
-    <div class="page-body">
+    <div class="page-body page-container">
       <!-- 过滤标签 -->
       <div class="filter-tabs">
         <button
@@ -787,7 +787,7 @@ async handleStart() {
 
 // ---- Body ----
 .page-body {
-  padding: $spacing-base;
+  padding: 0;
   padding-top: $spacing-base; // ← 去掉复杂的 calc，恢复正常
 }
 

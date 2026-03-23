@@ -71,7 +71,7 @@
     </div>
 
     <!-- 主体 -->
-    <div class="page-body">
+    <div class="page-body page-container">
 
       <!-- 加载中 -->
       <div v-if="loading" class="loading-wrap">
@@ -555,7 +555,7 @@ export default {
 
 // ---- Body ----
 .page-body {
-  padding: $spacing-base;
+  padding:0;
   /* 给出一定间距，但不需要完整头部高度 */
   padding-top: $spacing-base;
 }

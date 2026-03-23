@@ -23,7 +23,7 @@
     </div>
 
     <!-- 主体 -->
-    <div class="page-body">
+    <div class="page-body page-container">
 
       <!-- 每日学习计划 -->
       <section class="section" v-if="dailyPlan">
@@ -771,7 +771,7 @@ export default {
 }
 
 // ---- Body ----
-.page-body { padding: $spacing-base; }
+.page-body { padding: 0; }
 
 .section { margin-bottom: $spacing-lg; }
 
