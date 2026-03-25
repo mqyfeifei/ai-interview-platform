@@ -16,28 +16,27 @@
         class="top-nav__item"
         :class="{ active: isActive(item) }"
       >
-        <span class="top-nav__icon" v-html="item.icon" />
-        <span class="top-nav__label">{{ item.label }}</span>
+        {{ item.label }}
       </router-link>
     </nav>
 
-    <!-- 右侧：用户信息 -->
-    <div class="top-nav__user" @click="$router.push('/profile')">
-      <template v-if="userInfo">
+    <!-- 右侧：用户信息 + 统计弹窗 -->
+    <div class="top-nav__user-wrapper">
+      <div class="top-nav__user" @click="toggleUserStats">
         <img
-          v-if="userInfo.avatar"
+          v-if="userInfo && userInfo.avatar"
           :src="resolvedAvatarSrc"
           class="user-avatar"
           alt="头像"
         />
-        <span v-else class="user-avatar user-avatar--fallback">
-          {{ avatarLetter }}
-        </span>
-        <span class="user-name">{{ userName }}</span>
-      </template>
-      <template v-else>
-        <span class="user-guest" @click.stop="$router.push('/login')">登录</span>
-      </template>
+        <span v-else class="user-avatar user-avatar--fallback">{{ avatarLetter }}</span>
+      </div>
+      <div class="user-stats-popover" v-if="showUserStats">
+        <div class="stats-row">练习次数 <strong>{{ userTotalInterviews }}</strong></div>
+        <div class="stats-row">平均得分 <strong>{{ userAvgScore }}</strong></div>
+        <div class="stats-row">最近得分 <strong>{{ userLastScore }}</strong></div>
+        <div class="stats-row">连续天数 <strong>{{ userStreakDays }}</strong></div>
+      </div>
     </div>
   </header>
 </template>
@@ -49,31 +48,13 @@ export default {
   name: 'TopNav',
   data() {
     return {
+      showUserStats: false,
       navItems: [
-        {
-          name: 'Dashboard',
-          path: '/dashboard',
-          label: '首页',
-          icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`
-        },
-        {
-          name: 'LearningCenter',
-          path: '/learning',
-          label: '学习中心',
-          icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>`
-        },
-        {
-          name: 'HistoryRecords',
-          path: '/history',
-          label: '历史记录',
-          icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`
-        },
-        {
-          name: 'PersonalCenter',
-          path: '/profile',
-          label: '个人中心',
-          icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`
-        }
+        { name: 'Dashboard', path: '/dashboard', label: '首页' },
+        { name: 'LearningCenter', path: '/learning', label: '学习中心' },
+        { name: 'HistoryRecords', path: '/history', label: '历史记录' },
+        { name: 'JobSelection', path: '/interview/select', label: '岗位选择' },
+        { name: 'PersonalCenter', path: '/profile', label: '个人中心' }
       ]
     }
   },
@@ -83,6 +64,22 @@ export default {
     avatarLetter() {
       const name = this.userName || '用'
       return name.charAt(0)
+    },
+
+    userTotalInterviews() {
+      return this.userInfo?.totalInterviews || this.userInfo?.total_interviews || 0
+    },
+
+    userAvgScore() {
+      return this.userInfo?.avgScore || this.userInfo?.avg_score || '--'
+    },
+
+    userLastScore() {
+      return this.userInfo?.lastInterviewScore || this.userInfo?.last_interview_score || '--'
+    },
+
+    userStreakDays() {
+      return this.userInfo?.streakDays || this.userInfo?.streak_days || 0
     },
 
     resolvedAvatarSrc() {
@@ -102,7 +99,10 @@ export default {
   },
   methods: {
     isActive(item) {
-      return this.$route.name === item.name
+      return this.$route.path === item.path || this.$route.name === item.name
+    },
+    toggleUserStats() {
+      this.showUserStats = !this.showUserStats
     }
   }
 }
@@ -112,15 +112,15 @@ export default {
 .top-nav {
   position: sticky;
   top: 0;
-  z-index: 100;
-  height: 56px;
+  z-index: 999;
+  height: 64px;
   display: grid;
-  grid-template-columns: 200px 1fr 200px;  // 左中右三列布局
+  grid-template-columns: 220px 1fr 220px;
   align-items: center;
   padding: 0 24px;
-  background: #f4f3ff;
-  border-bottom: 1px solid #e5e7eb;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  background: #f4efff;
+  border-bottom: 1px solid #e8deff;
+  box-shadow: 0 2px 8px rgba(46, 36, 78, 0.1);
   gap: 0;
 
   // 品牌区
@@ -142,33 +142,89 @@ export default {
   &__menu {
     display: flex;
     align-items: center;
-    gap: 4px;
-    justify-content: center; 
-    // flex: 1;
+    gap: 12px;
+    justify-content: center;
   }
 
   &__item {
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 6px;
-    padding: 6px 14px;
-    border-radius: 6px;
-    color: #6b7280;
+    justify-content: center;
+    padding: 8px 14px;
+    border-radius: 999px;
+    color: #5f43d3;
     text-decoration: none;
     font-size: 14px;
-    font-weight: 500;
-    transition: all 0.15s ease;
+    font-weight: 600;
+    transition: all 0.2s ease;
     white-space: nowrap;
 
     &:hover {
-      color: #111827;
-      background: #f3f4f6;
+      color: #2a0d8b;
+      background: rgba(137, 95, 255, 0.12);
     }
 
     &.active {
-      color: #6366f1;
-      background: #eef2ff;
-      font-weight: 600;
+      color: #ffffff;
+      background: #7f67f5;
+      box-shadow: 0 6px 16px rgba(126, 95, 255, 0.26);
+    }
+  }
+
+  &__user-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+  }
+
+  &__user {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: 2px solid #d9cbff;
+    background: #ffffff;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover {
+      transform: translateY(-1px);
+      border-color: #b8a1ff;
+    }
+  }
+
+  .user-stats-popover {
+    position: absolute;
+    top: 52px;
+    right: 0;
+    background: #ffffff;
+    border-radius: 12px;
+    border: 1px solid #e7d8ff;
+    box-shadow: 0 10px 30px rgba(31, 21, 69, 0.17);
+    padding: 10px 14px;
+    width: 220px;
+    z-index: 1000;
+
+    .stats-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 6px 0;
+      color: #342f4b;
+      font-size: 13px;
+      border-bottom: 1px solid rgba(215, 204, 255, 0.4);
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      strong {
+        color: #633fdd;
+      }
     }
   }
 
@@ -207,34 +263,34 @@ export default {
 }
 
 .brand-logo {
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   border-radius: 8px;
   object-fit: cover;
   flex-shrink: 0;
 }
 
 .brand-name {
-  font-size: 16px;
-  font-weight: 700;
-  background: linear-gradient(135deg, #4f51be 0%, #6644b4 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  transition: color 0.15s;
+  font-size: 18px;
+  font-weight: 800;
+  color: #4c3aa2;
+  margin-left: 6px;
 }
 
 .user-avatar {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
-  border: 2px solid #e5e7eb;
+  display: block;
+  overflow: hidden;
+  background: #ffffff;
 
   &--fallback {
     display: flex;
     align-items: center;
     justify-content: center;
+    width: 100%;
+    height: 100%;
     background: #e0e7ff;
     color: #4f46e5;
     font-size: 13px;
