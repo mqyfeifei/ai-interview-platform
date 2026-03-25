@@ -5,24 +5,26 @@
   ============================================= --> 
 <template>
   <div class="profile-page">
-    <!-- 头部 -->
-    <div class="profile-header">
-      <div class="profile-header__content">
-        <div class="avatar-wrapper" @click="triggerAvatarUpload">
-          <div class="avatar">
-            <img v-if="userInfo && userInfo.avatar" :src="resolvedAvatarSrc" alt="头像" />
-            <span v-else class="avatar__fallback">{{ avatarLetter }}</span>
-          </div>
-          <div class="avatar-edit-badge">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 20h9" />
-              <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
-            </svg>
-          </div>
-        </div>
-
-        <h1 class="profile-header__name">{{ (userInfo && userInfo.username) || '用户' }}</h1>
-
+    <div class="profile-body page-container">
+      <div class="profile-main-grid">
+        <!-- 左侧：用户信息 + 成长体系 -->
+        <div class="profile-left-col">
+          <div class="card user-card">
+            <div class="card-header">
+              <h3>个人信息</h3>
+              <button class="edit-btn" @click="openEditModal">编辑</button>
+            </div>
+            <div class="user-card-body">
+              <div class="user-center">
+                <div class="user-avatar-wrap" @click="triggerAvatarUpload">
+                  <div class="avatar-lg">
+                    <img v-if="userInfo && userInfo.avatar" :src="resolvedAvatarSrc" alt="头像" />
+                    <span v-else class="avatar-lg__fallback">{{ avatarLetter }}</span>
+                  </div>
+                </div>
+                <input ref="avatarInput" type="file" accept="image/*" class="hidden-input" @change="handleAvatarChange" />
+                <h2 class="user-name">{{ (userInfo && userInfo.username) || '用户' }}</h2>
+                
         <div class="profile-stats">
           <div class="profile-stat">
             <span class="profile-stat__value">{{ memberDays }}</span>
@@ -39,121 +41,96 @@
             <span class="profile-stat__label">平均分数</span>
           </div>
         </div>
-      </div>
-    </div>
+              </div>
 
-    <div class="profile-body page-container">
-      <!-- 个人信息 -->
-      <section class="profile-section">
-        <div class="section-header">
-          <h2 class="section-title">个人信息</h2>
-          <button class="edit-btn" @click="openEditModal">编辑</button>
+              <div class="user-info-list">
+                <div class="user-info-row" v-for="item in infoRows" :key="item.key">
+                  <span class="user-info-key">{{ item.icon }} {{ item.label }}</span>
+                  <span class="user-info-value">{{ item.value || '未填写' }}</span>
+                </div>
+                <div class="user-info-row">
+                  <span class="user-info-key">🎯 默认岗位</span>
+                  <span class="user-info-value">{{ defaultJobDisplayName }}</span>
+                </div>
+              </div>
+
+              <div class="resume-btn-wrap">
+                <button class="resume-btn" @click="goToResume">我的简历</button>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div class="profile-info-card">
-          <!-- 第1列：头像 -->
-          <div class="profile-info-col profile-info-col--avatar">
-            <div class="avatar-section">
-              <div class="avatar-wrapper-lg" @click="triggerAvatarUpload">
-                <div class="avatar-lg">
-                  <img v-if="userInfo && userInfo.avatar" :src="resolvedAvatarSrc" alt="头像" />
-                  <span v-else class="avatar-lg__fallback">{{ avatarLetter }}</span>
-                </div>
-                <div class="avatar-edit-badge-lg">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M12 20h9" />
-                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
-                  </svg>
-                </div>
-                <input ref="avatarInput" type="file" accept="image/*" class="hidden-input" @change="handleAvatarChange" />
-              </div>
-              <span class="avatar-label">{{ (userInfo && userInfo.username) || '用户' }}</span>
+        <!-- 双栏布局：能力雷达 + 学习动态/成就 -->
+      <section class="section two-column-section" v-if="isLoggedIn">
+        <!-- 左侧：能力雷达图预览 -->
+        <div class="ability-card">
+          <div class="ability-card__header">
+            <h3 class="ability-card__title">📊 能力概览</h3>
+            <button class="ability-card__more" @click="$router.push('/history')">详情</button>
+          </div>
+          <div class="radar-preview">
+            <svg viewBox="0 0 200 200" class="radar-chart">
+              <!-- 背景网格 -->
+              <polygon class="radar-grid" points="100,20 168,65 168,135 100,180 32,135 32,65" />
+              <polygon class="radar-grid" points="100,40 152,72 152,128 100,160 48,128 48,72" />
+              <polygon class="radar-grid" points="100,60 136,80 136,120 100,140 64,120 64,80" />
+              <!-- 能力区域 -->
+              <polygon class="radar-area" :points="radarPoints" />
+              <!-- 能力点 -->
+              <circle v-for="(point, idx) in radarDots" :key="idx" :cx="point.x" :cy="point.y" r="4" class="radar-dot" />
+            </svg>
+            <div class="radar-labels">
+              <span class="radar-label" style="top: 0; left: 50%; transform: translateX(-50%)">专业知识</span>
+              <span class="radar-label" style="top: 25%; right: 0">逻辑思维</span>
+              <span class="radar-label" style="bottom: 25%; right: 0">表达能力</span>
+              <span class="radar-label" style="bottom: 0; left: 50%; transform: translateX(-50%)">问题解决</span>
+              <span class="radar-label" style="bottom: 25%; left: 0">代码能力</span>
+              <span class="radar-label" style="top: 25%; left: 0">学习能力</span>
+            </div>
+          </div>
+          <p class="ability-card__summary">
+            综合评分 <strong>{{ stats.avgScore || '--' }}</strong> 分，{{ abilityComment }}
+          </p>
+        </div>
+
+        <!-- 右侧：成就与动态 -->
+        <div class="achievement-card">
+          <div class="achievement-card__header">
+            <h3 class="achievement-card__title">🏆 我的成就</h3>
+            <div class="streak-badge">
+              <span class="streak-badge__fire">🔥</span>
+              <span class="streak-badge__text">{{ streakDays }}天连续</span>
+            </div>
+          </div>
+          
+          <!-- 成就徽章 -->
+          <div class="badges-row">
+            <div 
+              class="badge-item" 
+              v-for="badge in displayBadges" 
+              :key="badge.id"
+              :class="{ locked: !badge.unlocked }"
+            >
+              <span class="badge-item__icon">{{ badge.icon }}</span>
+              <span class="badge-item__name">{{ badge.name }}</span>
             </div>
           </div>
 
-          <!-- 第2列：基本信息 -->
-          <div class="profile-info-col">
-            <div class="info-group">
-              <div class="info-group-header">
-                <span class="info-group-icon">📋</span>
-                <span class="info-group-title">基本信息</span>
+          <!-- 最近动态 -->
+          <div class="recent-activity">
+            <h4 class="recent-activity__title">最近动态</h4>
+            <div class="activity-list">
+              <div class="activity-item" v-for="(act, idx) in recentActivities" :key="idx">
+                <span class="activity-item__icon">{{ act.icon }}</span>
+                <span class="activity-item__text">{{ act.text }}</span>
+                <span class="activity-item__time">{{ act.time }}</span>
               </div>
-              <div class="info-list">
-                <div class="info-item">
-                  <span class="info-item__icon">👤</span>
-                  <span class="info-item__label">用户昵称</span>
-                  <span class="info-item__value">{{ (userInfo && userInfo.username) || '未填写' }}</span>
-                </div>
-                <div class="info-item">
-                  <span class="info-item__icon">📧</span>
-                  <span class="info-item__label">邮箱</span>
-                  <span class="info-item__value">{{ (userInfo && userInfo.email) || '未填写' }}</span>
-                </div>
-                <div class="info-item">
-                  <span class="info-item__icon">📱</span>
-                  <span class="info-item__label">手机</span>
-                  <span class="info-item__value">{{ userInfo && userInfo.phone ? maskPhone(userInfo.phone) : '未填写' }}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- 第3列：教育信息 -->
-          <div class="profile-info-col">
-            <div class="info-group">
-              <div class="info-group-header">
-                <span class="info-group-icon">🎓</span>
-                <span class="info-group-title">教育信息</span>
-              </div>
-              <div class="info-list">
-                <div class="info-item">
-                  <span class="info-item__icon">🏫</span>
-                  <span class="info-item__label">学校</span>
-                  <span class="info-item__value">{{ (userInfo && userInfo.school) || '未填写' }}</span>
-                </div>
-                <div class="info-item">
-                  <span class="info-item__icon">📖</span>
-                  <span class="info-item__label">专业</span>
-                  <span class="info-item__value">{{ (userInfo && userInfo.major) || '未填写' }}</span>
-                </div>
-                <div class="info-item">
-                  <span class="info-item__icon">📅</span>
-                  <span class="info-item__label">年级</span>
-                  <span class="info-item__value">{{ (userInfo && userInfo.grade) || '未填写' }}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- 第4列：求职岗位（格式与教育信息相同） -->
-          <div class="profile-info-col">
-            <div class="info-group">
-              <div class="info-group-header">
-                <span class="info-group-icon">🎯</span>
-                <span class="info-group-title">求职岗位</span>
-              </div>
-              <div class="info-list">
-                <div class="info-item">
-                  <span class="info-item__icon">💼</span>
-                  <span class="info-item__label">岗位</span>
-                  <span class="info-item__value">
-                    {{ defaultJobDisplayName }}
-                    <span v-if="currentDefaultJob || defaultJobName" class="default-badge">默认岗位</span>
-                  </span>
-                </div>
-              </div>
-                <div class="job-select-wrap">
-                  <button class="job-select-btn" @click="goToJobSelection">
-                    选择岗位
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;margin-left:4px">
-                      <polyline points="9 18 15 12 9 6" />
-                    </svg>
-                  </button>
-                </div>
             </div>
           </div>
         </div>
       </section>
+      </div>
 
       <!-- 账号安全 -->
       <section class="profile-section">
@@ -427,6 +404,7 @@
 <script>
 import { mapGetters, mapActions } from 'vuex'
 import { JOB_TYPES, GRADE_OPTIONS } from '@/utils/constants'
+import { getDashboardStats } from '@/api/user'
 import HelpGuideModal from '@/components/common/HelpGuideModal.vue'
 import { ref } from 'vue';
 
@@ -464,12 +442,44 @@ export default {
       gradeOptions: GRADE_OPTIONS.map(o => o.value),
       allJobs: JOB_TYPES,
 
+      // 仪表盘统计数据（能力雷达、成就、最近活动）
+      stats: {
+        totalInterviews: 0,
+        avgScore: 0,
+        maxScore: 0,
+        lastInterviewScore: 0,
+        lastInterviewJob: '',
+        lastInterviewAt: '',
+        scoreImprovement: 0,
+        weeklyPractice: 0,
+        streakDays: 0,
+        abilities: {
+          knowledge: 0,
+          logic: 0,
+          expression: 0,
+          problemSolving: 0,
+          coding: 0,
+          learning: 0
+        }
+      },
+
+      // 成就徽章 - 根据真实数据动态计算
+      badges: [
+        { id: 1, icon: '🌟', name: '初次面试', condition: 'firstInterview' },
+        { id: 2, icon: '🔥', name: '连续3天', condition: 'streak3' },
+        { id: 3, icon: '💪', name: '突破80分', condition: 'score80' },
+        { id: 4, icon: '🏅', name: '面试达人', condition: 'interviews10' },
+        { id: 5, icon: '👑', name: '全能王者', condition: 'score90' }
+      ],
+
       // 新增版本卡片弹窗的响应式变量
-      showVersionCard: ref(false)
+      showVersionCard: ref(false),
+
+
     }
   },
   computed: {
-    ...mapGetters('user', ['userInfo', 'userName', 'defaultJob', 'defaultJobId', 'defaultJobName']),
+    ...mapGetters('user', ['userInfo', 'userName', 'defaultJob', 'defaultJobId', 'defaultJobName', 'isLoggedIn']),
 
     avatarLetter() {
       return (this.userName || '用').charAt(0)
@@ -507,6 +517,15 @@ export default {
       ]
     },
 
+    // 继续保留个性统计和数据展示相关（平稳安全）
+    achievementBadges() {
+      return [
+        { icon: '🔥', title: '连续登录', value: `${this.memberDays}天` },
+        { icon: '🎯', title: '目标达成', value: `${this.practiceCount}次练习` },
+        { icon: '⭐', title: '高分率', value: `${this.avgScoreDisplay}分` }
+      ]
+    },
+
     currentDefaultJob() {
       const jobId = this.defaultJob
       if (!jobId) return null
@@ -518,6 +537,15 @@ export default {
       if (this.currentDefaultJob) return this.currentDefaultJob.name
       if (this.defaultJobName) return this.defaultJobName
       return '未设置'
+    },
+    userLevel() {
+      const level = Math.min(10, Math.max(1, Math.floor((this.memberDays || 0) / 30) + 1))
+      return level
+    },
+    userIntro() {
+      const u = this.userInfo || {}
+      const intro = u.bio || u.description || u.about || ''
+      return intro ? intro : '暂无个人简介'
     },
 
     memberDays() {
@@ -553,6 +581,120 @@ export default {
       if (!Number.isFinite(asNumber)) return 0
       // 后端已 round 到两位，这里仅做展示兜底
       return (Math.round(asNumber * 100) / 100).toString()
+    },
+
+    streakDays() {
+      return this.stats?.streakDays || this.stats?.weeklyPractice || 0
+    },
+
+    hasAbilityData() {
+      if (!this.stats || !this.stats.abilities) return false
+      return Object.values(this.stats.abilities).some(v => Number(v) > 0)
+    },
+
+    radarPoints() {
+      const a = this.stats?.abilities || { knowledge: 0, logic: 0, expression: 0, problemSolving: 0, coding: 0, learning: 0 }
+      const center = 100
+      const maxRadius = 80
+      const angles = [-90, -30, 30, 90, 150, 210].map(d => d * Math.PI / 180)
+      const values = [a.knowledge, a.logic, a.expression, a.problemSolving, a.coding, a.learning]
+
+      const hasData = values.some(v => Number(v) > 0)
+      const defaultValue = hasData ? 0 : 10
+
+      return values.map((v, i) => {
+        const actualValue = Number(v) > 0 ? Number(v) : defaultValue
+        const r = (actualValue / 100) * maxRadius
+        const x = center + r * Math.cos(angles[i])
+        const y = center + r * Math.sin(angles[i])
+        return `${x},${y}`
+      }).join(' ')
+    },
+
+    radarDots() {
+      const a = this.stats?.abilities || { knowledge: 0, logic: 0, expression: 0, problemSolving: 0, coding: 0, learning: 0 }
+      const center = 100
+      const maxRadius = 80
+      const angles = [-90, -30, 30, 90, 150, 210].map(d => d * Math.PI / 180)
+      const values = [a.knowledge, a.logic, a.expression, a.problemSolving, a.coding, a.learning]
+
+      const hasData = values.some(v => Number(v) > 0)
+      const defaultValue = hasData ? 0 : 10
+
+      return values.map((v, i) => {
+        const actualValue = Number(v) > 0 ? Number(v) : defaultValue
+        const r = (actualValue / 100) * maxRadius
+        return {
+          x: center + r * Math.cos(angles[i]),
+          y: center + r * Math.sin(angles[i])
+        }
+      })
+    },
+
+    abilityComment() {
+      if (!this.hasAbilityData) return '完成面试后解锁能力分析'
+      const avg = Number(this.stats?.avgScore || 0)
+      if (avg >= 85) return '表现优秀，继续保持！'
+      if (avg >= 70) return '整体良好，部分能力可加强'
+      if (avg >= 60) return '有提升空间，建议多练习'
+      return '建议从基础开始系统学习'
+    },
+
+    displayBadges() {
+      return this.badges.map(badge => {
+        let unlocked = false
+        switch (badge.condition) {
+          case 'firstInterview':
+            unlocked = (this.stats?.totalInterviews || 0) >= 1
+            break
+          case 'streak3':
+            unlocked = (this.streakDays || 0) >= 3
+            break
+          case 'score80':
+            unlocked = (this.stats?.maxScore || 0) >= 80 || (this.stats?.avgScore || 0) >= 80
+            break
+          case 'interviews10':
+            unlocked = (this.stats?.totalInterviews || 0) >= 10
+            break
+          case 'score90':
+            unlocked = (this.stats?.maxScore || 0) >= 90 || (this.stats?.avgScore || 0) >= 90
+            break
+        }
+        return { ...badge, unlocked }
+      })
+    },
+
+    recentActivities() {
+      const activities = []
+      if (this.stats?.lastInterviewAt) {
+        activities.push({
+          icon: '🎯',
+          text: `完成了 ${this.stats?.lastInterviewJob || '面试'} 面试`,
+          time: this.formatDate(this.stats.lastInterviewAt)
+        })
+      }
+      if ((this.stats?.totalInterviews || 0) > 0) {
+        activities.push({
+          icon: '📈',
+          text: `累计面试 ${this.stats.totalInterviews} 次`,
+          time: '总计'
+        })
+      }
+      if (this.streakDays > 0) {
+        activities.push({
+          icon: '🔥',
+          text: `连续学习 ${this.streakDays} 天`,
+          time: '进行中'
+        })
+      }
+      if (activities.length === 0) {
+        activities.push({
+          icon: '💡',
+          text: '开始你的第一次面试练习吧',
+          time: '待解锁'
+        })
+      }
+      return activities.slice(0, 3)
     },
 
     securityMenu() {
@@ -591,6 +733,7 @@ export default {
   },
   created() {
     this.selectedJobId = this.defaultJob
+    this.loadDashboardStats()
   },
   mounted() {
     // 页面加载时从数据库同步最新用户信息
@@ -609,6 +752,10 @@ export default {
       this.$router.push('/interview/select')
     },
 
+    goToResume() {
+      this.$router.push('/resume')
+    },
+
     // 从数据库同步用户信息
     async syncUserInfo() {
       try {
@@ -619,12 +766,33 @@ export default {
       }
     },
 
+    async loadDashboardStats() {
+      try {
+        const data = await getDashboardStats()
+        this.stats = {
+          ...this.stats,
+          ...data,
+          abilities: {
+            ...this.stats.abilities,
+            ...(data.abilities || {})
+          }
+        }
+      } catch (err) {
+        console.warn('加载仪表盘统计数据失败', err)
+      }
+    },
+
     maskPhone(phone) {
       return phone ? phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2') : ''
     },
 
     triggerAvatarUpload() {
-      this.$refs.avatarInput.click()
+      const input = this.$refs.avatarInput
+      if (input && typeof input.click === 'function') {
+        input.click()
+      } else {
+        console.warn('avatarInput ref not found')
+      }
     },
 
     handleAvatarChange(e) {
@@ -637,6 +805,12 @@ export default {
       // 允许重复选择同一文件也触发 change
       e.target.value = ''
       this.doUploadAvatar(file)
+    },
+
+    formatDate(dateStr) {
+      if (!dateStr) return ''
+      const d = new Date(dateStr)
+      return `${d.getMonth() + 1}月${d.getDate()}日`
     },
 
     async doUploadAvatar(file) {
@@ -659,6 +833,19 @@ export default {
         grade: u.grade || ''
       };
       this.showEditModal = true;
+    },
+
+    copyUserId() {
+      const id = this.userInfo?.id
+      if (!id) {
+        alert('用户ID不可用')
+        return
+      }
+      navigator.clipboard.writeText(String(id)).then(() => {
+        alert('用户ID已复制')
+      }).catch(() => {
+        alert('复制失败，请手动复制')
+      })
     },
 
     async saveUserInfo() {
@@ -935,6 +1122,22 @@ export default {
   background: rgba(255,255,255,0.2);
 }
 
+.user-card .profile-stats {
+  background: #f9f9ff;
+  border: 1px solid #e8e9ff;
+  border-radius: 12px;
+  padding: 10px 12px;
+  color: #1f2a44;
+}
+
+.user-card .profile-stat__value {
+  color: #0f1531;
+}
+
+.user-card .profile-stat__label {
+  color: #667085;
+}
+
 // 内容区
 .profile-body {
   padding: 0;
@@ -942,20 +1145,491 @@ export default {
 }
 
 .profile-section {
-  margin-bottom: $spacing-lg;
+  margin-bottom: 24px;
+}
+
+.profile-main-grid {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.9fr) minmax(420px, 2.1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+@media (max-width: 1024px) {
+  .profile-main-grid {
+    grid-template-columns: minmax(220px, 1fr);
+  }
+}
+
+.profile-left-col,
+.profile-right-col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.resume-btn-wrap {
+  margin-top: 14px;
+  display: flex;
+  justify-content: center;
+}
+
+.resume-btn {
+  width: 100%;
+  max-width: 280px;
+  height: 44px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(90deg, #6b5cf4 0%, #4f46e5 100%);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(79, 70, 229, 0.24);
+}
+
+.resume-btn:hover {
+  filter: brightness(1.05);
+}
+
+.right-widget-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 1.6fr;
+  gap: 16px;
+}
+
+.ability-card {
+  background: #DDD6FE;
+  border-radius: 14px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 8px 20px rgba(47, 52, 72, 0.08);
+  padding: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 300px;
+  margin-bottom:30px;
+}
+
+.ability-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ability-card__title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.ability-card__more {
+  font-size: 12px;
+  color: #4f46e5;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  font-weight: 600;
+}
+
+.ability-card__summary {
+  text-align: center;
+  margin-top: 8px;
+  color: #4b5563;
+  font-size: 14px;
+}
+
+.ability-card__summary strong {
+  color: #4f46e5;
+}
+
+.ability-card .radar-preview {
+  position: relative;
+  width: 100%;
+  max-width: 240px;
+  margin: 0 auto;
+  aspect-ratio: 1;
+  flex: 1;
+}
+
+.radar-chart {
+  width: 100%;
+  height: 100%;
+}
+
+.radar-grid {
+  fill: none;
+  stroke: #E5E7EB;
+  stroke-width: 1;
+}
+
+.radar-area {
+  fill: rgba(99, 102, 241, 0.2);
+  stroke: #4f46e5;
+  stroke-width: 2;
+}
+
+.radar-dot {
+  fill: #4f46e5;
+}
+
+.radar-labels {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+
+.radar-label {
+  position: absolute;
+  font-size: 11px;
+  color: #6b7280;
+  white-space: nowrap;
+}
+
+.achievement-card {
+  min-height: 300px;
+  background: linear-gradient(135deg, #F5F3FF 0%, #EDE9FE 100%);
+  border-radius: 12px;
+  padding: 14px;
+  border: 1px solid #DDD6FE;
+}
+
+.achievement-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.achievement-card__title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.streak-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid #F59E0B;
+}
+
+.streak-badge__fire {
+  font-size: 14px;
+}
+
+.streak-badge__text {
+  font-size: 11px;
+  font-weight: 600;
+  color: #B45309;
+}
+
+.badges-row {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.badges-row::-webkit-scrollbar {
+  display: none;
+}
+
+.badge-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 52px;
+  padding: 8px 6px;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #E5E7EB;
+  transition: all 0.2s ease;
+}
+
+.badge-item__icon {
+  font-size: 20px;
+}
+
+.badge-item__name {
+  font-size: 9px;
+  color: #6B7280;
+  white-space: nowrap;
+}
+
+.badge-item.locked {
+  opacity: 0.4;
+  filter: grayscale(1);
+}
+
+.badge-item:not(.locked):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+  border-color: #4F46E5;
+}
+
+.recent-activity {
+  margin-top: 12px;
+}
+
+.recent-activity__title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 8px;
+}
+
+.activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.activity-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #E5E7EB;
+  padding: 6px 10px;
+}
+
+.activity-item__icon {
+  margin-right: 8px;
+}
+
+.activity-item__text {
+  flex: 1;
+  color: #374151;
+  font-size: 13px;
+}
+
+.activity-item__time {
+  color: #9CA3AF;
+  font-size: 12px;
+}
+
+.card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  padding: 16px;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.user-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.user-avatar-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.user-avatar-section .avatar-lg {
+  width: 70px;
+  height: 70px;
+}
+
+.user-name {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.user-info-list {
+  margin-top: 12px;
+  display: grid;
+  gap: 10px;
+}
+
+.user-info-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  color: #666;
+}
+
+.user-info-key {
+  display: inline-flex;
+  gap: 6px;
+  font-weight: 500;
+}
+
+.user-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.user-avatar-wrap {
+  width: 110px;
+  height: 110px;
+  border: 3px solid #8b5cf6; /* 紫色边框 */
+  border-radius: 50%;
+  padding: 4px;
+  box-shadow: 0 0 0 8px rgba(139, 92, 246, 0.1); /* 紫色晕染阴影 */
+  overflow: hidden;
+  background: #fff;
+}
+
+.user-avatar-wrap .avatar-lg {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: none;
+  background: #f3f3f3;
+}
+
+.user-avatar-wrap .avatar-lg img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.user-level {
+  background: linear-gradient(90deg, #ffab00, #ffcc54);
+  color: #fff;
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.user-meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  font-size: 14px;
+  color: #444;
+}
+
+.user-meta-row--id {
+  padding: 8px 12px;
+  border: 1px solid #e8e8e8;
+  border-radius: 8px;
+  background: #fff7e6;
+}
+
+.copy-btn {
+  border: 1px solid #ffcc54;
+  background: #fff;
+  color: #ff8c00;
+  border-radius: 100px;
+  padding: 2px 8px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.ability-list .ability-item,
+.data-grid .data-item,
+.badges-row .badge-item,
+.growth-content .growth-item {
+  margin-bottom: 10px;
+}
+
+.ability-row {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+
+.ability-bar {
+  height: 8px;
+  border-radius: 6px;
+  background: #f0f0f0;
+  overflow: hidden;
+}
+
+.ability-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #5e9dff, #3d6eff);
+}
+
+.badges-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 10px;
+}
+
+.badge-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+  padding: 10px;
+  text-align: center;
+}
+
+.badge-icon {
+  font-size: 18px;
+}
+
+.badge-name {
+  font-weight: bold;
+}
+
+.data-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.data-item {
+  background: #f8f9fc;
+  border-radius: 8px;
+  padding: 10px;
+  text-align: center;
+}
+
+.growth-content {
+  display: grid;
+  gap: 8px;
+}
+
+.growth-item {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
 }
 
 .section-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: $spacing-md;
+  margin-bottom: 16px;
 }
 
 .section-title {
-  font-size: $font-size-lg;
-  font-weight: $font-weight-bold;
-  color: $text-primary;
+  font-size: 20px;
+  font-weight: 600;
+  color: #2b2b2b;
 }
 
 // 编辑按钮样式调整
