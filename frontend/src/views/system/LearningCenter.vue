@@ -19,157 +19,47 @@
     </div> -->
 
     <!-- 主体 -->
-    <div class="page-body page-container">
+<div class="page-body page-container">
 
-      <!-- 每日学习计划 -->
-      <section class="section" v-if="dailyPlan">
-        <div class="section-header">
-          <h2 class="section-title">
-            今日学习计划
-          </h2>
-          <span class="plan-date">{{ todayLabel }}</span>
+  <!-- 第一行：能力成长曲线（全宽） -->
+  <section class="section">
+    <div class="section-header">
+      <h2 class="section-title">能力成长曲线</h2>
+    </div>
+    <div v-if="enableCharts">
+      <div class="curve-tabs">
+        <button
+          v-for="tab in curveTabs"
+          :key="tab.key"
+          :class="['curve-tab', { active: activeCurveTab === tab.key }]"
+          @click="switchCurveTab(tab.key)"
+        >{{ tab.label }}</button>
+      </div>
+      <div class="chart-card" style="position:relative">
+        <div ref="lineChart" class="line-chart" />
+        <div v-if="!growthData" class="chart-loading chart-loading--overlay">
+          <div class="mini-spinner" />
         </div>
+      </div>
+    </div>
+    <div v-else class="chart-card chart-card--disabled">
+      <p>能力成长曲线图表暂时关闭，不影响其它学习功能使用。</p>
+    </div>
+  </section>
 
-        <!-- 整体进度条 -->
-        <div class="plan-progress-bar">
-          <div
-            class="plan-progress-bar__fill"
-            :style="{ width: planProgressPct + '%' }"
-          />
-        </div>
+  <!-- 第二行：左主列 + 右侧边栏 -->
+  <div class="learning-layout">
 
-        <div class="plan-card">
-          <div
-            v-for="task in dailyPlan.tasks"
-            :key="task.id"
-            :class="['plan-task', { done: task.done }]"
-            @click="toggleTask(task)"
-          >
-            <div :class="['plan-task__check', { done: task.done }]">
-              <svg v-if="task.done" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="20 6 9 17 4 12"/>
-              </svg>
-            </div>
-            <div class="plan-task__body">
-              <p class="plan-task__title">{{ task.title }}</p>
-              <p class="plan-task__desc">{{ task.desc }}</p>
-            </div>
-            <div class="plan-task__meta">
-              <span :class="['task-type-tag', 'task-type-' + task.type]">{{ taskTypeLabel(task.type) }}</span>
-              <span class="task-time">{{ task.estimatedMinutes }}min</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- 能力成长曲线 -->
+    <!-- ===== 左列：推荐学习资源 ===== -->
+    <div class="learning-main">
       <section class="section">
         <div class="section-header">
-          <h2 class="section-title">
-            能力成长曲线
-          </h2>
-        </div>
-
-        <div v-if="enableCharts">
-          <!-- 维度切换 -->
-          <div class="curve-tabs">
-            <button
-              v-for="tab in curveTabs"
-              :key="tab.key"
-              :class="['curve-tab', { active: activeCurveTab === tab.key }]"
-              @click="switchCurveTab(tab.key)"
-            >{{ tab.label }}</button>
-          </div>
-
-          <div class="chart-card" style="position:relative">
-            <div ref="lineChart" class="line-chart" />
-            <div v-if="!growthData" class="chart-loading chart-loading--overlay">
-              <div class="mini-spinner" />
-            </div>
-          </div>
-        </div>
-        <div v-else class="chart-card chart-card--disabled">
-          <p>能力成长曲线图表暂时关闭，不影响其它学习功能使用。</p>
-        </div>
-      </section>
-
-      <!-- 技能短板分析 -->
-      <section class="section">
-        <div class="section-header clickable weakness-header" @click="toggleWeakness">
-          <h2 class="section-title">
-            技能短板
-            <span class="weakness-count">{{ (weaknesses || []).length }} 项待提升</span>
-          </h2>
-          <svg class="collapse-icon" :class="{ open: showWeaknessSection }" viewBox="0 0 24 24">
-            <polyline points="6 9 12 15 18 9" />
-          </svg>
-        </div>
-
-        <transition name="collapse">
-        <div v-if="showWeaknessSection">
-        <div v-if="weaknesses && weaknesses.length" class="weakness-cloud">
-          <span
-            v-for="w in weaknesses"
-            :key="w.id"
-            :class="['weakness-tag', 'weakness-' + w.level]"
-            @click="filterByWeakness(w)"
-          >
-            {{ w.tag }}
-            <span class="weakness-tag__level-dot" />
-          </span>
-        </div>
-
-        <!-- 掌握度可视化（简单横条） -->
-        <template v-if="weaknesses && weaknesses.length">
-          <div class="weakness-chart-card">
-            <div class="weakness-chart-header">
-              <span class="weakness-chart-title">📊 掌握度分布</span>
-              <span class="weakness-chart-hint">数值越低 = 越需提升</span>
-            </div>
-            <div class="weakness-bar-list">
-              <div v-for="w in sortedWeaknesses" :key="w.id" class="weakness-bar-item" :data-percentage="w.mastery_level || 0">
-                <div class="weakness-bar-label">{{ w.tag || w.name || '未知' }}</div>
-                <div class="weakness-bar">
-                  <div class="weakness-bar__fill" 
-                       :style="{ width: (w.mastery_level || 0) + '%', background: getColor(w.mastery_level) }" />
-                </div>
-              </div>
-            </div>
-          </div>
-        </template>
-
-        <!-- 如果没有短板，显示空态提示 -->
-        <div v-if="(!weaknesses || weaknesses.length === 0) && showWeaknessSection" class="empty-state-wrap">
-          <span style="font-size:48px">📊</span>
-          <p>暂无短板数据</p>
-        </div>
-
-        <div v-if="weaknesses && weaknesses.length" class="weakness-legend">
-          <span class="legend-dot" style="background:#EF4444" />薄弱 (&lt;40)
-          <span class="legend-dot" style="background:#F59E0B;margin-left:12px" />一般 (40-70)
-          <span class="legend-dot" style="background:#10B981;margin-left:12px" />良好 (70-90)
-          <span class="legend-dot" style="background:#6366F1;margin-left:12px" />优秀 (≥90)
-        </div>
-        </div> <!-- end collapsible wrapper -->
-        </transition>
-      </section>
-
-      <!-- 个性化推荐 -->
-      <section class="section">
-        <div class="section-header clickable resource-header" @click="toggleResources">
-          <h2 class="section-title">
-            推荐学习资源
-          </h2>
-          <span v-if="activeWeaknessFilter" class="filter-chip" @click.stop="clearWeaknessFilter">
+          <h2 class="section-title">推荐学习资源</h2>
+          <span v-if="activeWeaknessFilter" class="filter-chip" @click="clearWeaknessFilter">
             {{ activeWeaknessFilter }} ✕
           </span>
-          <svg class="collapse-icon" :class="{ open: showResourceSection }" viewBox="0 0 24 24">
-            <polyline points="6 9 12 15 18 9" />
-          </svg>
         </div>
 
-        <transition name="collapse">
-        <div v-if="showResourceSection">
         <!-- 类型筛选 -->
         <div class="type-filters">
           <button
@@ -183,59 +73,43 @@
           </button>
         </div>
 
-        <!-- 资源卡片列表 (带排序动画) -->
+        <!-- 资源卡片列表 -->
         <transition-group
-          v-if="filteredRecommendations.length > 0"
+          v-if="pagedRecommendations.length > 0"
           name="resource-move"
           tag="div"
           class="resource-list"
         >
           <div
-            v-for="(res, idx) in filteredRecommendations"
+            v-for="(res, idx) in pagedRecommendations"
             :key="res.id"
             :class="['resource-card', { 'resource-card--completed': res.completed, 'match-weakness': activeWeaknessFilter && (res.relatedWeakness === activeWeaknessFilter || (res.tags || []).includes(activeWeaknessFilter)) }]"
             :style="{ animationDelay: idx * 0.05 + 's' }"
             @click="openResource(res)"
           >
-            <!-- 类型图标 + 难度 -->
             <div class="resource-card__top">
-              <div :class="['resource-type-icon', 'type-' + res.type]">
-                {{ typeIcon(res.type) }}
-              </div>
+              <div :class="['resource-type-icon', 'type-' + res.type]">{{ typeIcon(res.type) }}</div>
               <span :class="['difficulty-badge', 'diff-' + res.difficulty]">{{ res.difficulty }}</span>
             </div>
-
-            <!-- 标题 + 摘要 -->
             <h3 class="resource-card__title">{{ res.title }}</h3>
             <p class="resource-card__summary">{{ res.summary }}</p>
-
-            <!-- 标签 -->
             <div class="resource-card__tags">
               <span v-for="tag in res.tags.slice(0, 3)" :key="tag" class="res-tag">{{ tag }}</span>
               <span class="res-source">来源：{{ res.source }}</span>
             </div>
-
-            <!-- 关联短板 -->
             <div v-if="res.relatedWeakness" class="resource-card__weakness">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px;flex-shrink:0">
                 <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
               </svg>
               针对短板：{{ res.relatedWeakness }}
             </div>
-
-            <!-- 操作按钮 -->
             <div class="resource-card__actions">
-              <button
-                :class="['action-bookmark', { active: res.bookmarked }]"
-                @click.stop="handleBookmark(res)"
-                :title="res.bookmarked ? '取消收藏' : '收藏'"
-              >
+              <button :class="['action-bookmark', { active: res.bookmarked }]" @click.stop="handleBookmark(res)">
                 <svg viewBox="0 0 24 24" :fill="res.bookmarked ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
                 </svg>
                 {{ res.bookmarked ? '已收藏' : '收藏' }}
               </button>
-
               <button
                 v-if="activeTypeFilter === 'bookmarked' && !res.completed"
                 class="action-complete"
@@ -253,8 +127,6 @@
                 已完成
               </span>
             </div>
-
-            <!-- 完成标志徽章 -->
             <div v-if="res.completed" class="resource-card__completed-badge">✓ 已完成</div>
           </div>
         </transition-group>
@@ -265,12 +137,140 @@
           <p>暂无匹配的学习资源</p>
           <button class="btn btn-ghost btn-sm" @click="activeTypeFilter = 'all'; clearWeaknessFilter()">清空筛选</button>
         </div>
-        </div> <!-- end showResourceSection wrapper -->
-        </transition>
-      </section>
 
+        <!-- 分页栏 -->
+        <div class="pagination-bar" v-if="filteredRecommendations.length > 0">
+          <div class="page-size-group">
+            <span class="page-size-label">每页</span>
+            <button
+              v-for="n in pageSizeOptions"
+              :key="n"
+              :class="['page-size-btn', { active: pageSize === n }]"
+              @click="pageSize = n"
+            >{{ n }}</button>
+            <span class="page-size-label">条</span>
+          </div>
+          <div class="page-nav">
+            <span class="page-info">第 {{ currentPage }} 页 / 共 {{ totalPages }} 页</span>
+            <button class="page-btn" :disabled="currentPage <= 1" @click="currentPage--">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
+                <polyline points="15 18 9 12 15 6"/>
+              </svg>
+            </button>
+            <button class="page-btn" :disabled="currentPage >= totalPages" @click="currentPage++">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
+                <polyline points="9 18 15 12 9 6"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </section>
     </div>
 
+    <!-- ===== 右列：侧边栏 ===== -->
+    <div class="learning-sidebar">
+
+      <!-- 侧边栏卡片1：今日学习计划 -->
+      <div class="sidebar-card" v-if="dailyPlan">
+        <div class="sidebar-card__header">
+          <span class="sidebar-card__title">📅 今日学习计划</span>
+          <span class="plan-date">{{ todayLabel }}</span>
+        </div>
+        <div class="plan-progress-bar" style="margin-bottom:10px">
+          <div class="plan-progress-bar__fill" :style="{ width: planProgressPct + '%' }" />
+        </div>
+        <div class="sidebar-task-list">
+          <div
+            v-for="task in dailyPlan.tasks"
+            :key="task.id"
+            :class="['sidebar-task', { done: task.done }]"
+            @click="toggleTask(task)"
+          >
+            <div :class="['plan-task__check', { done: task.done }]">
+              <svg v-if="task.done" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </div>
+            <div class="sidebar-task__body">
+              <p class="sidebar-task__title">{{ task.title }}</p>
+              <div class="sidebar-task__meta">
+                <span :class="['task-type-tag', 'task-type-' + task.type]">{{ taskTypeLabel(task.type) }}</span>
+                <span class="task-time">{{ task.estimatedMinutes }}min</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 侧边栏卡片2：技能短板 -->
+      <div class="sidebar-card">
+        <div class="sidebar-card__header">
+          <span class="sidebar-card__title">⚡ 技能短板</span>
+          <span class="weakness-count">{{ (weaknesses || []).length }} 项待提升</span>
+        </div>
+        <div v-if="weaknesses && weaknesses.length">
+          <div class="weakness-bar-list">
+            <div
+              v-for="w in sortedWeaknesses.slice(0, 6)"
+              :key="w.id"
+              class="weakness-bar-item"
+              :data-percentage="w.mastery_level || 0"
+              @click="filterByWeakness(w)"
+              style="cursor:pointer"
+            >
+              <div class="weakness-bar-label-row">
+                <span class="weakness-bar-label">{{ w.tag || w.name || '未知' }}</span>
+                <span class="weakness-bar-pct" :style="{ color: getColor(w.mastery_level) }">{{ w.mastery_level || 0 }}%</span>
+              </div>
+              <div class="weakness-bar">
+                <div class="weakness-bar__fill"
+                  :style="{ width: (w.mastery_level || 0) + '%', background: getColor(w.mastery_level) }" />
+              </div>
+            </div>
+          </div>
+          <div class="weakness-legend" style="margin-top:10px">
+            <span class="legend-dot" style="background:#EF4444" />薄弱
+            <span class="legend-dot" style="background:#F59E0B;margin-left:10px" />一般
+            <span class="legend-dot" style="background:#10B981;margin-left:10px" />良好
+            <span class="legend-dot" style="background:#6366F1;margin-left:10px" />优秀
+          </div>
+        </div>
+        <div v-else class="sidebar-empty">
+          <span>📊</span>
+          <p>暂无短板数据</p>
+        </div>
+      </div>
+
+      <!-- 侧边栏卡片3：技术热榜 -->
+      <div class="sidebar-card">
+        <div class="sidebar-card__header">
+          <span class="sidebar-card__title">🔥 技术热榜</span>
+        </div>
+        <div v-if="trendingLoading" class="trending-skeleton-list">
+          <div class="trending-skeleton" v-for="n in 5" :key="n" />
+        </div>
+        <div v-else-if="trendingTopics.length" class="sidebar-hot-list">
+          <div
+            v-for="(item, idx) in trendingTopics.slice(0, 10)"
+            :key="item.url || idx"
+            class="sidebar-hot-item"
+            @click="goToQuestionDetail(item)"
+          >
+            <span :class="['sidebar-hot-rank', idx < 3 ? 'rank-hot' : '']">{{ idx + 1 }}</span>
+            <p class="sidebar-hot-title">{{ item.title || item.text }}</p>
+            <span v-if="idx < 3" class="sidebar-hot-fire">🔥</span>
+          </div>
+        </div>
+        <div v-else class="sidebar-empty">
+          <span>📭</span>
+          <p>暂无热榜数据</p>
+        </div>
+      </div>
+
+    </div><!-- end learning-sidebar -->
+  </div><!-- end learning-layout -->
+
+</div>
     <!-- 资源详情弹窗 -->
     <teleport to="body">
       <transition name="modal-fade">
@@ -361,9 +361,6 @@ export default {
       activeCurveTab: 'overall',
       activeTypeFilter: 'all',
       activeWeaknessFilter: null,
-      // collapse flags for sections
-      showWeaknessSection: false,
-      showResourceSection: false,
       chartInstance: null,
       showResourceDetail: false,
       selectedResource: {},
@@ -376,13 +373,19 @@ export default {
         { key: 'adaptability', label: '应变' }
       ],
       typeFilters: [
-        { key: 'all', label: '全部', icon: '🌐' },
-        { key: 'article', label: '文章', icon: '📄' },
-        { key: 'video', label: '视频', icon: '🎬' },
+        { key: 'all', label: '全部'},
+        { key: 'article', label: '文章', icon: '📝' },
+        { key: 'video', label: '视频', icon: '▶️' },
         // "book" 类型已统一为 "course"（课程）
         { key: 'course', label: '书籍', icon: '📖' },
         { key: 'bookmarked', label: '收藏', icon: '⭐' }
-      ]
+      ],
+      currentPage: 1,
+pageSize: 4,
+pageSizeOptions: [4, 6, 8, 10],
+trendingTopics: [],
+trendingLoading: false,
+trendingActiveTab: 'all',
     }
   },
   computed: {
@@ -461,14 +464,23 @@ export default {
         if (a.completed === b.completed) return 0
         return a.completed ? 1 : -1
       })
-    }
+    },
+
+totalPages() {
+  return Math.ceil(this.filteredRecommendations.length / this.pageSize) || 1
+},
+
+pagedRecommendations() {
+  const start = (this.currentPage - 1) * this.pageSize
+  return this.filteredRecommendations.slice(start, start + this.pageSize)
+},
   },
-  async created() {
-    
-    if (!this.growthData) {
-      this.$store.dispatch('learning/loadAll')
-    }
-  },
+async created() {
+  if (!this.growthData) {
+    this.$store.dispatch('learning/loadAll')
+  }
+  this.loadTrendingTopics()
+},
   mounted() {
     this.initECharts()
     this.updateHeights()
@@ -484,19 +496,13 @@ export default {
     },
     activeCurveTab() {
       if (echarts && this.growthData && this.enableCharts) this.safeRenderChart()
-    }
+    },
+  activeTypeFilter() { this.currentPage = 1 },
+activeWeaknessFilter() { this.currentPage = 1 },
+pageSize() { this.currentPage = 1 },
   },
   methods: {
     ...mapActions('learning', ['toggleBookmark', 'markCompleted', 'updateTaskStatus']),
-    toggleWeakness() {
-      this.showWeaknessSection = !this.showWeaknessSection;
-      this.$nextTick(() => this.updateHeights());
-    },
-    toggleResources() {
-      this.showResourceSection = !this.showResourceSection;
-      this.$nextTick(() => this.updateHeights());
-    },
-
     updateHeights() {
       this.$nextTick(() => {
         const header = this.$el.querySelector('.page-header');
@@ -676,7 +682,7 @@ export default {
 
     typeIcon(type) {
       // 兼容老数据：book 也视为 course
-      const map = { article: '📄', video: '🎬', book: '📖', course: '📖', example: '⭐', bookmarked: '⭐' }
+      const map = { article: '📝', video: '▶️', book: '📖', course: '📖', example: '⭐', bookmarked: '⭐' }
       return map[type] || '📚'
     },
 
@@ -703,7 +709,25 @@ export default {
         this.$store.dispatch('learning/markCompleted', res.id)
         this.closeResource()
       }
-    }
+    },
+    async loadTrendingTopics() {
+  this.trendingLoading = true
+  try {
+    const { getTrendingTopics } = await import('@/api/job')
+    const res = await getTrendingTopics('default', 30)
+    const list = Array.isArray(res) ? res : (res?.data ?? [])
+    if (list.length > 0) this.trendingTopics = list
+  } catch (e) {
+    console.warn('热榜加载失败', e)
+  } finally {
+    this.trendingLoading = false
+  }
+},
+
+goToQuestionDetail(item) {
+  const data = encodeURIComponent(JSON.stringify(item))
+  this.$router.push({ path: '/question/detail', query: { data, type: 'trending' } })
+},
   }
 }
 </script>
@@ -988,85 +1012,6 @@ export default {
   font-size: $font-size-xs;
 }
 
-/* collapsible headers */
-.section-header.clickable {
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: $spacing-md $spacing-lg; /* 增大内边距提升高度 */
-  min-height: 56px;
-  background: $primary-bg; /* subtle theme color */
-  border: 1px solid $primary;
-  border-radius: $border-radius-lg;
-  transition: background $transition-fast, box-shadow $transition-fast, border-color $transition-fast, color $transition-fast;
-  color: $primary;
-}
-.section-header.clickable:hover {
-  background: lighten($primary-bg, 6%);
-  box-shadow: $shadow-sm;
-  border-color: darken($primary, 10%);
-}
-.section-header.clickable.open {
-  background: $primary;
-  border-color: $primary;
-  color: white;
-}
-.section-header.clickable.open:hover {
-  background: darken($primary, 7%);
-}
-
-/* specific header colors */
-.weakness-header {
-  background: #EFF8FF; /* very light blue */
-  border-color: #7EC8FF; /* soft blue */
-  color: #1E40AF; /* blue-900 text */
-}
-.weakness-header:hover {
-  background: #D1F1FF; /* hover: deeper light blue */
-  border-color: #3B82F6;
-}
-.weakness-header.open {
-  background: #2563EB; /* open: deeper blue */
-  border-color: #2563EB;
-  color: white;
-}
-
-.resource-header {
-  background: #FBF5FF; /* very light purple */
-  border-color: #D8B4FF; /* soft purple */
-  color: #6B21A8; /* purple-900 text */
-}
-.resource-header:hover {
-  background: #F0E6FF; /* hover: deeper light purple */
-  border-color: #A855F7;
-}
-.resource-header.open {
-  background: #7C3AED; /* open: deeper purple */
-  border-color: #7C3AED;
-  color: white;
-}
-.collapse-icon {
-  width: 18px; height: 18px;
-  margin-left: $spacing-sm;
-  transition: transform $transition-fast;
-  stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
-}
-.collapse-icon.open { transform: rotate(180deg); }
-
-/* collapse transition */
-.collapse-enter-active, .collapse-leave-active {
-  transition: max-height 0.3s ease, opacity 0.3s ease;
-}
-.collapse-enter-from, .collapse-leave-to {
-  max-height: 0;
-  opacity: 0;
-}
-.collapse-enter-to, .collapse-leave-from {
-  max-height: 1000px;
-  opacity: 1;
-}
-
 .legend-dot {
   width: 8px; height: 8px; border-radius: 50%; margin-right: 4px;
   &--high { background: $danger; }
@@ -1137,11 +1082,11 @@ export default {
   display: flex; align-items: center; justify-content: center;
   font-size: 16px; flex-shrink: 0;
 
-  &.type-article { background: #DBEAFE; }
-  &.type-video { background: #FEE2E2; }
-  &.type-practice { background: #D1FAE5; }
-  &.type-book { background: #F3E8FF; }
-  &.type-example { background: #FEF3C7; }
+  // &.type-article { background: #DBEAFE; }
+  // &.type-video { background: #FEE2E2; }
+  // &.type-practice { background: #D1FAE5; }
+  // &.type-book { background: #F3E8FF; }
+  // &.type-example { background: #FEF3C7; }
 }
 
 .difficulty-badge {
@@ -1392,4 +1337,409 @@ export default {
 .modal-fade-leave-active { transition: opacity 0.2s ease; }
 .modal-fade-enter-from, .modal-fade-leave-to { opacity: 0; }
 .modal-fade-enter-to, .modal-fade-leave-from { opacity: 1; }
+
+
+// ---- 分页栏 ----
+.pagination-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: $spacing-md;
+  padding: $spacing-sm $spacing-md;
+  background: white;
+  border: 1px solid $border-color;
+  border-radius: $border-radius-lg;
+  box-shadow: $shadow-sm;
+}
+
+.page-size-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.page-size-label {
+  font-size: $font-size-xs;
+  color: $text-muted;
+}
+
+.page-size-btn {
+  padding: 4px 10px;
+  border-radius: $border-radius-full;
+  border: 1.5px solid $border-color;
+  background: white;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+  color: $text-secondary;
+  cursor: pointer;
+  transition: all $transition-fast;
+  font-family: $font-family-base;
+
+  &.active {
+    background: $primary;
+    border-color: $primary;
+    color: white;
+  }
+
+  &:not(.active):hover {
+    border-color: $primary;
+    color: $primary;
+  }
+}
+
+.page-nav {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+}
+
+.page-info {
+  font-size: $font-size-sm;
+  color: $text-secondary;
+  white-space: nowrap;
+}
+
+.page-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: $border-radius;
+  border: 1.5px solid $border-color;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all $transition-fast;
+  color: $text-secondary;
+
+  &:hover:not(:disabled) {
+    border-color: $primary;
+    color: $primary;
+    background: $primary-bg;
+  }
+
+  &:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+}
+
+// ---- 技术热榜 ----
+.trending-skeleton-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.trending-skeleton {
+  height: 56px;
+  background: $gray-100;
+  border-radius: $border-radius;
+  animation: shimmer 1.2s ease infinite;
+}
+
+@keyframes shimmer {
+  0%, 100% { opacity: 1 }
+  50% { opacity: 0.5 }
+}
+
+.trending-list {
+  background: white;
+  border: 1px solid $border-color;
+  border-radius: $border-radius-lg;
+  overflow: hidden;
+  box-shadow: $shadow-sm;
+}
+
+.trending-item {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  padding: $spacing-md $spacing-base;
+  border-bottom: 1px solid $gray-100;
+  cursor: pointer;
+  transition: background $transition-fast;
+
+  &:last-child { border-bottom: none; }
+  &:hover { background: $gray-50; }
+
+  &__body {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__title {
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    color: $text-primary;
+    line-height: 1.4;
+    margin-bottom: 3px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  &__meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: $font-size-xs;
+    color: $text-muted;
+  }
+
+  &__source {
+    background: $gray-100;
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 10px;
+  }
+
+  &__arrow {
+    width: 14px;
+    height: 14px;
+    color: $gray-300;
+    flex-shrink: 0;
+    transition: color $transition-fast;
+  }
+
+  &:hover &__arrow {
+    color: $primary;
+  }
+}
+
+.trending-rank {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: $gray-100;
+  color: $text-muted;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  &.rank-hot {
+    background: linear-gradient(135deg, #EF4444, #F97316);
+    color: white;
+  }
+}
+// ======================================================
+// 双栏布局
+// ======================================================
+.learning-layout {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: $spacing-lg;
+  align-items: start;
+}
+
+.learning-main {
+  padding-top: 20px;
+  min-width: 0; // 防止内容撑破 grid
+}
+
+.learning-sidebar {
+  padding-top: 110px;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+  // 侧边栏跟随页面滚动，不粘性定位（移动端友好）
+}
+
+// ======================================================
+// 侧边栏通用卡片
+// ======================================================
+.sidebar-card {
+  background: white;
+  border-radius: $border-radius-lg;
+  border: 1px solid $border-color;
+  box-shadow: $shadow-sm;
+  padding: $spacing-base;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: $spacing-md;
+    padding-bottom: $spacing-sm;
+    border-bottom: 1px solid $gray-100;
+  }
+
+  &__title {
+    font-size: $font-size-sm;
+    font-weight: $font-weight-bold;
+    color: $text-primary;
+  }
+}
+
+// ======================================================
+// 侧边栏：今日学习计划任务列表
+// ======================================================
+.sidebar-task-list {
+  display: flex;
+  flex-direction: column;
+  // 不加 gap，用 border-bottom 分隔
+}
+
+.sidebar-task {
+  display: flex;
+  align-items: flex-start;
+  gap: $spacing-sm;
+  padding: $spacing-sm 0;
+  border-bottom: 1px solid $gray-100;
+  cursor: pointer;
+  transition: background $transition-fast;
+
+  &:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  &:first-child {
+    padding-top: 0;
+  }
+
+  &.done .sidebar-task__title {
+    text-decoration: line-through;
+    color: $text-muted;
+  }
+
+  &__body {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__title {
+    font-size: $font-size-xs;
+    font-weight: $font-weight-medium;
+    color: $text-primary;
+    line-height: 1.4;
+    margin-bottom: 4px;
+  }
+
+  &__meta {
+    display: flex;
+    align-items: center;
+    gap: $spacing-xs;
+  }
+}
+
+// ======================================================
+// 侧边栏：技能短板 - 新增标签行
+// ======================================================
+.weakness-bar-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.weakness-bar-pct {
+  font-size: 11px;
+  font-weight: $font-weight-semibold;
+}
+
+.sidebar-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: $spacing-lg 0;
+  gap: $spacing-xs;
+  color: $text-muted;
+  font-size: $font-size-xs;
+
+  span {
+    font-size: 28px;
+  }
+
+  p {
+    margin: 0;
+  }
+}
+
+// ======================================================
+// 侧边栏：技术热榜
+// ======================================================
+.sidebar-hot-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-hot-item {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  padding: 9px 0;
+  border-bottom: 1px solid $gray-100;
+  cursor: pointer;
+  transition: background $transition-fast;
+
+  &:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  &:first-child {
+    padding-top: 0;
+  }
+
+  &:hover .sidebar-hot-title {
+    color: $primary;
+  }
+}
+
+.sidebar-hot-rank {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  background: $gray-100;
+  color: $text-muted;
+  font-size: 11px;
+  font-weight: $font-weight-bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  // 前三名红色高亮
+  &.rank-hot {
+    background: linear-gradient(135deg, #EF4444, #F97316);
+    color: white;
+  }
+}
+
+.sidebar-hot-title {
+  flex: 1;
+  font-size: $font-size-xs;
+  color: $text-primary;
+  line-height: 1.4;
+  // 超出一行截断
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color $transition-fast;
+}
+
+.sidebar-hot-fire {
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+// ======================================================
+// 响应式：768px 以下折叠为单列
+// ======================================================
+@media (max-width: 767px) {
+  .learning-layout {
+    grid-template-columns: 1fr;
+  }
+
+  // 移动端侧边栏卡片横向并排（今日计划 + 短板）
+  .learning-sidebar {
+    // 保持竖排，移动端无需特殊处理
+  }
+}
 </style>
