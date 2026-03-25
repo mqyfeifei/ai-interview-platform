@@ -13,7 +13,7 @@ const routes = [
     path: '/login',
     name: 'Login',
     component: () => import('@/views/users/Login.vue'),
-    meta: {hideNavigation: true, requiresAuth: false, title: '登录' }
+    meta: { hideNavigation: true, requiresAuth: false, title: '登录' }
   },
   {
     path: '/register',
@@ -45,13 +45,13 @@ const routes = [
     path: '/interview/select',
     name: 'JobSelection',
     component: () => import('@/views/interview/JobSelection.vue'),
-    meta: {hideNavigation: true, requiresAuth: true, title: '选择岗位' }
+    meta: { hideNavigation: true, requiresAuth: true, title: '选择岗位' }
   },
   {
     path: '/interview/session',
     name: 'InterviewSession',
     component: () => import('@/views/interview/InterviewSession.vue'),
-    meta: {hideNavigation: true, requiresAuth: true, title: '模拟面试', hideNav: true }
+    meta: { hideNavigation: true, requiresAuth: true, title: '模拟面试', hideNav: true }
   },
   {
     path: '/interview/report/:reportId',
@@ -66,6 +66,12 @@ const routes = [
     name: 'LearningCenter',
     component: () => import('@/views/system/LearningCenter.vue'),
     meta: { requiresAuth: true, title: '学习中心', showBottomNav: true }
+  },
+  {
+    path: '/resume',
+    name: 'ResumeBuilder',
+    component: () => import('@/views/system/ResumeBuilder.vue'),
+    meta: { requiresAuth: true, title: '简历制作', showBottomNav: true }
   },
   {
     path: '/history',
