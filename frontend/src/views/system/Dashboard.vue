@@ -9,141 +9,77 @@
     <!-- 主内容区 -->
     <div class="dashboard-body page-container">
 
-      <div class="hero-layout">
+      <div class="homepage-hero-container">
+        <div class="homepage-hero">
+          <div class="homepage-hero__bg"></div>
+          <transition name="hero-fade" mode="out-in">
+            <div :key="heroTab" class="homepage-hero__content floating">
+              <div class="hero-tabs">
+                <button :class="{ active: heroTab === 'interview' }" @click="heroTab = 'interview'">AI 面试教练</button>
+                <button :class="{ active: heroTab === 'learning' }" @click="heroTab = 'learning'">个性化学习</button>
+              </div>
+              <h1 class="hero-title">
+                <template v-if="heroTab === 'interview'">
+                  你的 <span class="hero-word-highlight">专属AI</span> 面试教练
+                </template>
+                <template v-else>
+                  打造你的 <span class="hero-word-highlight">个性化</span> 学习资源
+                </template>
+              </h1>
+              <p class="hero-desc">{{ heroDesc }}</p>
+              <p v-if="heroTab === 'interview'" class="hero-current-job">当前岗位：{{ currentJobName }}</p>
+              <button class="hero-action-btn" @click="startHeroAction">{{ heroActionText }}</button>
+              <div class="learning-extra" :class="{ 'learning-extra--learning': heroTab === 'learning', 'learning-extra--interview': heroTab === 'interview' }">
+                <div class="learning-extra__card" v-if="heroTab === 'learning'">
+                  <h4>能力成长曲线</h4>
+                  <p>实时展示你在不同维度的进步趋势，目标可视化。</p>
+                </div>
+                <div class="learning-extra__card" v-if="heroTab === 'learning'">
+                  <h4>短板可视化</h4>
+                  <p>一目了然识别弱项，智能补强，降低盲区。</p>
+                </div>
+                <div class="learning-extra__card" v-if="heroTab === 'learning'">
+                  <h4>学习资源智能推荐</h4>
+                  <p>基于你的弱项自动推荐课程、题库与训练路径。</p>
+                </div>
 
-        <!-- 左：问候+数据卡片 -->
-        <div class="hero-card">
-          <div class="hero-card__greet">
-            <h2 class="hero-greet">{{ timeGreeting }}，{{ isLoggedIn ? userName : '访客' }} </h2>
-            <span class="hero-date">{{ heroDate }}</span>
-          </div>
-          <div class="hero-stats" v-if="isLoggedIn">
-            <div class="hero-stat">
-              <span class="hero-stat__val">{{ stats.totalInterviews || 0 }}</span>
-              <span class="hero-stat__lbl">练习次数</span>
-            </div>
-            <div class="hero-stat__sep" />
-            <div class="hero-stat">
-              <span class="hero-stat__val">{{ stats.avgScore || '--' }}</span>
-              <span class="hero-stat__lbl">平均得分</span>
-            </div>
-            <div class="hero-stat__sep" />
-            <div class="hero-stat">
-              <span class="hero-stat__val hero-stat__val--accent">{{ stats.lastInterviewScore || '--' }}</span>
-              <span class="hero-stat__lbl">最近得分</span>
-            </div>
-            <div class="hero-stat__sep" />
-            <div class="hero-stat">
-              <span class="hero-stat__val">{{ streakDays }}</span>
-              <span class="hero-stat__lbl">连续天数</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- 右：开始面试卡片 -->
-        <div class="start-card">
-          <div class="start-card__header">
-            <div>
-              <h2 class="start-card__title">开始模拟面试</h2>
-              <p class="start-card__desc">AI 面试官已就位，选择岗位立即开始</p>
-            </div>
-          </div>
-          <div class="start-card__jobs">
-            <button
-              class="job-chip"
-              v-for="job in topHotJobs"
-              :key="job.id"
-              @click="showJobConfirm(job)"
-            >
-              <span>{{ job.icon }}</span>
-              <span>{{ job.name.replace('开发','').replace('工程师','') }}</span>
-            </button>
-            <button class="job-chip job-chip--more" @click="$router.push('/interview/select')">
-              📋 更多岗位
-            </button>
-          </div>
-          <button class="start-btn" @click="startInterview">
-            开始面试
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-              stroke-linecap="round" stroke-linejoin="round" width="15" height="15">
-              <polyline points="9 18 15 12 9 6"/>
-            </svg>
-          </button>
-        </div>
-
-      </div>
-      <!-- 双栏布局：能力雷达 + 学习动态/成就 -->
-      <section class="section two-column-section" v-if="isLoggedIn">
-        <!-- 左侧：能力雷达图预览 -->
-        <div class="ability-card">
-          <div class="ability-card__header">
-            <h3 class="ability-card__title">📊 能力概览</h3>
-            <button class="ability-card__more" @click="$router.push('/history')">详情</button>
-          </div>
-          <div class="radar-preview">
-            <svg viewBox="0 0 200 200" class="radar-chart">
-              <!-- 背景网格 -->
-              <polygon class="radar-grid" points="100,20 168,65 168,135 100,180 32,135 32,65" />
-              <polygon class="radar-grid" points="100,40 152,72 152,128 100,160 48,128 48,72" />
-              <polygon class="radar-grid" points="100,60 136,80 136,120 100,140 64,120 64,80" />
-              <!-- 能力区域 -->
-              <polygon class="radar-area" :points="radarPoints" />
-              <!-- 能力点 -->
-              <circle v-for="(point, idx) in radarDots" :key="idx" :cx="point.x" :cy="point.y" r="4" class="radar-dot" />
-            </svg>
-            <div class="radar-labels">
-              <span class="radar-label" style="top: 0; left: 50%; transform: translateX(-50%)">专业知识</span>
-              <span class="radar-label" style="top: 25%; right: 0">逻辑思维</span>
-              <span class="radar-label" style="bottom: 25%; right: 0">表达能力</span>
-              <span class="radar-label" style="bottom: 0; left: 50%; transform: translateX(-50%)">问题解决</span>
-              <span class="radar-label" style="bottom: 25%; left: 0">代码能力</span>
-              <span class="radar-label" style="top: 25%; left: 0">学习能力</span>
-            </div>
-          </div>
-          <p class="ability-card__summary">
-            综合评分 <strong>{{ stats.avgScore || '--' }}</strong> 分，{{ abilityComment }}
-          </p>
-        </div>
-
-        <!-- 右侧：成就与动态 -->
-        <div class="achievement-card">
-          <div class="achievement-card__header">
-            <h3 class="achievement-card__title">🏆 我的成就</h3>
-            <div class="streak-badge">
-              <span class="streak-badge__fire">🔥</span>
-              <span class="streak-badge__text">{{ streakDays }}天连续</span>
-            </div>
-          </div>
-          
-          <!-- 成就徽章 -->
-          <div class="badges-row">
-            <div 
-              class="badge-item" 
-              v-for="badge in displayBadges" 
-              :key="badge.id"
-              :class="{ locked: !badge.unlocked }"
-            >
-              <span class="badge-item__icon">{{ badge.icon }}</span>
-              <span class="badge-item__name">{{ badge.name }}</span>
-            </div>
-          </div>
-
-          <!-- 最近动态 -->
-          <div class="recent-activity">
-            <h4 class="recent-activity__title">最近动态</h4>
-            <div class="activity-list">
-              <div class="activity-item" v-for="(act, idx) in recentActivities" :key="idx">
-                <span class="activity-item__icon">{{ act.icon }}</span>
-                <span class="activity-item__text">{{ act.text }}</span>
-                <span class="activity-item__time">{{ act.time }}</span>
+                <div class="learning-extra__card" v-if="heroTab === 'interview'">
+                  <h4>模拟真实场景</h4>
+                  <p>高度还原面试现场，压力和过程同步训练。</p>
+                </div>
+                <div class="learning-extra__card" v-if="heroTab === 'interview'">
+                  <h4>智能报告生成</h4>
+                  <p>自动分析表现，生成重点改进建议与复盘报告。</p>
+                </div>
+                <div class="learning-extra__card" v-if="heroTab === 'interview'">
+                  <h4>全面综合考察</h4>
+                  <p>覆盖技能、逻辑、表达与抗压全方位评估。</p>
+                </div>
               </div>
             </div>
-          </div>
+          </transition>
+        </div>
+
+        <section class="homepage-stats">
+        <div class="stat-card">
+          <div class="stat-number">320,000+</div>
+          <div class="stat-label">使用用户数目</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">1,600,000+</div>
+          <div class="stat-label">平台面试次数</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">12,000+</div>
+          <div class="stat-label">针对性岗位数目</div>
         </div>
       </section>
+    </div>
+
+
 
       <!-- 未登录时显示平台特色 -->
-      <section class="section feature-section" v-else>
+      <section class="section feature-section" v-if="!isLoggedIn">
         <h2 class="feature-section__title">✨ 为什么选择 AI面试助手？</h2>
         <div class="feature-grid">
           <div class="feature-box">
@@ -166,30 +102,6 @@
             <h3 class="feature-box__title">精准题库覆盖</h3>
             <p class="feature-box__desc">覆盖Java、前端、Python等热门方向，紧跟面试趋势</p>
           </div>
-        </div>
-      </section>
-
-      <!-- 热门面试题 -->
-      <section class="section">
-        <div class="section-header">
-          <h2 class="section-title">🔥 技术热榜</h2>
-        </div>
-        <div class="question-list" v-if="!trendingLoading">
-          <div class="question-card" v-for="(q, idx) in displayHotQuestions" :key="idx" @click="goToQuestionDetail(q)">
-            <div class="question-card__top">
-              <!-- tag removed per requirement: no backend/frontend/global labels -->
-              <span class="question-card__source" v-if="q.sourceLabel">{{ q.sourceLabel }}</span>
-            </div>
-            <p class="question-card__text">{{ q.text || q.title }}</p>
-            <div class="question-card__meta">
-              <span v-if="q.likes">👍 {{ q.likes }}</span>
-              <span v-if="q.comments">💬 {{ q.comments }}</span>
-              <span v-if="q.hasContent" class="question-card__readable">可阅读全文</span>
-            </div>
-          </div>
-        </div>
-        <div v-else class="trending-spinner-wrap">
-          <div class="spinner"></div>
         </div>
       </section>
 
@@ -309,7 +221,8 @@
 <script>
 import { mapGetters, mapActions } from 'vuex'
 import { getDashboardStats } from '@/api/user'
-import { fetchJobs, fetchPopularJobs, getTrendingTopics } from '@/api/job'
+import { fetchJobs, fetchPopularJobs } from '@/api/job'
+import { JOB_TYPES } from '@/utils/constants'
 import HelpGuideModal from '@/components/common/HelpGuideModal.vue'
 
 export default {
@@ -347,6 +260,7 @@ export default {
   { icon: '📈', title: '个性化学习路径', desc: 'AI分析薄弱点，智能推荐学习内容' },
   { icon: '🎯', title: '精准题库覆盖', desc: '覆盖Java、前端、Python等热门方向' },
 ],
+      heroTab: 'interview',
       dailyTips: [
         '回答时采用 STAR 法则（情境-任务-行动-结果），让回答更有结构和说服力。',
         '面试前10分钟快速回顾项目亮点，准备2-3个"失败经历+如何改进"的故事。',
@@ -354,13 +268,8 @@ export default {
         '多使用数字和具体案例，比如"优化后性能提升了40%"比"优化了很多"更有说服力。',
         '复杂问题先说结论，再展开细节，让面试官第一时间抓住重点。'
       ],
-      hotQuestions: [
-        { tag: 'Java', tagBg: '#FEF3C7', tagColor: '#B45309', text: '请介绍一下JVM的内存模型和垃圾回收机制', difficulty: '中等', views: 2847 },
-        { tag: '前端', tagBg: '#DBEAFE', tagColor: '#1D4ED8', text: 'Vue的响应式原理是什么？Vue3相比Vue2有哪些改进？', difficulty: '中等', views: 3156 },
-        { tag: '算法', tagBg: '#D1FAE5', tagColor: '#047857', text: '如何实现一个LRU缓存？时间复杂度是多少？', difficulty: '较难', views: 1923 }
-      ],
       // 成就徽章 - 根据真实数据动态计算
-      badges: [
+      badges:[
         { id: 1, icon: '🌟', name: '初次面试', condition: 'firstInterview' },
         { id: 2, icon: '🔥', name: '连续3天', condition: 'streak3' },
         { id: 3, icon: '💪', name: '突破80分', condition: 'score80' },
@@ -371,10 +280,6 @@ export default {
       showConfirmModal: false,
       selectedJob: null,
       voiceMode: false, 
-      // 实时热榜数据
-      trendingTopics: [],
-      trendingLoading: false,
-
       // 使用帮助指南（首次登录自动弹出一次）
       showHelpGuide: false,
       helpGuideStorageKey: ''
@@ -386,7 +291,41 @@ export default {
   const days = ['周日','周一','周二','周三','周四','周五','周六']
   return `${d.getMonth()+1}月${d.getDate()}日 ${days[d.getDay()]}`
 },
-    ...mapGetters('user', ['userInfo', 'userName', 'defaultJob', 'isLoggedIn']),
+    ...mapGetters('user', ['userInfo', 'userName', 'defaultJob', 'defaultJobName', 'isLoggedIn']),
+
+    currentJobName() {
+      // 从数据库返回的用户默认岗位优先显示
+      const dbJobName = this.userInfo?.defaultJobName || this.userInfo?.default_job_name || this.userInfo?.default_job || this.userInfo?.job_name
+      if (dbJobName) return dbJobName
+
+      // 然后使用 Vuex 里升级后的 defaultJobName
+      if (this.defaultJobName) return this.defaultJobName
+
+      // 其次尝试 jobs 列表 id -> name 匹配
+      if (this.defaultJob && this.jobs && this.jobs.length > 0) {
+        const job = this.jobs.find(j => String(j.id) === String(this.defaultJob) || (j.name && j.name === this.defaultJob))
+        if (job) return job.name
+      }
+      return "未设置"
+    },
+
+    heroTitle() {
+      if (this.heroTab === 'learning') {
+        return '打造你的个性化学习资源'
+      }
+      return '你的专属AI面试教练'
+    },
+
+    heroDesc() {
+      if (this.heroTab === 'learning') {
+        return '展示多维度能力曲线，针对薄弱点进行学习与练习，持续提升面试表现'
+      }
+      return '面试过程中实时提供专业建议，帮助构建清晰有逻辑的回答框架，面试成功率提升3倍'
+    },
+
+    heroActionText() {
+      return this.heroTab === 'learning' ? '开始学习' : '开始面试'
+    },
 
     timeGreeting() {
       const hour = new Date().getHours()
@@ -570,21 +509,6 @@ export default {
       return activities.slice(0, 3)
     },
 
-    // 热门题目（优先显示实时热榜，失败时回退到本地经典题）
-    displayHotQuestions() {
-      if (this.trendingTopics.length > 0) {
-        return this.trendingTopics.slice(0, 9).map(item => ({
-          ...item,
-          text: item.title || item.text,
-          isTrending: true,
-          // drop tag fields; frontend ignores them now
-          tag: undefined,
-          tagBg: undefined,
-          tagColor: undefined
-        }))
-      }
-      return this.hotQuestions
-    }
   },
   watch: {
     isLoggedIn: {
@@ -595,9 +519,11 @@ export default {
     }
   },
   async created() {
+    if (this.isLoggedIn) {
+      await this.fetchUserInfo()
+    }
     this.loadJobs() 
     this.loadStats()
-    this.loadTrendingTopics()
     this.maybeAutoShowHelpGuide()
   },
   methods: {
@@ -697,8 +623,12 @@ export default {
       return `${d.getMonth() + 1}月${d.getDate()}日`
     },
 
-    startInterview() {
-      this.$router.push('/interview/select')
+    startHeroAction() {
+      if (this.heroTab === 'learning') {
+        this.$router.push('/learning')
+      } else {
+        this.$router.push('/interview/select')
+      }
     },
 
     // 显示岗位确认弹窗
@@ -732,24 +662,6 @@ export default {
       this.$router.push('/interview/select')
     },
 
-    // 加载掘金实时热榜
-    async loadTrendingTopics() {
-      this.trendingLoading = true
-      try {
-        const jobId = this.defaultJob || 'default'
-        const res = await getTrendingTopics(jobId, 6)
-        // 响应拦截器已自动解包 res.data，这里 res 直接就是文章数组
-        const list = Array.isArray(res) ? res : (res && res.data ? res.data : [])
-        if (list.length > 0) {
-          this.trendingTopics = list
-        }
-      } catch (e) {
-        console.warn('热榜加载失败，使用本地经典题', e)
-      } finally {
-        this.trendingLoading = false
-      }
-    },
-
     // 跳转题目详情页
     goToQuestionDetail(item) {
       const data = encodeURIComponent(JSON.stringify(item))
@@ -763,8 +675,242 @@ export default {
 <style lang="scss" scoped>
 .dashboard-page {
   min-height: 100vh;
-  background: $bg-page;
+  background: #f8f8fb;
   padding-bottom: $bottom-nav-height;
+  position: relative;
+  overflow: hidden;
+}
+
+.dashboard-page::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: url('@/assets/backgroundA.jpg') center/cover no-repeat;
+  opacity: 0.12;
+  filter: blur(4px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.homepage-hero-container {
+  position: relative;
+  background: url('@/assets/backgroundA.jpg') center/cover no-repeat;
+  border-radius: 20px;
+  padding: 20px;
+  margin-bottom: 18px;
+  box-shadow: 0 10px 26px rgba(76, 66, 143, 0.14);
+  overflow: hidden;
+}
+
+.homepage-hero-container::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(250, 250, 255, 0.62);
+  backdrop-filter: blur(5px);
+  z-index: 1;
+}
+
+.homepage-hero,
+.homepage-stats,
+.page-container {
+  position: relative;
+  z-index: 1;
+}
+
+.homepage-hero {
+  position: relative;
+  background: transparent;
+  border-radius: 18px;
+  min-height: 420px;
+  margin-bottom: 18px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.homepage-hero__bg {
+  display: none;
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(232, 221, 255, 0.3), rgba(218, 240, 232, 0.24)), url('@/assets/backgroundA.jpg') center/cover no-repeat;
+  opacity: 0.18;
+  z-index: 1;
+}
+
+.homepage-hero__content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 16px;
+  max-width: 760px;
+}
+
+.homepage-hero__content.floating {
+  background: transparent;
+  border-radius: 0;
+  padding: 0;
+  backdrop-filter: none;
+  box-shadow: none;
+}
+
+
+.hero-tabs {
+  display: inline-flex;
+  gap: 8px;
+  background: rgba(226, 214, 255, 0.5);
+  border-radius: 999px;
+  padding: 4px;
+}
+
+.hero-tabs button {
+  border: none;
+  outline: none;
+  background: transparent;
+  color: #6940f7;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 8px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.hero-tabs button.active {
+  color: #fff;
+  background: #6a59f8;
+}
+
+.hero-title {
+  font-family: 'Microsoft YaHei', PingFangSC, sans-serif;
+  font-size: 44px;
+  font-weight: 900;
+  color: #2a2553;
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.hero-desc {
+  font-size: 16px;
+  line-height: 1.5;
+  color: #4b4a60;
+  max-width: 720px;
+}
+
+.hero-current-job {
+  font-size: 14px;
+  font-weight: 700;
+  color: #6a59f8;
+  background: rgba(226, 214, 255, 0.5);
+  border-radius: 999px;
+  padding: 8px 14px;
+  margin: 0;
+}
+
+.hero-word-highlight {
+  color: #7c56ff;
+}
+
+.learning-extra {
+  margin-top: 18px;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.learning-extra__card {
+  min-width: 160px;
+  max-width: 220px;
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid #e9e5ff;
+  border-radius: 14px;
+  box-shadow: 0 6px 14px rgba(77, 64, 170, 0.12);
+  padding: 12px 14px;
+  text-align: left;
+}
+
+.learning-extra__card h4 {
+  margin: 0 0 6px 0;
+  color: #5a3ee4;
+}
+
+.learning-extra__card p {
+  margin: 0;
+  color: #524d6e;
+  font-size: 13px;
+}
+
+.hero-fade-enter-active,
+.hero-fade-leave-active {
+  transition: all 0.35s ease;
+}
+.hero-fade-enter-from,
+.hero-fade-leave-to {
+  opacity: 0;
+  transform: translateY(8px);
+}
+.hero-fade-enter-to,
+.hero-fade-leave-from {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.hero-action-btn {
+  width: 160px;
+  height: 45px;
+  font-size: 15px;
+  font-weight: 700;
+  border-radius: 999px;
+  border: none;
+  color: #fff;
+  background: linear-gradient(90deg, #7365f0 0%, #543ed4 100%);
+  cursor: pointer;
+  box-shadow: 0 8px 18px rgba(94, 64, 170, 0.25);
+}
+
+.homepage-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(180px, 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.stat-card {
+  background: #fff;
+  border-radius: 14px;
+  border: 1px solid #e9e5ff;
+  padding: 14px;
+  box-shadow: 0 6px 18px rgba(80, 54, 158, 0.1);
+  text-align: center;
+}
+
+.stat-number {
+  font-size: 24px;
+  font-weight: 800;
+  color: #4233a2;
+  margin-bottom: 8px;
+}
+
+.stat-label {
+  font-size: 13px;
+  color: #68628e;
+}
+
+@media (max-width: 1024px) {
+  .hero-title {
+    font-size: 34px;
+  }
+
+  .homepage-stats {
+    grid-template-columns: 1fr;
+  }
 }
 
 
@@ -1052,169 +1198,6 @@ export default {
   max-width: 180px;
   margin: 0 auto;
   aspect-ratio: 1;
-}
-
-.radar-chart {
-  width: 100%;
-  height: 100%;
-}
-
-.radar-grid {
-  fill: none;
-  stroke: #E5E7EB;
-  stroke-width: 1;
-}
-
-.radar-area {
-  fill: rgba(99, 102, 241, 0.2);
-  stroke: $primary;
-  stroke-width: 2;
-}
-
-.radar-dot {
-  fill: $primary;
-}
-
-.radar-labels {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  pointer-events: none;
-}
-
-.radar-label {
-  position: absolute;
-  font-size: 9px;
-  color: $text-muted;
-  white-space: nowrap;
-}
-
-// 成就卡片
-.achievement-card {
-  background: linear-gradient(135deg, #F5F3FF 0%, #EDE9FE 100%);
-  border-radius: $border-radius-lg;
-  padding: $spacing-base;
-  border: 1px solid #DDD6FE;
-
-  &__header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: $spacing-md;
-  }
-
-  &__title {
-    font-size: $font-size-sm;
-    font-weight: $font-weight-bold;
-    color: $text-primary;
-  }
-}
-
-.streak-badge {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
-  padding: 4px 10px;
-  border-radius: 20px;
-  border: 1px solid #F59E0B;
-
-  &__fire {
-    font-size: 14px;
-  }
-
-  &__text {
-    font-size: 11px;
-    font-weight: $font-weight-semibold;
-    color: #B45309;
-  }
-}
-
-.badges-row {
-  display: flex;
-  gap: $spacing-xs;
-  margin-bottom: $spacing-md;
-  overflow-x: auto;
-  padding-bottom: 4px;
-
-  &::-webkit-scrollbar {
-    display: none;
-  }
-}
-
-.badge-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  min-width: 52px;
-  padding: 8px 6px;
-  background: white;
-  border-radius: $border-radius;
-  border: 1px solid #E5E7EB;
-  transition: all 0.2s ease;
-
-  &__icon {
-    font-size: 20px;
-  }
-
-  &__name {
-    font-size: 9px;
-    color: $text-secondary;
-    white-space: nowrap;
-  }
-
-  &.locked {
-    opacity: 0.4;
-    filter: grayscale(1);
-  }
-
-  &:not(.locked):hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
-    border-color: $primary;
-  }
-}
-
-.recent-activity {
-  &__title {
-    font-size: $font-size-xs;
-    font-weight: $font-weight-semibold;
-    color: $text-secondary;
-    margin-bottom: $spacing-xs;
-  }
-}
-
-.activity-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.activity-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 8px;
-  background: white;
-  border-radius: $border-radius-sm;
-  font-size: $font-size-xs;
-
-  &__icon {
-    font-size: 14px;
-  }
-
-  &__text {
-    flex: 1;
-    color: $text-primary;
-  }
-
-  &__time {
-    color: $text-muted;
-    font-size: 10px;
-  }
 }
 
 // 未登录 - 平台特色区域
