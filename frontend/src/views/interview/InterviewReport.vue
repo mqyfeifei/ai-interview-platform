@@ -30,32 +30,29 @@
     </div>
 
     <template v-else-if="report">
+
+
+      <!-- 内容区 -->
+      <div class="report-body page-container">
       <!-- 总体得分区 -->
       <div class="report-hero">
-        <div class="hero-bg-circle" />
-        <div class="hero-bg-circle hero-bg-circle--2" />
+          <div class="section-header" style="width:100%; margin-bottom: 0;">
+            <h1 class="section-title">
+              综合得分
+            </h1>
+          </div>
         <div class="hero-content">
+
           <div class="hero-meta">
             <span class="job-badge">{{ report.jobName }}</span>
             <span class="date-text">{{ formatDateTime(report.createdAt) }}</span>
           </div>
           <div class="hero-score-block">
-          <div class="score-circle-wrap">
-            <svg class="score-circle-svg" viewBox="0 0 180 180">
-              <circle cx="90" cy="90" r="76" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="10"/>
-              <circle cx="90" cy="90" r="76" fill="none" stroke="white" stroke-width="10"
-                stroke-linecap="round" :stroke-dasharray="scoreCircumference" :stroke-dashoffset="scoreOffset"
-                transform="rotate(-90 90 90)" style="transition: stroke-dashoffset 1.5s cubic-bezier(0.4,0,0.2,1)"/>
-            </svg>
-            <div class="score-circle-inner">
-              <span class="score-circle-number">{{ animatedScore }}</span>
-              <span class="score-circle-label">综合得分</span>
+            <div class="score-number">{{ animatedScore }}</div>
+            <div class="score-right">
+              <span class="grade-badge" :class="'grade-' + grade.key">{{ grade.label }}</span>
+              <span class="grade-desc">{{ grade.desc }}</span>
             </div>
-          </div>
-          <div class="score-grade">
-            <span class="grade-badge" :class="'grade-' + grade.key">{{ grade.label }}</span>
-            <span class="grade-desc">{{ grade.desc }}</span>
-          </div>
           </div>
           <div class="hero-stats">
             <div class="hero-stat">
@@ -93,15 +90,11 @@
           </div>
         </div>
       </div>
-
-      <!-- 内容区 -->
-      <div class="report-body page-container">
-
         <!-- 能力雷达图 -->
         <section class="report-section">
           <div class="section-header">
             <h2 class="section-title">
-              <span class="section-title__icon">📊</span>能力雷达图
+             能力雷达图
             </h2>
             <div class="legend">
               <span class="legend-item legend-item--you">本次</span>
@@ -128,7 +121,7 @@
 
         <!-- 亮点 -->
         <section class="report-section">
-          <h2 class="section-title"><span class="section-title__icon">✨</span>回答亮点</h2>
+          <h2 class="section-title">回答亮点</h2>
           <div class="highlight-list">
             <div v-for="(h, i) in report.highlights" :key="i" class="highlight-item" :style="{ animationDelay: i * 0.08 + 's' }">
               <div class="highlight-item__dot" />
@@ -139,7 +132,7 @@
 
         <!-- 待改进 -->
         <section class="report-section">
-          <h2 class="section-title"><span class="section-title__icon">🔧</span>待提升项</h2>
+          <h2 class="section-title">待提升项</h2>
           <div class="improvement-list">
             <div v-for="(imp, i) in report.improvements" :key="i" class="improvement-item" :style="{ animationDelay: i * 0.08 + 's' }">
               <div class="improvement-item__header">
@@ -163,7 +156,7 @@
         <!-- 逐题回顾（含 AI 点评） -->
         <section class="report-section">
           <div class="section-header">
-            <h2 class="section-title"><span class="section-title__icon">📋</span>逐题回顾</h2>
+            <h2 class="section-title">逐题回顾</h2>
             <button class="expand-all-btn" @click="toggleAllQuestions">
               {{ allExpanded ? '全部收起' : '全部展开' }}
             </button>
@@ -226,17 +219,17 @@
         <!-- 操作按钮区 -->
         <section class="report-actions">
           <button class="action-btn action-btn--primary" @click="retryInterview">
-            <span>🔄</span><span>再次面试</span>
+            <span>再次面试</span>
           </button>
           <button class="action-btn action-btn--outline" @click="$router.push('/learning')">
-            <span>📚</span><span>学习中心</span>
+            <span>学习中心</span>
           </button>
           <button class="action-btn action-btn--ghost" @click="$router.push('/history')">
-            <span>📋</span><span>历史记录</span>
+            <span>历史记录</span>
           </button>
         </section>
 
-        <div style="height: 32px;" />
+        <div style="height: 30px;" />
       </div>
     </template>
 
@@ -278,10 +271,6 @@ export default {
       if (s >= 70) return { key: 'average', label: '中等', desc: '有一定基础，还有提升空间。' }
       if (s >= 60) return { key: 'pass', label: '及格', desc: '基础薄弱，需要加强练习。' }
       return { key: 'fail', label: '待提升', desc: '建议从基础开始系统学习。' }
-    },
-    scoreCircumference() { return 2 * Math.PI * 76 },
-    scoreOffset() {
-      return this.scoreCircumference * (1 - (this.report?.totalScore || 0) / 100)
     },
     dimensionList() {
       if (!this.report) return []
@@ -513,7 +502,8 @@ export default {
   display: flex; align-items: center; justify-content: space-between;
   height: $top-nav-height;
   padding: 0 $spacing-base;
-  background: rgb(219, 225, 254);
+  // background: rgb(219, 225, 254);
+  background: rgba(255,255,255,0.95);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid $border-color;
   box-shadow: $shadow-sm;
@@ -551,30 +541,57 @@ export default {
 
 @keyframes spin { to { transform: rotate(360deg); } }
 
-// ---- Hero 得分区 ----
-.report-hero {
-  background: $gradient-primary;
-  padding: $spacing-xl $spacing-base $spacing-2xl;
-  position: relative; overflow: hidden;
+
+// ---- 报告主体 ----
+.report-body {
+  padding: 0;
+  animation: fadeSlideUp 0.4s ease both;
 }
 
-.hero-bg-circle {
-  position: absolute;
-  width: 350px; height: 350px; border-radius: 50%;
-  background: radial-gradient(circle, rgba(255,255,255,0.07) 0%, transparent 70%);
-  top: -120px; right: -100px; pointer-events: none;
+.report-section { margin-bottom: $spacing-xl; }
 
-  &--2 {
-    width: 250px; height: 250px;
-    bottom: -80px; left: -60px; top: auto; right: auto;
-    background: radial-gradient(circle, rgba(124,58,237,0.2) 0%, transparent 70%);
+.section-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: $spacing-md;
+
+}
+
+.section-title {
+  display: flex; align-items: center; gap: $spacing-sm;
+  font-size: $font-size-xl; font-weight: $font-weight-bold; color: $text-primary;
+  margin-left:$spacing-base;
+}
+
+.legend {
+  display: flex; gap: $spacing-md;
+}
+
+.legend-item {
+  display: flex; align-items: center; gap: 5px;
+  font-size: $font-size-xs; 
+  color: $text-secondary;
+  // color: $text-secondary;
+
+  &::before {
+    content: '';
+    width: 20px; height: 3px; border-radius: 2px;
   }
+  &--you::before { background: #685ddf; }
+  &--avg::before { background: #b2b9c2; border-top: 1px dashed #b2b9c2; }
 }
+
+// ---- Hero 得分区 ----
 
 .hero-content {
+  background: white;
   position: relative; z-index: 1;
-  display: flex; flex-direction: column; align-items: center;
-  gap: $spacing-base;
+  display: flex; flex-direction: column; align-items: flex-start; 
+  gap: $spacing-md;
+  padding: $spacing-xl $spacing-base $spacing-base;
+  border-bottom: 1px solid $border-color;
+  border-radius:12px;
+  margin-bottom: $spacing-xl;
+  margin-top: $spacing-md;
 }
 
 .hero-meta {
@@ -582,43 +599,16 @@ export default {
   justify-content: space-between; align-items: center;
 }
 
+// job-badge 改为紫色轻背景风格
 .job-badge {
-  background: rgba(255,255,255,0.18);
-  border: 1px solid rgba(255,255,255,0.25);
-  color: white; font-size: $font-size-sm; font-weight: $font-weight-semibold;
-  padding: 5px $spacing-md; border-radius: $border-radius-full;
-  backdrop-filter: blur(4px);
+  background: $primary-bg;
+  border: 1px solid rgba(67,56,202,0.2);
+  color: $primary;
+  font-size: $font-size-sm; font-weight: $font-weight-semibold;
+  padding: 4px $spacing-md; border-radius: $border-radius-full;
 }
 
-.date-text { font-size: $font-size-xs; color: rgba(255,255,255,0.55); }
-
-// 分数圆环
-.score-circle-wrap {
-  position: relative; width: 180px; height: 180px;
-  display: flex; align-items: center; justify-content: center;
-}
-
-.score-circle-svg {
-  position: absolute; inset: 0; width: 100%; height: 100%;
-  filter: drop-shadow(0 8px 24px rgba(0,0,0,0.2));
-}
-
-.score-circle-inner {
-  display: flex; flex-direction: column; align-items: center; gap: 4px;
-  position: relative; z-index: 1;
-}
-
-.score-circle-number {
-  font-family: $font-family-display;
-  font-size: 52px; font-weight: $font-weight-extrabold;
-  color: white; line-height: 1;
-  letter-spacing: -0.03em;
-}
-
-.score-circle-label {
-  font-size: $font-size-xs; color: rgba(255,255,255,0.7);
-  text-transform: uppercase; letter-spacing: 0.1em;
-}
+.date-text { font-size: $font-size-xs; color: $text-muted; }
 
 // 等级
 .score-grade {
@@ -639,65 +629,25 @@ export default {
 
 .grade-desc { font-size: $font-size-sm; color: rgba(255,255,255,0.7); }
 
-// Hero 统计数据
 .hero-stats {
-  display: flex; align-items: center; gap: $spacing-xl;
-  background: rgba(255,255,255,0.1);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255,255,255,0.18);
-  border-radius: $border-radius-xl;
-  padding: $spacing-md $spacing-xl;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: $spacing-sm;
   width: 100%;
-  justify-content: space-around;
-
 }
-
 
 .hero-stat {
-  display: flex; flex-direction: column; align-items: center; gap: 3px;
-  &__value { font-family: $font-family-display; font-size: $font-size-xl; font-weight: $font-weight-bold; color: white; }
-  &__label { font-size: $font-size-xs; color: rgba(255,255,255,0.55); }
+  background: $gray-50;
+  border-radius: $border-radius;
+  padding: $spacing-sm;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  &__value { font-family: $font-family-display; font-size: $font-size-lg; font-weight: $font-weight-bold; color: $text-primary; }
+  &__label { font-size: $font-size-xs; color: $text-muted; }
 }
 
-.hero-stat-divider { width: 1px; height: 36px; background: rgba(255,255,255,0.15); }
+// 分隔线不再需要
+.hero-stat-divider { display: none; }
 
-// ---- 报告主体 ----
-.report-body {
-  padding: 0;
-  animation: fadeSlideUp 0.4s ease both;
-}
-
-.report-section { margin-bottom: $spacing-xl; }
-
-.section-header {
-  display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: $spacing-md;
-}
-
-.section-title {
-  display: flex; align-items: center; gap: $spacing-sm;
-  font-size: $font-size-lg; font-weight: $font-weight-bold; color: $text-primary;
-
-  &__icon { font-size: 18px; }
-}
-
-.legend {
-  display: flex; gap: $spacing-md;
-}
-
-.legend-item {
-  display: flex; align-items: center; gap: 5px;
-  font-size: $font-size-xs; 
-  color: $text-secondary;
-  // color: $text-secondary;
-
-  &::before {
-    content: '';
-    width: 20px; height: 3px; border-radius: 2px;
-  }
-  &--you::before { background: #685ddf; }
-  &--avg::before { background: #b2b9c2; border-top: 1px dashed #b2b9c2; }
-}
 
 // 雷达图卡片
 .radar-card {
@@ -961,7 +911,7 @@ export default {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: 3px; border-radius: $border-radius;
   cursor: pointer; font-family: $font-family-base;
-  font-size: $font-size-xs; font-weight: $font-weight-semibold;
+  font-size: $font-size-base; font-weight: $font-weight-semibold;
   transition: all $transition-base; border: none;
 
   span:first-child { font-size: 18px; }
@@ -1034,4 +984,35 @@ export default {
   0%, 100% { opacity: 1; transform: scale(1); }
   50% { opacity: 0.5; transform: scale(0.85); }
 }
+
+
+.hero-score-block {
+  display: flex; align-items: center; gap: $spacing-xl;
+}
+
+.score-number {
+  font-family: $font-family-display;
+  font-size: 64px; font-weight: $font-weight-extrabold;
+  color: $text-primary; line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+.score-right {
+  display: flex; flex-direction: column; gap: $spacing-sm;
+}
+
+// grade-badge 颜色也要从白色字改为彩色字
+.grade-badge {
+  padding: 5px 16px; border-radius: $border-radius-full;
+  font-size: $font-size-sm; font-weight: $font-weight-bold;
+  display: inline-block; align-self: flex-start;
+
+  &.grade-excellent { background: #FEF3C7; color: #B45309; border: 1px solid #FDE68A; }
+  &.grade-good      { background: #ECFDF5; color: #059669; border: 1px solid #6EE7B7; }
+  &.grade-average   { background: #DBEAFE; color: #1D4ED8; border: 1px solid #93C5FD; }
+  &.grade-pass      { background: $gray-100; color: $text-secondary; border: 1px solid $gray-200; }
+  &.grade-fail      { background: #FEE2E2; color: #B91C1C; border: 1px solid #FCA5A5; }
+}
+
+.grade-desc { font-size: $font-size-sm; color: $text-muted; }
 </style>
