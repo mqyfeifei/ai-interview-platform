@@ -45,7 +45,7 @@ const routes = [
     path: '/interview/select',
     name: 'JobSelection',
     component: () => import('@/views/interview/JobSelection.vue'),
-    meta: { hideNavigation: true, requiresAuth: true, title: '选择岗位' }
+    meta: {requiresAuth: true, title: '选择岗位'}
   },
   {
     path: '/interview/session',
