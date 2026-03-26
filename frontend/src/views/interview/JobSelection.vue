@@ -18,111 +18,103 @@
 <template>
   <div class="job-selection-page">
     <!-- 顶部Header -->
-    <div class="page-header">
-      <div class="header-inner">
-        <button class="back-btn" @click="$router.push('/dashboard')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="15 18 9 12 15 6"/>
-          </svg>
-        </button>
-        <div class="header-text">
-          <h1>选择岗位</h1>
-          <p>选择目标岗位，开始 AI 模拟面试</p>
-        </div>
-      </div>
-
-      <!-- 搜索框 -->
-      <div class="search-box">
-        <span class="search-box__icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="11" cy="11" r="8"/>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-          </svg>
-        </span>
-        <input
-          v-model="searchQuery"
-          type="text"
-          placeholder="搜索岗位或技术栈..."
-          class="search-box__input"
-        />
-        <button v-if="searchQuery" class="search-box__clear" @click="searchQuery = ''">✕</button>
-      </div>
+<div class="page-header">
+  <div class="header-inner">
+    <button class="back-btn" @click="$router.push('/dashboard')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+        stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <div class="header-text">
+      <h1>选择面试岗位</h1>
+      <p>选好目标，开始 AI 模拟面试</p>
     </div>
+  </div>
+
+  <div class="search-row">
+    <div class="search-box">
+      <span class="search-box__icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+      </span>
+      <input
+        v-model="searchQuery"
+        type="text"
+        placeholder="搜索岗位或技术栈..."
+        class="search-box__input"
+      />
+      <button v-if="searchQuery" class="search-box__clear" @click="searchQuery = ''">✕</button>
+    </div>
+  </div>
+<!-- 过滤标签移入头部 -->
+  <div class="filter-tabs">
+    <button
+      v-for="tab in filterTabs"
+      :key="tab.key"
+      :class="['filter-tab', { active: activeFilter === tab.key }]"
+      @click="activeFilter = tab.key"
+    >{{ tab.label }}</button>
+  </div>
+
+</div>
 
     <!-- 主体 -->
     <div class="page-body page-container">
-      <!-- 过滤标签 -->
-      <div class="filter-tabs">
-        <button
-          v-for="tab in filterTabs"
-          :key="tab.key"
-          :class="['filter-tab', { active: activeFilter === tab.key }]"
-          @click="activeFilter = tab.key"
-        >{{ tab.label }}</button>
-      </div>
-
       <!-- 岗位列表 -->
-      <div v-if="filteredJobs.length > 0" class="job-grid job-grid-2col">
-        <div
-          v-for="(job, idx) in filteredJobs"
-          :key="job.id"
-          class="job-card"
-          :class="{
-            selected: currentSelected && currentSelected.id === job.id,
-            'job-card--default': normalizedDefaultJobId && (normalizedDefaultJobId === String(job.id) || normalizedDefaultJobId === String(job.dbId))
-          }"
-          :style="{
-            animationDelay: idx * 0.06 + 's',
-            borderColor: cardColors[idx % cardColors.length].main,
-            background: cardColors[idx % cardColors.length].bg
-          }"
-          @click="toggleSelect(job)"
-        >
-          <!-- 选中勾 -->
-          <div v-if="currentSelected && currentSelected.id === job.id" class="job-card__check">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="20 6 9 17 4 12"/>
-            </svg>
-          </div>
-          <!-- 热门岗位筛选时显示TOP标记，左下角圆角徽章，金银铜色 -->
-          <div v-if="activeFilter === 'popular' && job.popularRank && job.popularRank <= 3"
-               :class="['job-card__rank-badge', 'top-badge', 'top-badge-' + job.popularRank]">
-            <span>TOP{{ job.popularRank }}</span>
-          </div>
+<div v-if="filteredJobs.length > 0" class="job-list">
+  <div
+    v-for="(job, idx) in filteredJobs"
+    :key="job.id"
+    class="job-row"
+    :class="{
+      selected: currentSelected && currentSelected.id === job.id,
+      'job-row--default': normalizedDefaultJobId && (normalizedDefaultJobId === String(job.id) || normalizedDefaultJobId === String(job.dbId))
+    }"
+    :style="{ animationDelay: idx * 0.04 + 's' }"
+    @click="toggleSelect(job)"
+  >
+    <!-- 选中勾 -->
+    <div v-if="currentSelected && currentSelected.id === job.id" class="job-row__check">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+        stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="20 6 9 17 4 12"/>
+      </svg>
+    </div>
 
+    <!-- TOP 徽章 -->
+    <div v-if="activeFilter === 'popular' && job.popularRank && job.popularRank <= 3"
+         :class="['job-row__rank', 'top-badge', 'top-badge-' + job.popularRank]">
+      TOP{{ job.popularRank }}
+    </div>
+    <!-- 左侧图标 -->
+    <div class="job-row__icon">{{ job.icon }}</div>
 
-          <!-- 精简卡片内容 -->
-          <div class="job-card__mainrow">
-            <div v-if="job.icon" class="job-card__icon-wrap" :style="{ background: job.colorBg }">
-              <span class="job-card__icon">{{ job.icon }}</span>
-            </div>
-            <div class="job-card__info">
-              <h3 v-if="job.name" class="job-card__name">{{ job.name }}</h3>
-              <div v-if="typeof job.avg_score === 'number'" class="job-card__avgrow">
-                <span class="avg-label">面试均分</span>
-                <span class="avg-value" :style="{ color: job.color }">{{ job.avg_score }}</span>
-              </div>
-            </div>
-          </div>
-          <p v-if="job.description" class="job-card__desc">{{ job.description }}</p>
-          <div v-if="Array.isArray(job.techStack) && job.techStack.length" class="job-card__stack">
-            <span v-for="tech in job.techStack" :key="tech" class="stack-tag" :style="getTechStyle(tech)">{{ tech }}</span>
-          </div>
-
-          <!-- 默认岗位操作，固定右下角 -->
-          <div class="job-card__default fixed-default-btn">
-            <button v-if="normalizedDefaultJobId !== String(job.id) && normalizedDefaultJobId !== String(job.dbId)" class="btn-set-default" @click.stop="setDefault(job)">设为默认</button>
-            <span v-else class="default-badge">默认岗位</span>
-          </div>
-
-          <!-- 底部：题型（如有） -->
-          <div class="job-card__footer">
-            <div v-if="Array.isArray(job.questionTypes) && job.questionTypes.length" class="job-card__types">
-              <span v-for="t in job.questionTypes.slice(0, 2)" :key="t" class="type-tag">{{ t }}</span>
-            </div>
-          </div>
-        </div>
+    <!-- 中间信息区 -->
+    <div class="job-row__body">
+      <div class="job-row__title-line">
+        <span class="job-row__name">{{ job.name }}</span>
+        <span v-if="typeof job.avg_score === 'number' && job.avg_score > 0" class="job-row__score">
+          均分 {{ job.avg_score }}
+        </span>
       </div>
+      <p v-if="job.description" class="job-row__desc">{{ job.description }}</p>
+      <div v-if="Array.isArray(job.techStack) && job.techStack.length" class="job-row__stack">
+        <span v-for="tech in job.techStack.slice(0, 4)" :key="tech" class="stack-tag">{{ tech }}</span>
+      </div>
+    </div>
+
+<!-- 右侧操作区 -->
+    <div class="job-row__actions" @click.stop>
+      <button v-if="normalizedDefaultJobId !== String(job.id) && normalizedDefaultJobId !== String(job.dbId)"
+        class="btn-set-default" @click.stop="setDefault(job)">设为默认</button>
+      <span v-else class="default-badge">默认</span>
+    </div>
+  </div>
+</div>
 
       <!-- 搜索空态 -->
       <div v-else class="empty-state-wrap">
@@ -255,16 +247,6 @@ export default {
 
       jobs: [], // 后端岗位数据
       popularIds: [] // 热门岗位 id 顺序，前端用于排序与标记
-      ,cardColors: [
-        { main: '#3b82f6', bg: 'linear-gradient(135deg, #e0eaff 0%, #f5faff 100%)' },
-        { main: '#f59e42', bg: 'linear-gradient(135deg, #fff3e0 0%, #fffaf5 100%)' },
-        { main: '#10b981', bg: 'linear-gradient(135deg, #e0fff3 0%, #f5fffa 100%)' },
-        { main: '#6366f1', bg: 'linear-gradient(135deg, #e0e7ff 0%, #f5f7ff 100%)' },
-        { main: '#f43f5e', bg: 'linear-gradient(135deg, #ffe0e7 0%, #fff5f7 100%)' },
-        { main: '#fbbf24', bg: 'linear-gradient(135deg, #fffbe0 0%, #fffdf5 100%)' },
-        { main: '#06b6d4', bg: 'linear-gradient(135deg, #e0faff 0%, #f5fdff 100%)' },
-        { main: '#8b5cf6', bg: 'linear-gradient(135deg, #ede9fe 0%, #fafaff 100%)' }
-      ]
     }
   },
   computed: {
@@ -477,193 +459,7 @@ async handleStart() {
   background: $bg-page;
 }
 
-.job-card {
-  position: relative;
-}
-.job-card__default {
-  /* inline placement just above footer divider */
-  position: static;
-  margin: 0 0 8px; /* add bottom gap before divider */
-  text-align: right; /* move horizontally to right */
-}
-.job-card__default .default-badge {
-  display: inline-block;
-  padding: 2px 6px;
-  font-size: 10px;
-  color: #fff;
-  background: #3b82f6;
-  border-radius: 3px;
-}
 
-.job-grid.job-grid-2col {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 18px 14px;
-}
-.job-card {
-  position: relative;
-  min-height: 80px;
-  padding: 10px 8px 32px 8px;
-  margin-bottom: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px 0 rgba(0,0,0,0.04);
-  border: 2px solid #e5e7eb;
-  transition: box-shadow 0.2s, border-color 0.2s;
-  background: #fff;
-}
-.job-card__default.fixed-default-btn {
-  position: absolute;
-  right: 10px;
-  bottom: 10px;
-  margin: 0;
-  text-align: right;
-  z-index: 3;
-}
-.btn-set-default {
-  font-size: 11px;
-  color: #3b82f6;
-  background: transparent;
-  border: 1px solid #3b82f6;
-  border-radius: 3px;
-  padding: 2px 6px;
-  cursor: pointer;
-}
-.btn-set-default:hover {
-  background: #3b82f6;
-  color: #fff;
-}
-.job-card__rank-badge.top-badge {
-  position: absolute;
-  bottom: 10px;
-  left: 10px;
-  font-size: 11px;
-  font-weight: bold;
-  min-width: 36px;
-  height: 22px;
-  /* badge sits in the lower-left corner with rounded right side */
-  border-radius: 12px 12px 0 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 2;
-  box-shadow: 0 2px 6px 0 rgba(0,0,0,0.08);
-}
-.top-badge-1 {
-  background: linear-gradient(135deg, #ffd700 60%, #ffecb3 100%);
-  color: #222;
-}
-.top-badge-2 {
-  background: linear-gradient(135deg, #c0c0c0 60%, #f5f5f5 100%);
-  color: #222;
-}
-.top-badge-3 {
-  background: linear-gradient(135deg, #cd7f32 60%, #ffe0b2 100%);
-  color: #222;
-}
-@media (max-width: 700px) {
-  .job-card__default.fixed-default-btn {
-    right: 6px;
-    bottom: 6px;
-  }
-  .job-card {
-    padding-bottom: 36px;
-  }
-}
-.job-card__mainrow {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.job-card__icon-wrap {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
-  background: #f3f3f3;
-}
-.job-card__footer-row {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  margin-top: 4px;
-}
-.job-card__default {
-  position: static;
-  margin: 0;
-  text-align: right;
-}
-.btn-set-default {
-  font-size: 11px;
-  color: #3b82f6;
-  background: transparent;
-  border: 1px solid #3b82f6;
-  border-radius: 3px;
-  padding: 2px 6px;
-  cursor: pointer;
-}
-.btn-set-default:hover {
-  background: #3b82f6;
-  color: #fff;
-}/* duplicate badge styles removed; colors handled by .top-badge-1/2/3 above */
-.job-card.selected {
-  box-shadow: 0 4px 16px 0 rgba(59,130,246,0.10);
-  border-color: #3b82f6;
-}
-.job-card--default {
-  border-color: #3b82f6;
-}
-.job-card__mainrow {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.job-card__icon-wrap {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 20px;
-  background: #f3f3f3;
-}
-.job-card__info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-.job-card__name {
-  font-size: 15px;
-  font-weight: 600;
-  margin-bottom: 2px;
-}
-.job-card__avgrow {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 12px;
-  margin-top: 2px;
-}
-.job-card__desc {
-  font-size: 12px;
-  color: #666;
-  margin: 4px 0 0 0;
-  line-height: 1.5;
-  min-height: 0;
-}
-.job-card__stack {
-  margin-top: 2px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 3px;
-}
 .stack-tag {
   background: #f1f5f9;
   color: #64748b;
@@ -671,117 +467,110 @@ async handleStart() {
   border-radius: 3px;
   padding: 1px 6px;
 }
-
-.job-card__row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 4px;
-}
-/* legacy badge definition no longer needed */
-.job-card__default .btn-set-default {
-  font-size: 11px;
-  color: #3b82f6;
-  background: transparent;
-  border: 1px solid #3b82f6;
-  border-radius: 3px;
-  padding: 2px 6px;
-  cursor: pointer;
-}
-.job-card__default .btn-set-default:hover {
-  background: #3b82f6;
-  color: #fff;
-}
-
-/* highlight default job card */
-.job-card--default {
-  border: 1px solid #3b82f6;
-}
-
 // ---- Header ----
 .page-header {
-  background: $gradient-primary;
-  padding: 52px $spacing-base $spacing-lg;
+  background: #ffffff;
+  // padding: 20px $spacing-base 16px;
+  padding: 20px $spacing-base 0;  
   position: sticky;
   top: 0;
   z-index: 30;
-  /* expose header height for other elements */
-  // --header-height: 200px; /* adjust if actual height differs */
-  overflow: hidden;
+  border-bottom: 1px solid #eef0f6;
+  box-shadow: 0 2px 12px rgba(67, 56, 202, 0.06);
+}
 
-  &::before {
-    content: '';
-    position: absolute;
-    width: 280px; height: 280px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(255,255,255,0.07) 0%, transparent 70%);
-    top: -80px; right: -60px;
-    pointer-events: none;
-  }
+
+.header-inner,
+.search-row,
+.filter-tabs {
+  max-width: 1500px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .header-inner {
   display: flex;
   align-items: center;
   gap: $spacing-md;
-  margin-bottom: $spacing-base;
-  position: relative;
-  z-index: 1;
+  margin-bottom: 14px;
 }
 
 .back-btn {
   width: 36px; height: 36px;
   border-radius: 50%;
-  background: rgba(255,255,255,0.15);
+  background: #f3f4f6;
   border: none;
   display: flex; align-items: center; justify-content: center;
   cursor: pointer; flex-shrink: 0;
   transition: background $transition-fast;
-  color: white;
+  color: #374151;
   svg { width: 18px; height: 18px; }
-  &:hover { background: rgba(255,255,255,0.25); }
+  &:hover { background: #e5e7eb; }
 }
 
 .header-text {
-  position: relative; z-index: 1;
+  padding-inline: 3%;
   h1 {
     font-family: $font-family-display;
-    font-size: $font-size-2xl;
+    font-size: $font-size-xl;
     font-weight: $font-weight-extrabold;
-    color: white;
-    margin-bottom: 3px;
+    color: #111827;
+    margin-bottom: 2px;
+    line-height: 1.2;
   }
-  p { font-size: $font-size-sm; color: rgba(255,255,255,0.65); }
+  p { font-size: $font-size-xs; color: #9ca3af; }
+}
+
+.search-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-inline: 5%;
 }
 
 .search-box {
-  position: relative; z-index: 1;
+  position: relative;
+  flex: 1;
 
   &__icon {
     position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
-    color: $text-muted; display: flex; align-items: center; pointer-events: none;
+    color: #9ca3af; display: flex; align-items: center; pointer-events: none;
+    transition: color 0.2s;
     svg { width: 16px; height: 16px; }
   }
 
   &__input {
-    width: 100%; height: 44px;
-    padding: 0 38px 0 42px;
-    background: white; border: none;
-    border-radius: $border-radius-full;
+    width: 100%; height: 46px;
+    padding: 0 40px 0 44px;
+    background: #f9fafb;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 12px;
     font-size: $font-size-base; color: $text-primary;
     outline: none; font-family: $font-family-base;
-    box-shadow: $shadow-md;
-    &::placeholder { color: $text-muted; }
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+
+    &::placeholder { color: #c4c9d4; }
+
+    &:focus {
+      border-color: $primary;
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(67, 56, 202, 0.1);
+    }
+  }
+
+  // 聚焦时图标也变色
+  &:focus-within &__icon {
+    color: $primary;
   }
 
   &__clear {
     position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
-    background: $gray-200; border: none;
+    background: #e5e7eb; border: none;
     width: 20px; height: 20px; border-radius: 50%;
-    cursor: pointer; font-size: $font-size-xs; color: $text-muted;
+    cursor: pointer; font-size: 10px; color: #6b7280;
     display: flex; align-items: center; justify-content: center;
     transition: background $transition-fast;
-    &:hover { background: $gray-300; }
+    &:hover { background: #d1d5db; color: #374151; }
   }
 }
 
@@ -791,23 +580,18 @@ async handleStart() {
   padding-top: $spacing-base; // ← 去掉复杂的 calc，恢复正常
 }
 
-.filter-tabs {
+.filter-tabs {  
   display: flex;
   gap: $spacing-sm;
   overflow-x: auto;
-  padding-bottom: $spacing-sm;
-  margin-bottom: $spacing-base;
-  position: sticky;        // ← 改：sticky 跟随滚动但不遮挡
-  top: 0;                  // ← 吸顶但只在 page-body 滚动容器内
-  z-index: 20;
-  background: $bg-page;    // ← 加背景色防透底
-  padding-top: $spacing-sm;
+  padding: $spacing-sm 0 $spacing-md;   // ← 上下留白
   &::-webkit-scrollbar { display: none; }
+  padding-inline: 5%;
 }
 
 .filter-tab {
-  padding: 4px 12px;
-  border-radius: $border-radius-full;
+  padding: 5px 15px;
+  border-radius:6px;
   border: 1px solid $border-color;
   background: transparent; /* 改为透明 */
   font-size: $font-size-xs;
@@ -820,7 +604,7 @@ async handleStart() {
 
   &.active { background: $primary; border-color: $primary; color: rgb(255, 255, 255); box-shadow: 0 4px 12px rgba(67,56,202,0.3); }
   &:not(.active):hover { border-color: $primary; color: $primary; box-shadow: 0 2px 8px rgba(67,56,202,0.15); }
-  &:not(.active){ border-color: rgba(27, 21, 109, 0.6); color:rgba(49, 40, 164, 0.7); }
+  &:not(.active){ border-color: rgba(27, 21, 109, 0.6); color:rgba(49, 40, 164, 0.5); }
 }
 
 // ---- 岗位网格 ----
@@ -902,7 +686,7 @@ async handleStart() {
 
 .level-badge {
   font-size: $font-size-xs; font-weight: $font-weight-semibold;
-  padding: 3px 10px; border-radius: $border-radius-full;
+  padding: 3px 10px; border-radius: 12px;
   flex-shrink: 0;
   &.level-中级 { background: $info-bg; color: $info; }
   &.level-高级 { background: $warning-bg; color: darken($warning, 20%); }
@@ -912,7 +696,7 @@ async handleStart() {
 .stack-tag {
   font-size: $font-size-xs; font-weight: $font-weight-medium;
   background: $gray-100; color: $text-secondary;
-  padding: 3px 8px; border-radius: $border-radius-full;
+  padding: 3px 8px; border-radius: 12px;
   border: 1px solid $gray-200;
   transition: all $transition-fast;
 
@@ -922,7 +706,7 @@ async handleStart() {
 .type-tag {
   font-size: $font-size-xs; color: $text-muted;
   background: $gray-50; padding: 2px 8px;
-  border-radius: $border-radius-full; border: 1px solid $gray-200;
+  border-radius: 12px; border: 1px solid $gray-200;
 }
 
 .avg-label { font-size: $font-size-xs; color: $text-muted; }
@@ -984,7 +768,7 @@ async handleStart() {
 .start-btn {
   flex: 1; height: 50px;
   background: $gradient-primary;
-  border: none; border-radius: $border-radius-full;
+  border: none; border-radius: 12px;
   display: flex; align-items: center; justify-content: center;
   gap: $spacing-sm; cursor: pointer;
   box-shadow: $shadow-primary;
@@ -998,7 +782,7 @@ async handleStart() {
   &__sub {
     font-size: $font-size-xs; opacity: 0.75;
     background: rgba(255,255,255,0.18);
-    padding: 2px 8px; border-radius: $border-radius-full;
+    padding: 2px 8px; border-radius:12px;
   }
   svg { width: 16px; height: 16px; flex-shrink: 0; }
 }
@@ -1007,7 +791,7 @@ async handleStart() {
   display: flex; align-items: center; gap: 5px;
   flex-shrink: 0; cursor: pointer; user-select: none;
   font-size: $font-size-sm; color: $text-secondary;
-  padding: 6px 12px; border-radius: $border-radius-full;
+  padding: 6px 12px; border-radius: 12px;
   border: 1.5px solid $border-color; background: white;
   transition: all $transition-fast;
 
@@ -1035,7 +819,7 @@ async handleStart() {
 .modal-sheet {
   width: 100%; max-width: 480px;
   background: white;
-  border-radius: 24px; 
+  border-radius: 12px; 
   overflow: hidden;
   box-shadow: 0 -8px 40px rgba(67, 56, 202, 0.2);
   animation: sheetUp 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
@@ -1065,7 +849,7 @@ async handleStart() {
 
 .interview-mode-tag {
   display: inline-flex; align-items: center; gap: 6px;
-  padding: 5px 14px; border-radius: 20px;
+  padding: 5px 14px; border-radius: 12px;
   font-size: 12px; font-weight: 600; margin-bottom: 16px;
 
   &.mode-voice {
@@ -1097,6 +881,117 @@ async handleStart() {
   &--purple { background: #9d65fe; }
   &--green  { background: #61fdc9; }
   &--orange { background: #f7b84c; }
+}
+
+
+// ---- 新：列表式岗位行 ----
+.job-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border: none;   
+  border-radius: 0;
+  overflow: visible;  
+  // background: #fff;
+  background: transparent;
+}
+
+.job-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid #e9ebf0;    // ← 每个卡片自己的边框
+  border-radius: 12px;          // ← 卡片圆角
+  border-bottom: 1px solid #e9ebf0;  // ← 覆盖之前的 border-bottom only 写法
+  cursor: pointer;
+  background: #fff;
+  position: relative;
+  transition: background 0.15s, box-shadow 0.15s, border-color 0.15s;
+  animation: fadeSlideUp 0.4s ease both;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+
+  &:last-child { border-bottom: 1px solid #e9ebf0; }  // ← 最后一项不再特殊处理
+
+  &:hover {
+    background: #f8f9ff;
+    border-color: rgba(67, 56, 202, 0.25);
+    box-shadow: 0 2px 10px rgba(67, 56, 202, 0.08);
+  }
+
+  &.selected {
+    background: #f0f4ff;
+    border-color: $primary;
+    border-left: 3px solid $primary;
+    padding-left: 13px;
+    box-shadow: 0 2px 12px rgba(67, 56, 202, 0.12);
+  }
+
+  &.job-row--default {
+    border-left: 3px solid #3b82f6;
+    padding-left: 13px;
+  }
+
+  &__check {
+    position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+    width: 22px; height: 22px; border-radius: 50%;
+    background: $primary; display: flex; align-items: center; justify-content: center;
+    color: white; flex-shrink: 0;
+    svg { width: 11px; height: 11px; }
+  }
+
+  &__rank {
+    position: absolute; left: 0; top: 0;
+    font-size: 10px; font-weight: bold;
+    padding: 2px 6px;
+    border-radius: 0 0 6px 0;
+  }
+
+  &__icon {
+    font-size: 22px;
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    background: #f3f4f6;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+
+  &__body {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__title-line {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 2px;
+  }
+
+  &__name {
+    font-size: 14px; font-weight: 600; color: #111;
+  }
+
+  &__score {
+    font-size: 11px; color: #6366f1;
+    background: #ede9fe; padding: 1px 7px;
+    border-radius: 4px; flex-shrink: 0;
+  }
+
+  &__desc {
+    font-size: 12px; color: #9ca3af;
+    margin: 0 0 4px; line-height: 1.4;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+
+  &__stack {
+    display: flex; flex-wrap: wrap; gap: 3px;
+  }
+
+  &__actions {
+    flex-shrink: 0; margin-left: 8px;
+    display: flex; align-items: center;
+    // 给选中勾留出空间
+    padding-right: 28px;
+  }
 }
 
 .modal-actions {
