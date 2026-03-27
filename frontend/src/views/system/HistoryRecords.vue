@@ -118,8 +118,17 @@
               <!-- 中间：信息 -->
               <div class="record-info">
                 <div class="record-info__top">
-                  <span class="record-job-icon" :style="{ background: jobInfo(record.jobId).colorBg }">
-                    {{ jobInfo(record.jobId).icon }}
+                  <span
+                    class="record-job-icon"
+                    :style="{ background: jobInfo(record.jobId).colorBg }"
+                  >
+                    <img
+                      v-if="jobInfo(record.jobId).iconUrl"
+                      :src="jobInfo(record.jobId).iconUrl"
+                      :alt="record.jobName"
+                      class="record-job-icon__img"
+                    />
+                    <span v-else>{{ jobInfo(record.jobId).icon }}</span>
                   </span>
                   <h3 class="record-job-name">{{ record.jobName }}</h3>
                   <span :class="['grade-pill', gradePill(record.totalScore).cls]">
@@ -191,6 +200,7 @@
 <script>
 import { getHistoryList } from '@/api/report'
 import { fetchJobs } from '@/api/job'  // 从后端获取岗位列表
+import { JOB_TYPES } from '@/utils/constants'
 
 const PAGE_SIZE = 10
 
@@ -406,11 +416,29 @@ export default {
     },
 
     jobInfo(jobId) {
-      const info = (this.jobs || []).find(j => this.computeJobKey(j) === jobId)
-      if (info) {
-        return { icon: info.icon || '🎯', colorBg: info.colorBg || '#EEF2FF' }
+      const normalizedKey = String(jobId)
+
+      // 优先从数据库加载的 job 列表获取 icon_url/icon
+      const dbJob = (this.jobs || []).find(j => String(j.id) === normalizedKey || this.computeJobKey(j) === normalizedKey)
+      if (dbJob) {
+        const iconUrl = dbJob.icon_url || dbJob.icon || null
+        const icon = iconUrl ? null : (dbJob.icon || '🎯')
+        const colorBg = dbJob.colorBg || dbJob.color_bg || '#EEF2FF'
+        return {
+          icon,
+          iconUrl: iconUrl && !iconUrl.startsWith('#') ? iconUrl : null,
+          colorBg
+        }
       }
-      return { icon: '🎯', colorBg: '#EEF2FF' }
+
+      // 兼容 constants 里配置（作为兜底）
+      const constJob = JOB_TYPES.find(j => j.id === normalizedKey || String(j.dbId) === normalizedKey)
+      if (constJob) {
+        return { icon: constJob.icon || '🎯', iconUrl: null, colorBg: constJob.colorBg || '#EEF2FF' }
+      }
+
+      // 最后兜底
+      return { icon: '🎯', iconUrl: null, colorBg: '#EEF2FF' }
     },
 
     scoreColor(score) {
@@ -463,93 +491,102 @@ export default {
 <style lang="scss" scoped>
 .history-page {
   min-height: 100vh;
-  background: $bg-page;
+  background: #f5f7fb;
   padding-bottom: $bottom-nav-height;
 }
 
 // ---- Header ----
 .page-header {
-  background: $gradient-primary;
-  padding: 52px $spacing-base $spacing-lg;
-  /* header sticks at top; height exposed via CSS variable for other elements */
+  background: #fff;
+  padding: 0; /* 头部自身不额外增加高度 */
   position: sticky;
   top: 0; left: 0; right: 0;
-  z-index: 40;
-  overflow: hidden;
-  --header-height: 0px; /* updated dynamically by script */
+  z-index: 45;
+  border-bottom: 1px solid #eaeef3;
+  box-shadow: 0 1px 8px rgba(31,45,61,.05);
+  height: auto;
+  max-height: none;
+  --header-height: 0px;
+
+  .page-container {
+    margin: 0 auto;
+    padding: 8px 16px; /* 控制内容上下间距 */
+  }
 
   &::before {
-    content: '';
-    position: absolute;
-    width: 300px; height: 300px; border-radius: 50%;
-    background: radial-gradient(circle, rgba(255,255,255,0.07) 0%, transparent 70%);
-    top: -80px; right: -60px; pointer-events: none;
+    content: none;
   }
 
   &__top {
-    display: flex; align-items: flex-start;
+    display: flex; align-items: flex-start; /* 让标题靠上对齐 */
     justify-content: space-between;
-    margin-bottom: $spacing-base;
+    margin-bottom: 0;
     position: relative; z-index: 1;
   }
 
   &__text {
+    margin-top: 0;
+  }
+
+  &__text {
     h1 {
-      font-family: $font-family-display;
-      font-size: $font-size-2xl; font-weight: $font-weight-extrabold;
-      color: white; margin-bottom: 4px;
+      font-family: $font-family-base;
+      font-size: 18px; font-weight: $font-weight-bold;
+      color: #202b42; margin-bottom: 2px;
     }
-    p { font-size: $font-size-sm; color: rgba(255,255,255,0.65); }
+    p { font-size: 12px; color: #738096; margin: 0; }
   }
 }
 
 .header-stats {
-  display: flex; align-items: center; gap: $spacing-lg;
-  background: rgba(255,255,255,0.12);
-  border: 1px solid rgba(255,255,255,0.2);
-  border-radius: $border-radius-lg;
-  padding: $spacing-sm $spacing-base;
+  display: flex; align-items: center; gap: $spacing-sm;
+  background: #f8f9fb;
+  border: 1px solid #e8edf5;
+  border-radius: $border-radius;
+  padding: 1px 10px;
 }
 
 .header-stat {
-  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  display: flex; flex-direction: column; align-items: flex-start;
+  gap: 2px;
   &__value {
     font-family: $font-family-display;
-    font-size: $font-size-xl; font-weight: $font-weight-extrabold;
-    color: white; line-height: 1;
+    font-size: 14px; font-weight: $font-weight-bold;
+    color: #242f45; line-height: 1;
   }
-  &__label { font-size: $font-size-xs; color: rgba(255,255,255,0.55); }
+  &__label { font-size: 11px; color: #8d9cb4; }
 }
 
-.header-stat-divider { width: 1px; height: 28px; background: rgba(255,255,255,0.2); }
+.header-stat-divider { width: 1px; height: 24px; background: #dbe2ed; }
 
 .search-box {
   position: relative; z-index: 1;
+  margin: 1px 0;
 
   &__icon {
-    position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
-    color: $text-muted; display: flex; align-items: center; pointer-events: none;
-    svg { width: 16px; height: 16px; }
+    position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+    color: #9baac5; display: flex; align-items: center; pointer-events: none;
+    svg { width: 14px; height: 14px; }
   }
 
   &__input {
-    width: 100%; height: 44px;
-    padding: 0 38px 0 42px;
-    background: white; border: none;
+    width: 100%; height: 38px;
+    padding: 0 38px 0 36px;
+    background: #f9fbff; border: 1px solid #dbe2ed;
     border-radius: $border-radius-full;
-    font-size: $font-size-base; color: $text-primary;
+    font-size: 13px; color: #1f3047;
     outline: none; font-family: $font-family-base;
-    box-shadow: $shadow-md;
-    &::placeholder { color: $text-muted; }
+    box-shadow: none;
+    &::placeholder { color: #9baac5; }
   }
 
   &__clear {
     position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
-    background: $gray-200; border: none;
+    background: #dbe2ed; border: none;
     width: 20px; height: 20px; border-radius: 50%;
-    cursor: pointer; font-size: $font-size-xs; color: $text-muted;
+    cursor: pointer; font-size: $font-size-xs; color: #607698;
     display: flex; align-items: center; justify-content: center;
-    &:hover { background: $gray-300; }
+    &:hover { background: #b8c8e4; }
   }
 }
 
@@ -557,20 +594,20 @@ export default {
 .page-body {
   padding:0;
   /* 给出一定间距，但不需要完整头部高度 */
-  padding-top: $spacing-base;
+  padding-top: $spacing-sm; /* 缩减顶部间距 */
 }
 
 .filter-row {
   display: flex; align-items: center;
   justify-content: space-between;
-  gap: $spacing-sm;
-  margin-top: $spacing-base; /* 与搜索框间距 */
-  background: radial-gradient(circle, rgba(255,255,255,0.07) 0%, transparent 70%);
-  padding: 0 $spacing-base; /* 两边水平内边距 */
-  /* 默认占满父级 container 宽度 */
+  gap: $spacing-xs;
+  margin-top: 6px;
+  background: #fff;
+  border: 1px solid #e4eaf2;
+  border-radius: $border-radius;
+  padding: 6px $spacing-base;
   width: 100%;
   box-sizing: border-box;
-  /* 不再固定，作为 header 的一部分呈现 */
 }
 
 /* PC端样式：在较宽屏幕上加入左右边距以避开侧边栏 */
@@ -649,18 +686,18 @@ export default {
 // ---- 记录卡片 ----
 .record-card {
   background: white; border-radius: $border-radius-lg;
-  padding: $spacing-md $spacing-base;
-  display: flex; align-items: center; gap: $spacing-md;
-  cursor: pointer; transition: all $transition-base;
-  border: 1.5px solid $border-color; box-shadow: $shadow-sm;
-  animation: fadeSlideUp 0.4s ease both;
+  padding: $spacing-base;
+  display: flex; align-items: center; gap: $spacing-sm;
+  cursor: pointer; transition: all $transition-fast;
+  border: 1px solid #e3e8f0; box-shadow: 0 1px 3px rgba(31,45,61,.08);
+  animation: fadeSlideUp 0.3s ease both;
 
   &:hover {
-    border-color: $primary;
-    box-shadow: $shadow-md;
-    transform: translateX(3px);
+    border-color: #6a86b8;
+    box-shadow: 0 4px 12px rgba(37,72,132,.16);
+    transform: translateX(2px);
   }
-  &:active { transform: scale(0.99); }
+  &:active { transform: translateX(1px) scale(0.99); }
 }
 
 // 得分圆环
@@ -686,7 +723,8 @@ export default {
   display: flex; flex-direction: column; gap: 6px;
 
   &__top {
-    display: flex; align-items: center; gap: $spacing-sm;
+    display: flex; align-items: center; gap: 8px;
+    flex-wrap: wrap;
   }
 }
 
@@ -694,8 +732,15 @@ export default {
   width: 28px; height: 28px; border-radius: $border-radius-sm;
   display: flex; align-items: center; justify-content: center;
   font-size: 15px; flex-shrink: 0;
+  overflow: hidden;
 }
 
+.record-job-icon__img {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  display: block;
+}
 .record-job-name {
   font-size: $font-size-base; font-weight: $font-weight-semibold;
   color: $text-primary; flex: 1;
