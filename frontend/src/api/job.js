@@ -5,10 +5,22 @@
 // =============================================
 
 import request from '@/utils/request'
+import { JOB_TYPES } from '@/utils/constants'
 const USE_MOCK = process.env.VUE_APP_USE_MOCK !== 'false'
 
 export const fetchJobs = async () => {
-  if (USE_MOCK) return null  // Mock 模式下由 constants.js 兜底
+  if (USE_MOCK) {
+    // Mock模式下，从常量里提供一致岗位数据，同时模拟DB icon_url字段
+    return JOB_TYPES.map(job => ({
+      id: job.dbId,
+      name: job.name,
+      description: job.description,
+      tech_stack: job.techStack || [],
+      icon_url: '',
+      icon: job.icon,
+      colorBg: job.colorBg
+    }))
+  }
   const res = await request.get('/jobs')
   return res  // 返回数组：[{ id:1, name:'Java后端开发', description, tech_stack, icon_url }]
 }
