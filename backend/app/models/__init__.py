@@ -6,3 +6,4 @@ from .interview import Interview, InterviewChat, Dimension, InterviewScore, User
 from .learning import Resource, KnowledgeTag, UserLearning, UserKnowledgeMastery
 from .prompt import AiPrompt, InterviewScene
 from .knowledge import KnowledgeItem
+from .resume import Resume

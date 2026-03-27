@@ -47,7 +47,7 @@ request.interceptors.response.use(
     }
 
     // 401 - Token过期或无效，跳转登录
-    if (res.code === 401) {
+    if (res.code === 401 ) {
       clearAuth()
       router.push({ name: 'Login', query: { redirect: router.currentRoute.value.fullPath } })
       return Promise.reject(new Error(res.message || '登录已过期，请重新登录'))
@@ -60,7 +60,7 @@ request.interceptors.response.use(
     // HTTP层错误处理
     if (error.response) {
       const { status, data } = error.response
-      if (status === 401) {
+      if (status === 401 || status === 422) {
         clearAuth()
         router.push({ name: 'Login' })
         const msg = data?.message || data?.msg || '登录已过期，请重新登录'

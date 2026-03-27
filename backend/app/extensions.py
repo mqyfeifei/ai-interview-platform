@@ -1,5 +1,6 @@
+# backend/app/extensions.py
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 
 db = SQLAlchemy()
-migrate = Migrate()  # 初始化 Migrate
+migrate = Migrate()
