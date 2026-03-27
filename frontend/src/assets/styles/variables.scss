@@ -3,13 +3,13 @@
 // =============================================
 
 // --- 主色系 ---
-$primary: #4338CA;          // 深靛蓝 - 主品牌色
-$primary-light: #6366F1;    // 亮靛蓝
-$primary-dark: #312E81;     // 深靛蓝（深色）
-$primary-bg: #EEF2FF;       // 极淡靛蓝（背景用）
+$primary: #4338CA; // 深靛蓝 - 主品牌色
+$primary-light: #6366F1; // 亮靛蓝
+$primary-dark: #312E81; // 深靛蓝（深色）
+$primary-bg: #EEF2FF; // 极淡靛蓝（背景用）
 
-$secondary: #7C3AED;        // 紫色
-$accent: #F59E0B;           // 琥珀色 - 强调/高亮
+$secondary: #7C3AED; // 紫色
+$accent: #F59E0B; // 琥珀色 - 强调/高亮
 
 // --- 功能色 ---
 $success: #10B981;
@@ -48,6 +48,7 @@ $bg-overlay: rgba(15, 23, 42, 0.5);
 $border-color: #E2E8F0;
 $border-radius-sm: 8px;
 $border-radius: 12px;
+$border-radius-md: $border-radius; // 兼容旧变量命名
 $border-radius-lg: 16px;
 $border-radius-xl: 24px;
 $border-radius-full: 9999px;
