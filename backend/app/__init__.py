@@ -1,3 +1,4 @@
+# app/__init__.py
 from flask import Flask
 from flask import send_from_directory
 import os
@@ -20,7 +21,6 @@ def create_app(config_name=None):
     # 初始化插件
     db.init_app(app)
     migrate.init_app(app, db)
-
     # 注册蓝图
     from app.api.v1.auth import auth_bp
     from app.api.v1.interview import interview_bp
@@ -28,13 +28,15 @@ def create_app(config_name=None):
     from app.api.v1.report import report_bp
     from app.api.v1.user import user_bp
     from app.api.v1.learning import learning_bp
+    from app.api.v1.resumes import bp as resumes_bp
     app.register_blueprint(learning_bp, url_prefix='/api/v1/learning')
     app.register_blueprint(auth_bp, url_prefix='/api/v1/auth')
     app.register_blueprint(interview_bp, url_prefix='/api/v1/interviews')
     app.register_blueprint(job_bp, url_prefix='/api/v1/jobs')
     app.register_blueprint(report_bp, url_prefix='/api/v1/reports')
     app.register_blueprint(user_bp, url_prefix='/api/v1/users')
-
+    app.register_blueprint(resumes_bp, url_prefix='/api/v1/resumes')
+    # app.register_blueprint(resumes_bp, url_prefix='/api/v1')
     upload_root = os.path.join(app.root_path, 'uploads')
     os.makedirs(upload_root, exist_ok=True)
 
