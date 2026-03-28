@@ -16,6 +16,8 @@ class User(db.Model):
     major = db.Column(db.String(100))
     grade = db.Column(db.String(20))
     avatar_url = db.Column(db.Text)
+    role = db.Column(db.String(20), nullable=False, default='user')
+    is_active = db.Column(db.Boolean, nullable=False, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     # 外键：默认岗位
@@ -33,7 +35,11 @@ class User(db.Model):
         return {
             'id': self.id,
             'username': self.username,
+            'email': self.email,
             'real_name': self.real_name,
             'school': self.school,
-            'default_job': self.default_job.name if self.default_job else None
+            'default_job': self.default_job.name if self.default_job else None,
+            'role': self.role,
+            'is_active': self.is_active,
+            'created_at': self.created_at.isoformat() if self.created_at else None
         }
