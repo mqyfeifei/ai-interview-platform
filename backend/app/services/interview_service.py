@@ -100,7 +100,7 @@ class InterviewService:
             .order_by(KnowledgeItem.embedding.l2_distance(user_vector)).limit(1).first()
 
         # 3. 组装上下文与 RAG 提示词
-        prompt_config = AiPrompt.query.filter_by(job_id=interview.job_id).first()
+        prompt_config = AiPrompt.query.filter_by(job_id=interview.job_id, is_active=True).first()
         base_prompt = prompt_config.system_prompt if prompt_config else "你是面试官，【核心指令】：当你觉得已经问了足够多的问题（例如超过5题），或者你认为已经充分评估了该候选人的能力时，请主动结束面试。结束时，请务必在你的回复文本的最后面加上特殊标记 [INTERVIEW_OVER]。"
 
         # ================= 优化点：动态注入“面试大纲” =================

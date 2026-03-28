@@ -49,18 +49,23 @@ class AuthService:
         return candidate
 
     @staticmethod
-    def _generate_token(user_id):
+    def _generate_token(user_id, role='user'):
         serializer = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
-        return serializer.dumps({"user_id": user_id}, salt="auth-token")
+        return serializer.dumps({"user_id": user_id, "role": role}, salt="auth-token")
 
     @staticmethod
-    def verify_token(token, max_age=7 * 24 * 3600):
+    def verify_token_payload(token, max_age=7 * 24 * 3600):
         serializer = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
         payload = serializer.loads(token, salt="auth-token", max_age=max_age)
         user_id = payload.get("user_id")
         if not user_id:
             raise ValueError("无效的登录凭证")
-        return user_id
+        return payload
+
+    @staticmethod
+    def verify_token(token, max_age=7 * 24 * 3600):
+        payload = AuthService.verify_token_payload(token, max_age=max_age)
+        return payload.get("user_id")
 
     @staticmethod
     def _serialize_user(user):
@@ -93,6 +98,8 @@ class AuthService:
             "avatar_url": user.avatar_url,
             "avatar": user.avatar_url,
             "avatarUrl": user.avatar_url,
+            "role": user.role,
+            "is_active": user.is_active,
             "defaultJob": default_job,
             "created_at": user.created_at.isoformat() if user.created_at else None,
             "createdAt": user.created_at.isoformat() if user.created_at else None
@@ -153,6 +160,24 @@ class AuthService:
         user = cls._find_user_by_login_id(login_id)
         if not user or not user.check_password(password):
             raise ValueError('账号或密码错误')
-        token = cls._generate_token(user.id)
+        if not user.is_active:
+            raise ValueError('账号已被禁用，请联系管理员')
+        token = cls._generate_token(user.id, role=user.role or 'user')
+        return {"token": token, "user": cls._serialize_user(user)}
+
+    @classmethod
+    def admin_login_with_password(cls, login_id, password):
+        if not login_id or not password:
+            raise ValueError('账号和密码不能为空')
+
+        user = cls._find_user_by_login_id(login_id)
+        if not user or not user.check_password(password):
+            raise ValueError('账号或密码错误')
+        if not user.is_active:
+            raise ValueError('账号已被禁用，请联系管理员')
+        if (user.role or 'user') != 'admin':
+            raise ValueError('当前账号无管理员权限')
+
+        token = cls._generate_token(user.id, role='admin')
         return {"token": token, "user": cls._serialize_user(user)}
 
