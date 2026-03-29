@@ -1,4 +1,3 @@
-# backend/import_kb_v2.py
 import os
 import sys
 import yaml
