@@ -4,7 +4,7 @@
 // =============================================
 
 import { createRouter, createWebHistory } from 'vue-router'
-import { isLoggedIn } from '@/utils/auth'
+import { isLoggedIn, getCachedUser } from '@/utils/auth'
 
 // 懒加载路由组件，提高首屏性能
 const routes = [
@@ -34,6 +34,12 @@ const routes = [
     meta: { requiresAuth: true, title: '首页', showBottomNav: true }
   },
   {
+    path: '/admin/dashboard',
+    name: 'AdminDashboard',
+    component: () => import('@/views/admin/AdminDashboard.vue'),
+    meta: { requiresAuth: true, requiresAdmin: true, hideNavigation: true, title: '管理后台' }
+  },
+  {
     path: '/profile',
     name: 'PersonalCenter',
     component: () => import('@/views/users/PersonalCenter.vue'),
@@ -45,7 +51,7 @@ const routes = [
     path: '/interview/select',
     name: 'JobSelection',
     component: () => import('@/views/interview/JobSelection.vue'),
-    meta: {requiresAuth: true, title: '选择岗位'}
+    meta: { requiresAuth: true, title: '选择岗位' }
   },
   {
     path: '/interview/session',
@@ -112,6 +118,23 @@ router.beforeEach((to, from, next) => {
   if (requiresAuth && !isLoggedIn()) {
     // 未登录，重定向到登录页并记录目标路径
     next({ name: 'Login', query: { redirect: to.fullPath } })
+  } else if (to.meta.requiresAdmin) {
+    const user = getCachedUser()
+    if (!user) {
+      next({ name: 'Login', query: { redirect: to.fullPath } })
+      return
+    }
+    if (user.is_active === false) {
+      alert('账号被禁用')
+      next({ name: 'Login' })
+      return
+    }
+    if (user.role !== 'admin') {
+      alert('无管理员权限')
+      next({ name: 'Dashboard' })
+      return
+    }
+    next()
   } else if (!requiresAuth && isLoggedIn() && (to.name === 'Login' || to.name === 'Register')) {
     // 已登录用户访问登录/注册页，重定向到首页
     next({ name: 'Dashboard' })

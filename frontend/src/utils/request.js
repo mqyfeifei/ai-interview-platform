@@ -20,6 +20,17 @@ const request = axios.create({
 // ---- 请求拦截器 ----
 request.interceptors.request.use(
   (config) => {
+    // 管理后台接口前缀
+    if (config.admin) {
+      const raw = config.url || ''
+      if (!raw.startsWith('/api/v1/admin')) {
+        const cleanPath = raw.startsWith('/') ? raw : `/${raw}`
+        config.url = `/api/v1/admin${cleanPath}`
+      }
+      // 如果系统有 `baseURL`，直接覆盖，避免变成 /api/api/v1/admin
+      config.baseURL = ''
+    }
+
     // 自动附加Token
     const token = getToken()
     if (token) {
@@ -47,10 +58,22 @@ request.interceptors.response.use(
     }
 
     // 401 - Token过期或无效，跳转登录
-    if (res.code === 401 ) {
+    if (res.code === 401) {
       clearAuth()
       router.push({ name: 'Login', query: { redirect: router.currentRoute.value.fullPath } })
       return Promise.reject(new Error(res.message || '登录已过期，请重新登录'))
+    }
+
+    // 403 - 无权限
+    if (res.code === 403) {
+      const msg = res.message || '无管理员权限'
+      return Promise.reject(new Error(msg))
+    }
+
+    // 400 - 请求参数/数据错误
+    if (res.code === 400) {
+      const msg = res.message || '请求参数错误'
+      return Promise.reject(new Error(msg))
     }
 
     // 其他业务错误
@@ -66,7 +89,11 @@ request.interceptors.response.use(
         const msg = data?.message || data?.msg || '登录已过期，请重新登录'
         return Promise.reject(new Error(msg))
       } else if (status === 403) {
-        console.error('无权限访问')
+        const msg = data?.message || data?.msg || '无管理员权限'
+        return Promise.reject(new Error(msg))
+      } else if (status === 400) {
+        const msg = data?.message || data?.msg || '请求参数错误'
+        return Promise.reject(new Error(msg))
       } else if (status === 500) {
         console.error('服务器内部错误')
       }

@@ -39,13 +39,15 @@
           <p>欢迎回来，继续你的面试之旅</p>
         </div>
 
-        <div class="login-tabs">
+        <div class="mode-tabs">
           <button
-            v-for="tab in loginTabs"
-            :key="tab.key"
-            :class="['tab-btn', { active: loginType === tab.key }]"
-            @click="loginType = tab.key"
-          >{{ tab.label }}</button>
+            :class="['tab-btn', { active: loginMode === 'user' }]"
+            @click="loginMode = 'user'"
+          >普通用户登录</button>
+          <button
+            :class="['tab-btn', { active: loginMode === 'admin' }]"
+            @click="loginMode = 'admin'"
+          >管理员登录</button>
         </div>
 
         <form @submit.prevent="handleLogin" novalidate>
@@ -117,6 +119,15 @@
             <span v-if="loading" class="spinner" />
             <span>{{ loading ? '登录中...' : '立即登录' }}</span>
           </button>
+
+          <div class="login-tabs login-tabs--small">
+            <button
+              v-for="tab in loginTabs"
+              :key="tab.key"
+              :class="['tab-btn', { active: loginType === tab.key }]"
+              @click="loginType = tab.key"
+            >{{ tab.label }}</button>
+          </div>
         </form>
 
         <div class="divider">或</div>
@@ -142,6 +153,7 @@ export default {
   name: 'LoginPage',
   data() {
     return {
+      loginMode: 'user',
       loginType: 'email',
       loginTabs: [
         { key: 'email', label: '邮箱登录' },
@@ -155,7 +167,7 @@ export default {
     }
   },
   methods: {
-    ...mapActions('user', ['login']),
+    ...mapActions('user', ['login', 'adminLogin']),
     validate() {
       this.errors = {}
       const { loginId, password } = this.form
@@ -178,9 +190,15 @@ export default {
       this.globalError = ''
       this.loading = true
       try {
-        await this.login({ loginId: this.form.loginId, password: this.form.password })
-        const redirect = this.$route.query.redirect || '/dashboard'
-        this.$router.push(redirect)
+        if (this.loginMode === 'admin') {
+          await this.adminLogin({ loginId: this.form.loginId, password: this.form.password })
+          const redirect = this.$route.query.redirect || '/admin/dashboard'
+          this.$router.push(redirect)
+        } else {
+          await this.login({ loginId: this.form.loginId, password: this.form.password })
+          const redirect = this.$route.query.redirect || '/dashboard'
+          this.$router.push(redirect)
+        }
       } catch (err) {
         this.globalError = err.message || '登录失败，请检查账号密码'
       } finally {
@@ -383,6 +401,16 @@ export default {
   }
 }
 
+// ── 登录模式切换 ──────────────────────────────────
+.mode-tabs {
+  display: flex;
+  background: rgba(238, 235, 255, 0.6);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: 12px;
+  padding: 3px;
+  margin-bottom: 10px;
+}
+
 // ── 标签切换 ──────────────────────────────────
 .login-tabs {
   display: flex;
@@ -390,9 +418,19 @@ export default {
   border: 1px solid rgba(99, 102, 241, 0.2);
   border-radius: 12px;
   padding: 3px;
-  margin-bottom: 24px;
+  margin-top: 12px;
+  margin-bottom: 16px;
 }
 
+.login-tabs--small {
+  margin-top: 6px;
+  margin-bottom: 0;
+}
+
+.login-tabs--small .tab-btn {
+  padding: 7px;
+  font-size: 12px;
+}
 .tab-btn {
   flex: 1;
   padding: 9px;
