@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 
 from sqlalchemy import func, or_
@@ -14,6 +14,7 @@ from app.models.job import Job
 from app.models.question import Question
 from app.models.knowledge import KnowledgeItem
 from app.models.prompt import AiPrompt
+from app.models.learning import UserLearning
 
 
 admin_bp = Blueprint('admin', __name__)
@@ -202,6 +203,13 @@ def get_dashboard():
             .scalar() or 0
         )
         total_interviews = db.session.query(func.count(Interview.id)).scalar() or 0
+        today_new_interviews = (
+            db.session.query(func.count(Interview.id))
+            .filter(func.date(Interview.start_time) == date.today())
+            .scalar() or 0
+        )
+        total_jobs = db.session.query(func.count(Job.id)).scalar() or 0
+        total_questions = db.session.query(func.count(Question.id)).scalar() or 0
 
         top_jobs_rows = (
             db.session.query(
@@ -225,12 +233,137 @@ def get_dashboard():
             for row in top_jobs_rows
         ]
 
+        # 用户排行榜：面试次数/均分/连续学习天数综合评分
+        user_perf_rows = (
+            db.session.query(
+                User.id.label('user_id'),
+                User.username.label('username'),
+                func.count(Interview.id).label('interview_count'),
+                func.avg(Interview.total_score).label('avg_score')
+            )
+            .outerjoin(Interview, Interview.user_id == User.id)
+            .group_by(User.id, User.username)
+            .all()
+        )
+
+        # 获取用户学习完成日期集合（按天聚合）
+        learn_dates = {}
+        learn_query = (
+            db.session.query(
+                UserLearning.user_id,
+                func.date(UserLearning.finish_time).label('day')
+            )
+            .filter(UserLearning.finish_time != None)
+            .group_by(UserLearning.user_id, func.date(UserLearning.finish_time))
+            .all()
+        )
+        for u_id, day in learn_query:
+            learn_dates.setdefault(u_id, set()).add(day)
+
+        user_rankings = []
+        for row in user_perf_rows:
+            streak = 0
+            day_check = date.today()
+            user_days = sorted(learn_dates.get(row.user_id, []), reverse=True)
+            # 计算连续学习天数(当天及往前)
+            while day_check in user_days:
+                streak += 1
+                day_check -= timedelta(days=1)
+
+            interview_count = int(row.interview_count or 0)
+            avg_score = float(row.avg_score or 0)
+            score = interview_count * 0.5 + avg_score * 0.3 + streak * 0.2
+            user_rankings.append({
+                'user_id': row.user_id,
+                'username': row.username,
+                'interview_count': interview_count,
+                'avg_score': round(avg_score, 2),
+                'streak_days': streak,
+                'score': round(score, 2)
+            })
+
+        user_rankings = sorted(user_rankings, key=lambda x: x['score'], reverse=True)[:10]
+
+        # 最新动态：用户注册 + 面试完成 + 题库新增
+        recent_events = []
+
+        for u in db.session.query(User.username, User.created_at).order_by(User.created_at.desc()).limit(10):
+            recent_events.append({
+                'text': f"{u.username} 注册为新用户",
+                'time': u.created_at.isoformat(),
+                'type': 'user_register'
+            })
+
+        for row in (
+                db.session.query(Interview, User.username.label('username'), Job.name.label('job_name'))
+                .join(User, Interview.user_id == User.id)
+                .join(Job, Interview.job_id == Job.id)
+                .filter(Interview.status == 'completed', Interview.end_time != None)
+                .order_by(Interview.end_time.desc())
+                .limit(10)
+        ):
+            interview, username, job_name = row
+            recent_events.append({
+                'text': f"{username} 完成了 {job_name} 面试",
+                'time': interview.end_time.isoformat(),
+                'type': 'interview_completed'
+            })
+
+        for q in db.session.query(Question.id, Question.content).order_by(Question.id.desc()).limit(10):
+            content = q.content or '题目'
+            short = content[:12] + '...' if len(content) > 12 else content
+            recent_events.append({
+                'text': f"系统新增「{short}」题库",
+                'time': None,
+                'type': 'question_added'
+            })
+
+        # 按时间排序，None 放后面
+        recent_events = sorted(recent_events, key=lambda x: x['time'] or '', reverse=True)[:10]
+
+        # 时间序列：最近7天每日累积用户总数和面试总数
+        end_date = date.today()
+        start_date = end_date - timedelta(days=6)
+
+        user_by_date = {
+            row.day: int(row.user_count)
+            for row in db.session.query(func.date(User.created_at).label('day'), func.count(User.id).label('user_count'))
+            .filter(func.date(User.created_at) >= start_date)
+            .group_by(func.date(User.created_at)).all()
+        }
+
+        interview_by_date = {
+            row.day: int(row.interview_count)
+            for row in db.session.query(func.date(Interview.start_time).label('day'), func.count(Interview.id).label('interview_count'))
+            .filter(func.date(Interview.start_time) >= start_date)
+            .group_by(func.date(Interview.start_time)).all()
+        }
+
+        current_users = 0
+        current_interviews = 0
+        usage_trend = []
+        for i in range(7):
+            day = start_date + timedelta(days=i)
+            current_users += user_by_date.get(day, 0)
+            current_interviews += interview_by_date.get(day, 0)
+            usage_trend.append({
+                'date': day.isoformat(),
+                'total_users': current_users,
+                'total_interviews': current_interviews
+            })
+
         return success_response(
             {
                 'total_users': int(total_users),
                 'today_new_users': int(today_new_users),
                 'total_interviews': int(total_interviews),
-                'top_jobs': top_jobs
+                'today_new_interviews': int(today_new_interviews),
+                'total_jobs': int(total_jobs),
+                'total_questions': int(total_questions),
+                'top_jobs': top_jobs,
+                'top_users': user_rankings,
+                'recent_events': recent_events,
+                'usage_trend': usage_trend
             },
             '获取管理大盘数据成功'
         )

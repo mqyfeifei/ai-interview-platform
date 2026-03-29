@@ -3,7 +3,7 @@
 // Vuex 用户模块
 // =============================================
 
-import { login, register, logout } from '@/api/auth'
+import { login, register, logout, adminLogin } from '@/api/auth'
 import { getUserInfo, updateUserInfo, changePassword, updateDefaultJob, uploadAvatar, bindPhone } from '@/api/user'
 import { setToken, getToken, clearAuth, getCachedUser, setCachedUser } from '@/utils/auth'
 
@@ -42,6 +42,19 @@ const actions = {
     commit('SET_LOADING', true)
     try {
       const { token, user } = await login(credentials)
+      commit('SET_TOKEN', token)
+      commit('SET_USER_INFO', user)
+      return user
+    } finally {
+      commit('SET_LOADING', false)
+    }
+  },
+
+  // 管理员登录
+  async adminLogin({ commit }, credentials) {
+    commit('SET_LOADING', true)
+    try {
+      const { token, user } = await adminLogin(credentials)
       commit('SET_TOKEN', token)
       commit('SET_USER_INFO', user)
       return user
@@ -161,6 +174,8 @@ const getters = {
   userName: state => state.userInfo?.username || '用户',
   userAvatar: state => state.userInfo?.avatar || null,
   defaultJob: state => state.userInfo?.defaultJob || null,
+  userRole: state => state.userInfo?.role || 'user',
+  isActive: state => state.userInfo?.is_active !== false,
   // new getters expose numeric id and name (useful when defaultJob key is absent)
   defaultJobId: state => state.userInfo?.defaultJobId || null,
   defaultJobName: state => state.userInfo?.defaultJobName || null,
