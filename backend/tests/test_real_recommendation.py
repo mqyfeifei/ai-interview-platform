@@ -31,7 +31,7 @@ def run_interactive_full_flow():
         # 寻找真实岗位
         job = Job.query.filter_by(name="Java后端开发").first()
         if not job:
-            print("❌ 未找到Java后端开发岗位数据，请确认已运行过 import_kb.py 导入题库！")
+            print("❌ 未找到Java后端开发岗位数据，请确认已运行过 data_create_and_import.py 导入题库！")
             return
 
         user_id = user.id
