@@ -23,6 +23,18 @@ const MOCK_USERS = [
     defaultJob: 'java-backend',
     totalInterviews: 12,
     avgScore: 78,
+    role: 'user',
+    is_active: true,
+    createdAt: '2024-09-01'
+  },
+  {
+    id: 99,
+    username: '管理员',
+    email: 'admin@example.com',
+    phone: '13800000099',
+    password: 'admin123',
+    role: 'admin',
+    is_active: true,
     createdAt: '2024-09-01'
   }
 ]
@@ -48,6 +60,25 @@ export const login = async (data) => {
     return { token: 'mock_token_' + Date.now(), user: safeUser }
   }
   return request.post('/auth/login', data)
+}
+
+/**
+ * 管理员登录
+ * @param {Object} data - { loginId, password }
+ */
+export const adminLogin = async (data) => {
+  if (USE_MOCK) {
+    await mockDelay()
+    const user = MOCK_USERS.find(
+      u => u.role === 'admin' && (u.email === data.loginId || u.phone === data.loginId) && u.password === data.password
+    )
+    if (!user) throw new Error('账号或密码错误')
+    if (user.is_active === false) throw new Error('账号被禁用')
+    const { ...safeUser } = user
+
+    return { token: 'mock_admin_token_' + Date.now(), user: safeUser }
+  }
+  return request.post('/login', data, { admin: true })
 }
 
 /**
