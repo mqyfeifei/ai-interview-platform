@@ -18,7 +18,11 @@ class KnowledgeTag(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), unique=True, nullable=False)
     category = db.Column(db.String(50))
-
+    # --- 新增字段 ---
+    complexity = db.Column(db.String(20))     # 预估难度
+    estimated_hours = db.Column(db.Integer)   # 预估学习耗时
+    # --- 新增字段：加入向量字段，用于和 Question 做语义匹配 ---
+    embedding = db.Column(Vector(512))
 
 class Resource(db.Model):
     __tablename__ = 'resources'

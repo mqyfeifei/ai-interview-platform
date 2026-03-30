@@ -17,15 +17,3 @@ class AiPrompt(db.Model):
     max_tokens = db.Column(db.Integer, default=500)
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-
-    # 关系
-    scenes = db.relationship('InterviewScene', backref='prompt', lazy=True)
-
-
-class InterviewScene(db.Model):
-    __tablename__ = 'interview_scenes'
-
-    id = db.Column(db.Integer, primary_key=True)
-    prompt_id = db.Column(db.Integer, db.ForeignKey('ai_prompts.id'), nullable=False)
-    scene_name = db.Column(db.String(50))  # opening, technical, stress, closing
-    scene_prompt = db.Column(db.Text)

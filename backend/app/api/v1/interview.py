@@ -2,20 +2,9 @@ from flask import Blueprint, request, Response, stream_with_context, jsonify
 from app.services.interview_service import InterviewService
 from app.services.asr_service import ASRService
 from app.services.auth_service import AuthService
-from app.models.job import Job
+from app.models.job import Job, DEFAULT_JOBS
 
 interview_bp = Blueprint('interview', __name__)
-
-# 前端 jobId 字符串到数据库岗位名称的映射
-JOB_ID_MAP = {
-    'java-backend': 'Java后端开发',
-    'web-frontend': 'Web前端开发',
-    'python-algorithm': 'Python算法工程师',
-    'fullstack': '全栈开发工程师',
-    'android': 'Android开发',
-    'devops': 'DevOps工程师'
-}
-
 
 def get_current_user_id():
     """从 Authorization header 中获取当前用户 ID"""
@@ -43,15 +32,17 @@ def resolve_job_id(job_id_input):
         return int(job_id_input)
     except (ValueError, TypeError):
         pass
-    
-    # 字符串类型，尝试通过映射查找岗位名称
-    job_name = JOB_ID_MAP.get(job_id_input)
-    if job_name:
-        job = Job.query.filter_by(name=job_name).first()
+
+    lowered_input = str(job_id_input).lower()
+
+    # 1. 尝试通过集中维护的映射查找岗位名称
+    job_info = DEFAULT_JOBS.get(lowered_input)
+    if job_info:
+        job = Job.query.filter_by(name=job_info['name']).first()
         if job:
             return job.id
-    
-    # 如果映射中没有，尝试直接用传入的字符串作为岗位名称查找
+
+    # 2. 如果映射中没有（或者前端直接传了中文名），尝试直接作为岗位名称查找
     job = Job.query.filter_by(name=job_id_input).first()
     if job:
         return job.id

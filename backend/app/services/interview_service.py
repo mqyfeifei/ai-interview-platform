@@ -1,5 +1,7 @@
 # backend/app/services/interview_service.py
 import os
+import re
+import json
 
 # 启用 Hugging Face 在线模式并配置中国镜像站
 os.environ["HF_HUB_OFFLINE"] = "0"
@@ -14,24 +16,33 @@ except Exception:
     pass
 
 from app.extensions import db
+from app.services.asr_service import global_speed_cache
 from app.models.interview import Interview, InterviewChat
 from app.models.prompt import AiPrompt
 from app.models.knowledge import KnowledgeItem
+from app.models.learning import KnowledgeTag, UserKnowledgeMastery
+from app.models.example import Example
+from app.models.question import Question
 from app.utils.llm_client import DeepSeekClient
+from app.models.interview import InterviewScore, Dimension
 from openai import OpenAI
 from flask import current_app
-import json
-from app.models.interview import InterviewScore, Dimension
-import json
 from sentence_transformers import SentenceTransformer
 from datetime import datetime
-from app.models.learning import KnowledgeTag, UserKnowledgeMastery
-from app.services.asr_service import global_speed_cache
+
+
 
 
 # 推荐在类外部进行全局加载，避免每次调用时重复加载模型进内存
 # 'BAAI/bge-small-zh-v1.5' 首次运行会自动下载
 local_embedding_model = SentenceTransformer('BAAI/bge-small-zh-v1.5', local_files_only=False)
+# ================= 新增：配置 Tokenizer 安全截断 =================
+# 显式限制模型的最大序列长度为 512（bge-small 默认上限）。
+# 这样即使输入的字符串 token 数量超过上限，底层的 tokenizer 也会自动进行安全截断，
+# 而不会报 token index out of range 错误或 warning。
+local_embedding_model.max_seq_length = 512
+# =============================================================
+
 class InterviewService:
     # @staticmethod
     # def get_embedding(text):
@@ -96,8 +107,8 @@ class InterviewService:
         # 2. 向量检索：匹配相关的考察知识点或参考答案
         user_vector = InterviewService.get_embedding(user_answer)
         # 依据 L2 距离查询最相关的知识库条目
-        related_knowledge = KnowledgeItem.query.filter_by(job_id=interview.job_id) \
-            .order_by(KnowledgeItem.embedding.l2_distance(user_vector)).limit(1).first()
+        related_question = Question.query.filter_by(job_id=interview.job_id, status='published') \
+            .order_by(Question.embedding.l2_distance(user_vector)).limit(1).first()
 
         # 3. 组装上下文与 RAG 提示词
         prompt_config = AiPrompt.query.filter_by(job_id=interview.job_id, is_active=True).first()
@@ -105,9 +116,13 @@ class InterviewService:
 
         # ================= 优化点：动态注入“面试大纲” =================
         # 从数据库拉取真实的知识点，约束 AI 只能在这个范围内提问
-        existing_tags = KnowledgeTag.query.all()
-        tag_list = [t.name for t in existing_tags]
-        tags_str = "、".join(tag_list)
+        # 获取当前岗位下所有题目的关联标签
+        questions = Question.query.filter_by(job_id=interview.job_id).all()
+        tag_set = set()
+        for q in questions:
+            for tag in q.knowledge_tags:
+                tag_set.add(tag.name)
+        valid_tags_str = "、".join(list(tag_set))
 
         # ================= 动态拼装情感安抚指令 =================
         emotion_instruction = ""
@@ -136,9 +151,10 @@ class InterviewService:
 
         messages = [{"role": "system", "content": enhanced_system_prompt}]
 
-        if related_knowledge:
+        if related_question:
             messages.append({"role": "system",
-                             "content": f"参考知识点：{related_knowledge.content}。请依据此知识点对用户的回答进行专业追问或评价。"})
+                     "content": f"参考题目：{related_question.content}。参考答案要点：{related_question.reference_answer}。请围绕此知识点对候选人进行专业追问。"})
+
         # 加载历史对话
         history = InterviewChat.query.filter_by(interview_id=interview_id).order_by(InterviewChat.timestamp).all()
         for msg in history:
@@ -182,11 +198,37 @@ class InterviewService:
         chat_history = "\n".join([f"{c.role}: {c.content}" for c in chats])
 
         # ================= 优化点 1: 扁平化组装真实标准知识点 =================
-        existing_tags = KnowledgeTag.query.all()
-        tag_list = [t.name for t in existing_tags]
-        valid_tags_str = "、".join(tag_list)
+        # 获取当前岗位下所有题目的关联标签
+        questions = Question.query.filter_by(job_id=interview.job_id).all()
+        tag_set = set()
+        for q in questions:
+            for tag in q.knowledge_tags:
+                tag_set.add(tag.name)
+        valid_tags_str = "、".join(list(tag_set))
         # ======================================================================
         # ======================================================================
+
+        # ================= 优化点 2: 引入优秀回答范例，提升 AI 建议的具体性 =================
+        # 用面试核心对话内容做向量检索
+        combined_text = " ".join([c.content for c in chats if c.role == 'user'])
+        example_context = ""
+
+        # 防空判断，避免没有 user 回复时获取 embedding 报错
+        if combined_text.strip():
+            # 【修改点】：将截取长度缩减到 400 字符，避免汉字密集导致 Token 溢出 512 上限
+            chat_vector = InterviewService.get_embedding(combined_text[-400:])
+
+            if chat_vector:
+                # 向量检索相关的优秀范例
+                related_examples = Example.query.filter_by(job_id=interview.job_id) \
+                    .order_by(Example.embedding.l2_distance(chat_vector)).limit(2).all()
+
+                if related_examples:
+                    example_context = "\n\n【优秀回答参考范例】：\n请对比候选人回答与以下范例，并在给出建议时适当参考：\n"
+                    for ex in related_examples:
+                        example_context += f"问题：{ex.question}\n回答框架：{ex.framework}\n范例回答：{ex.answer}\n---\n"
+        # ====================================================================================
+
 
         # 2. 强化系统提示词，强制输出详尽的 JSON 结构
         system_prompt = f"""
@@ -215,6 +257,7 @@ class InterviewService:
 
                 标准知识点库：
                 [{valid_tags_str}]
+                {example_context}
                 """
         llm = DeepSeekClient()
         response_text = llm.generate_reply([
@@ -222,9 +265,37 @@ class InterviewService:
             {"role": "user", "content": f"面试记录如下：\n{chat_history}"}
         ])
 
-        # 清理可能附带的 markdown 格式以确保 JSON 解析成功
-        cleaned_json_text = response_text.replace("```json", "").replace("```", "").strip()
-        report_data = json.loads(cleaned_json_text)
+        # ================= 优化点：增强 JSON 正则提取与异常阻断 =================
+        try:
+            # 1. 粗略清理 markdown 标记
+            cleaned_text = response_text.replace("```json", "").replace("```", "").strip()
+
+            # 2. 引入正则，提取首尾大括号之间的核心 JSON 块（防止 AI 在前后加废话）
+            json_match = re.search(r'\{.*\}', cleaned_text, re.DOTALL)
+            if json_match:
+                cleaned_text = json_match.group(0)
+            else:
+                raise ValueError("未在模型响应中匹配到有效的 JSON 结构")
+
+            report_data = json.loads(cleaned_text)
+
+        except (json.JSONDecodeError, ValueError) as e:
+            # 记录真实报错（如果你配置了日志，建议加上 current_app.logger.error）
+            print(f"解析报告 JSON 失败: {str(e)}。原始响应: {response_text}")
+
+            # 核心防线：终止向下执行，防止将 0 分存入数据库
+            db.session.rollback() # 回滚可能存在的意外事务
+
+            # 直接抛出异常，触发 v1/interview.py 的 except 捕获机制
+            raise ValueError("AI 报告生成异常，请稍后再试（大模型返回格式不合规）")
+            
+            # # 返回明确的错误结构给前端，前端可据此提示用户“报告生成异常，请重试”
+            # # 注意：此时 interview.status 依然是 'evaluating'，为重试留下了余地
+            # return {
+            #     "error": "AI 报告生成异常，请稍后再试",
+            #     "detail": "大模型返回格式不合规"
+            # }, 500
+        # ========================================================================
 
         # 3. 写入总表详细评价字段
         interview.total_score = report_data.get("total_score", 0)
@@ -251,7 +322,7 @@ class InterviewService:
                     comment=dim_data.get("comment", "")
                 )
                 db.session.add(score_record)
-        # ================= 优化点 2: 严格校验，切断自动生成逻辑 =================
+        # ================= 优化点 3: 严格校验，切断自动生成逻辑 =================
         tags_eval = report_data.get("knowledge_tags_eval", {})
         for tag_name, score in tags_eval.items():
             # 严格去数据库匹配已有的标签，找不到就直接丢弃（防大模型幻觉）
