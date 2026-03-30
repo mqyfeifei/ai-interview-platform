@@ -1,11 +1,12 @@
 from flask import Blueprint, jsonify, request
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from pathlib import Path
 
 from sqlalchemy import func, or_
 import yaml
 
 from app.services.auth_service import AuthService
+from app.services.learning_service import LearningService
 from app.api.v1.auth_utils import admin_required
 from app.extensions import db
 from app.models.user import User
@@ -378,6 +379,7 @@ def get_users():
         page = request.args.get('page', default=1, type=int)
         size = request.args.get('size', default=10, type=int)
         keyword = (request.args.get('keyword', default='', type=str) or '').strip()
+        role = (request.args.get('role', default=None, type=str) or '').strip().lower()
 
         if page < 1:
             return error_response('page 必须大于等于 1', 400)
@@ -387,6 +389,46 @@ def get_users():
             size = 100
 
         query = User.query
+
+        status = request.args.get('is_active', default=None)
+        if status is not None and status != '':
+            if status in ['true', '1', 'True', 'TRUE', 't']:
+                query = query.filter(User.is_active == True)
+            elif status in ['false', '0', 'False', 'FALSE', 'f']:
+                query = query.filter(User.is_active == False)
+
+        user_id = request.args.get('user_id', default=None, type=int)
+        if user_id:
+            query = query.filter(User.id == user_id)
+
+        grade = (request.args.get('grade', default=None, type=str) or '').strip()
+        if grade:
+            query = query.filter(User.grade == grade)
+
+        major = (request.args.get('major', default=None, type=str) or '').strip()
+        if major:
+            query = query.filter(User.major.ilike(f'%{major}%'))
+
+        school = (request.args.get('school', default=None, type=str) or '').strip()
+        if school:
+            query = query.filter(User.school.ilike(f'%{school}%'))
+
+        username = (request.args.get('username', default=None, type=str) or '').strip()
+        if username:
+            query = query.filter(User.username.ilike(f'%{username}%'))
+
+        email = (request.args.get('email', default=None, type=str) or '').strip()
+        if email:
+            query = query.filter(User.email.ilike(f'%{email}%'))
+
+        created_range = request.args.get('created_range', default=None, type=int)
+        if created_range is not None and created_range > 0:
+            from_date = datetime.utcnow() - timedelta(days=created_range)
+            query = query.filter(User.created_at >= from_date)
+
+        if role:
+            query = query.filter(User.role == role)
+
         if keyword:
             like_pattern = f'%{keyword}%'
             query = query.filter(
@@ -436,6 +478,23 @@ def update_user_status(user_id):
         db.session.commit()
 
         return success_response(user.to_dict(), '用户状态更新成功')
+    except Exception as exc:
+        db.session.rollback()
+        return error_response(str(exc), 500)
+
+
+@admin_bp.route('/users/<int:user_id>', methods=['DELETE'])
+@admin_required
+def delete_user(user_id):
+    try:
+        user = User.query.get(user_id)
+        if not user:
+            return error_response('用户不存在', 404)
+
+        db.session.delete(user)
+        db.session.commit()
+
+        return success_response(None, '用户删除成功')
     except Exception as exc:
         db.session.rollback()
         return error_response(str(exc), 500)
@@ -1059,6 +1118,91 @@ def list_interviews():
         return success_response(
             {'list': data, 'page': page, 'size': size, 'total': total},
             '获取面试记录列表成功'
+        )
+    except Exception as exc:
+        return error_response(str(exc), 500)
+
+
+@admin_bp.route('/users/<int:user_id>/performance', methods=['GET'])
+@admin_required
+def get_user_performance(user_id):
+    try:
+        user = User.query.get(user_id)
+        if not user:
+            return error_response('用户不存在', 404)
+
+        rows = (
+            db.session.query(Interview, Job)
+            .outerjoin(Job, Job.id == Interview.job_id)
+            .filter(Interview.user_id == user_id)
+            .order_by(Interview.start_time.desc().nullslast(), Interview.id.desc())
+            .all()
+        )
+
+        interview_list = [
+            {
+                'interview_id': interview.id,
+                'job_id': interview.job_id,
+                'job_name': job.name if job else None,
+                'status': interview.status,
+                'score': interview.total_score,
+                'start_time': interview.start_time.isoformat() if interview.start_time else None,
+                'end_time': interview.end_time.isoformat() if interview.end_time else None,
+                'question_count': interview.question_count,
+                'used_time': interview.used_time
+            }
+            for interview, job in rows
+        ]
+
+        growth_curve = LearningService.get_growth_curve(user_id)
+
+        ability_rows = (
+            db.session.query(Dimension.name, func.avg(InterviewScore.score).label('avg_score'))
+            .join(InterviewScore, InterviewScore.dimension_id == Dimension.id)
+            .join(Interview, InterviewScore.interview_id == Interview.id)
+            .filter(Interview.user_id == user_id, Interview.status == 'completed')
+            .group_by(Dimension.name)
+            .all()
+        )
+
+        abilities = {}
+        name_map = {
+            '专业知识': 'knowledge',
+            '逻辑思维': 'logic',
+            '表达能力': 'expression',
+            '问题解决': 'problemSolving',
+            '代码能力': 'coding',
+            '学习能力': 'learning'
+        }
+        for name, avg_score in ability_rows:
+            key = name_map.get(name, name)
+            abilities[key] = int(round(avg_score or 0))
+
+        # 保证全部 6 个维度存在
+        default_abilities = {
+            'knowledge': 0,
+            'logic': 0,
+            'expression': 0,
+            'problemSolving': 0,
+            'coding': 0,
+            'learning': 0
+        }
+        abilities = {**default_abilities, **abilities}
+
+        learning_completed = UserLearning.query.filter_by(user_id=user_id, status='completed').count()
+        learning_active = UserLearning.query.filter_by(user_id=user_id, status='in_progress').count()
+
+        return success_response(
+            {
+                'interviews': interview_list,
+                'growth_curve': growth_curve,
+                'abilities': abilities,
+                'learning': {
+                    'completed': learning_completed,
+                    'in_progress': learning_active
+                }
+            },
+            '获取用户绩效数据成功'
         )
     except Exception as exc:
         return error_response(str(exc), 500)
