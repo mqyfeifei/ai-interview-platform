@@ -22,7 +22,7 @@ def render_item(type_, obj, autogen_context):
         autogen_context.imports.add("import pgvector")
         return False
 
-    # （可选）其实你甚至可以直接无脑加一行：
+    # （可选）其实你甚至可以直接无脑加一行：com
     # autogen_context.imports.add("import pgvector")
     # 因为集合会自动去重，哪怕普通迁移带上这句也没任何副作用。
 
