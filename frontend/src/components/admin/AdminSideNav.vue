@@ -53,18 +53,46 @@
           <span v-if="!isCollapsed" class="asn-admin-badge__text">管理员已登录</span>
         </transition>
       </div>
+      
+      <!-- 退出登录按钮 -->
+      <button class="asn-logout-btn" @click="showLogoutConfirm" :title="isCollapsed ? '退出登录' : ''">
+        <span class="asn-logout-btn__icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+            <polyline points="16 17 21 12 16 7"/>
+            <line x1="21" y1="12" x2="9" y2="12"/>
+          </svg>
+        </span>
+        <transition name="fade-text">
+          <span v-if="!isCollapsed" class="asn-logout-btn__text">退出登录</span>
+        </transition>
+      </button>
+    </div>
+    
+    <!-- 退出确认对话框 -->
+    <div v-if="showLogoutDialog" class="asn-logout-dialog">
+      <div class="asn-logout-dialog__content">
+        <h3 class="asn-logout-dialog__title">确认退出</h3>
+        <p class="asn-logout-dialog__message">您确定要退出登录吗？</p>
+        <div class="asn-logout-dialog__actions">
+          <button class="asn-logout-dialog__btn asn-logout-dialog__btn--cancel" @click="showLogoutDialog = false">取消</button>
+          <button class="asn-logout-dialog__btn asn-logout-dialog__btn--confirm" @click="handleLogout">确认退出</button>
+        </div>
+      </div>
     </div>
 
   </aside>
 </template>
 
 <script>
+import { mapActions } from 'vuex'
 export default {
   name: 'AdminSideNav',
 
   data() {
     return {
       isCollapsed: false,
+      showLogoutDialog: false,
       navItems: [
         {
           name: 'AdminDashboard',
@@ -104,11 +132,21 @@ export default {
   },
 
   methods: {
+    ...mapActions('user', ['logout']),
     isActive(item) {
       return this.$route.name === item.name || this.$route.path === item.path
     },
     toggleCollapse() {
       this.isCollapsed = !this.isCollapsed
+    },
+    showLogoutConfirm() {
+      this.showLogoutDialog = true
+    },
+    async handleLogout() {
+
+        await this.logout()
+        this.$router.push('/login')
+
     }
   }
 }
@@ -372,9 +410,131 @@ $nav-transition: 0.22s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   &__text {
-    font-size: 11.5px;
-    color: rgba(255, 255, 255, 0.35);
+    font-size: 12px;
+    color: rgba(166, 136, 237, 0.75);
     white-space: nowrap;
+  }
+}
+
+// ── 退出登录按钮 ──
+.asn-logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 12px;
+  padding: 8px 12px;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 8px;
+  background: rgba(239, 68, 68, 0.05);
+  color: #ef4444;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all $nav-transition;
+  white-space: nowrap;
+
+  &:hover {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.3);
+  }
+
+  &__icon {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    svg {
+      width: 16px;
+      height: 16px;
+    }
+  }
+
+  &__text {
+    flex: 1;
+    text-align: left;
+  }
+}
+
+.admin-side-nav.collapsed {
+  .asn-logout-btn {
+    justify-content: center;
+    padding: 8px 0;
+    margin-top: 8px;
+  }
+}
+
+// ── 退出确认对话框 ──
+.asn-logout-dialog {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+
+  &__content {
+    background: #fff;
+    border-radius: 12px;
+    padding: 24px;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  }
+
+  &__title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0 0 12px;
+  }
+
+  &__message {
+    font-size: 14px;
+    color: #6b7280;
+    margin: 0 0 20px;
+  }
+
+  &__actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+  }
+
+  &__btn {
+    padding: 8px 16px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &--cancel {
+      background: #f3f4f6;
+      color: #374151;
+
+      &:hover {
+        background: #e5e7eb;
+      }
+    }
+
+    &--confirm {
+      background: #ef4444;
+      border-color: #ef4444;
+      color: #fff;
+
+      &:hover {
+        background: #dc2626;
+      }
+    }
   }
 }
 
