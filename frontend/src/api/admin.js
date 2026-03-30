@@ -1,0 +1,98 @@
+// =============================================
+// frontend/src/api/admin.js
+// 管理后台 API — 题库、面试记录、AI Prompt
+// =============================================
+// request.js 拦截器：config.admin = true 时自动把 URL 改写为 /api/v1/admin/*
+
+import request from '@/utils/request'
+
+// ─────────────────────────────────────────────
+// 题库 / 知识库（entity: 'question' | 'knowledge'）
+// ─────────────────────────────────────────────
+
+/** 获取题目列表（分页 + 过滤） */
+export function listQuestions(params = {}) {
+  return request.get('/questions', {
+    params: { entity: 'question', ...params },
+    admin: true
+  })
+}
+
+/** 创建题目 */
+export function createQuestion(data) {
+  return request.post('/questions', { entity: 'question', ...data }, { admin: true })
+}
+
+/** 更新题目 */
+export function updateQuestion(id, data) {
+  return request.put(`/questions/${id}`, { entity: 'question', ...data }, { admin: true })
+}
+
+/** 删除题目 */
+export function deleteQuestion(id) {
+  return request.delete(`/questions/${id}`, {
+    params: { entity: 'question' },
+    admin: true
+  })
+}
+
+/**
+ * 批量导入题库（从服务器 YAML 文件）
+ * @param {{ dry_run: boolean, clear_existing: boolean, base_dir?: string }} data
+ */
+export function importQuestions(data) {
+  return request.post('/questions/import', data, { admin: true })
+}
+
+// ─────────────────────────────────────────────
+// 面试记录（只读 + 详情）
+// ─────────────────────────────────────────────
+
+/** 获取面试记录列表（分页） */
+export function listInterviews(params = {}) {
+  return request.get('/interviews', { params, admin: true })
+}
+
+/** 获取面试详情（含对话记录、维度评分、报告） */
+export function getInterviewDetail(id) {
+  return request.get(`/interviews/${id}/details`, { admin: true })
+}
+
+// ─────────────────────────────────────────────
+// AI Prompt
+// ─────────────────────────────────────────────
+
+/** 获取 Prompt 列表 */
+export function listPrompts(params = {}) {
+  return request.get('/prompts', { params, admin: true })
+}
+
+/** 创建 Prompt */
+export function createPrompt(data) {
+  return request.post('/prompts', data, { admin: true })
+}
+
+/** 获取 Prompt 详情 */
+export function getPromptDetail(id) {
+  return request.get(`/prompts/${id}`, { admin: true })
+}
+
+/** 更新 Prompt */
+export function updatePrompt(id, data) {
+  return request.put(`/prompts/${id}`, data, { admin: true })
+}
+
+/** 删除 Prompt */
+export function deletePrompt(id) {
+  return request.delete(`/prompts/${id}`, { admin: true })
+}
+
+// ─────────────────────────────────────────────
+// 公共：岗位下拉列表
+// ─────────────────────────────────────────────
+
+/** 获取全部岗位（用于下拉选择） */
+export function listAdminJobs() {
+    
+  return request.get('/jobs', { admin: true })
+}

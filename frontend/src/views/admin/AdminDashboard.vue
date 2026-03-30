@@ -1,19 +1,9 @@
 <template>
   <div class="admin-shell">
-    <aside class="admin-sidebar">
-      <div class="brand">
-        <img class="brand-logo" src="@/assets/logo5.png" alt="logo" />
-        <span>码上offer 管理后台</span>
-      </div>
-      <nav>
-        <a :class="{ active: activeTab === 'home' }" @click="activeTab='home'" href="#">首页</a>
-        <a :class="{ active: activeTab === 'users' }" @click="activeTab='users'" href="#">用户管理</a>
-        <a :class="{ active: activeTab === 'jobs' }" @click="activeTab='jobs'" href="#">岗位与题库管理</a>
-        <a :class="{ active: activeTab === 'records' }" @click="activeTab='records'" href="#">面试记录管理</a>
-        <a :class="{ active: activeTab === 'assistant' }" @click="activeTab='assistant'" href="#">面试助手管理</a>
-      </nav>
-    </aside>
+    <!-- ── 侧边导航 ── 替换为 AdminSideNav 组件 -->
+    <AdminSideNav />
 
+    <!-- ── 主内容区 ── -->
     <main class="admin-main">
       <section class="top-cards">
         <div class="metric-card">
@@ -137,13 +127,16 @@
 </template>
 
 <script>
+import AdminSideNav from '@/components/admin/AdminSideNav.vue'
 import request from '@/utils/request'
 
 export default {
   name: 'AdminDashboard',
+  components: {
+    AdminSideNav  // 注册侧边导航组件
+  },
   data() {
     return {
-      activeTab: 'home',
       stats: {
         total_users: 0,
         today_new_users: 0,
@@ -180,15 +173,6 @@ export default {
     }
   },
   computed: {
-    tabLabel() {
-      switch (this.activeTab) {
-        case 'users': return '用户管理'
-        case 'jobs': return '岗位与题库管理'
-        case 'records': return '面试记录管理'
-        case 'assistant': return '面试助手管理'
-        default: return '首页'
-      }
-    },
     userGrowthPercentage() {
       if (!this.stats.total_users || this.stats.total_users <= 0) return 0
       return Math.min(100, (this.stats.today_new_users / this.stats.total_users) * 100)
@@ -337,66 +321,18 @@ export default {
 .admin-shell {
   display: flex;
   min-height: 100vh;
-  background:light-gray;
+  background: #f5f6fa;
 }
 
-.admin-sidebar {
-  width: 260px;
-  background: #f8f4ff;
-  border-right: 1px solid #e4def5;
-  color: #4a3b8a;
-  padding: 24px 16px;
-}
-
-.brand {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  font-size: 1.3rem;
-  font-weight: 700;
-  margin-bottom: 24px;
-  color: #5f4bb0;
-  text-align: center;
-}
-
-.brand-logo {
-  width: 90px;
-  height: 90px;
-  border-radius: 12px;
-  object-fit: contain;
-}
-
-.admin-sidebar nav a {
-  display: block;
-  color: #5e4fa4;
-  padding: 10px 14px;
-  border-radius: 8px;
-  margin-bottom: 8px;
-  text-decoration: none;
-  transition: all .2s;
-  font-size: 1.05rem;
-  font-weight: 600;
-}
-
-.admin-sidebar nav a:hover {
-  background: #eae4ff;
-}
-
-.admin-sidebar nav a.active {
-  background: #d9cfff;
-  color: #2f1f78;
-  font-weight: 700;
-}
-
+/* 移除原来的 admin-sidebar 相关样式，因为 AdminSideNav 有自己的样式 */
 .admin-main {
   flex: 1;
-  padding: 24px;
-  background: light-gray;
+  padding: 24px 64px;
   overflow-y: auto;
+  max-height: 100vh;
 }
 
+/* 其余样式保持不变 */
 .metric-ring-wrap {
   display: flex;
   align-items: center;
@@ -502,31 +438,64 @@ export default {
   transform: rotate(90deg);
 }
 
-.dashboard-card-single {
-  display: flex;
-  justify-content: flex-start;
+.top-cards {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
   margin-bottom: 20px;
-  padding-left: 20px;
 }
 
-.card-single {
-  width: 66%;
-  min-width: 320px;
+.metric-card {
+  background: #fff;
+  border: 1px solid #eae4ff;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 2px 7px rgba(58, 35, 130, 0.08);
+}
+
+.metric-title {
+  color: #7f65d6;
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-bottom: 8px;
+}
+
+.metric-value {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #2e1f7a;
+}
+
+.metric-sub {
+  color: #7e71a8;
+  font-size: 0.78rem;
+  margin-top: 5px;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.card {
   background: #fff;
   border-radius: 12px;
   border: 1px solid #e7def8;
-  padding: 18px;
+  padding: 16px;
   box-shadow: 0 3px 10px rgba(131, 95, 207, 0.09);
 }
 
-.card-right {
-  flex: 0 0 30%;
-  min-width: 260px;
-  margin-left: 16px;
-}
-
-.card-right .card {
-  padding: 14px 12px;
+.chart-card .chart-placeholder {
+  height: 260px;
+  background: linear-gradient(135deg, rgba(93, 75, 177, 0.08), rgba(148, 122, 227, 0.08));
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #5c4aa2;
+  font-size: 0.95rem;
 }
 
 .card-header {
@@ -609,144 +578,7 @@ export default {
   text-align: center;
 }
 
-.card-row {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 0;
-}
-
-.card-row.single-row {
-  justify-content: space-between;
-}
-
-.stat-item {
-  flex: 1;
-  min-width: 0;
-  padding: 8px;
-  border-right: 1px solid #efecff;
-}
-
-.stat-item:last-child {
-  border-right: none;
-}
-
-.card {
-  background: #fff;
-  border-radius: 12px;
-  border: 1px solid #e7def8;
-  padding: 16px;
-  box-shadow: 0 3px 10px rgba(131, 95, 207, 0.09);
-}
-
-.card-label {
-  color: #8b6ed0;
-  font-size: 0.82rem;
-  margin-bottom: 4px;
-}
-
-.card-value {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #3f2e88;
-  margin-bottom: 2px;
-}
-
-.card-sub {
-  font-size: 0.82rem;
-  color: #7a6f9e;
-}
-
-.top-cards {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 16px;
-  margin-bottom: 20px;
-}
-
-.metric-card {
-  background: #fff;
-  border: 1px solid #eae4ff;
-  border-radius: 12px;
-  padding: 16px;
-  box-shadow: 0 2px 7px rgba(58, 35, 130, 0.08);
-}
-
-.metric-title {
-  color: #7f65d6;
-  font-weight: 600;
-  font-size: 0.9rem;
-  margin-bottom: 8px;
-}
-
-.metric-value {
-  font-size: 1.8rem;
-  font-weight: 700;
-  color: #2e1f7a;
-}
-
-.metric-sub {
-  color: #7e71a8;
-  font-size: 0.78rem;
-  margin-top: 5px;
-}
-
-.dashboard-grid {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 16px;
-  margin-bottom: 20px;
-}
-
-.chart-card .chart-placeholder {
-  height: 260px;
-  background: linear-gradient(135deg, rgba(93, 75, 177, 0.08), rgba(148, 122, 227, 0.08));
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #5c4aa2;
-  font-size: 0.95rem;
-}
-
-.chart-footers {
-  margin-top: 14px;
-  display: flex;
-  justify-content: space-between;
-  color: #6d5d9a;
-  font-size: 0.82rem;
-}
-
-.goal-item {
-  margin-bottom: 12px;
-}
-
-.goal-head {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.86rem;
-  color: #4f3f92;
-  margin-bottom: 6px;
-}
-
-.progress-bar {
-  width: 100%;
-  height: 8px;
-  background: #eee6fe;
-  border-radius: 6px;
-  overflow: hidden;
-}
-
-.progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #6c52f6, #4f41c4);
-}
-
-.bottom-row {
-  margin-bottom: 16px;
-}
-
-.rank-card, .embedded-rank-card, .event-card, .user-rank-card {
+.rank-card, .event-card, .user-rank-card {
   background: #fff;
   border: 1px solid #e7def8;
   border-radius: 12px;
@@ -784,9 +616,5 @@ export default {
   margin-top: 4px;
   font-size: 0.75rem;
   color: #7f6fa0;
-}
-
-.embedded-rank-card .card-header {
-  margin-bottom: 10px;
 }
 </style>
