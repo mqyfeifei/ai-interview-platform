@@ -88,11 +88,35 @@ export function deletePrompt(id) {
 }
 
 // ─────────────────────────────────────────────
+// 用户管理
+// ─────────────────────────────────────────────
+
+/** 获取用户列表（管理员） */
+export function listAdminUsers(params = {}) {
+  return request.get('/users', { params, admin: true })
+}
+
+/** 更新用户状态 */
+export function updateAdminUserStatus(userId, data) {
+  return request.put(`/users/${userId}/status`, data, { admin: true })
+}
+
+/** 删除用户（管理员） */
+export function deleteAdminUser(userId) {
+  return request.delete(`/users/${userId}`, { admin: true })
+}
+
+/** 获取用户面试与学习绩效（Admin） */
+export function getAdminUserPerformance(userId) {
+  return request.get(`/users/${userId}/performance`, { admin: true })
+}
+
+// ─────────────────────────────────────────────
 // 公共：岗位下拉列表
 // ─────────────────────────────────────────────
 
 /** 获取全部岗位（用于下拉选择） */
 export function listAdminJobs() {
-    
+
   return request.get('/jobs', { admin: true })
 }
