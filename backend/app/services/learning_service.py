@@ -4,6 +4,7 @@ from sqlalchemy import asc
 from app.extensions import db
 from app.models.interview import Interview, InterviewScore, Dimension
 from app.models.learning import UserKnowledgeMastery, KnowledgeTag, Resource, UserLearning
+from app.models.example import Example
 from sentence_transformers import SentenceTransformer
 
 # 复用全局加载的模型
@@ -51,7 +52,10 @@ class LearningService:
                 weaknesses.append({
                     "tag_id": tag.id,
                     "name": tag.name,
-                    "mastery_level": m.mastery_level
+                    "mastery_level": m.mastery_level,
+                    # 新增透传字段，用于前端展示预计耗时与难度徽章
+                    "complexity": tag.complexity,
+                    "estimated_hours": tag.estimated_hours
                 })
         return weaknesses
 
@@ -72,6 +76,17 @@ class LearningService:
             return []  # 如果没有短板数据，可返回默认热门资源
 
         weak_text = " ".join([w['name'] for w in weaknesses])
+
+        # 改进：用薄弱点向量检索相关 Example，扩充语义
+        weak_vector = local_embedding_model.encode(weak_text).tolist()
+        related_examples = Example.query.order_by(
+            Example.embedding.l2_distance(weak_vector)
+        ).limit(3).all()
+
+        # 将范例问题和框架补充进检索文本
+        if related_examples:
+            example_texts = " ".join([f"{e.question} {e.framework or ''}" for e in related_examples])
+            weak_text = weak_text + " " + example_texts
 
         # 2. 将薄弱点转换为向量
         target_vector = local_embedding_model.encode(weak_text).tolist()
@@ -141,7 +156,18 @@ class LearningService:
         if record.start_time:
             time_spent = int((record.finish_time - record.start_time).total_seconds())
 
-        # TODO: 这里可以通过抛出事件或直接调用方法，提升该资源对应标签的掌握度 (UserKnowledgeMastery)
+        # 完成学习后提升关联知识点掌握度
+        resource = Resource.query.get(resource_id)
+        if resource and resource.knowledge_tags:
+            for tag in resource.knowledge_tags:
+                mastery = UserKnowledgeMastery.query.filter_by(
+                    user_id=user_id, tag_id=tag.id).first()
+                if mastery:
+                    mastery.mastery_level = min(100, mastery.mastery_level + 5)
+                else:
+                    mastery = UserKnowledgeMastery(
+                        user_id=user_id, tag_id=tag.id, mastery_level=10)
+                    db.session.add(mastery)
 
         db.session.commit()
         return {"msg": "Learning finished", "time_spent_seconds": time_spent}

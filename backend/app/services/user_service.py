@@ -8,72 +8,12 @@ from werkzeug.utils import secure_filename
 from app.extensions import db
 from app.models.user import User
 from app.models.interview import Interview, InterviewScore, Dimension
-from app.models.job import Job
+from app.models.job import Job, DEFAULT_JOBS, get_job_front_key
+from app.api.v1.interview import resolve_job_id
 
 
 class UserService:
     ALLOWED_IMAGE_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
-
-    FRONT_JOB_KEY_TO_NAME = {
-        'java-backend': 'Java后端开发',
-        'web-frontend': '前端开发',
-        'python-algorithm': 'Python算法工程师',
-        'fullstack': '全栈开发工程师',
-        'android': 'Android开发',
-        'devops': 'DevOps工程师'
-    }
-
-    @classmethod
-    def _job_to_front_key(cls, job):
-        if not job:
-            return None
-        if job.name in cls.FRONT_JOB_KEY_TO_NAME.values():
-            for key, value in cls.FRONT_JOB_KEY_TO_NAME.items():
-                if value == job.name:
-                    return key
-
-        name = (job.name or '').lower()
-        if 'java' in name:
-            return 'java-backend'
-        if '前端' in job.name or 'frontend' in name or 'web' in name:
-            return 'web-frontend'
-        if 'python' in name or '算法' in job.name:
-            return 'python-algorithm'
-        if '全栈' in job.name:
-            return 'fullstack'
-        if 'android' in name:
-            return 'android'
-        if 'devops' in name:
-            return 'devops'
-        return None
-
-    @classmethod
-    def _resolve_job_by_front_key(cls, job_key):
-        if not job_key:
-            return None
-        if str(job_key).isdigit():
-            return db.session.get(Job, int(job_key))
-
-        expected_name = cls.FRONT_JOB_KEY_TO_NAME.get(job_key)
-        if expected_name:
-            exact = Job.query.filter_by(name=expected_name).first()
-            if exact:
-                return exact
-
-        lowered = str(job_key).lower()
-        if lowered == 'java-backend':
-            return Job.query.filter(Job.name.like('%Java%')).first()
-        if lowered == 'web-frontend':
-            return Job.query.filter((Job.name.like('%前端%')) | (Job.name.like('%Web%'))).first()
-        if lowered == 'python-algorithm':
-            return Job.query.filter((Job.name.like('%Python%')) | (Job.name.like('%算法%'))).first()
-        if lowered == 'fullstack':
-            return Job.query.filter(Job.name.like('%全栈%')).first()
-        if lowered == 'android':
-            return Job.query.filter(Job.name.like('%Android%')).first()
-        if lowered == 'devops':
-            return Job.query.filter(Job.name.like('%DevOps%')).first()
-        return None
 
     @classmethod
     def _collect_dashboard_stats(cls, user_id):
@@ -115,7 +55,7 @@ class UserService:
         hot_jobs = []
         for row in hot_job_rows:
             job = db.session.get(Job, row.job_id)
-            key = cls._job_to_front_key(job)
+            key = get_job_front_key(job)
             if key:
                 hot_jobs.append(key)
 
@@ -241,7 +181,7 @@ class UserService:
     @classmethod
     def serialize_user(cls, user):
         dashboard_stats = cls._collect_dashboard_stats(user.id)
-        default_job_key = cls._job_to_front_key(user.default_job)
+        default_job_key = get_job_front_key(user.default_job)
         return {
             "id": user.id,
             "username": user.username,
@@ -255,9 +195,7 @@ class UserService:
             "avatar_url": user.avatar_url,
             "avatar": user.avatar_url,
             "avatarUrl": user.avatar_url,
-            # 原来的 front-end key（如 "java-backend"），可能为 null
             "defaultJob": default_job_key,
-            # 原始数据库关联ID以及真实岗位名称
             "defaultJobId": user.default_job_id,
             "defaultJobName": user.default_job.name if user.default_job else None,
             "created_at": user.created_at.isoformat() if user.created_at else None,
@@ -390,14 +328,16 @@ class UserService:
         if not user:
             raise ValueError('用户不存在')
 
-        job = cls._resolve_job_by_front_key(default_job)
+        job_id = resolve_job_id(default_job)
+        job = db.session.get(Job, job_id) if job_id else None
+
         if not job:
             raise ValueError('岗位不存在或暂未初始化')
 
         user.default_job_id = job.id
         db.session.commit()
         return {
-            "defaultJob": cls._job_to_front_key(job),
+            "defaultJob": get_job_front_key(job), # 【修改】替换为全局函数
             "default_job_id": job.id,
             "job_name": job.name
         }
