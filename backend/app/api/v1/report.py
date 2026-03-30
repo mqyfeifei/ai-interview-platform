@@ -2,10 +2,10 @@ from itsdangerous import BadSignature, SignatureExpired
 from flask import Blueprint, request, jsonify
 from app.services.auth_service import AuthService
 from app.services.report_service import ReportService
-
+from app.services.user_service import UserService
+from app.api.v1.interview import resolve_job_id
 
 report_bp = Blueprint('report', __name__)
-
 
 def success_response(data=None, msg='success', status_code=200):
     return jsonify({"code": 200, "data": data, "msg": msg, "message": msg}), status_code
@@ -62,11 +62,21 @@ def get_report(report_id):
 def list_reports():
     page = int(request.args.get('page', 1))
     page_size = int(request.args.get('pageSize', request.args.get('page_size', 10)))
-    job_id = request.args.get('jobId') or request.args.get('job_id')
+    job_id_input = request.args.get('jobId') or request.args.get('job_id')
+
+    parsed_job_id = None
+    if job_id_input:
+        # 直接复用 interview.py 中的解析逻辑，它会返回具体的 int ID 或 None
+        resolved_id = resolve_job_id(job_id_input)
+        if resolved_id is not None:
+            parsed_job_id = resolved_id
+        else:
+            # 若无法解析该类别，传递一个不会被查出的假ID，返回空列表
+            parsed_job_id = -1
 
     try:
         user_id = get_current_user_id_required()
-        data = ReportService.list_reports(user_id=user_id, page=page, page_size=page_size, job_id=job_id)
+        data = ReportService.list_reports(user_id=user_id, page=page, page_size=page_size, job_id=parsed_job_id)
         return success_response(data)
     except ValueError as exc:
         msg = str(exc)
