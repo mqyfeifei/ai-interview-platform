@@ -11,9 +11,11 @@ sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 
 from app import create_app
 from app.extensions import db
-from app.models.job import Job
+from app.models.job import Job, DEFAULT_JOBS
 from app.models.knowledge import KnowledgeItem
 from app.models.learning import KnowledgeTag, Resource
+from app.models.question import Question
+from app.models.example import Example
 
 # 知识库基准路径配置 (当前脚本和 FuChuangTiKu 文件夹在同级)
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -29,16 +31,6 @@ RESOURCE_TYPE_MAPPING = {
     "书籍": "course",
     "快速入门": "article"
 }
-
-# 岗位信息映射
-JOB_INFOS = {
-    'backend': {'name': 'Java后端开发', 'desc': 'Java基础、并发、JVM、框架及中间件等'},
-    'frontend': {'name': 'Web前端开发', 'desc': 'JS核心、Vue/React架构、工程化等'},
-    'cv': {'name': '计算机视觉', 'desc': '经典机器学习、CNN/Transformer架构、工程部署优化等'},
-    'network': {'name': '网络工程', 'desc': 'TCP/IP协议栈、OSPF/BGP路由控制、SD-WAN等'},
-    'qa': {'name': '测试开发', 'desc': '白盒/黑盒理论、UI/接口自动化、性能调优等'}
-}
-
 
 JOB_PS = {
     'backend': {
@@ -131,7 +123,7 @@ def clear_existing_data():
 
 def get_or_create_job(domain_key):
     """根据领域 key 获取或创建目标岗位"""
-    job_info = JOB_INFOS.get(domain_key, {'name': f'{domain_key}工程师', 'desc': '自动生成的岗位'})
+    job_info = DEFAULT_JOBS.get(domain_key, {'name': f'{domain_key}工程师', 'desc': '自动生成的岗位'})
     job_name = job_info['name']
 
     job = Job.query.filter_by(name=job_name).first()
@@ -211,15 +203,27 @@ def import_knowledge_base():
                     for pt in module.get('points', []):
                         if isinstance(pt, str):
                             point_name = pt
-                            resources = []
+                            complexity, estimated_hours, resources = "Medium", 1, []
                         else:
                             point_name = pt.get('point')
+                            complexity = pt.get('complexity', 'Medium')
+                            estimated_hours = pt.get('estimated_hours', 1)
                             resources = pt.get('resources', [])
 
                         # 创建知识点标签
                         tag = KnowledgeTag.query.filter_by(name=point_name).first()
                         if not tag:
-                            tag = KnowledgeTag(name=point_name, category=category)
+                            # 将模块名和知识点名结合，提升语义丰富度
+                            tag_text_to_encode = f"模块: {category} 知识点: {point_name}"
+                            tag_embedding = model.encode(tag_text_to_encode).tolist()
+
+                            tag = KnowledgeTag(
+                                name=point_name,
+                                category=category,
+                                complexity=complexity,            # 新增
+                                estimated_hours=estimated_hours,  # 新增
+                                embedding=tag_embedding           # 新增，存入向量
+                            )
                             db.session.add(tag)
                             db.session.flush()
 
@@ -231,7 +235,7 @@ def import_knowledge_base():
 
                             mapped_type = RESOURCE_TYPE_MAPPING.get(yaml_type, "article")
                             res_content = f"领域: {domain.upper()} | 所属模块: {category} | 知识点: {point_name} | 来源: {yaml_type}"
-
+                            res_difficulty = res.get('complexity', complexity).lower()
                             res_embedding = model.encode(f"{res_title} {point_name} {category}").tolist()
 
                             resource_obj = Resource(
@@ -240,7 +244,7 @@ def import_knowledge_base():
                                 url=res_url,
                                 content=res_content,
                                 source=yaml_type,
-                                difficulty="medium",
+                                difficulty=res_difficulty,
                                 embedding=res_embedding
                             )
                             resource_obj.knowledge_tags.append(tag)
@@ -249,39 +253,73 @@ def import_knowledge_base():
                 db.session.commit()
 
             # =====================================================================
-            # 分支 B: 导入面试题库 / 优秀回答范例
+            # 分支 B: 导入面试题库
             # =====================================================================
-            else:
+            elif 'questions' in ds_type:
                 for item in data.get('items', []):
                     title = item.get('question', '')
                     tags = item.get('tags', [])
-                    ki_type = item.get('type', 'practice')
+                    ki_type = item.get('type', 'technical')
+                    difficulty = item.get('difficulty', 'medium')
+                    key_points = item.get('key_points', [])
+                    source = item.get('source', '')
+                    status = item.get('status', 'draft')
 
-                    # 区别处理普通的题目 (含 key_points) 和 优秀回答范例 (含 answer)
-                    if 'key_points' in item:
-                        content = "\n".join([f"- {kp}" for kp in item.get('key_points', [])])
-                        text_to_encode = f"问题: {title} 答案要点: {content}"
-                    elif 'answer' in item:
-                        framework = item.get('framework', '无')
-                        content = f"回答框架: {framework}\n具体回答:\n{item.get('answer', '')}"
-                        text_to_encode = f"问题: {title} 框架: {framework} 回答内容: {content}"
-                        ki_type = f"example_{ki_type}" # 将其标记为范例题
-                    else:
-                        content = ""
-                        text_to_encode = f"问题: {title}"
-
+                    # 组合用于向量化的文本
+                    text_to_encode = f"问题: {title} 答案要点: {', '.join(key_points)}"
                     embedding = model.encode(text_to_encode).tolist()
 
-                    ki = KnowledgeItem(
-                        title=title,
-                        content=content,
-                        type=ki_type,
+                    # 写入 Question 表
+                    q = Question(
                         job_id=job_id,
-                        tags=tags,
+                        content=title,
+                        type=ki_type,
+                        difficulty=difficulty,
+                        keywords=tags,
+                        reference_answer=key_points, # 数据库已支持 JSONB 存储数组
+                        source=source,               # 映射新增字段
+                        status=status,               # 映射新增字段
                         embedding=embedding
                     )
-                    db.session.add(ki)
+
+                    # --- 自动语义匹配并绑定知识点 ---
+                    # 利用 pgvector 的 cosine_distance 寻找最接近的 1 个或 2 个知识点
+                    # 距离越小越相似 (要求 pgvector 安装正确且支持此语法)
+                    similar_tags = KnowledgeTag.query.order_by(
+                        KnowledgeTag.embedding.cosine_distance(embedding)
+                    ).limit(1).all()
+                    for stag in similar_tags:
+                        q.knowledge_tags.append(stag)
+
+                    db.session.add(q)
                 db.session.commit()
+
+            # =====================================================================
+            # 分支 C: 导入优秀回答范例
+            # =====================================================================
+            elif 'examples' in ds_type or 'excellent_answer' in ds_type:
+                for item in data.get('items', []):
+                    title = item.get('question', '')
+                    framework = item.get('framework', '无')
+                    answer = item.get('answer', '')
+
+                    # 组合用于向量化的文本（包含框架和具体回答）
+                    text_to_encode = f"问题: {title} 框架: {framework} 回答内容: {answer}"
+                    embedding = model.encode(text_to_encode).tolist()
+
+                    # 写入 Example 表
+                    example_obj = Example(
+                        job_id=job_id,
+                        question=title,
+                        framework=framework,
+                        answer=answer,
+                        embedding=embedding
+                    )
+                    db.session.add(example_obj)
+                db.session.commit()
+
+            else:
+                print(f"⚠️ 遇到未知的数据集类型: {ds_type}，跳过导入。")
 
         #5.导入提示词
         create_prompts()

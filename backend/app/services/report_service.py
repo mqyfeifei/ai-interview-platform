@@ -1,9 +1,14 @@
+import concurrent.futures
 from sqlalchemy import func
 import re
 import json
 from app.extensions import db
 from app.models.interview import Interview, InterviewChat, InterviewScore, Dimension
-from app.models.job import Job
+from app.models.job import Job, DEFAULT_JOBS, get_job_front_key
+from app.models.question import Question
+from app.models.example import Example
+from app.models.learning import Resource  # 【新增】导入学习资源模型，用于推荐提升资源
+from app.services.interview_service import InterviewService
 from app.utils.llm_client import DeepSeekClient
 
 
@@ -15,38 +20,6 @@ class ReportService:
         '表达沟通': 'expression',
         '应变能力': 'adaptability'
     }
-
-    FRONT_JOB_KEY_TO_NAME = {
-        'java-backend': 'Java后端开发',
-        'web-frontend': '前端开发',
-        'python-algorithm': 'Python算法工程师',
-        'fullstack': '全栈开发工程师',
-        'android': 'Android开发',
-        'devops': 'DevOps工程师'
-    }
-
-    @classmethod
-    def _job_to_front_key(cls, job):
-        if not job:
-            return None
-        for key, value in cls.FRONT_JOB_KEY_TO_NAME.items():
-            if value == job.name:
-                return key
-
-        name = (job.name or '').lower()
-        if 'java' in name:
-            return 'java-backend'
-        if '前端' in job.name or 'frontend' in name or 'web' in name:
-            return 'web-frontend'
-        if 'python' in name or '算法' in job.name:
-            return 'python-algorithm'
-        if '全栈' in job.name:
-            return 'fullstack'
-        if 'android' in name:
-            return 'android'
-        if 'devops' in name:
-            return 'devops'
-        return None
 
     @staticmethod
     def _split_text_to_list(raw_text):
@@ -69,47 +42,108 @@ class ReportService:
         return cleaned.strip()
 
     @classmethod
+    def _get_recommended_resource(cls, point_text):
+        """
+        【新增】为 AI 总结的改进点（提升项）推荐相关的学习资源
+        依赖于 learning.py 中的 Resource 模型以及向量检索
+        """
+        if not point_text:
+            return None
+        try:
+            # 1. 对 AI 给出的“待提升点”文本进行向量化
+            vec = InterviewService.get_embedding(point_text)
+
+            # 2. 从学习资源表中寻找最接近该知识点的文档或视频
+            res = Resource.query.order_by(Resource.embedding.l2_distance(vec)).first()
+            if res:
+                return {
+                    'id': res.id,
+                    'title': res.title,
+                    'type': res.type,
+                    'url': res.url,
+                    'source': res.source
+                }
+        except Exception as e:
+            print(f"[Error] Failed to fetch recommended resource: {e}")
+        return None
+
+    @classmethod
     def _build_reply_text_evaluations(cls, pairs):
+        """
+        批量评估用户的面试回答，利用向量检索获取标准参考点 (Example 模型)，交由 LLM 进行评价。
+        """
         if not pairs:
             return {}
 
         llm = DeepSeekClient()
-        payload = [
-            {
+
+        def fetch_reference(item):
+            reference_hint = ""
+            try:
+                # 获取当前问题的向量
+                vec = InterviewService.get_embedding(item['question'])
+
+                # 【核心逻辑】依赖 example.py：查询最近似的参考范例
+                ex = Example.query.order_by(Example.embedding.l2_distance(vec)).first()
+                if ex:
+                    reference_hint = f"参考框架：{ex.framework}；范例要点：{ex.answer[:200]}"
+            except Exception as e:
+                print(f"[Error] Failed to fetch example for question index {item.get('index', 'unknown')}: {e}")
+
+            return {
                 'index': item['index'],
                 'question': item['question'],
-                'answer': item['answer']
+                'answer': item['answer'],
+                'reference': reference_hint
             }
-            for item in pairs
-        ]
+
+        payload = []
+        with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+            payload = list(executor.map(fetch_reference, pairs))
 
         system_prompt = (
-            '你是一名专业技术面试评估助手。请仅评价用户回答质量，不要打分。'
-            '必须严格返回 JSON 数组，不要包含 markdown。'
-            '数组每项结构为：{"index": 1, "evaluationText": "..."}。'
-            'evaluationText 要求：2-3 句中文，先肯定，再指出问题，最后给改进建议。'
+            '你是一名专业技术面试评估助手。请仅评价用户回答质量，不要打分。\n'
+            '【评估要求】\n'
+            '1. 请严格参考提供的 "reference"（参考框架和要点）作为你的评价基准。如果 reference 为空，请依据你的专业技术知识进行客观评价。\n'
+            '2. 如果用户的 answer 覆盖了 reference 中的要点，请予以肯定；如果有遗漏或偏差，请结合参考框架给出具体的改进建议。\n'
+            '3. 必须严格返回 JSON 数组，不要包含 markdown 格式。\n'
+            '4. 数组每项结构为：{"index": 1, "evaluationText": "..."}。\n'
+            '5. evaluationText 要求：2-3 句中文，先肯定，再指出问题，最后给改进建议。'
         )
 
         user_prompt = f'请对以下问答中的“用户回答”逐条评价：\n{json.dumps(payload, ensure_ascii=False)}'
-        response_text = llm.generate_reply([
-            {'role': 'system', 'content': system_prompt},
-            {'role': 'user', 'content': user_prompt}
-        ])
+
+        try:
+            response_text = llm.generate_reply([
+                {'role': 'system', 'content': system_prompt},
+                {'role': 'user', 'content': user_prompt}
+            ])
+        except Exception as e:
+            print(f"[Error] LLM generate_reply failed: {e}")
+            raise ValueError("大模型服务响应异常，请稍后重试")
 
         cleaned = cls._clean_json_block(response_text)
-        parsed = json.loads(cleaned)
+
+        try:
+            parsed = json.loads(cleaned)
+        except json.JSONDecodeError as e:
+            print(f"[Error] Failed to parse LLM response to JSON. Raw text: {cleaned}")
+            raise ValueError('AI 返回格式无效或非标准 JSON')
+
         if not isinstance(parsed, list):
-            raise ValueError('AI 返回格式无效')
+            raise ValueError('AI 返回格式无效：期望一个 JSON 数组')
 
         result = {}
         for item in parsed:
             try:
                 idx = int(item.get('index'))
-            except Exception:
+            except (TypeError, ValueError):
                 continue
+
             text = (item.get('evaluationText') or '').strip()
             if text:
                 result[idx] = text
+
         return result
 
     @classmethod
@@ -148,6 +182,9 @@ class ReportService:
 
     @classmethod
     def _build_questions(cls, interview_id, fallback_score):
+        interview = db.session.get(Interview, int(interview_id))
+        job_id = interview.job_id if interview else None
+
         chats = InterviewChat.query.filter_by(interview_id=interview_id).order_by(InterviewChat.timestamp.asc()).all()
         questions = []
         question_index = 1
@@ -166,6 +203,19 @@ class ReportService:
 
             q_text = chat.content or ''
             is_follow_up = ('追问' in q_text) or ('继续' in q_text and '请' in q_text)
+
+            reference = None
+            if job_id:
+                try:
+                    q_vec = InterviewService.get_embedding(q_text[:200])
+                    # 【核心逻辑】依赖 question.py：查询题库匹配原题的标准知识点/参考答案
+                    matched_q = Question.query.filter_by(job_id=job_id) \
+                        .order_by(Question.embedding.l2_distance(q_vec)).first()
+                    if matched_q:
+                        reference = matched_q.reference_answer
+                except Exception:
+                    reference = None
+
             questions.append({
                 'id': chat.id,
                 'question': q_text,
@@ -173,7 +223,8 @@ class ReportService:
                 'score': fallback_score,
                 'comment': '',
                 'isFollowUp': is_follow_up,
-                'index': question_index
+                'index': question_index,
+                'reference': reference
             })
             question_index += 1
         return questions
@@ -205,10 +256,18 @@ class ReportService:
         total_score = interview.total_score or 0
 
         highlights = cls._split_text_to_list(interview.evaluation_highlights)
-        improvements = [
-            {'point': item, 'resource': None} for item in cls._split_text_to_list(interview.evaluation_improvements)
-        ]
+
+        # 【修改】使用推荐资源方法将待提升点与 learning.py 的资源关联起来
+        raw_improvements = cls._split_text_to_list(interview.evaluation_improvements)
+        improvements = []
+        for item in raw_improvements:
+            improvements.append({
+                'point': item,
+                'resource': cls._get_recommended_resource(item) # 动态检索并嵌入资源对象
+            })
+
         suggestions = cls._split_text_to_list(interview.evaluation_suggestions)
+
         if not highlights:
             highlights = ['暂无亮点总结']
         if not improvements:
@@ -228,7 +287,7 @@ class ReportService:
         return {
             'id': interview.id,
             'sessionId': str(interview.id),
-            'jobId': cls._job_to_front_key(job),
+            'jobId': get_job_front_key(job),
             'jobName': job.name if job else '',
             'totalScore': total_score,
             'duration': duration or 0,
@@ -261,7 +320,7 @@ class ReportService:
             job = db.session.get(Job, interview.job_id)
             items.append({
                 'id': interview.id,
-                'jobId': cls._job_to_front_key(job),
+                'jobId': get_job_front_key(job),
                 'jobName': job.name if job else '',
                 'totalScore': interview.total_score or 0,
                 'duration': interview.used_time or 0,
@@ -309,7 +368,8 @@ class ReportService:
 
         try:
             ai_eval_map = cls._build_reply_text_evaluations(analyses)
-        except Exception:
+        except Exception as e:
+            print(f"[Error] Failed to execute _build_reply_text_evaluations: {e}")
             ai_eval_map = {}
 
         for item in analyses:
@@ -352,7 +412,7 @@ class ReportService:
                 'startTime': interview.start_time.isoformat() if interview.start_time else None,
                 'endTime': interview.end_time.isoformat() if interview.end_time else None,
                 'createdAt': interview_time.isoformat() if interview_time else None,
-                'jobId': cls._job_to_front_key(job),
+                'jobId': get_job_front_key(job),
                 'jobName': job.name if job else '',
                 'totalScore': interview.total_score or 0,
                 'duration': interview.used_time or 0,
