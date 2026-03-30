@@ -11,6 +11,23 @@ os.environ["HF_DATASETS_OFFLINE"] = "1"
 from app.extensions import db, migrate
 from app.config import config   # 导入配置字典，而不是单个类
 
+from pgvector.sqlalchemy import Vector
+def render_item(type_, obj, autogen_context):
+    """
+        自定义 Alembic 的渲染行为：
+        只要对象类型或模块名字里包含 'pgvector'，就自动注入 import pgvector
+        """
+    # 方案：通过字符串模糊匹配，比 isinstance 更稳健
+    if type_ == 'type' and 'pgvector' in str(type(obj)):
+        autogen_context.imports.add("import pgvector")
+        return False
+
+    # （可选）其实你甚至可以直接无脑加一行：
+    # autogen_context.imports.add("import pgvector")
+    # 因为集合会自动去重，哪怕普通迁移带上这句也没任何副作用。
+
+    return False
+
 def create_app(config_name=None):
     if config_name is None:
         config_name = os.environ.get('FLASK_ENV', 'default')  # 从环境变量获取
@@ -20,7 +37,7 @@ def create_app(config_name=None):
 
     # 初始化插件
     db.init_app(app)
-    migrate.init_app(app, db)
+    migrate.init_app(app, db, render_item=render_item)
     # 注册蓝图
     from app.api.v1.auth import auth_bp
     from app.api.v1.interview import interview_bp
