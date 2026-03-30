@@ -4,7 +4,6 @@
 -->
 <template>
   <div class="qm-layout">
-    <AdminSideNav />
 
     <!-- ── 主内容区 ── -->
     <div class="qm-main">
@@ -319,7 +318,6 @@
 </template>
 
 <script>
-import AdminSideNav from '@/components/admin/AdminSideNav.vue'
 import {
   listQuestions, createQuestion, updateQuestion, deleteQuestion, importQuestions, listAdminJobs
 } from '@/api/admin'
@@ -352,7 +350,6 @@ function defaultForm() {
 
 export default {
   name: 'QuestionManager',
-  components: { AdminSideNav }, 
 
   data() {
     return {

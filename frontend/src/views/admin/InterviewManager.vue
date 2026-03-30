@@ -5,8 +5,6 @@
 <template>
   <div class="im-layout">
 
-    <!-- ── 侧边导航 ── -->
-    <AdminSideNav />
 
     <!-- ── 主内容区 ── -->
     <div class="im-main">
@@ -111,12 +109,11 @@
                 v-for="item in items"
                 :key="item.interview_id"
                 class="data-table__row"
-                @click="openDetail(item)"
               >
                 <td>
                   <span class="td-id">#{{ item.interview_id }}</span>
                 </td>
-                <td>
+                <td class="td-center">
                   <div class="user-cell">
                     <span class="user-avatar">{{ avatarChar(item.username) }}</span>
                     <div class="user-info">
@@ -145,8 +142,8 @@
                 <td class="td-center">
                   <span class="time-text">{{ formatDuration(item.used_time) }}</span>
                 </td>
-                <td class="td-time">{{ formatDate(item.start_time) }}</td>
-                <td>
+                <td class="td-center">{{ formatDate(item.start_time) }}</td>
+                <td class="td-center">
                   <div class="action-cell">
                     <button class="act-btn" @click.stop="openDetail(item)" title="查看详情">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -406,12 +403,10 @@
 </template>
 
 <script>
-import AdminSideNav from '@/components/admin/AdminSideNav.vue'
 import { listInterviews, getInterviewDetail, listAdminJobs } from '@/api/admin'
 
 export default {
   name: 'InterviewManager',
-  components: { AdminSideNav },
 
   data() {
     return {
@@ -827,7 +822,7 @@ export default {
     text-transform: uppercase;
     letter-spacing: 0.05em;
     padding: 12px 16px;
-    text-align: left;
+    text-align: center;
     border-bottom: 1px solid #f3f4f6;
     white-space: nowrap;
     position: sticky;
@@ -840,6 +835,7 @@ export default {
     color: #374151;
     border-bottom: 1px solid #f9fafb;
     vertical-align: middle;
+    text-align: center;
   }
 
   &__row {
@@ -880,6 +876,7 @@ export default {
   display: flex;
   align-items: center;
   gap: 9px;
+  justify-content: center; 
 }
 
 .user-avatar {
@@ -932,9 +929,9 @@ export default {
   white-space: nowrap;
 }
 
-.status--in_progress { background: #fef3c7; color: #92400e; }
-.status--evaluating { background: #dbeafe; color: #1e40af; }
-.status--completed { background: #d1fae5; color: #065f46; }
+.status--in_progress { background: #fef7d9; color: #92400e; }
+.status--evaluating { background: #e2ecfa; color: #1e40af; }
+.status--completed { background: #eaf9f1; color: #065f46; }
 
 .score-pill {
   display: inline-flex;
@@ -947,8 +944,8 @@ export default {
   font-size: 13px;
 }
 
-.score--high { color: #059669; background: #ecfdf5; }
-.score--mid { color: #d97706; background: #fffbeb; }
+.score--high { color: #059669; background: #f2fff9; }
+.score--mid { color: #d97706; background: #faf7ea; }
 .score--low { color: #dc2626; background: #fef2f2; }
 
 .count-badge {
@@ -984,7 +981,7 @@ export default {
   cursor: pointer;
   font-size: 12px;
   font-weight: 600;
-  background: #eef2ff;
+  background: #f3f6fe;
   color: #4338ca;
   transition: all 0.15s;
   font-family: $font-family-base;
@@ -1094,8 +1091,8 @@ export default {
 }
 
 .drawer {
-  width: 580px;
-  max-width: 92vw;
+  width: 680px;
+  max-width: 200vw;
   height: 100%;
   background: white;
   display: flex;
@@ -1110,19 +1107,19 @@ export default {
   align-items: flex-start;
   justify-content: space-between;
   padding: 22px 24px 18px;
-  border-bottom: 1px solid #f3f4f6;
+  border-bottom: 1px solid #e5e5e6;
   flex-shrink: 0;
-  background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
-  color: white;
+  background: linear-gradient(135deg, #f7f6ffc9 0%, #ece3f9e3 100%);
+  color: rgb(70, 67, 67);
 
   &__badge {
     display: inline-flex;
     padding: 2px 9px;
-    background: rgba(255, 255, 255, 0.12);
+    background: rgb(247, 239, 255);
     border-radius: 4px;
-    font-size: 10.5px;
+    font-size: 12px;
     font-weight: 600;
-    color: rgba(255, 255, 255, 0.65);
+    color: rgba(40, 39, 39, 0.65);
     letter-spacing: 0.3px;
     margin-bottom: 6px;
   }
@@ -1130,7 +1127,7 @@ export default {
   &__title {
     font-size: 17px;
     font-weight: 700;
-    color: white;
+    color: rgb(30, 28, 28);
     margin: 0 0 4px;
     display: flex;
     align-items: baseline;
@@ -1139,13 +1136,13 @@ export default {
 
   &__id {
     font-size: 13px;
-    color: rgba(255, 255, 255, 0.4);
+    color: rgba(116, 115, 115);
     font-weight: 400;
   }
 
   &__sub {
     font-size: 12px;
-    color: rgba(255, 255, 255, 0.55);
+    color: rgba(65, 61, 61, 0.75);
     margin: 0;
   }
 
@@ -1159,8 +1156,8 @@ export default {
   height: 30px;
   border-radius: 7px;
   border: none;
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.7);
+  background: rgba(215, 199, 246, 0.6);
+  color: rgba(255, 255, 255, 0.8);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -1341,10 +1338,10 @@ export default {
     height: 100%;
     border-radius: 3px;
     transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-
     &.score--high { background: linear-gradient(90deg, #34d399, #10b981); }
     &.score--mid { background: linear-gradient(90deg, #fbbf24, #f59e0b); }
     &.score--low { background: linear-gradient(90deg, #f87171, #ef4444); }
+
   }
 }
 
@@ -1375,7 +1372,7 @@ export default {
   }
 
   &--green {
-    background: #f0fdf4;
+    // background: #f0fdf4;
     border: 1px solid #bbf7d0;
 
     .report-block__title { color: #15803d; }
@@ -1383,7 +1380,7 @@ export default {
   }
 
   &--orange {
-    background: #fff7ed;
+    // background: #fff7ed;
     border: 1px solid #fed7aa;
 
     .report-block__title { color: #c2410c; }
@@ -1391,7 +1388,7 @@ export default {
   }
 
   &--blue {
-    background: #eff6ff;
+    // background: #eff6ff;
     border: 1px solid #bfdbfe;
 
     .report-block__title { color: #1d4ed8; }

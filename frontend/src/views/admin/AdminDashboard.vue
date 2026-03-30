@@ -1,7 +1,5 @@
 <template>
   <div class="admin-shell">
-    <!-- ── 侧边导航 ── 替换为 AdminSideNav 组件 -->
-    <AdminSideNav />
 
     <!-- ── 主内容区 ── -->
     <main class="admin-main">
@@ -127,14 +125,10 @@
 </template>
 
 <script>
-import AdminSideNav from '@/components/admin/AdminSideNav.vue'
 import request from '@/utils/request'
 
 export default {
   name: 'AdminDashboard',
-  components: {
-    AdminSideNav  // 注册侧边导航组件
-  },
   data() {
     return {
       stats: {

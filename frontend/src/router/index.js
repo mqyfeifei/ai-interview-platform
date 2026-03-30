@@ -37,7 +37,7 @@ const routes = [
     path: '/admin/dashboard',
     name: 'AdminDashboard',
     component: () => import('@/views/admin/AdminDashboard.vue'),
-    meta: { requiresAuth: false, requiresAdmin: false, hideNavigation: true, title: '管理后台' }
+    meta: { requiresAuth: true, requiresAdmin: true, showAdminNav: true, title: '管理后台' }
   },
   {
     path: '/profile',
@@ -70,25 +70,25 @@ const routes = [
     path: '/admin/users',
     name: 'AdminUsers',
     component: () => import('@/views/admin/AdminUsers.vue'),
-    meta: { requiresAuth: false, requiresAdmin: false, hideNavigation: true, title: '用户管理' }
+    meta: { requiresAuth: true, requiresAdmin: true, showAdminNav: true, title: '用户管理' }
   },
   {
     path: '/admin/questions',
     name: 'AdminQuestions',
     component: () => import('@/views/admin/QuestionManager.vue'),
-    meta: { requiresAuth: false, requiresAdmin: false, hideNavigation: true, title: '题库管理' }
+    meta: { requiresAuth: true, requiresAdmin: true, showAdminNav: true, title: '题库管理' }
   },
   {
     path: '/admin/interviews',
     name: 'AdminInterviews',
     component: () => import('@/views/admin/InterviewManager.vue'),
-    meta: { requiresAuth: false, requiresAdmin: false, hideNavigation: true, title: '面试记录' }
+    meta: { requiresAuth: true, requiresAdmin: true, showAdminNav: true, title: '面试记录' }
   },
   {
     path: '/admin/prompts',
     name: 'AdminPrompts',
     component: () => import('@/views/admin/PromptManager.vue'),
-    meta: { requiresAuth: false, requiresAdmin: false, hideNavigation: true, title: 'AI Prompt' }
+    meta: { requiresAuth: true, requiresAdmin: true, showAdminNav: true, title: 'AI Prompt' }
   },
   // ---- 其他功能路由 ----
   {
