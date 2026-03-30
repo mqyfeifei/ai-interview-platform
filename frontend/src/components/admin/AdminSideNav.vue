@@ -27,25 +27,6 @@
       </button>
     </div>
 
-    <!-- 回到前台入口 -->
-    <div class="asn-back-wrap">
-      <router-link to="/dashboard" class="asn-back-btn">
-        <span class="asn-back-btn__icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round">
-            <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
-            <polyline points="9 22 9 12 15 12 15 22"/>
-          </svg>
-        </span>
-        <span v-if="!isCollapsed" class="asn-back-btn__label">返回前台</span>
-      </router-link>
-    </div>
-
-    <!-- 分隔线 -->
-    <div class="asn-divider">
-      <span v-if="!isCollapsed" class="asn-divider__label">功能模块</span>
-    </div>
-
     <!-- 主导航菜单 -->
     <nav class="asn-menu">
       <router-link
@@ -164,42 +145,40 @@ $nav-transition: 0.22s cubic-bezier(0.4, 0, 0.2, 1);
     .asn-brand {
       padding: 18px 0 14px;
       justify-content: center;
-    }
-
-    .asn-brand__logo img {
-      margin: 0 auto;
-    }
-
-    .asn-back-wrap {
-      padding: 10px 8px 6px;
+      
+      .asn-brand__logo {
+        margin: 0 auto;
+      }
     }
 
     .asn-menu__item {
-      color: $nav-text;
-      border-radius: 8px;
-      margin: 6px 8px;
-      padding: 10px 14px;
-      transition: all 0.2s;
-    }
-
-    .asn-menu__item:hover {
-      background: $nav-bg-hover;
-    }
-
-    .asn-back-btn {
       justify-content: center;
       padding: 10px 0;
+      margin: 6px 8px;
     }
+  .asn-menu__icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.05);
+    flex-shrink: 0;
+    transition: background $nav-transition;
+
+    :deep(svg) {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+      stroke-width: 1.8;  // 稍微加粗线条
+    }
+  }
 
     .asn-admin-badge {
       justify-content: center;
     }
 
-    .asn-divider {
-      padding: 12px 0 6px;
-      display: flex;
-      justify-content: center;
-    }
   }
 }
 
@@ -207,8 +186,8 @@ $nav-transition: 0.22s cubic-bezier(0.4, 0, 0.2, 1);
 .asn-brand {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 18px 14px 14px;
+  gap: 14px;
+  padding: 30px 16px 40px;
   border-bottom: 1px solid $nav-border;
   min-height: 72px;
   flex-shrink: 0;
@@ -237,12 +216,12 @@ $nav-transition: 0.22s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   &__title {
-    font-size: 15px;
+    font-size: 20px;
     font-weight: 800;
     color: #fff;
     white-space: nowrap;
     letter-spacing: -0.2px;
-    background: linear-gradient(135deg, #a5b4fc 0%, #c4b5fd 100%);
+    background: linear-gradient(135deg, #5856da 0%, #6d19ac 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -250,8 +229,8 @@ $nav-transition: 0.22s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   &__sub {
-    font-size: 10px;
-    color: rgba(255, 255, 255, 0.3);
+    font-size: 12px;
+    color: rgba(100, 83, 130, 0.8);
     white-space: nowrap;
     margin: 2px 0 0;
     letter-spacing: 0.4px;
@@ -287,71 +266,6 @@ $nav-transition: 0.22s cubic-bezier(0.4, 0, 0.2, 1);
   }
 }
 
-// ── 返回前台 ──
-.asn-back-wrap {
-  padding: 10px 10px 6px;
-  flex-shrink: 0;
-  transition: padding $nav-transition;
-}
-
-.asn-back-btn {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  padding: 9px 10px;
-  border-radius: 9px;
-  color: $nav-text;
-  text-decoration: none;
-  font-size: 12.5px;
-  font-weight: 500;
-  transition: all $nav-transition;
-  white-space: nowrap;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-
-  &__icon {
-    width: 28px;
-    height: 28px;
-    border-radius: 7px;
-    background: rgba(255, 255, 255, 0.07);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-
-    svg {
-      width: 15px;
-      height: 15px;
-    }
-  }
-
-  &__label {
-    overflow: hidden;
-    white-space: nowrap;
-  }
-
-  &:hover {
-    background: rgba(255, 255, 255, 0.09);
-    color: #fff;
-    border-color: rgba(255, 255, 255, 0.14);
-  }
-}
-
-// ── 分隔线 ──
-.asn-divider {
-  padding: 14px 16px 6px;
-  flex-shrink: 0;
-  transition: padding $nav-transition;
-
-  &__label {
-    font-size: 10px;
-    font-weight: 700;
-    color: rgba(255, 255, 255, 0.22);
-    letter-spacing: 0.9px;
-    text-transform: uppercase;
-    white-space: nowrap;
-  }
-}
 
 // ── 主菜单 ──
 .asn-menu {
@@ -370,12 +284,12 @@ $nav-transition: 0.22s cubic-bezier(0.4, 0, 0.2, 1);
   &__item {
     display: flex;
     align-items: center;
-    gap: 11px;
+    gap: 12px;
     padding: 10px 12px;
     border-radius: 10px;
     color: $nav-text;
     text-decoration: none;
-    font-size: 13px;
+    font-size: 15px;
     font-weight: 500;
     transition: all $nav-transition;
     white-space: nowrap;
@@ -384,7 +298,7 @@ $nav-transition: 0.22s cubic-bezier(0.4, 0, 0.2, 1);
 
     &:hover {
       background: $nav-bg-hover;
-      color: rgba(255, 255, 255, 0.9);
+      color: #220d5b;
     }
 
     &.active {
@@ -407,9 +321,9 @@ $nav-transition: 0.22s cubic-bezier(0.4, 0, 0.2, 1);
     transition: background $nav-transition;
 
     .asn-menu__item.active {
-      background: $nav-bg-active;
-      color: $nav-text-active;
-      font-weight: 700;
+      .asn-menu__icon {
+        background: rgba(99, 102, 241, 0.15);
+      }
     }
     :deep(svg) {
       width: 16px;

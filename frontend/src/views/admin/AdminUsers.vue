@@ -1,6 +1,5 @@
 <template>
   <div class="am-layout">
-    <AdminSideNav />
 
     <div class="am-main">
       <div class="am-content">
@@ -248,14 +247,12 @@
 
 <script>
 import { markRaw } from 'vue'
-import AdminSideNav from '@/components/admin/AdminSideNav.vue'
 import { listAdminUsers, updateAdminUserStatus, deleteAdminUser, getAdminUserPerformance } from '@/api/admin'
 
 let echarts = null
 
 export default {
   name: 'AdminUsers',
-  components: { AdminSideNav },
   data() {
     return {
       users: [],

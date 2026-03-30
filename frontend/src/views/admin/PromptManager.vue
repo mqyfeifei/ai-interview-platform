@@ -5,7 +5,6 @@
 <template>
    <div class="pm-layout">
 
-    <AdminSideNav />
     <div class="pm-main">
       <div class="pm-content">
 
@@ -57,14 +56,14 @@
           <table v-else class="data-table">
             <thead>
               <tr>
-                <th style="width:60px">ID</th>
-                <th>名称</th>
-                <th style="width:120px">关联岗位</th>
-                <th style="width:120px">提问风格</th>
-                <th style="width:70px">温度</th>
-                <th style="width:80px">Max Tokens</th>
-                <th style="width:80px">状态</th>
-                <th style="width:110px">操作</th>
+                <th class="col-id">ID</th>
+                <th class="col-name">名称</th>
+                <th class="col-job">关联岗位</th>
+                <th class="col-style">提问风格</th>
+                <th class="col-temp">温度</th>
+                <th class="col-tokens">Max Tokens</th>
+                <th class="col-status">状态</th>
+                <th class="col-actions">操作</th>
               </tr>
             </thead>
             <tbody>
@@ -74,13 +73,13 @@
                   <div class="prompt-name">{{ item.name }}</div>
                   <div v-if="item.role_description" class="prompt-desc">{{ truncate(item.role_description, 40) }}</div>
                 </td>
-                <td><span class="job-chip">{{ item.job_name || '通用' }}</span></td>
+                <td class="td-center"><span class="job-chip">{{ getJobName(item.job_id) }}</span></td>
                 <td class="td-style">{{ item.questioning_style || '—' }}</td>
                 <td class="td-center">
                   <span class="temp-val" :class="tempClass(item.temperature)">{{ item.temperature }}</span>
                 </td>
                 <td class="td-center td-muted">{{ item.max_tokens || '—' }}</td>
-                <td>
+                <td class="td-center">
                   <button
                     class="toggle-btn"
                     :class="item.is_active ? 'toggle-btn--on' : 'toggle-btn--off'"
@@ -324,7 +323,6 @@
 </template>
 
 <script>
-import AdminSideNav from '@/components/admin/AdminSideNav.vue'
 import {
   listPrompts, createPrompt, updatePrompt, deletePrompt, listAdminJobs
 } from '@/api/admin'
@@ -345,7 +343,6 @@ function defaultForm() {
 
 export default {
   name: 'PromptManager',
-  components: { AdminSideNav }, 
 
   data() {
     return {
@@ -527,6 +524,12 @@ export default {
       }
     },
 
+    getJobName(jobId) {
+      if (!jobId) return '通用'
+      const job = this.jobs.find(j => j.id === jobId)
+      return job ? job.name : '通用'
+    },
+
     // ── Preview ──
     openPreview(item) {
       this.previewItem = item
@@ -645,12 +648,24 @@ export default {
 
 /* ── Table ── */
 .table-card {
-  background: white; border-radius: 12px; border: 1px solid #e5e7eb;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.04); overflow: hidden;
+  background: white; 
+  border-radius: 12px; 
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04); 
+  overflow-x: auto;  // 添加横向滚动
+  overflow-y: hidden; // 可选，隐藏纵向溢出
+  -webkit-overflow-scrolling: touch; // 移动端平滑滚动
 }
 .table-loading {
-  display: flex; align-items: center; justify-content: center;
-  gap: 10px; padding: 60px; color: #9ca3af; font-size: 14px;
+  display: flex; 
+  align-items: center; 
+  justify-content: center;
+  gap: 10px; 
+  padding: 60px; 
+  color: #9ca3af; 
+  font-size: 14px;
+  // 移除或注释掉 min-width: 900px; 让它在小屏幕也能正常居中
+  // min-width: 900px;  
 }
 .table-empty {
   display: flex; flex-direction: column; align-items: center;
@@ -659,11 +674,11 @@ export default {
 .empty-icon { width: 64px; height: 64px; opacity: 0.5; }
 
 .data-table {
-  width: 100%; border-collapse: collapse; font-size: 13px;
+  width: 100%; border-collapse: collapse; font-size: 13px;min-width: 900px;
   th {
     background: #f9fafb; color: #6b7280; font-weight: 600; font-size: 12px;
     text-transform: uppercase; letter-spacing: 0.04em;
-    padding: 11px 16px; text-align: left; border-bottom: 1px solid #f3f4f6; white-space: nowrap;
+    padding: 11px 16px; text-align: center; border-bottom: 1px solid #f3f4f6; white-space: nowrap;
   }
   td { padding: 13px 16px; color: #374151; border-bottom: 1px solid #f9fafb; vertical-align: middle; }
   &__row {
@@ -672,7 +687,32 @@ export default {
     &:last-child td { border-bottom: none; }
   }
 }
-.td-id { color: #9ca3af; font-size: 12px; font-weight: 500; }
+
+.data-table {
+  table-layout: fixed; // 固定表格布局
+  
+  .col-id { width: 30px; }
+  .col-name { width: 26%; }
+  .col-job { width: 8%; }
+  .col-style { width: 24%; }
+  .col-temp { width: 6%; }
+  .col-tokens { width: 10%; }
+  .col-status { width: 8%; }
+  .col-actions { width: 12%; }
+  
+  td {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    
+    // 让名称列的 description 可以换行
+    &.col-name {
+      white-space: normal;
+      word-break: break-word;
+    }
+  }
+}
+.td-id { color: #9ca3af; font-size: 12px; font-weight: 500; text-align: center; }
 .td-center { text-align: center; }
 .td-muted { color: #9ca3af; }
 .td-style { color: #6b7280; font-size: 12px; }
@@ -681,8 +721,8 @@ export default {
 .prompt-desc { font-size: 11px; color: #9ca3af; }
 
 .job-chip {
-  display: inline-block; padding: 2px 8px; border-radius: 4px;
-  background: #ede9fe; color: #5b21b6; font-size: 11px; font-weight: 600;
+  display: inline-block; padding: 2px 8px; 
+  color: #5b21b6; font-size: 11px; font-weight: 600;
 }
 
 /* ── Temperature indicator ── */
@@ -696,29 +736,29 @@ export default {
 /* ── Toggle button ── */
 .toggle-btn {
   display: inline-flex; align-items: center; gap: 6px;
-  padding: 4px 10px; border-radius: 12px; border: none;
+  padding: 4px 10px; border-radius: 6px; border: none;
   font-size: 11px; font-weight: 700; cursor: pointer;
   transition: all 0.2s; font-family: $font-family-base;
-  &--on { background: #d1fae5; color: #059669; &:hover { background: #a7f3d0; } }
+  &--on { background: #ecfcf3; color: #1b8060; &:hover { background: #a7f3d0; } }
   &--off { background: #f3f4f6; color: #9ca3af; &:hover { background: #e5e7eb; } }
   &:disabled { opacity: 0.6; cursor: wait; }
 }
 .toggle-dot {
   width: 7px; height: 7px; border-radius: 50%;
-  .toggle-btn--on & { background: #059669; }
+  .toggle-btn--on & { background: #3a987b; }
   .toggle-btn--off & { background: #d1d5db; }
 }
 
 /* ── Row actions ── */
-.row-actions { display: flex; gap: 4px; align-items: center; }
+.row-actions { display: flex; gap: 6px; align-items: center;  }
 .act-btn {
-  width: 30px; height: 30px; border-radius: 6px; border: none;
+  width: 32px; height: 32px; border-radius: 8px; border: none;
   display: flex; align-items: center; justify-content: center;
   cursor: pointer; transition: all 0.15s;
-  svg { width: 14px; height: 14px; }
-  &--preview { background: #f0fdf4; color: #059669; &:hover { background: #dcfce7; } }
-  &--edit { background: #eef2ff; color: #4338ca; &:hover { background: #e0e7ff; } }
-  &--del { background: #fff1f2; color: #e11d48; &:hover { background: #ffe4e6; } }
+  svg { width: 16px; height: 16px; }
+  &--preview { background: #f5f7f5; color: #059669; &:hover { background: #e2f9ea; } }
+  &--edit { background: #f3f5fa; color: #4338ca; &:hover { background: #e4eafc; } }
+  &--del { background: #fef7f7; color: #e11d48; &:hover { background: #f7e3e4; } }
 }
 
 /* ── Pagination ── */

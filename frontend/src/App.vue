@@ -1,16 +1,23 @@
 <template>
   <div id="app-root" class="app-shell">
 
-    <!-- PC端顶部导航 -->
+    <!-- PC端顶部导航（普通用户） -->
     <TopNav
-      v-if="isPC && !route.meta.hideNavigation && !route.meta.hideSideNav"
+      v-if="isPC && !route.meta.hideNavigation && !route.meta.showAdminNav"
       class="app-shell__topnav"
     />
 
     <div class="app-shell__body" :class="{ 'no-nav': hideAllNav }">
-      <!-- 移动端侧边栏（宽屏时隐藏） -->
+
+      <!-- 管理后台侧边栏（由 meta.showAdminNav 控制） -->
+      <AdminSideNav
+        v-if="route.meta.showAdminNav"
+        class="app-shell__admin-side"
+      />
+
+      <!-- 移动端侧边栏（普通用户） -->
       <SideNav
-        v-if="!isPC && !route.meta.hideNavigation && !route.meta.hideSideNav"
+        v-if="!isPC && !route.meta.hideNavigation && !route.meta.showAdminNav"
         class="app-shell__side"
       />
 
@@ -23,9 +30,9 @@
       </main>
     </div>
 
-    <!-- 移动端底部导航 -->
+    <!-- 移动端底部导航（普通用户） -->
     <BottomNav
-      v-if="!isPC && !route.meta.hideNavigation && !route.meta.hideBottomNav"
+      v-if="!isPC && !route.meta.hideNavigation && !route.meta.showAdminNav"
       class="app-shell__bottom"
     />
 
@@ -36,6 +43,7 @@
 import BottomNav from '@/components/common/BottomNav.vue'
 import SideNav from '@/components/common/SideNav.vue'
 import TopNav from '@/components/common/TopNav.vue'
+import AdminSideNav from '@/components/admin/AdminSideNav.vue'  // 新增
 import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 
@@ -44,12 +52,11 @@ export default {
   components: {
     SideNav,
     BottomNav,
-    TopNav
+    TopNav,
+    AdminSideNav  // 新增
   },
   setup() {
     const route = useRoute()
-
-    // 响应式判断是否 PC 端
     const isPC = ref(window.innerWidth >= 1024)
     const onResize = () => { isPC.value = window.innerWidth >= 1024 }
     onMounted(() => window.addEventListener('resize', onResize))
@@ -183,5 +190,16 @@ export default {
   .page-container {
     padding: 16px 16px;
   }
+}
+
+
+// 管理后台布局：侧边栏 + 内容区横向排列
+.app-shell__admin-side {
+  flex-shrink: 0;
+}
+
+// 有管理侧边栏时，body 横向排列
+.app-shell__body:has(.app-shell__admin-side) {
+  flex-direction: row;
 }
 </style>
