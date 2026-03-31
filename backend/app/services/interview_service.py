@@ -19,7 +19,6 @@ from app.extensions import db
 from app.services.asr_service import global_speed_cache
 from app.models.interview import Interview, InterviewChat
 from app.models.prompt import AiPrompt
-from app.models.knowledge import KnowledgeItem
 from app.models.learning import KnowledgeTag, UserKnowledgeMastery
 from app.models.example import Example
 from app.models.question import Question
