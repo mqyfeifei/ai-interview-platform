@@ -2,9 +2,6 @@ import os
 import sys
 import yaml
 from sentence_transformers import SentenceTransformer
-from app import create_app
-from app.extensions import db
-from app.models import Dimension, Job, AiPrompt
 
 # 确保能正确导入 app (根据你的项目结构可能需要调整路径)
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
@@ -12,7 +9,8 @@ sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 from app import create_app
 from app.extensions import db
 from app.models.job import Job, DEFAULT_JOBS
-from app.models.knowledge import KnowledgeItem
+from app.models.interview import Dimension
+from app.models.prompt import AiPrompt
 from app.models.learning import KnowledgeTag, Resource
 from app.models.question import Question
 from app.models.example import Example
@@ -109,16 +107,80 @@ def create_prompts():
 
 
 def clear_existing_data():
-    """级联清空知识库相关的表数据"""
+    """级联清空知识库相关的表数据（兼容 PostgreSQL / MySQL / SQLite）。
+
+    策略：
+    - PostgreSQL: 使用 TRUNCATE ... RESTART IDENTITY CASCADE（速度最快，且会级联清理并重置序列）
+    - MySQL: 暂时禁用外键检查，逐表 DELETE 并重置 AUTO_INCREMENT
+    - SQLite: 逐表 DELETE 并清理 sqlite_sequence
+    - 其他: 退回到逐表 DELETE
+
+    为安全起见，会按 metadata.sorted_tables 的反序（子表先）清理，并跳过重要表（如 users、alembic_version）。
+    """
     print("🧹 正在清空旧数据...")
-    # 使用 TRUNCATE CASCADE 可以安全彻底地清空表，并重置自增 ID
-    db.session.execute(db.text('TRUNCATE TABLE knowledge_items RESTART IDENTITY CASCADE;'))
-    db.session.execute(db.text('TRUNCATE TABLE resources RESTART IDENTITY CASCADE;'))
-    db.session.execute(db.text('TRUNCATE TABLE knowledge_tags RESTART IDENTITY CASCADE;'))
-    db.session.execute(db.text('TRUNCATE TABLE jobs RESTART IDENTITY CASCADE;'))
-    db.session.execute(db.text('TRUNCATE TABLE ai_prompts RESTART IDENTITY CASCADE;'))
-    db.session.commit()
-    print("✅ 旧数据已清空。")
+
+    # 不要删除的表（按需扩展）
+    SKIP_TABLES = {"users", "alembic_version"}
+
+    try:
+        dialect = db.engine.dialect.name
+        print(f"当前数据库方言: {dialect}")
+
+        # 按依赖关系反向排序：子表通常在前，父表在后，方便逐表删除
+        all_tables = list(reversed(db.metadata.sorted_tables))
+        tables_to_clear = [t for t in all_tables if t.name not in SKIP_TABLES]
+
+        if not tables_to_clear:
+            print("⚠️ 未发现需要清空的表（或全部表被跳过）。")
+            return
+
+        if dialect == 'postgresql':
+            # 使用 TRUNCATE ... RESTART IDENTITY CASCADE，效率高且级联
+            table_names = ', '.join([f'"{t.name}"' for t in tables_to_clear])
+            sql = f'TRUNCATE TABLE {table_names} RESTART IDENTITY CASCADE;'
+            db.session.execute(db.text(sql))
+            db.session.commit()
+
+        elif dialect in ('mysql', 'mariadb'):
+            # MySQL: 暂时关闭外键检查，逐表删除并重置自增
+            db.session.execute(db.text('SET FOREIGN_KEY_CHECKS=0;'))
+            for t in tables_to_clear:
+                db.session.execute(t.delete())
+                # 重置自增（仅当表包含自增列时生效）
+                try:
+                    db.session.execute(db.text(f'ALTER TABLE `{t.name}` AUTO_INCREMENT = 1;'))
+                except Exception:
+                    # 某些表或引擎可能不支持，忽略错误
+                    pass
+            db.session.execute(db.text('SET FOREIGN_KEY_CHECKS=1;'))
+            db.session.commit()
+
+        elif dialect == 'sqlite':
+            # SQLite: 逐表 DELETE，并重置 sqlite_sequence
+            for t in tables_to_clear:
+                db.session.execute(t.delete())
+            # 清理 sqlite_sequence 中的对应记录以重置 AUTOINCREMENT
+            seq_names = ','.join([f"'{t.name}'" for t in tables_to_clear])
+            try:
+                db.session.execute(db.text(f"DELETE FROM sqlite_sequence WHERE name IN ({seq_names});"))
+            except Exception:
+                # sqlite_sequence 在某些 SQLite 空数据库中可能不存在
+                pass
+            db.session.commit()
+
+        else:
+            # 兜底：逐表删除
+            for t in tables_to_clear:
+                db.session.execute(t.delete())
+            db.session.commit()
+
+        print("✅ 旧数据已清空。")
+
+    except Exception as e:
+        # 回滚并打印错误以便诊断
+        db.session.rollback()
+        print("❌ 清空旧数据时发生错误:", str(e))
+        raise
 
 
 def get_or_create_job(domain_key):

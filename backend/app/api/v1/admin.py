@@ -13,16 +13,17 @@ from app.models.user import User
 from app.models.interview import Interview, InterviewChat, InterviewScore, Dimension
 from app.models.job import Job
 from app.models.question import Question
-from app.models.knowledge import KnowledgeItem
+# from app.models.knowledge import KnowledgeItem
+from app.models.learning import KnowledgeTag, Resource, UserLearning, UserKnowledgeMastery
+from app.models.example import Example
 from app.models.prompt import AiPrompt
-from app.models.learning import UserLearning
 
 
 admin_bp = Blueprint('admin', __name__)
 
 _JOB_MAPPING_CACHE = None
 
-
+# 适配 Question 新增字段 source, status 及多对多关联 knowledge_tags
 def _serialize_question(question):
     return {
         'id': question.id,
@@ -32,26 +33,61 @@ def _serialize_question(question):
         'difficulty': question.difficulty,
         'keywords': question.keywords,
         'reference_answer': question.reference_answer,
-        'knowledge_points': question.knowledge_points
+        'source': question.source,
+        'status': question.status,
+        'knowledge_tags': [{'id': t.id, 'name': t.name} for t in question.knowledge_tags]
     }
 
-
-def _serialize_knowledge(item):
+# 序列化 Resource 学习资源
+def _serialize_resource(resource):
     return {
-        'id': item.id,
-        'title': item.title,
-        'content': item.content,
-        'type': item.type,
-        'job_id': item.job_id,
-        'tags': item.tags
+        'id': resource.id,
+        'title': resource.title,
+        'type': resource.type,
+        'url': resource.url,
+        'content': resource.content,
+        'source': resource.source,
+        'thumbnail': resource.thumbnail,
+        'difficulty': resource.difficulty,
+        'tags': resource.tags,
+        'knowledge_tags': [{'id': t.id, 'name': t.name} for t in resource.knowledge_tags]
     }
 
+# 序列化 KnowledgeTag 知识点标签
+def _serialize_knowledge_tag(tag):
+    return {
+        'id': tag.id,
+        'name': tag.name,
+        'category': tag.category,
+        'complexity': tag.complexity,
+        'estimated_hours': tag.estimated_hours
+    }
 
+# 序列化 Example 优秀回答范例
+def _serialize_example(example):
+    return {
+        'id': example.id,
+        'job_id': example.job_id,
+        'question': example.question,
+        'framework': example.framework,
+        'answer': example.answer
+    }
+
+# 实体解析支持并增加白名单校验：question, resource, tag, example
 def _resolve_entity():
     entity = (request.args.get('entity') or '').strip().lower()
     if not entity:
         body = request.get_json(silent=True) or {}
         entity = str(body.get('entity', 'question')).strip().lower()
+
+    # 加入合法实体白名单检验
+    allowed_entities = {'question', 'resource', 'tag', 'example'}
+
+    # 如果传了不支持的 entity，直接降级兜底为默认的 'question'
+    # （或者你也可以选择在这里直接 raise ValueError 让前端报错）
+    if entity not in allowed_entities:
+        return 'question'
+
     return entity or 'question'
 
 
@@ -567,12 +603,12 @@ def update_job(job_id):
 
         if 'description' in data:
             job.description = data.get('description')
-        if 'icon_url' in data:
-            job.icon_url = data.get('icon_url')
-        if 'tech_stack' in data:
-            if data.get('tech_stack') is not None and not isinstance(data.get('tech_stack'), list):
-                return error_response('tech_stack 必须为数组或 null', 400)
-            job.tech_stack = data.get('tech_stack')
+        # if 'icon_url' in data:
+        #     job.icon_url = data.get('icon_url')
+        # if 'tech_stack' in data:
+        #     if data.get('tech_stack') is not None and not isinstance(data.get('tech_stack'), list):
+        #         return error_response('tech_stack 必须为数组或 null', 400)
+        #     job.tech_stack = data.get('tech_stack')
 
         db.session.commit()
         return success_response(job.to_dict(), '岗位更新成功')
@@ -597,9 +633,10 @@ def delete_job(job_id):
         return error_response(str(exc), 500)
 
 
+# 核心题库与知识库资源管理（Question, Resource, Tag, Example）
 @admin_bp.route('/questions', methods=['GET'])
 @admin_required
-def list_question_entities():
+def list_entities():
     try:
         entity = _resolve_entity()
         page = request.args.get('page', default=1, type=int)
@@ -613,34 +650,36 @@ def list_question_entities():
 
         if entity == 'question':
             query = Question.query
-            if job_id:
-                query = query.filter(Question.job_id == job_id)
+            if job_id: query = query.filter(Question.job_id == job_id)
             total = query.count()
-            records = (
-                query.order_by(Question.id.desc())
-                .offset((page - 1) * size)
-                .limit(size)
-                .all()
-            )
+            records = query.order_by(Question.id.desc()).offset((page - 1) * size).limit(size).all()
             payload = [_serialize_question(item) for item in records]
-        elif entity == 'knowledge':
-            query = KnowledgeItem.query
-            if job_id:
-                query = query.filter(KnowledgeItem.job_id == job_id)
+
+        elif entity == 'resource':
+            query = Resource.query
             total = query.count()
-            records = (
-                query.order_by(KnowledgeItem.id.desc())
-                .offset((page - 1) * size)
-                .limit(size)
-                .all()
-            )
-            payload = [_serialize_knowledge(item) for item in records]
+            records = query.order_by(Resource.id.desc()).offset((page - 1) * size).limit(size).all()
+            payload = [_serialize_resource(item) for item in records]
+
+        elif entity == 'tag':
+            query = KnowledgeTag.query
+            total = query.count()
+            records = query.order_by(KnowledgeTag.id.desc()).offset((page - 1) * size).limit(size).all()
+            payload = [_serialize_knowledge_tag(item) for item in records]
+
+        elif entity == 'example':
+            query = Example.query
+            if job_id: query = query.filter(Example.job_id == job_id)
+            total = query.count()
+            records = query.order_by(Example.id.desc()).offset((page - 1) * size).limit(size).all()
+            payload = [_serialize_example(item) for item in records]
+
         else:
-            return error_response('entity 仅支持 question 或 knowledge', 400)
+            return error_response('entity 仅支持 question/resource/tag/example', 400)
 
         return success_response(
             {'entity': entity, 'list': payload, 'page': page, 'size': size, 'total': total},
-            '获取题库列表成功'
+            '获取列表成功'
         )
     except Exception as exc:
         return error_response(str(exc), 500)
@@ -648,50 +687,86 @@ def list_question_entities():
 
 @admin_bp.route('/questions', methods=['POST'])
 @admin_required
-def create_question_entity():
+def create_entity():
     try:
         data = request.get_json(silent=True) or {}
         entity = _resolve_entity()
 
+        # Question 创建：增加 status, source, knowledge_tags 支持
         if entity == 'question':
-            content = (data.get('content') or '').strip()
-            if not content:
-                return error_response('content 不能为空', 400)
-            if not data.get('job_id'):
-                return error_response('job_id 不能为空', 400)
+            if not data.get('content') or not data.get('job_id'):
+                return error_response('content 和 job_id 不能为空', 400)
 
             item = Question(
                 job_id=data.get('job_id'),
-                content=content,
+                content=data.get('content').strip(),
                 type=_normalize_question_type(data.get('type')),
                 difficulty=data.get('difficulty'),
                 keywords=data.get('keywords') if isinstance(data.get('keywords'), list) else None,
                 reference_answer=data.get('reference_answer'),
-                knowledge_points=data.get('knowledge_points') if isinstance(data.get('knowledge_points'), list) else None
+                source=data.get('source'),
+                status=data.get('status', 'draft')
             )
+            # 关联 KnowledgeTag
+            tag_ids = data.get('tag_ids', [])
+            if isinstance(tag_ids, list) and tag_ids:
+                item.knowledge_tags = KnowledgeTag.query.filter(KnowledgeTag.id.in_(tag_ids)).all()
+
             db.session.add(item)
             db.session.commit()
             return success_response(_serialize_question(item), '题目创建成功')
 
-        if entity == 'knowledge':
-            content = (data.get('content') or '').strip()
-            if not content:
-                return error_response('content 不能为空', 400)
-            if not data.get('type'):
-                return error_response('type 不能为空', 400)
-
-            item = KnowledgeItem(
-                title=data.get('title'),
-                content=content,
-                type=data.get('type'),
-                job_id=data.get('job_id'),
+        # Resource 创建
+        elif entity == 'resource':
+            if not data.get('title') or not data.get('type'):
+                return error_response('title 和 type 不能为空', 400)
+            item = Resource(
+                title=data.get('title').strip(),
+                type=data.get('type').strip(),
+                url=data.get('url'),
+                content=data.get('content'),
+                source=data.get('source'),
+                thumbnail=data.get('thumbnail'),
+                difficulty=data.get('difficulty'),
                 tags=data.get('tags') if isinstance(data.get('tags'), list) else None
+            )
+            tag_ids = data.get('tag_ids', [])
+            if isinstance(tag_ids, list) and tag_ids:
+                item.knowledge_tags = KnowledgeTag.query.filter(KnowledgeTag.id.in_(tag_ids)).all()
+
+            db.session.add(item)
+            db.session.commit()
+            return success_response(_serialize_resource(item), '资源创建成功')
+
+        # KnowledgeTag 创建
+        elif entity == 'tag':
+            if not data.get('name'):
+                return error_response('name 不能为空', 400)
+            item = KnowledgeTag(
+                name=data.get('name').strip(),
+                category=data.get('category'),
+                complexity=data.get('complexity'),
+                estimated_hours=data.get('estimated_hours')
             )
             db.session.add(item)
             db.session.commit()
-            return success_response(_serialize_knowledge(item), '知识项创建成功')
+            return success_response(_serialize_knowledge_tag(item), '标签创建成功')
 
-        return error_response('entity 仅支持 question 或 knowledge', 400)
+        # Example 创建
+        elif entity == 'example':
+            if not data.get('job_id') or not data.get('question') or not data.get('answer'):
+                return error_response('job_id, question 和 answer 不能为空', 400)
+            item = Example(
+                job_id=data.get('job_id'),
+                question=data.get('question').strip(),
+                framework=data.get('framework'),
+                answer=data.get('answer').strip()
+            )
+            db.session.add(item)
+            db.session.commit()
+            return success_response(_serialize_example(item), '范例创建成功')
+
+        return error_response('entity 仅支持 question/resource/tag/example', 400)
     except Exception as exc:
         db.session.rollback()
         return error_response(str(exc), 500)
@@ -699,7 +774,7 @@ def create_question_entity():
 
 @admin_bp.route('/questions/<int:item_id>', methods=['PUT'])
 @admin_required
-def update_question_entity(item_id):
+def update_entity(item_id):
     try:
         data = request.get_json(silent=True) or {}
         entity = _resolve_entity()
@@ -726,39 +801,89 @@ def update_question_entity(item_id):
                 item.keywords = data.get('keywords')
             if 'reference_answer' in data:
                 item.reference_answer = data.get('reference_answer')
-            if 'knowledge_points' in data:
-                if data.get('knowledge_points') is not None and not isinstance(data.get('knowledge_points'), list):
-                    return error_response('knowledge_points 必须是数组或 null', 400)
-                item.knowledge_points = data.get('knowledge_points')
+            if 'source' in data:
+                item.source = data.get('source')
+            if 'status' in data:
+                item.status = data.get('status')
+
+            # 更新关联 KnowledgeTag
+            if 'tag_ids' in data and isinstance(data.get('tag_ids'), list):
+                item.knowledge_tags = KnowledgeTag.query.filter(KnowledgeTag.id.in_(data.get('tag_ids'))).all()
 
             db.session.commit()
             return success_response(_serialize_question(item), '题目更新成功')
 
-        if entity == 'knowledge':
-            item = KnowledgeItem.query.get(item_id)
+        elif entity == 'resource':
+            item = Resource.query.get(item_id)
             if not item:
-                return error_response('知识项不存在', 404)
+                return error_response('资源不存在', 404)
 
             if 'title' in data:
                 item.title = data.get('title')
+            if 'type' in data:
+                item.type = data.get('type')
+            if 'url' in data:
+                item.url = data.get('url')
             if 'content' in data:
                 content = (data.get('content') or '').strip()
                 if not content:
                     return error_response('content 不能为空', 400)
                 item.content = content
-            if 'type' in data:
-                item.type = data.get('type')
-            if 'job_id' in data:
-                item.job_id = data.get('job_id')
+            if 'source' in data:
+                item.source = data.get('source')
+            if 'difficulty' in data:
+                item.difficulty = data.get('difficulty')
             if 'tags' in data:
                 if data.get('tags') is not None and not isinstance(data.get('tags'), list):
                     return error_response('tags 必须是数组或 null', 400)
                 item.tags = data.get('tags')
+            if 'tag_ids' in data and isinstance(data.get('tag_ids'), list):
+                item.knowledge_tags = KnowledgeTag.query.filter(KnowledgeTag.id.in_(data.get('tag_ids'))).all()
 
             db.session.commit()
-            return success_response(_serialize_knowledge(item), '知识项更新成功')
+            return success_response(_serialize_resource(item), '资源更新成功')
 
-        return error_response('entity 仅支持 question 或 knowledge', 400)
+        elif entity == 'tag':
+            item = KnowledgeTag.query.get(item_id)
+            if not item:
+                return error_response('标签不存在', 404)
+
+            if 'name' in data:
+                name = (data.get('name') or '').strip()
+                if not name:
+                    return error_response('name 不能为空', 400)
+                item.name = name
+            if 'category' in data:
+                item.category = data.get('category')
+            if 'complexity' in data:
+                item.complexity = data.get('complexity')
+            if 'estimated_hours' in data:
+                item.estimated_hours = data.get('estimated_hours')
+
+        elif entity == 'example':
+            item = Example.query.get(item_id)
+            if not item:
+                return error_response('范例不存在', 404)
+
+            if 'job_id' in data:
+                item.job_id = data.get('job_id')
+            if 'question' in data:
+                question = (data.get('question') or '').strip()
+                if not question:
+                    return error_response('question 不能为空', 400)
+                item.question = question
+            if 'framework' in data:
+                item.framework = data.get('framework')
+            if 'answer' in data:
+                answer = (data.get('answer') or '').strip()
+                if not answer:
+                    return error_response('answer 不能为空', 400)
+                item.answer = answer
+
+            db.session.commit()
+            return success_response(_serialize_knowledge_tag(item), '范例更新成功')
+
+        return error_response('entity 仅支持 question/resource/tag/example', 400)
     except Exception as exc:
         db.session.rollback()
         return error_response(str(exc), 500)
@@ -769,29 +894,29 @@ def update_question_entity(item_id):
 def delete_question_entity(item_id):
     try:
         entity = _resolve_entity()
+        model_map = {
+            'question': Question,
+            'resource': Resource,
+            'tag': KnowledgeTag,
+            'example': Example
+        }
 
-        if entity == 'question':
-            item = Question.query.get(item_id)
-            if not item:
-                return error_response('题目不存在', 404)
-            db.session.delete(item)
-            db.session.commit()
-            return success_response({'deleted_id': item_id, 'entity': entity}, '题目删除成功')
+        model = model_map.get(entity)
+        if not model:
+            return error_response('entity 仅支持 question/resource/tag/example', 400)
 
-        if entity == 'knowledge':
-            item = KnowledgeItem.query.get(item_id)
-            if not item:
-                return error_response('知识项不存在', 404)
-            db.session.delete(item)
-            db.session.commit()
-            return success_response({'deleted_id': item_id, 'entity': entity}, '知识项删除成功')
+        item = model.query.get(item_id)
+        if not item:
+            return error_response('数据不存在', 404)
 
-        return error_response('entity 仅支持 question 或 knowledge', 400)
+        db.session.delete(item)
+        db.session.commit()
+        return success_response({'deleted_id': item_id, 'entity': entity}, '删除成功')
     except Exception as exc:
         db.session.rollback()
         return error_response(str(exc), 500)
 
-
+# 适配最新模型：丢弃 knowledge_points 列，兼容 reference_answer 采用 JSONB 的逻辑
 @admin_bp.route('/questions/import', methods=['POST'])
 @admin_required
 def import_questions():
@@ -851,8 +976,12 @@ def import_questions():
                 key_points = item.get('key_points') if isinstance(item.get('key_points'), list) else None
                 tags = item.get('tags') if isinstance(item.get('tags'), list) else None
                 reference_answer = item.get('answer')
+                # 【修改】如果存在 key_points 但未指定 answer，将其格式化为 reference_answer(JSONB兼容)
                 if not reference_answer and key_points:
-                    reference_answer = '\\n'.join([f'- {kp}' for kp in key_points])
+                    reference_answer = key_points
+                # if not reference_answer and key_points:
+                #     reference_answer = '\\n'.join([f'- {kp}' for kp in key_points])
+
 
                 all_objects.append(
                     Question(
@@ -862,7 +991,8 @@ def import_questions():
                         difficulty=item.get('difficulty'),
                         keywords=tags,
                         reference_answer=reference_answer,
-                        knowledge_points=key_points
+                        source=item.get('source', 'admin_import'),
+                        status=item.get('status', 'published')
                     )
                 )
                 imported_count += 1
@@ -1035,8 +1165,8 @@ def update_prompt(prompt_id):
             prompt.questioning_style = data.get('questioning_style')
         if 'temperature' in data:
             prompt.temperature = data.get('temperature')
-        if 'max_tokens' in data:
-            prompt.max_tokens = data.get('max_tokens')
+        # if 'max_tokens' in data:
+        #     prompt.max_tokens = data.get('max_tokens')
         if 'is_active' in data:
             if not isinstance(data.get('is_active'), bool):
                 return error_response('is_active 必须是布尔值', 400)
@@ -1252,6 +1382,7 @@ def get_interview_details(interview_id):
             {
                 'dimension_id': dim.id,
                 'dimension_name': dim.name,
+                'dimension_description': dim.description,
                 'score': score.score,
                 'comment': score.comment
             }

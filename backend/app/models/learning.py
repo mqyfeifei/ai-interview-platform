@@ -33,9 +33,9 @@ class Resource(db.Model):
     url = db.Column(db.Text)
     content = db.Column(db.Text)
     source = db.Column(db.String(100))
-    thumbnail = db.Column(db.Text)
+    # thumbnail = db.Column(db.Text)
     difficulty = db.Column(db.String(10))  # easy, medium, hard
-    tags = db.Column(JSONB)  # JSON 形式的标签备份或扩展
+    # tags = db.Column(JSONB)  # JSON 形式的标签备份或扩展
     embedding = db.Column(Vector(512))
 
     # 关系
