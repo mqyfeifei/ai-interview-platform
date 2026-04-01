@@ -104,6 +104,27 @@ def run_learning_test():
     print("🚀 学习中心 / 向量推荐流程 测试启动")
     print("=" * 50)
 
+    # 0.x 测试：当用户无短板数据时，不返回学习推荐
+    print("\n[0.x] 测试: 无短板时不返回推荐资源")
+    with app.app_context():
+        empty_user = User.query.filter_by(username="learning_no_weakness").first()
+        if not empty_user:
+            empty_user = User(username="learning_no_weakness", email="no_weakness@test.com", password_hash="hash")
+            db.session.add(empty_user)
+            db.session.commit()
+
+        UserKnowledgeMastery.query.filter_by(user_id=empty_user.id).delete()
+        db.session.commit()
+
+    res_empty = client.get(f'/api/v1/learning/weaknesses?user_id={empty_user.id}')
+    assert res_empty.status_code == 200
+    assert res_empty.get_json().get('data', []) == []
+
+    res_recs = client.get(f'/api/v1/learning/recommendations?user_id={empty_user.id}&limit=3')
+    assert res_recs.status_code == 200
+    assert res_recs.get_json().get('data', []) == []
+    print("  ✅ 验证通过：短板为空时不返回推荐")
+
     # 1. 测试：发现短板
     print("\n[1] 正在调用接口，获取用户技能短板...")
     res = client.get(f'/api/v1/learning/weaknesses?user_id={user_id}')

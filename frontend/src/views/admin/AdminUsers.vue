@@ -3,11 +3,18 @@
 
     <div class="am-main">
       <div class="am-content">
-        <div class="am-header">
+        <div class="am-header" style="display:flex;align-items:center;justify-content:space-between;gap:16px;">
           <div class="am-header__left">
             <h1 class="am-header__title">用户管理</h1>
             <p class="am-header__sub">共 <strong>{{ total }}</strong> 位用户</p>
           </div>
+          <button class="btn btn-primary" @click="addUser" style="display:flex;align-items:center;gap:6px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="btn-icon" style="width:16px;height:16px;">
+              <line x1="12" y1="5" x2="12" y2="19"/>
+              <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            新增用户
+          </button>
         </div>
 
         <div v-if="toastText" :class="['toast', toastType === 'error' ? 'toast--error' : 'toast--success']">
@@ -137,6 +144,68 @@
             </div>
           </div>
 
+          <transition name="fade">
+            <div v-if="showEditModal" class="modal-overlay" @click.self="closeEditModal" style="position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:2500;">
+              <div class="modal" style="background:#fff;border-radius:10px;max-width:720px;width:calc(100% - 40px);padding:24px;box-shadow:0 10px 30px rgba(0,0,0,.25);">
+                <h3 style="margin-top:0;margin-bottom:16px;font-size:18px;font-weight:700;">{{ editUserForm.id ? '编辑用户信息' : '新增用户' }}</h3>
+                <div class="edit-user-form" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;">
+                  <label class="input-group" style="display:flex;flex-direction:column;">
+                    <span>用户名<span style="color:#f43f5e;margin-left:4px;">*</span></span>
+                    <input v-model="editUserForm.username" class="form-control" />
+                    <small v-if="editUserErrors.username" style="color:#f43f5e;margin-top:4px;">{{ editUserErrors.username }}</small>
+                  </label>
+                  <label class="input-group"><span>真实姓名</span><input v-model="editUserForm.real_name" class="form-control" /></label>
+                  <label class="input-group" style="display:flex;flex-direction:column;">
+                    <span>邮箱<span style="color:#f43f5e;margin-left:4px;">*</span></span>
+                    <input v-model="editUserForm.email" class="form-control" type="email" />
+                    <small v-if="editUserErrors.email" style="color:#f43f5e;margin-top:4px;">{{ editUserErrors.email }}</small>
+                  </label>
+                  <label class="input-group" style="display:flex;flex-direction:column;">
+                    <span>手机号</span>
+                    <input v-model="editUserForm.phone" class="form-control" />
+                    <small v-if="editUserErrors.phone" style="color:#f43f5e;margin-top:4px;">{{ editUserErrors.phone }}</small>
+                  </label>
+                  <label class="input-group" style="display:flex;flex-direction:column;">
+                    <span>学校<span style="color:#f43f5e;margin-left:4px;">*</span></span>
+                    <input v-model="editUserForm.school" class="form-control" />
+                    <small v-if="editUserErrors.school" style="color:#f43f5e;margin-top:4px;">{{ editUserErrors.school }}</small>
+                  </label>
+                  <label class="input-group" style="display:flex;flex-direction:column;">
+                    <span>专业<span style="color:#f43f5e;margin-left:4px;">*</span></span>
+                    <input v-model="editUserForm.major" class="form-control" />
+                    <small v-if="editUserErrors.major" style="color:#f43f5e;margin-top:4px;">{{ editUserErrors.major }}</small>
+                  </label>
+                  <label class="input-group" style="display:flex;flex-direction:column;">
+                    <span>年级<span style="color:#f43f5e;margin-left:4px;">*</span></span>
+                    <input v-model="editUserForm.grade" class="form-control" />
+                    <small v-if="editUserErrors.grade" style="color:#f43f5e;margin-top:4px;">{{ editUserErrors.grade }}</small>
+                  </label>
+                  <label v-if="!editUserForm.id" class="input-group" style="display:flex;flex-direction:column;">
+                    <span>密码<span style="color:#f43f5e;margin-left:4px;">*</span></span>
+                    <input v-model="editUserForm.password" type="password" class="form-control" placeholder="请输入密码" />
+                    <small v-if="editUserErrors.password" style="color:#f43f5e;margin-top:4px;">{{ editUserErrors.password }}</small>
+                  </label>
+                  <label class="input-group" style="display:flex;flex-direction:column;"><span>默认岗位</span>
+                    <select v-model="editUserForm.default_job" class="form-control">
+                      <option value="">（无）</option>
+                      <option v-for="job in jobs" :key="job.id" :value="job.id">{{ job.name }}</option>
+                    </select>
+                  </label>
+                  <div style="grid-column:1/-1;display:flex;align-items:center;gap:10px;">
+                    <input type="checkbox" id="edit-user-active" v-model="editUserForm.is_active" />
+                    <label for="edit-user-active" style="margin:0;">账号可用</label>
+                  </div>
+                </div>
+                <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:18px;">
+                  <button class="btn btn-ghost" @click="closeEditModal" type="button" style="min-width:100px;">取消</button>
+                  <button class="btn btn-primary" @click="submitEditUser" :disabled="editLoading" type="button" style="min-width:100px;">
+                    {{ editLoading ? '保存中...' : '保存' }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </transition>
+
           <transition name="drawer">
             <div v-if="showDetail" class="drawer-overlay" @click.self="closeUserDetail">
               <div class="drawer">
@@ -186,33 +255,86 @@
                   </section>
 
                   <section class="dsec">
-                    <h3 class="dsec__title">面试记录（最近 5 条）</h3>
-                    <div class="history-list">
-                      <div v-if="!userPerformance || !userPerformance.interviews || userPerformance.interviews.length === 0" class="history-empty">暂无面试记录</div>
-                      <ul v-else>
-                        <li v-for="item in displayedInterviews" :key="item.interview_id">
-                          <span>{{ formatDate(item.start_time) || '—' }}</span>
-                          <strong>{{ item.job_name || '未知岗位' }}</strong>
-                          <span>得分：{{ item.score != null ? item.score : '—' }}</span>
-                          <span :class="['status-badge', item.status === 'completed' ? 'status-badge--success' : 'status-badge--danger']">{{ item.status }}</span>
-                        </li>
-                      </ul>
-                      <button
-                        v-if="userPerformance && userPerformance.interviews && userPerformance.interviews.length > 5"
-                        @click="showAllInterviews = !showAllInterviews"
-                        class="btn btn-text"
-                        style="margin-top: 8px;"
-                      >
-                        {{ showAllInterviews ? '收起面试记录' : '展开全部面试记录' }}（{{ userPerformance.interviews.length }}）
-                      </button>
+                    <h3 class="dsec__title">用户简历</h3>
+                    <div class="info-grid" style="align-items: center;">
+                      <div class="info-card" style="flex:1; min-width:220px;">
+                        <span class="info-card__label">选中简历</span>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                          <select
+                            v-model="selectedResumeId"
+                            @change="onSelectedResumeChange(detailUser.id)"
+                            :disabled="resumeLoading || resumeList.length===0"
+                            class="filter-select"
+                            style="flex: 1;"
+                          >
+                            <option value="" disabled>请选择简历</option>
+                            <option v-for="resume in resumeList" :key="resume.id" :value="resume.id">{{ resume.title }}</option>
+                          </select>
+                          <span style="white-space:nowrap;">（{{ resumeList.length }}份）</span>
+                        </div>
+                      </div>
+                      <div class="info-card" style="flex:0 0 auto;">
+                        <button
+                          class="btn btn-sm resume-detail-btn"
+                          @click="openResumeModal"
+                          :disabled="resumeLoading || !selectedResume"
+                        >
+                          查看简历详情
+                        </button>
+                      </div>
                     </div>
                   </section>
 
                   <section class="dsec">
-                    <h3 class="dsec__title">面试曲线</h3>
-                    <div v-if="userPerformance && userPerformance.growth_curve && userPerformance.growth_curve.length" class="line-chart" ref="performanceLineChart"></div>
-                    <div v-else class="history-empty">暂无曲线数据</div>
-                    <div v-if="userPerformance && userPerformance.growth_curve" class="curve-labels">已完成 {{ userPerformance.growth_curve.length }} 次面试</div>
+                    <h3 class="dsec__title">面试记录（共 {{ interviewTotal || userInterviewList.length }} 条）</h3>
+                    <div class="history-list">
+                      <div v-if="interviewLoading" class="history-empty">加载中...</div>
+                      <div v-else-if="!userInterviewList || userInterviewList.length === 0" class="history-empty">暂无面试记录</div>
+                      <div v-else-if="!showAllInterviews" class="history-empty">面试记录已折叠，点击下方按钮展开全部。</div>
+                      <ul v-else>
+                        <li v-for="item in displayedInterviews" :key="item.interview_id">
+                          <span>{{ formatDate(item.start_time) || '—' }}</span>
+                          <strong>{{ item.job_name || '未知岗位' }}</strong>
+                          <span>得分：{{ item.total_score != null ? item.total_score : item.score != null ? item.score : '—' }}</span>
+                          <span :class="['status-badge', item.status === 'completed' ? 'status-badge--success' : 'status-badge--danger']">{{ item.status }}</span>
+                        </li>
+                      </ul>
+                      <button
+                        v-if="(interviewTotal || userInterviewList.length) > 0"
+                        @click="showAllInterviews = !showAllInterviews"
+                        class="btn btn-text"
+                        style="margin-top: 8px;"
+                      >
+                        {{ showAllInterviews ? '收起面试记录' : '展开全部面试记录' }}（{{ interviewTotal || userInterviewList.length }}）
+                      </button>
+                    </div>
+                  </section>
+
+                  <transition name="fade">
+                    <div v-if="showResumeModal" class="modal-overlay" @click.self="closeResumeModal" style="position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:2000;">
+                      <div class="modal" style="background:#fff;border-radius:8px;max-width:960px;width:calc(100vw - 40px);max-height:88vh;overflow:auto;padding:20px;box-shadow:0 8px 24px rgba(0,0,0,.25);">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                          <h4 style="margin:0;">简历详情</h4>
+                          <button class="btn btn-text" @click="closeResumeModal">关闭</button>
+                        </div>
+                        <div v-if="resumeLoading">加载中...</div>
+                        <div v-else-if="!selectedResume">暂无选中简历</div>
+                        <div v-else>
+                          <ResumePreview
+                            :content="selectedResume.content || {}"
+                            :blockOrder="resumeBlockOrder"
+                            :config="resumeConfig"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </transition>
+
+                  <section class="dsec">
+                  <h3 class="dsec__title">面试综合能力曲线</h3>
+                      <div v-if="!hasPerformanceData" class="history-empty">暂无曲线数据</div>
+                    <div v-else class="line-chart" ref="performanceLineChart"></div>
+                    <div class="curve-labels" style="margin-top:8px;">已完成 {{ (userPerformance && userPerformance.growth_curve ? userPerformance.growth_curve.length : 0) }} 次面试</div>
                   </section>
 
                   <section class="dsec">
@@ -247,12 +369,16 @@
 
 <script>
 import { markRaw } from 'vue'
-import { listAdminUsers, updateAdminUserStatus, deleteAdminUser, getAdminUserPerformance } from '@/api/admin'
+import AdminSideNav from '@/components/admin/AdminSideNav.vue'
+import ResumePreview from '@/components/common/ResumePreview.vue'
+import { listAdminUsers, updateAdminUserStatus, updateAdminUser, createAdminUser, deleteAdminUser, getAdminUserPerformance, listInterviews, listAdminUserResumes, getAdminUserResume, listAdminJobs } from '@/api/admin'
+import { fetchJobs } from '@/api/job'
 
 let echarts = null
 
 export default {
   name: 'AdminUsers',
+  components: { AdminSideNav, ResumePreview },
   data() {
     return {
       users: [],
@@ -276,8 +402,36 @@ export default {
       detailUser: null,
       detailLoading: false,
       userPerformance: null,
+      userInterviewList: [],
+      interviewTotal: 0,
+      interviewLoading: false,
       showAllInterviews: false,
-      performanceChartInstance: null
+      activeCurveTab: 'overall',
+      curveTabs: [],
+      resumeList: [],
+      selectedResumeId: '',
+      selectedResume: null,
+      resumeLoading: false,
+      showResumeModal: false,
+      resumeBlockOrder: ['profile', 'objective', 'education', 'campus', 'internship', 'work', 'project', 'prices', 'skills'],
+      resumeConfig: { titleColor: '#2B2B2B', bodyColor: '#4F4F4F', fontSize: 14, padding: 20 },
+      performanceChartInstance: null,
+      showEditModal: false,
+      jobs: [],
+      editUserForm: {
+        id: null,
+        username: '',
+        real_name: '',
+        email: '',
+        phone: '',
+        school: '',
+        major: '',
+        grade: '',
+        default_job: '',
+        is_active: true
+      },
+      editUserErrors: {},
+      editLoading: false
     }
   },
   computed: {
@@ -310,13 +464,45 @@ export default {
       return pages
     },
     displayedInterviews() {
-      if (!this.userPerformance || !this.userPerformance.interviews) return []
-      if (this.showAllInterviews) return this.userPerformance.interviews
-      return this.userPerformance.interviews.slice(0, 5)
+      if (!this.userInterviewList || this.userInterviewList.length === 0) return []
+      if (!this.showAllInterviews) return []
+      return this.userInterviewList
+    },
+    resumeData() {
+      const content = (this.selectedResume && this.selectedResume.content) || {}
+      return {
+        personal: content.personal || {},
+        objective: content.objective || {},
+        education: Array.isArray(content.education) ? content.education : [],
+        skills: Array.isArray(content.skills) ? content.skills : [],
+        prices: Array.isArray(content.prices) ? content.prices : [],
+      }
+    },
+    resumeProfile() {
+      return this.resumeData.personal || {}
+    },
+    resumeObjective() {
+      return this.resumeData.objective || {}
+    },
+    resumeEducation() {
+      return this.resumeData.education || []
+    },
+    resumeSkills() {
+      return this.resumeData.skills || []
+    },
+    resumePrices() {
+      return this.resumeData.prices || []
+    },
+    hasPerformanceData() {
+      if (!this.userPerformance) return false
+      const curve = this.userPerformance.growth_curve || []
+      const abilities = this.userPerformance.abilities || {}
+      return (curve.length > 0) || Object.keys(abilities).length > 0
     }
   },
   created() {
     this.loadUsers()
+    this.loadJobs()
   },
   methods: {
     async loadUsers() {
@@ -354,7 +540,7 @@ export default {
 
         const data = await listAdminUsers(params)
         if (data) {
-          this.users = data.list || []
+          this.users = (data.list || []).slice().sort((a, b) => Number(a.id || 0) - Number(b.id || 0))
           this.total = data.total || 0
           this.totalPages = Math.max(1, Math.ceil(this.total / this.size))
         }
@@ -363,6 +549,22 @@ export default {
         this.errorMsg = err.message || '获取用户列表失败，请稍后重试'
       } finally {
         this.loading = false
+      }
+    },
+    async loadJobs() {
+      try {
+        let res = await listAdminJobs()
+        if (res && Array.isArray(res.list) && res.list.length > 0) {
+          this.jobs = res.list
+          return
+        }
+
+        // fallback to public jobs endpoint if admin jobs is empty or unavailable
+        const fallback = await fetchJobs()
+        this.jobs = Array.isArray(fallback) ? fallback : (fallback && fallback.list ? fallback.list : [])
+      } catch (err) {
+        console.error('获取岗位列表失败', err)
+        this.jobs = []
       }
     },
     onSearch() {
@@ -415,32 +617,126 @@ export default {
       this.showDetail = true
       this.detailLoading = true
       this.userPerformance = null
+      this.userInterviewList = []
+      this.interviewTotal = 0
+      this.interviewLoading = true
       this.showAllInterviews = false
+      this.activeCurveTab = 'overall'
+
       try {
-        const res = await getAdminUserPerformance(user.id)
+        const perfPromise = getAdminUserPerformance(user.id)
+        const interviewPromise = this.loadUserInterviews(user.id)
+        const resumePromise = this.loadUserResumes(user.id)
+
+        const res = await perfPromise
         this.userPerformance = res || null
+
+        await Promise.all([interviewPromise, resumePromise])
         this.$nextTick(() => {
           this.initPerformanceChart()
         })
       } catch (e) {
-        console.error('加载用户绩效失败', e)
+        console.error('加载用户绩效、面试记录或简历失败', e)
       } finally {
         this.detailLoading = false
+        this.interviewLoading = false
+        this.resumeLoading = false
       }
     },
     closeUserDetail() {
       this.showDetail = false
       this.detailUser = null
       this.userPerformance = null
+      this.userInterviewList = []
+      this.interviewTotal = 0
+      this.interviewLoading = false
       if (this.performanceChartInstance && !this.performanceChartInstance.isDisposed()) {
         this.performanceChartInstance.dispose()
       }
       this.performanceChartInstance = null
     },
-    async initPerformanceChart() {
-      if (!this.userPerformance || !this.userPerformance.growth_curve || this.userPerformance.growth_curve.length === 0) {
+    async loadUserInterviews(userId) {
+      const pageSize = 50
+      let page = 1
+      let allInterviews = []
+      this.interviewLoading = true
+
+      try {
+        while (true) {
+          const appear = await listInterviews({ user_id: userId, page, size: pageSize })
+          if (!appear || !Array.isArray(appear.list)) break
+
+          allInterviews = allInterviews.concat(appear.list)
+          this.interviewTotal = appear.total || allInterviews.length
+          if (allInterviews.length >= this.interviewTotal || appear.list.length < pageSize) {
+            break
+          }
+          page += 1
+        }
+      } catch (err) {
+        console.error('加载用户面试记录失败', err)
+      } finally {
+        this.userInterviewList = allInterviews
+        this.interviewLoading = false
+      }
+    },
+
+    async loadUserResumes(userId) {
+      this.resumeLoading = true
+      this.resumeList = []
+      this.selectedResumeId = ''
+      this.selectedResume = null
+
+      try {
+        const res = await listAdminUserResumes(userId)
+        this.resumeList = Array.isArray(res) ? res : []
+        if (this.resumeList.length > 0) {
+          this.selectedResumeId = this.resumeList[0].id
+          await this.loadResumeDetails(userId, this.selectedResumeId)
+        }
+      } catch (err) {
+        console.error('加载用户简历列表失败', err)
+      } finally {
+        this.resumeLoading = false
+      }
+    },
+
+    async loadResumeDetails(userId, resumeId) {
+      if (!resumeId) return
+      this.resumeLoading = true
+
+      try {
+        const resume = await getAdminUserResume(userId, resumeId)
+        this.selectedResume = resume || null
+        this.selectedResumeId = resumeId
+      } catch (err) {
+        console.error('加载简历详情失败', err)
+      } finally {
+        this.resumeLoading = false
+      }
+    },
+
+    onSelectedResumeChange(userId) {
+      if (!this.selectedResumeId) {
+        this.selectedResume = null
         return
       }
+      this.loadResumeDetails(userId, this.selectedResumeId)
+    },
+
+    switchCurveTab(tabKey) {
+      this.activeCurveTab = tabKey
+      this.initPerformanceChart()
+    },
+
+    openResumeModal() {
+      this.showResumeModal = true
+    },
+    closeResumeModal() {
+      this.showResumeModal = false
+    },
+    async initPerformanceChart() {
+      if (!this.userPerformance) return
 
       if (!echarts) {
         try {
@@ -463,52 +759,276 @@ export default {
         }).observe(el)
       }
 
-      const curve = this.userPerformance.growth_curve
-      const xData = curve.map((item) => item.date || '')
-      const yData = curve.map((item) => Number(item.score) || 0)
+      const curve = Array.isArray(this.userPerformance.growth_curve) ? this.userPerformance.growth_curve : []
+      const abilities = this.userPerformance.abilities || {}
+      const dimensionCurves = this.userPerformance.dimension_curves || {}
+      const activeTab = this.activeCurveTab || 'overall'
+      const CURVE_COLORS = {
+        overall: '#4338CA',
+        knowledge: '#F59E0B',
+        logic: '#3B82F6',
+        expression: '#8B5CF6',
+        problemSolving: '#EF4444',
+        coding: '#10B981',
+        learning: '#6366F1'
+      }
+      const dimLabels = {
+        overall: '综合得分',
+        knowledge: '专业知识',
+        logic: '逻辑',
+        expression: '表达',
+        problemSolving: '问题解决',
+        coding: '代码能力',
+        learning: '学习能力'
+      }
+
+      let xData = []
+      let yData = []
+      let seriesName = dimLabels[activeTab] || '得分'
+      let color = CURVE_COLORS[activeTab] || '#4338CA'
+
+      if (activeTab === 'overall') {
+        xData = curve.map((item) => item.date || '')
+        yData = curve.map((item) => Number(item.score) || 0)
+      } else {
+        const deCurve = Array.isArray(dimensionCurves[activeTab]) ? dimensionCurves[activeTab] : []
+        if (deCurve.length > 0) {
+          xData = deCurve.map((item) => item.date || '')
+          yData = deCurve.map((item) => Number(item.score) || 0)
+        } else {
+          const point = Number(abilities[activeTab] || 0)
+          if (curve && curve.length) {
+            xData = curve.map((item) => item.date || '')
+            yData = curve.map(() => point)
+          } else {
+            xData = ['暂无']
+            yData = [point]
+          }
+        }
+      }
+      if (!xData.length) {
+        xData = ['暂无']
+        yData = [0]
+      }
+
+      const validScores = yData.filter((v) => typeof v === 'number')
+      const minScore = validScores.length ? Math.min(...validScores) : 0
+      const maxScore = validScores.length ? Math.max(...validScores) : 100
+      const yMin = Math.max(0, Math.floor((minScore - 10) / 10) * 10)
+      const yMax = Math.min(100, Math.ceil((maxScore + 10) / 10) * 10)
 
       this.performanceChartInstance.setOption({
         backgroundColor: 'transparent',
-        tooltip: { trigger: 'axis' },
+        tooltip: {
+          trigger: 'axis',
+          confine: true,
+          triggerOn: 'mousemove|click',
+          backgroundColor: '#1E293B',
+          borderColor: 'transparent',
+          textStyle: { color: '#F8FAFC', fontSize: 12 },
+          formatter: (params) => {
+            const p = params[0]
+            return `<div style="padding:4px 8px"><b style="font-size:16px;color:${color}">${p.value}</b> 分</div>`
+          }
+        },
         xAxis: {
           type: 'category',
           data: xData,
           boundaryGap: false,
-          axisLabel: {
-            rotate: 30,
-            formatter: (value) => value
-          }
+          axisLine: { lineStyle: { color: '#E2E8F0' } },
+          axisTick: { show: false },
+          axisLabel: { color: '#94A3B8', fontSize: 11 }
         },
         yAxis: {
           type: 'value',
-          min: 0,
-          max: 100,
-          axisLabel: {
-            formatter: '{value}'
-          }
+          min: yMin,
+          max: yMax,
+          splitNumber: 4,
+          axisLabel: { color: '#94A3B8', fontSize: 11 },
+          splitLine: { lineStyle: { color: '#F1F5F9', type: 'dashed' } },
+          axisLine: { show: false },
+          axisTick: { show: false }
         },
-        grid: {
-          left: '12%',
-          right: '12%',
-          top: '16%',
-          bottom: '20%'
-        },
+        grid: { left: '12%', right: '12%', top: '16%', bottom: '20%' },
         series: [
           {
-            name: '得分',
+            name: seriesName,
             type: 'line',
             data: yData,
-            smooth: true,
-            lineStyle: { color: '#3b82f6' },
-            itemStyle: { color: '#3b82f6' },
-            areaStyle: { color: 'rgba(59, 130, 246, 0.16)' }
+            smooth: false,
+            symbol: 'circle',
+            symbolSize: 8,
+            itemStyle: { color, borderColor: 'white', borderWidth: 2 },
+            lineStyle: { color, width: 2.5 },
+            areaStyle: { color: color + '22' },
+            markPoint: {
+              data: [
+                { type: 'max', name: '最高' },
+                { type: 'min', name: '最低' }
+              ],
+              label: { color: 'white', fontSize: 10 },
+              itemStyle: { color },
+              symbolSize: 40
+            }
           }
-        ]
-      })
+        ],
+        animation: true,
+        animationDuration: 600,
+        animationEasing: 'cubicOut'
+      }, true)
+    },
+    addUser() {
+      this.editUserForm = {
+        id: null,
+        username: '',
+        real_name: '',
+        email: '',
+        phone: '',
+        school: '',
+        major: '',
+        grade: '',
+        default_job: '',
+        is_active: true,
+        password: ''
+      }
+      this.editUserErrors = {}
+      this.showEditModal = true
     },
     editUser(user) {
-      this.showToast(`编辑用户：${user.username || '-'}（ID ${user.id}）`, 'success')
-      // 这里可以跳转至用户编辑页面，例如：this.$router.push({ name: 'AdminUserEdit', params: { id: user.id } })
+      let defaultJobValue = user.default_job_id || ''
+      if (!defaultJobValue && user.default_job) {
+        const matchedJob = this.jobs.find((job) =>
+          String(job.id) === String(user.default_job) || job.name === user.default_job
+        )
+        if (matchedJob) {
+          defaultJobValue = matchedJob.id
+        }
+      }
+
+      this.editUserForm = {
+        id: user.id,
+        username: user.username || '',
+        real_name: user.real_name || '',
+        email: user.email || '',
+        phone: user.phone || '',
+        school: user.school || '',
+        major: user.major || '',
+        grade: user.grade || '',
+        default_job: defaultJobValue || '',
+        is_active: user.is_active !== false,
+        password: ''
+      }
+      this.editUserErrors = {}
+      this.showEditModal = true
+    },
+    closeEditModal() {
+      this.showEditModal = false
+      this.editLoading = false
+    },
+    async submitEditUser() {
+      const emailValue = (this.editUserForm.email || '').trim()
+      const phoneValue = (this.editUserForm.phone || '').trim()
+      this.editUserErrors = {}
+
+      if (!this.editUserForm.username || !this.editUserForm.username.trim()) {
+        this.editUserErrors.username = '用户名不能为空'
+      }
+
+      if (!this.editUserForm.id && !this.editUserForm.password) {
+        this.editUserErrors.password = '密码不能为空'
+      }
+
+      if (!emailValue) {
+        this.editUserErrors.email = '邮箱不能为空'
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailValue)) {
+        this.editUserErrors.email = '邮箱格式不正确，请输入有效邮箱地址'
+      }
+
+      if (!this.editUserForm.school || !this.editUserForm.school.trim()) {
+        this.editUserErrors.school = '学校不能为空'
+      }
+      if (!this.editUserForm.major || !this.editUserForm.major.trim()) {
+        this.editUserErrors.major = '专业不能为空'
+      }
+      if (!this.editUserForm.grade || !this.editUserForm.grade.trim()) {
+        this.editUserErrors.grade = '年级不能为空'
+      }
+
+      if (phoneValue && !/^1[3-9]\d{9}$/.test(phoneValue)) {
+        this.editUserErrors.phone = '手机号格式不正确，请输入11位手机号'
+      }
+
+      if (Object.keys(this.editUserErrors).length > 0) {
+        return
+      }
+
+      this.editUserForm.email = emailValue
+      this.editUserForm.phone = phoneValue
+
+      this.editLoading = true
+      try {
+        let updated
+        if (this.editUserForm.id) {
+          updated = await updateAdminUser(this.editUserForm.id, {
+            username: this.editUserForm.username,
+            real_name: this.editUserForm.real_name,
+            email: this.editUserForm.email,
+            phone: this.editUserForm.phone,
+            school: this.editUserForm.school,
+            major: this.editUserForm.major,
+            grade: this.editUserForm.grade,
+            default_job: this.editUserForm.default_job,
+            is_active: this.editUserForm.is_active
+          })
+        } else {
+          if (!this.editUserForm.password) {
+            this.editUserErrors.password = '密码不能为空'
+            return
+          }
+          updated = await createAdminUser({
+            username: this.editUserForm.username,
+            real_name: this.editUserForm.real_name,
+            email: this.editUserForm.email,
+            phone: this.editUserForm.phone,
+            school: this.editUserForm.school,
+            major: this.editUserForm.major,
+            grade: this.editUserForm.grade,
+            default_job: this.editUserForm.default_job,
+            is_active: this.editUserForm.is_active,
+            password: this.editUserForm.password
+          })
+          this.total += 1
+          // 新用户加入列表最前，为方便查看
+          this.users.unshift(updated)
+        }
+
+        // 更新列表中的用户信息
+        const idx = this.users.findIndex((u) => u.id === updated.id)
+        if (idx !== -1 && this.editUserForm.id) {
+          this.users.splice(idx, 1, updated)
+        }
+        // 若详情页打开，刷新当前用户数据
+        if (this.detailUser && this.detailUser.id === updated.id) {
+          this.detailUser = updated
+        }
+
+        this.showToast(this.editUserForm.id ? '用户信息已更新' : '新增用户成功', 'success')
+        this.closeEditModal()
+      } catch (err) {
+        console.error('保存用户信息失败', err)
+        const msg = err.message || (err.response && err.response.data && err.response.data.msg) || '保存用户信息失败'
+        if (/该邮箱已注册/.test(msg)) {
+          this.editUserErrors.email = '该邮箱已注册'
+        } else if (/该手机号已注册/.test(msg)) {
+          this.editUserErrors.phone = '该手机号已注册'
+        } else if (/用户名已存在/.test(msg)) {
+          this.editUserErrors.username = '用户名已存在'
+        } else {
+          this.showToast(msg, 'error')
+        }
+      } finally {
+        this.editLoading = false
+      }
     },
     async deleteUser(user) {
       if (!window.confirm(`确定要删除用户 ${user.username || user.email || user.id} 吗？`)) {
@@ -1059,6 +1579,14 @@ export default {
   font-size: 12px;
   padding: 10px 0;
 }
+.line-chart {
+  width: 100%;
+  min-height: 200px;
+  height: 200px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+}
 .chart-line {
   position: relative;
   min-height: 150px;
@@ -1202,5 +1730,24 @@ export default {
 }
 .switch input:checked + .slider:before {
   transform: translateX(24px);
+}
+
+.resume-detail-btn {
+  background: linear-gradient(90deg, #7c3aed, #6d28d9);
+  color: #fff;
+  border-color: #7c3aed;
+  font-size: 14px;
+  font-weight: 600;
+  min-width: 120px;
+  padding: 8px 10px;
+  border-radius: 6px;
+}
+.resume-detail-btn:hover:not(:disabled) {
+  background: linear-gradient(90deg, #5b21b6, #6d28d9);
+  border-color: #5b21b6;
+}
+.resume-detail-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 </style>

@@ -246,12 +246,13 @@ class InterviewService:
                         "improvements": "指出回答中的主要不足与知识盲区",
                         "suggestions": "针对不足给出3条具体、可操作的学习改进建议",
                         "knowledge_tags_eval": {{
-                            "真实的知识点名称": 20
+                            "这里填标准知识点名称，如'HTML5语义化'等": 20
                         }}
                     }}
 
                 【绝对指令】：对于 knowledge_tags_eval 字段，你**只能**从下面的“标准知识点库”中挑选你在对话中考察到的知识点进行 0-100 的打分。
                 如果候选人回答完全错误或不会，给20分以下。
+                **禁止直接照抄模板里的文字，必须填写真实的标签名称。**
                 **禁止自己捏造、改写或发明新的知识点名称！如果对话涉及的知识不在下表中，请忽略它。**
 
                 标准知识点库：
@@ -323,10 +324,15 @@ class InterviewService:
                 db.session.add(score_record)
         # ================= 优化点 3: 严格校验，切断自动生成逻辑 =================
         tags_eval = report_data.get("knowledge_tags_eval", {})
+        valid_tags_found = 0
         for tag_name, score in tags_eval.items():
+            # 跳过大模型照抄的模板废话
+            if "真实的" in tag_name or "这里填" in tag_name:
+                continue
             # 严格去数据库匹配已有的标签，找不到就直接丢弃（防大模型幻觉）
             tag = KnowledgeTag.query.filter_by(name=tag_name).first()
             if tag:
+                valid_tags_found += 1
                 mastery = UserKnowledgeMastery.query.filter_by(user_id=interview.user_id, tag_id=tag.id).first()
                 if not mastery:
                     # 用户第一次接触这个标签，直接存入分数
@@ -335,6 +341,28 @@ class InterviewService:
                     db.session.add(mastery)
                 else:
                     # 已有记录，将历史分数与本次分数取平均（模拟平滑的成长或遗忘）
+                    mastery.mastery_level = int((mastery.mastery_level + score) / 2)
+                    
+        # === 兜底机制：如果大模型没有正确输出任何有效标签，或者该岗位由于数据库空导致大纲为空 ===
+        if valid_tags_found == 0 and len(questions) > 0:
+            # 随便找1-2个岗位标签，赋一个及格分兜底，保证流程非空
+            fallback_tags = set()
+            for q in questions:
+                for t in q.knowledge_tags:
+                    if t.name not in fallback_tags:
+                        fallback_tags.add(t)
+                        if len(fallback_tags) >= 2:
+                            break
+                if len(fallback_tags) >= 2:
+                    break
+            
+            for t in fallback_tags:
+                mastery = UserKnowledgeMastery.query.filter_by(user_id=interview.user_id, tag_id=t.id).first()
+                score = 50 # 默认及格偏下分数
+                if not mastery:
+                    mastery = UserKnowledgeMastery(user_id=interview.user_id, tag_id=t.id, mastery_level=score)
+                    db.session.add(mastery)
+                else:
                     mastery.mastery_level = int((mastery.mastery_level + score) / 2)
         # ========================================================================
 

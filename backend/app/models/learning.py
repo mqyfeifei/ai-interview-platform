@@ -16,7 +16,7 @@ resource_tags = db.Table('resource_tags',
 class KnowledgeTag(db.Model):
     __tablename__ = 'knowledge_tags'
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), unique=True, nullable=False)
+    name = db.Column(db.Text, unique=True, nullable=False)
     category = db.Column(db.String(50))
     # --- 新增字段 ---
     complexity = db.Column(db.String(20))     # 预估难度

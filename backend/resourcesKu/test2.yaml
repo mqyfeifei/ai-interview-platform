@@ -1,0 +1,24 @@
+# resource list (knowledge/resource 形式)
+modules:
+  - name: "数据库基础"
+    points:
+      - point: "事务管理"
+        resources:
+          - name: "MySQL 事务详解"
+            type: "article"
+            url: "https://example.com/mysql-transaction"
+            description: "MySQL 事务隔离与锁机制解析"
+            complexity: "medium"
+            tags:
+              - "数据库"
+              - "事务"
+      - point: "索引优化"
+        resources:
+          - name: "索引设计技巧"
+            type: "course"
+            url: "https://example.com/index-design"
+            description: "高效 SQL 索引方案"
+            complexity: "medium"
+            tags:
+              - "性能"
+              - "数据库"
