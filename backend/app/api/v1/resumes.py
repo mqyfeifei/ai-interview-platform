@@ -60,7 +60,6 @@ def _auth_error(msg: str):
     """判断是否为认证类错误，决定返回 401 还是 400。"""
     return msg in {'缺少登录凭证', '登录已过期，请重新登录', '登录凭证无效'}
 
-
 # --------------------------------------------------------------------------- #
 # GET /api/v1/resumes                                                          #
 # --------------------------------------------------------------------------- #
@@ -244,3 +243,55 @@ def upload_resume_avatar():
         return error_response(str(e), 400)
     except Exception as e:
         return error_response(f"上传失败：{str(e)}", 500)
+
+
+# --------------------------------------------------------------------------- #
+# GET /api/v1/resumes/guidance  获取简历必填与建议指导（用于前端右侧栏或提示气泡展示）
+# --------------------------------------------------------------------------- #
+@bp.route('/guidance', methods=['GET'])
+def get_resume_guidance():
+    """
+    Query Args:
+      - job_id (可选, int): 对应的岗位 ID，用于返回差异化提示
+    """
+    try:
+        # 验证登录态
+        get_current_user_id()
+        job_id = request.args.get('job_id', type=int)
+
+        data = ResumeService.get_resume_guidance(job_id)
+        return success_response(data)
+    except ValueError as exc:
+        msg = str(exc)
+        return error_response(msg, 401 if _auth_error(msg) else 400)
+    except Exception as exc:
+        return error_response(str(exc), 500)
+
+
+# --------------------------------------------------------------------------- #
+# POST /api/v1/resumes/analyze  实时分析当前简历的完成度与缺失项
+# --------------------------------------------------------------------------- #
+@bp.route('/analyze', methods=['POST'])
+def analyze_resume_completion():
+    """
+    Body:
+    {
+      "content": dict,  // 前端当前编辑器里实时的 JSON 数据
+      "jobId": int      // (可选) 当前简历绑定的岗位
+    }
+    """
+    try:
+        get_current_user_id()
+        body = request.get_json(silent=True) or {}
+        content = body.get('content', {})
+        job_id = body.get('jobId')
+
+        # 计算完成度
+        analysis_result = ResumeService.calculate_completion(content, job_id)
+
+        return success_response(analysis_result)
+    except ValueError as exc:
+        msg = str(exc)
+        return error_response(msg, 401 if _auth_error(msg) else 400)
+    except Exception as exc:
+        return error_response(str(exc), 500)

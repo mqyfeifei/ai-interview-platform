@@ -52,7 +52,7 @@ def _serialize_question(question):
     }
 
 
-def _serialize_knowledge(item):
+def _serialize_knowledge(tag):
     return {
         'id': tag.id,
         'name': tag.name,

@@ -18,6 +18,7 @@ except Exception:
 from app.extensions import db
 from app.services.asr_service import global_speed_cache
 from app.services.tts_service import TTSService, bytes_to_b64
+from app.services.resume_service import ResumeService
 from app.models.interview import Interview, InterviewChat
 from app.models.prompt import AiPrompt
 from app.models.learning import KnowledgeTag, UserKnowledgeMastery
@@ -66,7 +67,73 @@ class InterviewService:
         return embeddings.tolist()
 
     @staticmethod
+    def _extract_resume_context(user_id: int, max_chars: int = 800) -> str:
+        """
+        拉取并解析用户主简历，进行去敏与核心要点抽取，防止 Token 溢出。
+        """
+        try:
+            # 获取主简历及其 JSON content
+            resume_data = ResumeService.get_main_resume(user_id)
+            content = resume_data.get('content', {})
+            if not content:
+                return ""
+
+            # 1. 基础信息去敏 (绝对禁止加入手机号和邮箱)
+            personal = content.get('personal', {})
+            name = personal.get('name', '候选人')
+
+            # 2. 技能抽取 (Top-10)
+            skills_list = content.get('skills', [])
+            skills_names = [s.get('name', '') for s in skills_list if s.get('name')]
+            skills_str = "、".join(skills_names[:10])
+
+            # 3. 工作经历抽取 (最近 2 条)
+            # 3. 【修复点】：合并工作、实习、校园经历
+            works = content.get('workExperiences', [])
+            interns = content.get('internshipExperiences', [])
+            campus = content.get('campusExperiences', [])
+            all_exps = []
+            for w in works:
+                all_exps.append({'org': w.get('company', '某公司'), 'role': w.get('role', '某职位'), 'period': f"{w.get('startDate', '')} 至 {w.get('endDate', '')}", 'desc': w.get('description', '')})
+            for i in interns:
+                all_exps.append({'org': i.get('company', '某公司'), 'role': i.get('role', '实习生'), 'period': f"{i.get('startDate', '')} 至 {i.get('endDate', '')}", 'desc': i.get('description', '')})
+            for c in campus:
+                org_name = c.get('school') or c.get('organization') or '某学校/组织'
+                all_exps.append({'org': org_name, 'role': c.get('role', '成员'), 'period': f"{c.get('startDate', '')} 至 {c.get('endDate', '')}", 'desc': c.get('description', '')})
+
+            work_context = ""
+
+            # 取最前面的 3 条经历（前端传入通常已经按时间排好序）
+            for exp in all_exps[:3]:
+                desc = exp['desc'].replace('\n', ' ')[:100] if exp['desc'] else ''
+                work_context += f"- {exp['org']} | {exp['role']} ({exp['period']})\n  核心职责/成就: {desc}...\n"
+
+            # 4. 组装简历摘要模板
+            resume_text = f"""
+            【候选人简历摘要】
+            - 姓名: {name}
+            - 核心技能: {skills_str if skills_str else '未填写'}
+            - 近期经历:
+            {work_context if work_context else '未填写'}
+            """
+
+            # 5. 安全硬截断，作为兜底防止恶意的超长输入
+            return resume_text.strip()[:max_chars]
+
+        except Exception as e:
+            print(f"简历摘要提取失败: {str(e)}")
+            return ""
+
+    @staticmethod
     def start_interview(user_id, job_id):
+        # 0. 【修复点】：提前拉取简历，判断是否为空
+        resume_data = ResumeService.get_main_resume(user_id)
+        content = resume_data.get('content', {})
+        has_experience = bool(content.get('workExperiences') or content.get('internshipExperiences') or content.get('campusExperiences'))
+        has_skills = bool(content.get('skills'))
+        # 如果既没有经历也没有技能，判定为空简历
+        is_resume_empty = not (has_experience or has_skills)
+
         # 1. 创建面试记录
         interview = Interview(
             user_id=user_id,
@@ -76,19 +143,39 @@ class InterviewService:
             start_time=datetime.now()
         )
         db.session.add(interview)
-        db.session.commit()
+        db.session.flush() # 使用 flush 获取 interview.id 供后续绑定
+        # db.session.commit()
 
         # 2. 动态获取角色设定与提示词
         prompt_config = AiPrompt.query.filter_by(job_id=job_id, is_active=True).first()
-        system_msg = prompt_config.system_prompt if prompt_config else "你是一个专业的面试官。"
-        greeting = prompt_config.greeting_message if prompt_config else "你好，我们开始面试吧。"
+        base_greeting = prompt_config.greeting_message if prompt_config else "你好，我们开始面试吧。"
+        greeting = base_greeting
 
-        # 3. 记录开场白至 InterviewChat
+        # 3. 【修复点】：结合简历生成个性化开场白
+        if not is_resume_empty:
+            try:
+                resume_context = InterviewService._extract_resume_context(user_id)
+                llm = DeepSeekClient()
+                # 要求 LLM 融合基础配置和简历信息，生成一句话开场
+                sys_msg = f"你是一个专业的面试官。请根据候选人简历摘要，结合默认开场白：【{base_greeting}】，生成一句自然、友好的个性化开场欢迎语（要求：绝对不要提问，只打招呼并简短提及对方的背景，字数控制在80字左右）。\n\n{resume_context}"
+
+                greeting_reply = llm.generate_reply([{"role": "system", "content": sys_msg}])
+                if greeting_reply:
+                    greeting = greeting_reply.strip()
+            except Exception as e:
+                print(f"个性化开场白生成失败，降级使用默认配置: {str(e)}")
+
+        # 4. 记录开场白至 InterviewChat
         chat = InterviewChat(interview_id=interview.id, role='ai', content=greeting)
         db.session.add(chat)
         db.session.commit()
 
-        return {"interview_id": interview.id, "question": greeting}
+        # 5. 【修复点】：下发 warning 字段，供前端弹窗/Toast提示
+        return {
+            "interview_id": interview.id,
+            "question": greeting,
+            "warning": "系统检测到您的简历未完善，本次面试将进入「标准盲面」模式，无法为您进行个性化项目追问。" if is_resume_empty else None
+        }
 
     @staticmethod
     def process_chat_round_stream(interview_id, user_answer):
@@ -136,15 +223,21 @@ class InterviewService:
                     """
         # ========================================================
 
+        resume_context = InterviewService._extract_resume_context(interview.user_id)
+
         enhanced_system_prompt = f"""
                 {base_prompt}
                 {emotion_instruction}
+                {resume_context}
+                【提问策略调整指令】：
+                如果你在上述“候选人简历摘要”中看到了相关的项目和技能，请尽量结合 TA 的实际过往经历进行提问（例如：“你在X公司的Y项目中用到了Z技术，能具体说说...”）。如果简历为空，则直接进入常规提问。
+                
                 【面试提问大纲约束】：
                 为了保证面试的标准化，请你**严格**围绕以下“面试大纲”中的知识点向候选人提问。
                 - 每次提问请挑选 1 个具体的知识点进行深入考察。
                 - 请不要提出大纲范围之外（天马行空）的技术问题。
                 - 如果候选人回答不会，请宽慰他，并从大纲中换一个全新的知识点继续提问。
-
+                
                 面试大纲（标准知识点库）：
                 [{valid_tags_str}]
                 """
