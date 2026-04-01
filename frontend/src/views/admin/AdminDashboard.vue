@@ -52,27 +52,49 @@
         </div>
         <div class="metric-card">
           <div class="metric-title">岗位总数</div>
-          <div class="metric-value">{{ stats.total_jobs }}</div>
-          <div class="job-bubble-container">
-            <div v-for="(job, idx) in top_jobs" :key="job.job_id || idx" class="job-bubble-wrap">
-              <div class="job-bubble" :style="{ width: getBubbleSize(job.interview_count) + 'px', height: getBubbleSize(job.interview_count) + 'px', background: getBubbleColor(idx) }" :title="job.job_name">
-                {{ job.job_name || '无' }}
-              </div>
-            </div>
-            <div v-if="!top_jobs.length" class="bubble-empty">暂无岗位排行</div>
+          <div class="metric-ring-wrap">
+            <div class="metric-value">{{ stats.total_jobs }}</div>
+            <svg viewBox="0 0 36 36" class="metric-ring">
+              <path
+                class="metric-ring-bg"
+                d="M18 2.0845
+                  a 15.9155 15.9155 0 0 1 0 31.831
+                  a 15.9155 15.9155 0 0 1 0 -31.831"
+              />
+              <path
+                class="metric-ring-fill"
+                :stroke-dasharray="jobGrowthPercentage + ', 100'"
+                d="M18 2.0845
+                  a 15.9155 15.9155 0 0 1 0 31.831
+                  a 15.9155 15.9155 0 0 1 0 -31.831"
+              />
+              <text x="18" y="20.5" class="metric-ring-text">{{ jobGrowthPercentage.toFixed(1) }}%</text>
+            </svg>
           </div>
+          <div class="metric-sub">今日新增 {{ stats.today_new_jobs }} 岗</div>
         </div>
         <div class="metric-card">
           <div class="metric-title">题库总数</div>
-          <div class="metric-value">{{ stats.total_questions }}</div>
-        </div>
-        <div class="metric-card">
-          <div class="metric-title">已发布题目</div>
-          <div class="metric-value">{{ stats.total_published_questions }}</div>
-        </div>
-        <div class="metric-card">
-          <div class="metric-title">学习资源总数</div>
-          <div class="metric-value">{{ stats.total_resources }}</div>
+          <div class="metric-ring-wrap">
+            <div class="metric-value">{{ stats.total_questions }}</div>
+            <svg viewBox="0 0 36 36" class="metric-ring">
+              <path
+                class="metric-ring-bg"
+                d="M18 2.0845
+                  a 15.9155 15.9155 0 0 1 0 31.831
+                  a 15.9155 15.9155 0 0 1 0 -31.831"
+              />
+              <path
+                class="metric-ring-fill"
+                :stroke-dasharray="questionGrowthPercentage + ', 100'"
+                d="M18 2.0845
+                  a 15.9155 15.9155 0 0 1 0 31.831
+                  a 15.9155 15.9155 0 0 1 0 -31.831"
+              />
+              <text x="18" y="20.5" class="metric-ring-text">{{ questionGrowthPercentage.toFixed(1) }}%</text>
+            </svg>
+          </div>
+          <div class="metric-sub">今日新发布 {{ stats.today_new_questions }} 题</div>
         </div>
       </section>
 
@@ -127,7 +149,6 @@
           <div class="empty-tip" v-else>暂无系统动态</div>
         </div>
       </section>
-
     </main>
   </div>
 </template>
@@ -147,6 +168,7 @@ export default {
         total_jobs: 0,
         today_new_jobs: 0,
         total_questions: 0,
+        today_new_questions: 0,
         total_published_questions: 0,
         total_resources: 0,
         total_visits: 0,
@@ -184,6 +206,14 @@ export default {
     interviewGrowthPercentage() {
       if (!this.stats.total_interviews || this.stats.total_interviews <= 0) return 0
       return Math.min(100, (this.stats.today_new_interviews / this.stats.total_interviews) * 100)
+    },
+    jobGrowthPercentage() {
+      if (!this.stats.total_jobs || this.stats.total_jobs <= 0) return 0
+      return Math.min(100, (this.stats.today_new_jobs / this.stats.total_jobs) * 100)
+    },
+    questionGrowthPercentage() {
+      if (!this.stats.total_questions || this.stats.total_questions <= 0) return 0
+      return Math.min(100, (this.stats.today_new_questions / this.stats.total_questions) * 100)
     }
   },
   methods: {
@@ -218,6 +248,7 @@ export default {
           total_jobs: data.total_jobs || 0,
           today_new_jobs: data.today_new_jobs || 0,
           total_questions: data.total_questions || 0,
+          today_new_questions: data.today_new_questions || 0,
           total_published_questions: data.total_published_questions || 0,
           total_resources: data.total_resources || 0,
           total_visits: data.total_visits || data.unique_visitors || 0,

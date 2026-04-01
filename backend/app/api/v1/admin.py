@@ -291,8 +291,27 @@ def get_dashboard():
             .filter(func.date(Interview.start_time) == date.today())
             .scalar() or 0
         )
+
         total_jobs = db.session.query(func.count(Job.id)).scalar() or 0
         total_questions = db.session.query(func.count(Question.id)).scalar() or 0
+
+        try:
+            today_new_jobs = (
+                db.session.query(func.count(Job.id))
+                .filter(func.date(Job.created_at) == date.today())
+                .scalar() or 0
+            )
+        except Exception:
+            today_new_jobs = 0
+
+        try:
+            today_new_questions = (
+                db.session.query(func.count(Question.id))
+                .filter(func.date(Question.created_at) == date.today())
+                .scalar() or 0
+            )
+        except Exception:
+            today_new_questions = 0
         total_published_questions = (
             db.session.query(func.count(Question.id)).filter(Question.status == 'published').scalar() or 0
         )
@@ -446,7 +465,9 @@ def get_dashboard():
                 'total_interviews': int(total_interviews),
                 'today_new_interviews': int(today_new_interviews),
                 'total_jobs': int(total_jobs),
+                'today_new_jobs': int(today_new_jobs),
                 'total_questions': int(total_questions),
+                'today_new_questions': int(today_new_questions),
                 'total_published_questions': int(total_published_questions),
                 'total_resources': int(total_resources),
                 'top_jobs': top_jobs,
@@ -791,14 +812,14 @@ def list_entities():
                 query = query.filter(
                     or_(
                         Question.content.ilike(like_pattern),
-                        Question.reference_answer.ilike(like_pattern),
                         Question.source.ilike(like_pattern),
+                        Question.reference_answer.cast(db.String).ilike(like_pattern),
                         Question.keywords.cast(db.String).ilike(like_pattern)
                     )
                 )
 
             total = query.count()
-            records = query.order_by(Question.id.desc()).offset((page - 1) * size).limit(size).all()
+            records = query.order_by(Question.id.asc()).offset((page - 1) * size).limit(size).all()
             payload = [_serialize_question(item) for item in records]
         elif entity in ['knowledge', 'resource']:
             query = Resource.query
@@ -819,7 +840,7 @@ def list_entities():
 
             total = query.count()
             records = (
-                query.order_by(Resource.id.desc())
+                query.order_by(Resource.id.asc())
                 .offset((page - 1) * size)
                 .limit(size)
                 .all()

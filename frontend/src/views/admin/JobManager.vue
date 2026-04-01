@@ -1,6 +1,5 @@
 <template>
   <div class="jm-layout">
-    <AdminSideNav />
     <div class="jm-main">
       <div class="jm-content">
         <div class="jm-header">
@@ -8,18 +7,23 @@
             <h1 class="jm-header__title">岗位管理</h1>
             <p class="jm-header__sub">共 <strong>{{ total }}</strong> 个岗位</p>
           </div>
-          <button class="btn btn-primary" @click="openCreate">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="btn-icon">
-              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-            </svg>
-            新建岗位
-          </button>
+          <div class="jm-header__actions">
+            <button class="btn btn-primary btn-image" @click="openCreate">
+              新建岗位
+            </button>
+          </div>
         </div>
 
-        <div class="jm-filters">
-          <input v-model="searchKeyword" class="filter-input" placeholder="按岗位名/描述搜索" @keyup.enter="onSearch" />
-          <button class="btn btn-primary" @click="onSearch">搜索</button>
-          <button v-if="hasFilters" class="btn btn-text" @click="clearFilters">清空</button>
+        <div class="jm-filters" style="display: flex; align-items: center; gap: 10px;">
+          <div class="jm-search" style="flex: 1; min-width: 220px; max-width: 360px;">
+            <div class="jm-search-box">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="jm-search-box__icon">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+              <input v-model="searchKeyword" type="text" placeholder="按岗位名/描述搜索" class="jm-search-box__input" @input="onSearchDebounce" />
+              <button v-if="searchKeyword" class="jm-search-box__clear" @click="clearSearch">✕</button>
+            </div>
+          </div>
         </div>
 
         <div class="table-card">
@@ -179,6 +183,7 @@ export default {
       size: 15,
       loading: false,
       searchKeyword: '',
+      searchTimer: null,
 
       showModal: false,
       modalMode: 'create',
@@ -240,6 +245,20 @@ export default {
     },
 
     onSearch() {
+      this.page = 1
+      this.loadData()
+    },
+
+    onSearchDebounce() {
+      clearTimeout(this.searchTimer)
+      this.searchTimer = setTimeout(() => {
+        this.page = 1
+        this.loadData()
+      }, 400)
+    },
+
+    clearSearch() {
+      this.searchKeyword = ''
       this.page = 1
       this.loadData()
     },
@@ -372,10 +391,54 @@ export default {
 .jm-layout { display: flex; min-height: 100vh; background: #f5f6fa; }
 .jm-main { flex: 1; min-width: 0; display: flex; flex-direction: column; padding: 28px 32px; overflow-y: auto; max-height: 100vh; }
 .jm-content { max-width: 1400px; width: 100%; margin: 0 auto; }
-.jm-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; gap: 16px; }
+.jm-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 20px; gap: 16px; flex-wrap: wrap; }
 .jm-header__title { font-size: 22px; font-weight: 700; margin: 0; }
 .jm-header__sub { margin: 0; color: #6b7280; }
+.jm-header__actions { display: flex; gap: 10px; align-items: center; flex-shrink: 0; }
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 38px;
+  padding: 0 18px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  border: none;
+}
+.btn-primary {
+  background: #4338ca;
+  color: #fff;
+}
+.btn-primary:hover {
+  background: #3730a3;
+}
+.btn-image {
+  padding-left: 44px;
+  position: relative;
+}
+.btn-image::before {
+  content: '';
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='12' y1='5' x2='12' y2='19'/%3E%3Cline x1='5' y1='12' x2='19' y2='12'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-size: contain;
+}
 .jm-filters { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+.jm-search-box { position: relative; max-width: 100%; }
+.jm-search-box__icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #9ca3af; width: 16px; height: 16px; pointer-events: none; }
+.jm-search-box__input { width: 100%; height: 38px; padding: 0 36px 0 38px; border: 1.5px solid #e5e7eb; border-radius: 8px; background: white; font-size: 13px; color: #374151; outline: none; }
+.jm-search-box__input:focus { border-color: #4338ca; box-shadow: 0 0 0 3px rgba(67,56,202,0.1); }
+.jm-search-box__clear { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; border: none; border-radius: 50%; background: #e5e7eb; color: #6b7280; display: flex; justify-content: center; align-items: center; font-size: 10px; cursor: pointer; }
+.jm-search-box__clear:hover { background: #d1d5db; }
 .filter-input { height: 36px; padding: 0 12px; border: 1px solid #e5e7eb; border-radius: 8px; background: white; }
 .table-card { background: white; border-radius: 12px; border: 1px solid #e5e7eb; box-shadow: 0 1px 4px rgba(0,0,0,0.04); overflow: hidden; }
 .table-loading, .table-empty { padding: 50px 20px; text-align: center; color: #9ca3af; }
