@@ -12,28 +12,34 @@ import request from '@/utils/request'
 
 /** 获取题目列表（分页 + 过滤） */
 export function listQuestions(params = {}) {
+  const entity = params.entity || 'question'
   return request.get('/questions', {
-    params: { entity: 'question', ...params },
+    params: { entity, ...params },
     admin: true
   })
 }
 
-/** 创建题目 */
-export function createQuestion(data) {
-  return request.post('/questions', { entity: 'question', ...data }, { admin: true })
+/** 创建题目/知识项 */
+export function createQuestion(data, entity = 'question') {
+  return request.post('/questions', { entity, ...data }, { admin: true })
 }
 
-/** 更新题目 */
-export function updateQuestion(id, data) {
-  return request.put(`/questions/${id}`, { entity: 'question', ...data }, { admin: true })
+/** 更新题目/知识项 */
+export function updateQuestion(id, data, entity = 'question') {
+  return request.put(`/questions/${id}`, { entity, ...data }, { admin: true })
 }
 
-/** 删除题目 */
-export function deleteQuestion(id) {
+/** 删除题目/知识项 */
+export function deleteQuestion(id, entity = 'question') {
   return request.delete(`/questions/${id}`, {
-    params: { entity: 'question' },
+    params: { entity },
     admin: true
   })
+}
+
+/** 批量更新题目状态 */
+export function bulkUpdateQuestionStatus(data) {
+  return request.post('/questions/bulk-update-status', data, { admin: true })
 }
 
 /**
@@ -41,6 +47,12 @@ export function deleteQuestion(id) {
  * @param {{ dry_run: boolean, clear_existing: boolean, base_dir?: string }} data
  */
 export function importQuestions(data) {
+  if (data instanceof FormData) {
+    return request.post('/questions/import', data, {
+      admin: true,
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+  }
   return request.post('/questions/import', data, { admin: true })
 }
 
@@ -111,12 +123,61 @@ export function getAdminUserPerformance(userId) {
   return request.get(`/users/${userId}/performance`, { admin: true })
 }
 
+/** 获取指定用户简历列表（Admin） */
+export function listAdminUserResumes(userId) {
+  return request.get(`/users/${userId}/resumes`, { admin: true })
+}
+
+/** 获取指定用户简历详情（Admin） */
+export function getAdminUserResume(userId, resumeId) {
+  return request.get(`/users/${userId}/resumes/${resumeId}`, { admin: true })
+}
+
+/** 更新用户信息（Admin） */
+export function updateAdminUser(userId, data) {
+  return request.put(`/users/${userId}`, data, { admin: true })
+}
+
+/** 创建用户（Admin） */
+export function createAdminUser(data) {
+  return request.post('/users', data, { admin: true })
+}
+
 // ─────────────────────────────────────────────
-// 公共：岗位下拉列表
+// 岗位管理
 // ─────────────────────────────────────────────
 
 /** 获取全部岗位（用于下拉选择） */
 export function listAdminJobs() {
-
   return request.get('/jobs', { admin: true })
+}
+
+/** 获取岗位列表（分页） */
+export function listJobs(params = {}) {
+  return request.get('/jobs', { params, admin: true })
+}
+
+/** 创建岗位 */
+export function createJob(data) {
+  return request.post('/jobs', data, { admin: true })
+}
+
+/** 更新岗位 */
+export function updateJob(id, data) {
+  return request.put(`/jobs/${id}`, data, { admin: true })
+}
+
+/** 删除岗位 */
+export function deleteJob(id) {
+  return request.delete(`/jobs/${id}`, { admin: true })
+}
+
+/** 上传岗位图标 */
+export function uploadJobIcon(file) {
+  const formData = new FormData()
+  formData.append('file', file)
+  return request.post('/jobs/icon-upload', formData, {
+    admin: true,
+    headers: { 'Content-Type': 'multipart/form-data' }
+  })
 }

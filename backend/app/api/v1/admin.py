@@ -1,12 +1,16 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, current_app
 from datetime import date, datetime, timedelta
 from pathlib import Path
+import os
+import uuid
 
 from sqlalchemy import func, or_
 import yaml
 
 from app.services.auth_service import AuthService
 from app.services.learning_service import LearningService
+from app.services.user_service import UserService
+from werkzeug.utils import secure_filename
 from app.api.v1.auth_utils import admin_required
 from app.extensions import db
 from app.models.user import User
@@ -17,6 +21,8 @@ from app.models.question import Question
 from app.models.learning import KnowledgeTag, Resource, UserLearning, UserKnowledgeMastery
 from app.models.example import Example
 from app.models.prompt import AiPrompt
+from app.models.learning import Resource, UserLearning, KnowledgeTag
+from app.models.resume import Resume
 
 
 admin_bp = Blueprint('admin', __name__)
@@ -25,6 +31,13 @@ _JOB_MAPPING_CACHE = None
 
 # 适配 Question 新增字段 source, status 及多对多关联 knowledge_tags
 def _serialize_question(question):
+    # question.knowledge_points 可能不存在（数据库使用 question.knowledge_tags 关联）
+    knowledge_points = None
+    if hasattr(question, 'knowledge_points'):
+        knowledge_points = question.knowledge_points
+    else:
+        knowledge_points = [tag.name for tag in getattr(question, 'knowledge_tags', [])]
+
     return {
         'id': question.id,
         'job_id': question.job_id,
@@ -33,28 +46,13 @@ def _serialize_question(question):
         'difficulty': question.difficulty,
         'keywords': question.keywords,
         'reference_answer': question.reference_answer,
-        'source': question.source,
-        'status': question.status,
-        'knowledge_tags': [{'id': t.id, 'name': t.name} for t in question.knowledge_tags]
+        'source': getattr(question, 'source', None),
+        'status': getattr(question, 'status', 'draft'),
+        'knowledge_points': knowledge_points
     }
 
-# 序列化 Resource 学习资源
-def _serialize_resource(resource):
-    return {
-        'id': resource.id,
-        'title': resource.title,
-        'type': resource.type,
-        'url': resource.url,
-        'content': resource.content,
-        'source': resource.source,
-        'thumbnail': resource.thumbnail,
-        'difficulty': resource.difficulty,
-        'tags': resource.tags,
-        'knowledge_tags': [{'id': t.id, 'name': t.name} for t in resource.knowledge_tags]
-    }
 
-# 序列化 KnowledgeTag 知识点标签
-def _serialize_knowledge_tag(tag):
+def _serialize_knowledge(item):
     return {
         'id': tag.id,
         'name': tag.name,
@@ -73,7 +71,56 @@ def _serialize_example(example):
         'answer': example.answer
     }
 
-# 实体解析支持并增加白名单校验：question, resource, tag, example
+
+def _serialize_resource(resource):
+    knowledge_tag_names = [tag.name for tag in getattr(resource, 'knowledge_tags', [])]
+    return {
+        'id': resource.id,
+        'title': resource.title,
+        'type': resource.type,
+        'url': resource.url,
+        'content': resource.content,
+        'source': resource.source,
+        'difficulty': resource.difficulty,
+        'tags': knowledge_tag_names,
+        'knowledge_tags': knowledge_tag_names
+    }
+
+
+def _resolve_knowledge_tags(tags):
+    if tags is None:
+        return None
+    if not isinstance(tags, list):
+        raise ValueError('knowledge_tags 必须是数组或 null')
+
+    normalized = []
+    for t in tags:
+        if t is None:
+            continue
+        if isinstance(t, int):
+            kt = KnowledgeTag.query.get(t)
+            if kt:
+                normalized.append(kt)
+            continue
+
+        name = str(t).strip()
+        if len(name) > 100:
+            name = name[:97] + "..."
+            
+        if not name:
+            continue
+
+        kt = KnowledgeTag.query.filter(func.lower(KnowledgeTag.name) == name.lower()).first()
+        if not kt:
+            kt = KnowledgeTag(name=name)
+            db.session.add(kt)
+            db.session.flush()
+
+        normalized.append(kt)
+
+    return normalized
+
+
 def _resolve_entity():
     entity = (request.args.get('entity') or '').strip().lower()
     if not entity:
@@ -178,7 +225,6 @@ def _create_default_prompt_for_job(job):
         greeting_message=default_greeting,
         questioning_style='专业、结构化追问',
         temperature=0.7,
-        max_tokens=500,
         is_active=True
     )
 
@@ -194,9 +240,9 @@ def _serialize_prompt(prompt):
         'greeting_message': prompt.greeting_message,
         'questioning_style': prompt.questioning_style,
         'temperature': float(prompt.temperature) if prompt.temperature is not None else None,
-        'max_tokens': prompt.max_tokens,
+        'max_tokens': getattr(prompt, 'max_tokens', 500),
         'is_active': prompt.is_active,
-        'created_at': prompt.created_at.isoformat() if prompt.created_at else None
+        'created_at': getattr(prompt, 'created_at', None).isoformat() if getattr(prompt, 'created_at', None) else None
     }
 
 
@@ -247,6 +293,10 @@ def get_dashboard():
         )
         total_jobs = db.session.query(func.count(Job.id)).scalar() or 0
         total_questions = db.session.query(func.count(Question.id)).scalar() or 0
+        total_published_questions = (
+            db.session.query(func.count(Question.id)).filter(Question.status == 'published').scalar() or 0
+        )
+        total_resources = db.session.query(func.count(Resource.id)).scalar() or 0
 
         top_jobs_rows = (
             db.session.query(
@@ -397,6 +447,8 @@ def get_dashboard():
                 'today_new_interviews': int(today_new_interviews),
                 'total_jobs': int(total_jobs),
                 'total_questions': int(total_questions),
+                'total_published_questions': int(total_published_questions),
+                'total_resources': int(total_resources),
                 'top_jobs': top_jobs,
                 'top_users': user_rankings,
                 'recent_events': recent_events,
@@ -404,6 +456,19 @@ def get_dashboard():
             },
             '获取管理大盘数据成功'
         )
+    except Exception as exc:
+        return error_response(str(exc), 500)
+
+
+@admin_bp.route('/users', methods=['POST'])
+@admin_required
+def create_user():
+    try:
+        data = request.get_json(silent=True) or {}
+        result = UserService.create_user(data)
+        return success_response(result, '创建用户成功')
+    except ValueError as exc:
+        return error_response(str(exc), 400)
     except Exception as exc:
         return error_response(str(exc), 500)
 
@@ -477,7 +542,7 @@ def get_users():
         total = query.count()
         items = (
             query
-            .order_by(User.created_at.desc(), User.id.desc())
+            .order_by(User.id.asc())
             .offset((page - 1) * size)
             .limit(size)
             .all()
@@ -492,6 +557,19 @@ def get_users():
             },
             '获取用户列表成功'
         )
+    except Exception as exc:
+        return error_response(str(exc), 500)
+
+
+@admin_bp.route('/users/<int:user_id>', methods=['PUT'])
+@admin_required
+def update_user(user_id):
+    try:
+        data = request.get_json(silent=True) or {}
+        result = UserService.update_profile(user_id, data)
+        return success_response(result, '更新用户信息成功')
+    except ValueError as exc:
+        return error_response(str(exc), 400)
     except Exception as exc:
         return error_response(str(exc), 500)
 
@@ -540,8 +618,49 @@ def delete_user(user_id):
 @admin_required
 def list_jobs():
     try:
-        jobs = Job.query.order_by(Job.id.asc()).all()
-        return success_response({'list': [job.to_dict() for job in jobs], 'total': len(jobs)}, '获取岗位列表成功')
+        query = Job.query
+        keyword = request.args.get('q', '').strip()
+        if keyword:
+            like_pattern = f"%{keyword}%"
+            query = query.filter(
+                or_(
+                    Job.name.ilike(like_pattern),
+                    Job.description.ilike(like_pattern)
+                )
+            )
+
+        jobs = query.order_by(Job.id.asc()).all()
+        return success_response({'list': [job.to_dict() for job in jobs], 'total': query.count()}, '获取岗位列表成功')
+    except Exception as exc:
+        return error_response(str(exc), 500)
+
+
+@admin_bp.route('/jobs/icon-upload', methods=['POST'])
+@admin_required
+def upload_job_icon():
+    try:
+        icon_file = request.files.get('file') or request.files.get('icon')
+        if not icon_file:
+            return error_response('请上传图标文件', 400)
+
+        filename = secure_filename(icon_file.filename or '')
+        if not filename or '.' not in filename:
+            return error_response('文件名无效', 400)
+
+        ext = filename.rsplit('.', 1)[1].lower()
+        if ext not in {'png', 'jpg', 'jpeg', 'gif', 'webp'}:
+            return error_response('仅支持 png/jpg/jpeg/gif/webp 格式', 400)
+
+        upload_root = current_app.config.get('UPLOAD_ROOT') or os.path.join(current_app.root_path, 'uploads')
+        icon_dir = os.path.join(upload_root, 'job_icons')
+        os.makedirs(icon_dir, exist_ok=True)
+
+        saved_name = f"job_icon_{uuid.uuid4().hex}.{ext}"
+        saved_path = os.path.join(icon_dir, saved_name)
+        icon_file.save(saved_path)
+
+        icon_url = f"/uploads/job_icons/{saved_name}"
+        return success_response({'icon_url': icon_url}, '图标上传成功')
     except Exception as exc:
         return error_response(str(exc), 500)
 
@@ -603,12 +722,12 @@ def update_job(job_id):
 
         if 'description' in data:
             job.description = data.get('description')
-        # if 'icon_url' in data:
-        #     job.icon_url = data.get('icon_url')
-        # if 'tech_stack' in data:
-        #     if data.get('tech_stack') is not None and not isinstance(data.get('tech_stack'), list):
-        #         return error_response('tech_stack 必须为数组或 null', 400)
-        #     job.tech_stack = data.get('tech_stack')
+        if 'icon_url' in data:
+            job.icon_url = data.get('icon_url')
+        if 'tech_stack' in data:
+            if data.get('tech_stack') is not None and not isinstance(data.get('tech_stack'), list):
+                return error_response('tech_stack 必须为数组或 null', 400)
+            job.tech_stack = data.get('tech_stack')
 
         db.session.commit()
         return success_response(job.to_dict(), '岗位更新成功')
@@ -624,6 +743,12 @@ def delete_job(job_id):
         job = Job.query.get(job_id)
         if not job:
             return error_response('岗位不存在', 404)
+
+        # 方案一：禁止删除关联题目未处理的岗位，避免触发非空外键约束错误
+        from app.models.question import Question
+        question_count = Question.query.filter_by(job_id=job_id).count()
+        if question_count > 0:
+            return error_response(f'该岗位关联了 {question_count} 个题目，需先删除或迁移后再删除岗位', 400)
 
         db.session.delete(job)
         db.session.commit()
@@ -642,6 +767,9 @@ def list_entities():
         page = request.args.get('page', default=1, type=int)
         size = request.args.get('size', default=10, type=int)
         job_id = request.args.get('job_id', type=int)
+        keyword = (request.args.get('q') or request.args.get('keyword') or '').strip()
+        question_type = (request.args.get('type') or '').strip()
+        difficulty = (request.args.get('difficulty') or '').strip()
 
         if page < 1 or size < 1:
             return error_response('page 和 size 必须大于等于 1', 400)
@@ -650,32 +778,55 @@ def list_entities():
 
         if entity == 'question':
             query = Question.query
-            if job_id: query = query.filter(Question.job_id == job_id)
+            if job_id:
+                query = query.filter(Question.job_id == job_id)
+            if question_type:
+                query = query.filter(Question.type == question_type)
+            if difficulty:
+                query = query.filter(Question.difficulty == difficulty)
+            if request.args.get('status'):
+                query = query.filter(Question.status == request.args.get('status'))
+            if keyword:
+                like_pattern = f'%{keyword}%'
+                query = query.filter(
+                    or_(
+                        Question.content.ilike(like_pattern),
+                        Question.reference_answer.ilike(like_pattern),
+                        Question.source.ilike(like_pattern),
+                        Question.keywords.cast(db.String).ilike(like_pattern)
+                    )
+                )
+
             total = query.count()
             records = query.order_by(Question.id.desc()).offset((page - 1) * size).limit(size).all()
             payload = [_serialize_question(item) for item in records]
-
-        elif entity == 'resource':
+        elif entity in ['knowledge', 'resource']:
             query = Resource.query
+            if question_type:
+                query = query.filter(Resource.type == question_type)
+            if difficulty:
+                query = query.filter(Resource.difficulty == difficulty)
+            if keyword:
+                like_pattern = f'%{keyword}%'
+                query = query.filter(
+                    or_(
+                        Resource.title.ilike(like_pattern),
+                        Resource.content.ilike(like_pattern),
+                        Resource.source.ilike(like_pattern),
+                        Resource.url.ilike(like_pattern)
+                    )
+                )
+
             total = query.count()
-            records = query.order_by(Resource.id.desc()).offset((page - 1) * size).limit(size).all()
+            records = (
+                query.order_by(Resource.id.desc())
+                .offset((page - 1) * size)
+                .limit(size)
+                .all()
+            )
             payload = [_serialize_resource(item) for item in records]
-
-        elif entity == 'tag':
-            query = KnowledgeTag.query
-            total = query.count()
-            records = query.order_by(KnowledgeTag.id.desc()).offset((page - 1) * size).limit(size).all()
-            payload = [_serialize_knowledge_tag(item) for item in records]
-
-        elif entity == 'example':
-            query = Example.query
-            if job_id: query = query.filter(Example.job_id == job_id)
-            total = query.count()
-            records = query.order_by(Example.id.desc()).offset((page - 1) * size).limit(size).all()
-            payload = [_serialize_example(item) for item in records]
-
         else:
-            return error_response('entity 仅支持 question/resource/tag/example', 400)
+            return error_response('entity 仅支持 question 或 resource', 400)
 
         return success_response(
             {'entity': entity, 'list': payload, 'page': page, 'size': size, 'total': total},
@@ -703,70 +854,50 @@ def create_entity():
                 type=_normalize_question_type(data.get('type')),
                 difficulty=data.get('difficulty'),
                 keywords=data.get('keywords') if isinstance(data.get('keywords'), list) else None,
-                reference_answer=data.get('reference_answer'),
-                source=data.get('source'),
-                status=data.get('status', 'draft')
+                reference_answer=data.get('reference_answer')
             )
-            # 关联 KnowledgeTag
-            tag_ids = data.get('tag_ids', [])
-            if isinstance(tag_ids, list) and tag_ids:
-                item.knowledge_tags = KnowledgeTag.query.filter(KnowledgeTag.id.in_(tag_ids)).all()
-
+            # 解析并关联知识点标签（兼容前端使用 knowledge_points 字段传入名称或 id）
+            if data.get('knowledge_points') is not None:
+                try:
+                    resolved = _resolve_knowledge_tags(data.get('knowledge_points'))
+                    item.knowledge_tags = resolved if resolved is not None else []
+                except ValueError as exc:
+                    db.session.rollback()
+                    return error_response(str(exc), 400)
             db.session.add(item)
             db.session.commit()
             return success_response(_serialize_question(item), '题目创建成功')
 
-        # Resource 创建
-        elif entity == 'resource':
-            if not data.get('title') or not data.get('type'):
-                return error_response('title 和 type 不能为空', 400)
+        if entity in ['knowledge', 'resource']:
+            title = (data.get('title') or '').strip()
+            content = (data.get('content') or '').strip()
+            if not title:
+                return error_response('title 不能为空', 400)
+            if not content:
+                return error_response('content 不能为空', 400)
+
             item = Resource(
-                title=data.get('title').strip(),
-                type=data.get('type').strip(),
+                title=title,
+                type=data.get('type') or 'article',
                 url=data.get('url'),
-                content=data.get('content'),
+                content=content,
                 source=data.get('source'),
-                thumbnail=data.get('thumbnail'),
-                difficulty=data.get('difficulty'),
-                tags=data.get('tags') if isinstance(data.get('tags'), list) else None
-            )
-            tag_ids = data.get('tag_ids', [])
-            if isinstance(tag_ids, list) and tag_ids:
-                item.knowledge_tags = KnowledgeTag.query.filter(KnowledgeTag.id.in_(tag_ids)).all()
-
-            db.session.add(item)
-            db.session.commit()
-            return success_response(_serialize_resource(item), '资源创建成功')
-
-        # KnowledgeTag 创建
-        elif entity == 'tag':
-            if not data.get('name'):
-                return error_response('name 不能为空', 400)
-            item = KnowledgeTag(
-                name=data.get('name').strip(),
-                category=data.get('category'),
-                complexity=data.get('complexity'),
-                estimated_hours=data.get('estimated_hours')
+                difficulty=data.get('difficulty')
             )
             db.session.add(item)
-            db.session.commit()
-            return success_response(_serialize_knowledge_tag(item), '标签创建成功')
 
-        # Example 创建
-        elif entity == 'example':
-            if not data.get('job_id') or not data.get('question') or not data.get('answer'):
-                return error_response('job_id, question 和 answer 不能为空', 400)
-            item = Example(
-                job_id=data.get('job_id'),
-                question=data.get('question').strip(),
-                framework=data.get('framework'),
-                answer=data.get('answer').strip()
-            )
-            db.session.add(item)
-            db.session.commit()
-            return success_response(_serialize_example(item), '范例创建成功')
+            if 'knowledge_tags' in data:
+                try:
+                    resolved = _resolve_knowledge_tags(data.get('knowledge_tags'))
+                    item.knowledge_tags = resolved if resolved is not None else []
+                except ValueError as exc:
+                    db.session.rollback()
+                    return error_response(str(exc), 400)
 
-        return error_response('entity 仅支持 question/resource/tag/example', 400)
+            db.session.commit()
+            return success_response(_serialize_resource(item), '学习资源创建成功')
+
+        return error_response('entity 仅支持 question 或 resource', 400)
     except Exception as exc:
         db.session.rollback()
         return error_response(str(exc), 500)
@@ -801,89 +932,53 @@ def update_entity(item_id):
                 item.keywords = data.get('keywords')
             if 'reference_answer' in data:
                 item.reference_answer = data.get('reference_answer')
-            if 'source' in data:
-                item.source = data.get('source')
             if 'status' in data:
                 item.status = data.get('status')
-
-            # 更新关联 KnowledgeTag
-            if 'tag_ids' in data and isinstance(data.get('tag_ids'), list):
-                item.knowledge_tags = KnowledgeTag.query.filter(KnowledgeTag.id.in_(data.get('tag_ids'))).all()
+            if 'knowledge_points' in data:
+                if data.get('knowledge_points') is not None and not isinstance(data.get('knowledge_points'), list):
+                    return error_response('knowledge_points 必须是数组或 null', 400)
+                try:
+                    resolved = _resolve_knowledge_tags(data.get('knowledge_points'))
+                    item.knowledge_tags = resolved if resolved is not None else []
+                except ValueError as exc:
+                    db.session.rollback()
+                    return error_response(str(exc), 400)
 
             db.session.commit()
             return success_response(_serialize_question(item), '题目更新成功')
 
-        elif entity == 'resource':
+        if entity in ['knowledge', 'resource']:
             item = Resource.query.get(item_id)
             if not item:
-                return error_response('资源不存在', 404)
+                return error_response('学习资源不存在', 404)
 
             if 'title' in data:
-                item.title = data.get('title')
-            if 'type' in data:
-                item.type = data.get('type')
-            if 'url' in data:
-                item.url = data.get('url')
+                item.title = (data.get('title') or '').strip()
             if 'content' in data:
                 content = (data.get('content') or '').strip()
                 if not content:
                     return error_response('content 不能为空', 400)
                 item.content = content
+            if 'type' in data:
+                item.type = data.get('type')
+            if 'url' in data:
+                item.url = data.get('url')
             if 'source' in data:
                 item.source = data.get('source')
             if 'difficulty' in data:
                 item.difficulty = data.get('difficulty')
-            if 'tags' in data:
-                if data.get('tags') is not None and not isinstance(data.get('tags'), list):
-                    return error_response('tags 必须是数组或 null', 400)
-                item.tags = data.get('tags')
-            if 'tag_ids' in data and isinstance(data.get('tag_ids'), list):
-                item.knowledge_tags = KnowledgeTag.query.filter(KnowledgeTag.id.in_(data.get('tag_ids'))).all()
+            if 'knowledge_tags' in data:
+                try:
+                    resolved = _resolve_knowledge_tags(data.get('knowledge_tags'))
+                    item.knowledge_tags = resolved if resolved is not None else []
+                except ValueError as exc:
+                    db.session.rollback()
+                    return error_response(str(exc), 400)
 
             db.session.commit()
-            return success_response(_serialize_resource(item), '资源更新成功')
+            return success_response(_serialize_resource(item), '学习资源更新成功')
 
-        elif entity == 'tag':
-            item = KnowledgeTag.query.get(item_id)
-            if not item:
-                return error_response('标签不存在', 404)
-
-            if 'name' in data:
-                name = (data.get('name') or '').strip()
-                if not name:
-                    return error_response('name 不能为空', 400)
-                item.name = name
-            if 'category' in data:
-                item.category = data.get('category')
-            if 'complexity' in data:
-                item.complexity = data.get('complexity')
-            if 'estimated_hours' in data:
-                item.estimated_hours = data.get('estimated_hours')
-
-        elif entity == 'example':
-            item = Example.query.get(item_id)
-            if not item:
-                return error_response('范例不存在', 404)
-
-            if 'job_id' in data:
-                item.job_id = data.get('job_id')
-            if 'question' in data:
-                question = (data.get('question') or '').strip()
-                if not question:
-                    return error_response('question 不能为空', 400)
-                item.question = question
-            if 'framework' in data:
-                item.framework = data.get('framework')
-            if 'answer' in data:
-                answer = (data.get('answer') or '').strip()
-                if not answer:
-                    return error_response('answer 不能为空', 400)
-                item.answer = answer
-
-            db.session.commit()
-            return success_response(_serialize_knowledge_tag(item), '范例更新成功')
-
-        return error_response('entity 仅支持 question/resource/tag/example', 400)
+        return error_response('entity 仅支持 question 或 resource', 400)
     except Exception as exc:
         db.session.rollback()
         return error_response(str(exc), 500)
@@ -894,24 +989,43 @@ def update_entity(item_id):
 def delete_question_entity(item_id):
     try:
         entity = _resolve_entity()
-        model_map = {
-            'question': Question,
-            'resource': Resource,
-            'tag': KnowledgeTag,
-            'example': Example
-        }
 
-        model = model_map.get(entity)
-        if not model:
-            return error_response('entity 仅支持 question/resource/tag/example', 400)
+        if entity == 'question':
+            item = Question.query.get(item_id)
+            if not item:
+                return error_response('题目不存在', 404)
+            db.session.delete(item)
+            db.session.commit()
+            return success_response({'deleted_id': item_id, 'entity': entity}, '题目删除成功')
 
-        item = model.query.get(item_id)
-        if not item:
-            return error_response('数据不存在', 404)
+        if entity in ['knowledge', 'resource']:
+            item = Resource.query.get(item_id)
+            if not item:
+                return error_response('学习资源不存在', 404)
+            db.session.delete(item)
+            db.session.commit()
+            return success_response({'deleted_id': item_id, 'entity': entity}, '学习资源删除成功')
 
-        db.session.delete(item)
+        return error_response('entity 仅支持 question 或 resource', 400)
+    except Exception as exc:
+        db.session.rollback()
+        return error_response(str(exc), 500)
+
+
+@admin_bp.route('/questions/bulk-update-status', methods=['POST'])
+@admin_required
+def bulk_update_question_status():
+    try:
+        data = request.get_json(silent=True) or {}
+        ids = data.get('ids', [])
+        status = data.get('status', 'published')
+        
+        if not ids:
+            return error_response('未提供 ID 列表', 400)
+            
+        Question.query.filter(Question.id.in_(ids)).update({Question.status: status}, synchronize_session=False)
         db.session.commit()
-        return success_response({'deleted_id': item_id, 'entity': entity}, '删除成功')
+        return success_response(None, f'成功批量修改 {len(ids)} 条状态')
     except Exception as exc:
         db.session.rollback()
         return error_response(str(exc), 500)
@@ -921,29 +1035,87 @@ def delete_question_entity(item_id):
 @admin_required
 def import_questions():
     try:
-        data = request.get_json(silent=True) or {}
-        clear_existing = bool(data.get('clear_existing', False))
-        dry_run = bool(data.get('dry_run', False))
-        base_dir = (data.get('base_dir') or 'FuChuangTiKu').strip()
+        upload_file = request.files.get('file')
+        if upload_file:
+            # 通过前端上传的 YAML 文件导入
+            try:
+                payload_obj = yaml.safe_load(upload_file.stream) or {}
+            except Exception as exc:
+                return error_response(f'YAML 解析失败: {exc}', 400)
 
-        backend_root = Path(__file__).resolve().parents[3]
-        kb_root = (backend_root / base_dir).resolve()
-        if not kb_root.exists() or not kb_root.is_dir():
-            return error_response(f'题库目录不存在: {kb_root}', 400)
+            form = request.form.to_dict(flat=True)
+            entity = (form.get('entity') or 'question').strip().lower()
+            clear_existing = str(form.get('clear_existing', '')).lower() in ('1', 'true', 'yes', 'on')
+            status = form.get('status', 'published').strip().lower()
+            if status not in ('draft', 'published'):
+                status = 'published'
 
-        index_path = kb_root / 'index.yaml'
-        datasets = []
-        if index_path.exists():
-            with open(index_path, 'r', encoding='utf-8') as fp:
-                index_data = yaml.safe_load(fp) or {}
-            datasets = index_data.get('datasets', []) or []
-            datasets = [item for item in datasets if 'questions' in str(item.get('type', ''))]
+            # 当使用预览导入（也就是存为草稿）时，不清除已有的题目
+            if status == 'draft':
+                clear_existing = False
+            
+            # 根据实体类型选择默认目录
+            default_base = 'FuChuangTiKu' if entity == 'question' else 'resourcesKu'
+            base_dir = (form.get('base_dir') or default_base).strip()
+
+            datasets = [{'type': 'uploaded', 'data': payload_obj}]
+            use_uploaded = True
+            kb_root = None
         else:
-            for qf in sorted((kb_root / 'data' / 'questions').glob('*.yaml')):
-                datasets.append({'type': qf.stem, 'path': str(qf.relative_to(kb_root)).replace('\\\\', '/')})
+            data = request.get_json(silent=True) or {}
+            entity = (data.get('entity') or 'question').strip().lower()
+            clear_existing = bool(data.get('clear_existing', False))
+            status = (data.get('status') or 'published').strip().lower()
+            if status not in ('draft', 'published'):
+                status = 'published'
+
+            if status == 'draft':
+                clear_existing = False
+            
+            # 根据实体类型选择默认目录
+            default_base = 'FuChuangTiKu' if entity == 'question' else 'resourcesKu'
+            base_dir = (data.get('base_dir') or default_base).strip()
+
+            backend_root = Path(__file__).resolve().parents[3]
+            kb_root = (backend_root / base_dir).resolve()
+            if not kb_root.exists() or not kb_root.is_dir():
+                return error_response(f'目录不存在: {kb_root}', 400)
+
+            index_path = kb_root / 'index.yaml'
+            datasets = []
+            if index_path.exists():
+                with open(index_path, 'r', encoding='utf-8') as fp:
+                    index_data = yaml.safe_load(fp) or {}
+                datasets = index_data.get('datasets', []) or []
+            else:
+                # 如果没有 index.yaml，则扫描目录下的所有 yaml
+                if entity == 'question':
+                    search_dir = kb_root / 'data' / 'questions'
+                    if not search_dir.exists(): search_dir = kb_root
+                else:
+                    search_dir = kb_root / 'data' / 'knowledge_points'
+                    if not search_dir.exists(): search_dir = kb_root
+                
+                for qf in sorted(search_dir.glob('**/*.yaml')):
+                    datasets.append({'type': qf.stem, 'path': str(qf.relative_to(kb_root)).replace('\\', '/')})
+
+            use_uploaded = False
+
+        if entity == 'question':
+            # 当通过前端上传 YAML 文件时，datasets 已由上传内容提供，不应再按类型过滤或访问文件系统
+            if not use_uploaded:
+                # 如果是通过 index.yaml 加载的，过滤出 question 类型
+                if index_path.exists():
+                    datasets = [item for item in datasets if 'questions' in str(item.get('type', ''))]
+        elif entity in ['knowledge', 'resource']:
+            if not use_uploaded:
+                if index_path.exists():
+                    datasets = [item for item in datasets if 'knowledge_points' in str(item.get('type', ''))]
+        else:
+            return error_response('entity 仅支持 question 或 resource', 400)
 
         if not datasets:
-            return error_response('未发现可导入的 questions YAML 文件', 400)
+            return error_response('未发现可导入的 YAML 文件', 400)
 
         all_objects = []
         file_stats = []
@@ -951,89 +1123,153 @@ def import_questions():
 
         for ds in datasets:
             ds_type = ds.get('type')
-            ds_path = ds.get('path')
-            if not ds_path:
-                continue
-
-            yaml_path = (kb_root / ds_path).resolve()
-            if not yaml_path.exists():
-                continue
-
-            with open(yaml_path, 'r', encoding='utf-8') as fp:
-                payload = yaml.safe_load(fp) or {}
-
-            items = payload.get('items', []) or []
-            domain = _extract_domain_from_dataset(ds_type, str(yaml_path))
-            job = _get_or_create_job_by_domain(domain)
-
-            imported_count = 0
-            for item in items:
-                content = (item.get('question') or '').strip()
-                if not content:
-                    skipped += 1
+            if use_uploaded:
+                payload = ds.get('data') or {}
+                # 上传文件缺省时使用通用岗位，以保证题目可写入
+                job = _get_or_create_job_by_domain('general')
+            else:
+                ds_path = ds.get('path')
+                if not ds_path:
                     continue
 
-                key_points = item.get('key_points') if isinstance(item.get('key_points'), list) else None
-                tags = item.get('tags') if isinstance(item.get('tags'), list) else None
-                reference_answer = item.get('answer')
-                # 【修改】如果存在 key_points 但未指定 answer，将其格式化为 reference_answer(JSONB兼容)
-                if not reference_answer and key_points:
-                    reference_answer = key_points
-                # if not reference_answer and key_points:
-                #     reference_answer = '\\n'.join([f'- {kp}' for kp in key_points])
+                yaml_path = (kb_root / ds_path).resolve()
+                if not yaml_path.exists():
+                    continue
 
+                with open(yaml_path, 'r', encoding='utf-8') as fp:
+                    payload = yaml.safe_load(fp) or {}
 
-                all_objects.append(
-                    Question(
-                        job_id=job.id,
+                domain = _extract_domain_from_dataset(ds_type, str(yaml_path))
+                job = _get_or_create_job_by_domain(domain)
+
+            imported_count = 0
+            if entity == 'question':
+                if isinstance(payload, list):
+                    items = payload
+                else:
+                    items = payload.get('items', []) or []
+                for item in items:
+                    content = (item.get('question') or '').strip()
+                    if not content:
+                        skipped += 1
+                        continue
+
+                    key_points = item.get('key_points') if isinstance(item.get('key_points'), list) else None
+                    tags = item.get('tags') if isinstance(item.get('tags'), list) else None
+                    reference_answer = item.get('answer')
+                    if not reference_answer and key_points:
+                        reference_answer = '\n'.join([f'- {kp}' for kp in key_points])
+
+                    item_job_id = item.get('job_id') or (job.id if job else None)
+                    if not item_job_id:
+                        skipped += 1
+                        continue
+
+                    q_obj = Question(
+                        job_id=item_job_id,
                         content=content,
                         type=_normalize_question_type(item.get('type')),
                         difficulty=item.get('difficulty'),
                         keywords=tags,
                         reference_answer=reference_answer,
-                        source=item.get('source', 'admin_import'),
-                        status=item.get('status', 'published')
+                        source=item.get('source'),
+                        status=status
                     )
-                )
-                imported_count += 1
+                    # 解析并关联知识点标签（来自 key_points 字段）
+                    if key_points:
+                        try:
+                            resolved_tags = _resolve_knowledge_tags(key_points)
+                            q_obj.knowledge_tags = resolved_tags
+                        except ValueError:
+                            # 非法的知识点格式，跳过此题
+                            skipped += 1
+                            continue
+                    all_objects.append(q_obj)
+                    imported_count += 1
+            else:
+                if isinstance(payload, list):
+                    modules = payload
+                else:
+                    modules = payload.get('modules', []) or []
+                for module in modules:
+                    category = module.get('name')
+                    points = module.get('points', []) or []
+                    for pt in points:
+                        if isinstance(pt, str):
+                            point_name = pt
+                            resources = []
+                        else:
+                            point_name = pt.get('point') or ''
+                            resources = pt.get('resources', []) or []
 
-            file_stats.append(
-                {
-                    'type': ds_type,
-                    'file': str(yaml_path),
-                    'job_id': job.id,
-                    'job_name': job.name,
-                    'count': imported_count
-                }
-            )
+                        for res in resources:
+                            title = (res.get('name') or '').strip()
+                            if not title:
+                                skipped += 1
+                                continue
 
-        if not dry_run:
-            if clear_existing:
+                            res_url = res.get('url')
+                            yaml_type = res.get('type', 'article')
+                            content = res.get('description') or f'知识点: {point_name} / 模块: {category}'
+                            difficulty = res.get('complexity', 'medium')
+                            source = yaml_type
+                            tags = res.get('tags') if isinstance(res.get('tags'), list) else None
+
+                            all_objects.append(
+                                Resource(
+                                    title=title,
+                                    type=yaml_type,
+                                    url=res_url,
+                                    content=content,
+                                    source=source,
+                                    difficulty=difficulty
+                                )
+                            )
+                            imported_count += 1
+
+            # 记录文件信息：上传模式下使用上传文件名或标记，文件系统模式使用实际路径
+            if use_uploaded:
+                file_name = upload_file.filename if upload_file else 'uploaded'
+            else:
+                file_name = str(yaml_path)
+
+            file_stats.append({
+                'type': ds_type,
+                'file': file_name,
+                'job_id': job.id if job else None,
+                'job_name': job.name if job else None,
+                'count': imported_count
+            })
+
+        if clear_existing:
+            if entity == 'question':
                 db.session.query(Question).delete()
-                db.session.flush()
+                # 使用更通用的方式重置序列（自动识别序列名）
+                db.session.execute(db.text("SELECT setval(pg_get_serial_sequence('questions', 'id'), 1, false)"))
+            else:
+                db.session.query(Resource).delete()
+                db.session.query(KnowledgeTag).delete()
+                # 分别重置资源和标签的序列
+                db.session.execute(db.text("SELECT setval(pg_get_serial_sequence('resources', 'id'), 1, false)"))
+                db.session.execute(db.text("SELECT setval(pg_get_serial_sequence('knowledge_tags', 'id'), 1, false)"))
+            db.session.flush()
 
-            if all_objects:
-                db.session.bulk_save_objects(all_objects)
-            db.session.commit()
-        else:
-            db.session.rollback()
+        if all_objects:
+            # 使用 add_all 以保证 ORM 关系（如 knowledge_tags）能被正确处理
+            db.session.add_all(all_objects)
+        db.session.commit()
 
-        return success_response(
-            {
-                'dry_run': dry_run,
-                'clear_existing': clear_existing,
-                'base_dir': str(kb_root),
-                'imported_total': len(all_objects),
-                'skipped': skipped,
-                'files': file_stats
-            },
-            '题库批量导入完成'
-        )
+        return success_response({
+            'clear_existing': clear_existing,
+            'entity': entity,
+            'base_dir': str(kb_root) if kb_root else '',
+            'imported_total': len(all_objects),
+            'skipped': skipped,
+            'files': file_stats
+        }, '批量导入完成')
     except Exception as exc:
         db.session.rollback()
         return error_response(str(exc), 500)
-
-
 @admin_bp.route('/prompts', methods=['GET'])
 @admin_required
 def list_prompts():
@@ -1105,7 +1341,6 @@ def create_prompt():
             greeting_message=data.get('greeting_message'),
             questioning_style=data.get('questioning_style') or data.get('scene_key'),
             temperature=data.get('temperature', 0.7),
-            max_tokens=data.get('max_tokens', 500),
             is_active=is_active
         )
 
@@ -1211,11 +1446,16 @@ def list_interviews():
         if size > 100:
             size = 100
 
+        user_id = request.args.get('user_id', type=int)
+
         base_query = (
             db.session.query(Interview, User, Job)
             .join(User, User.id == Interview.user_id)
             .join(Job, Job.id == Interview.job_id)
         )
+
+        if user_id is not None:
+            base_query = base_query.filter(Interview.user_id == user_id)
 
         total = base_query.count()
         rows = (
@@ -1296,13 +1536,19 @@ def get_user_performance(user_id):
         )
 
         abilities = {}
+        # 维度名与 UserService 统一（数据初始化中是技术正确性/逻辑严谨性等）
         name_map = {
+            '技术正确性': 'knowledge',
+            '逻辑严谨性': 'logic',
+            '表达沟通': 'expression',
+            '岗位匹配度': 'problemSolving',
+            '应变能力': 'coding',
+            '学习能力': 'learning',
+            # 兼容旧字段映射
             '专业知识': 'knowledge',
             '逻辑思维': 'logic',
-            '表达能力': 'expression',
             '问题解决': 'problemSolving',
-            '代码能力': 'coding',
-            '学习能力': 'learning'
+            '代码能力': 'coding'
         }
         for name, avg_score in ability_rows:
             key = name_map.get(name, name)
@@ -1319,6 +1565,11 @@ def get_user_performance(user_id):
         }
         abilities = {**default_abilities, **abilities}
 
+        # 学习能力以已计算维度平均值为准（兼容历史维度字段）
+        core_scores = [abilities[k] for k in ['knowledge', 'logic', 'expression', 'problemSolving', 'coding'] if abilities.get(k, 0) > 0]
+        if core_scores:
+            abilities['learning'] = int(round(sum(core_scores) / len(core_scores)))
+
         learning_completed = UserLearning.query.filter_by(user_id=user_id, status='completed').count()
         learning_active = UserLearning.query.filter_by(user_id=user_id, status='in_progress').count()
 
@@ -1334,6 +1585,45 @@ def get_user_performance(user_id):
             },
             '获取用户绩效数据成功'
         )
+    except Exception as exc:
+        return error_response(str(exc), 500)
+
+
+@admin_bp.route('/users/<int:user_id>/resumes', methods=['GET'])
+@admin_required
+def list_user_resumes(user_id):
+    try:
+        user = User.query.get(user_id)
+        if not user:
+            return error_response('用户不存在', 404)
+
+        resumes = (
+            Resume.query
+            .filter_by(user_id=user_id)
+            .order_by(Resume.is_main.desc(), Resume.created_at.asc())
+            .all()
+        )
+
+        return success_response([
+            r.to_dict(include_content=False) for r in resumes
+        ], '获取用户简历列表成功')
+    except Exception as exc:
+        return error_response(str(exc), 500)
+
+
+@admin_bp.route('/users/<int:user_id>/resumes/<int:resume_id>', methods=['GET'])
+@admin_required
+def get_user_resume(user_id, resume_id):
+    try:
+        user = User.query.get(user_id)
+        if not user:
+            return error_response('用户不存在', 404)
+
+        resume = Resume.query.filter_by(id=resume_id, user_id=user_id).first()
+        if not resume:
+            return error_response('简历不存在', 404)
+
+        return success_response(resume.to_dict(include_content=True), '获取简历详情成功')
     except Exception as exc:
         return error_response(str(exc), 500)
 

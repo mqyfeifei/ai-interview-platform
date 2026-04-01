@@ -66,6 +66,14 @@
           <div class="metric-title">题库总数</div>
           <div class="metric-value">{{ stats.total_questions }}</div>
         </div>
+        <div class="metric-card">
+          <div class="metric-title">已发布题目</div>
+          <div class="metric-value">{{ stats.total_published_questions }}</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-title">学习资源总数</div>
+          <div class="metric-value">{{ stats.total_resources }}</div>
+        </div>
       </section>
 
       <section class="dashboard-grid">
@@ -139,6 +147,8 @@ export default {
         total_jobs: 0,
         today_new_jobs: 0,
         total_questions: 0,
+        total_published_questions: 0,
+        total_resources: 0,
         total_visits: 0,
         unique_visitors: 0,
         unique_visitors_today: 0,
@@ -208,6 +218,8 @@ export default {
           total_jobs: data.total_jobs || 0,
           today_new_jobs: data.today_new_jobs || 0,
           total_questions: data.total_questions || 0,
+          total_published_questions: data.total_published_questions || 0,
+          total_resources: data.total_resources || 0,
           total_visits: data.total_visits || data.unique_visitors || 0,
           unique_visitors: data.unique_visitors || 0,
           unique_visitors_today: data.unique_visitors_today || 0
