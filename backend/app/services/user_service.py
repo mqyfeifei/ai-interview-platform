@@ -15,6 +15,73 @@ from app.api.v1.interview import resolve_job_id
 class UserService:
     ALLOWED_IMAGE_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 
+    FRONT_JOB_KEY_TO_NAME = {
+        'java-backend': 'Java后端开发',
+        'web-frontend': '前端开发',
+        'python-algorithm': 'Python算法工程师',
+        'fullstack': '全栈开发工程师',
+        'android': 'Android开发',
+        'devops': 'DevOps工程师'
+    }
+
+    @classmethod
+    def _job_to_front_key(cls, job):
+        if not job:
+            return None
+        if job.name in cls.FRONT_JOB_KEY_TO_NAME.values():
+            for key, value in cls.FRONT_JOB_KEY_TO_NAME.items():
+                if value == job.name:
+                    return key
+
+        name = (job.name or '').lower()
+        if 'java' in name:
+            return 'java-backend'
+        if '前端' in job.name or 'frontend' in name or 'web' in name:
+            return 'web-frontend'
+        if 'python' in name or '算法' in job.name:
+            return 'python-algorithm'
+        if '全栈' in job.name:
+            return 'fullstack'
+        if 'android' in name:
+            return 'android'
+        if 'devops' in name:
+            return 'devops'
+        return None
+
+    @classmethod
+    def _resolve_job_by_front_key(cls, job_key):
+        if not job_key:
+            return None
+        if str(job_key).isdigit():
+            return db.session.get(Job, int(job_key))
+
+        expected_name = cls.FRONT_JOB_KEY_TO_NAME.get(job_key)
+        if expected_name:
+            exact = Job.query.filter_by(name=expected_name).first()
+            if exact:
+                return exact
+
+        # 支持直接传岗位名称
+        exact_by_name = Job.query.filter_by(name=job_key).first()
+        if exact_by_name:
+            return exact_by_name
+
+        # 支持模糊匹配名称或前端key
+        lowered = str(job_key).lower()
+        if lowered == 'java-backend':
+            return Job.query.filter(Job.name.like('%Java%')).first()
+        if lowered == 'web-frontend':
+            return Job.query.filter((Job.name.like('%前端%')) | (Job.name.like('%Web%'))).first()
+        if lowered == 'python-algorithm':
+            return Job.query.filter((Job.name.like('%Python%')) | (Job.name.like('%算法%'))).first()
+        if lowered == 'fullstack':
+            return Job.query.filter(Job.name.like('%全栈%')).first()
+        if lowered == 'android':
+            return Job.query.filter(Job.name.like('%Android%')).first()
+        if lowered == 'devops':
+            return Job.query.filter(Job.name.like('%DevOps%')).first()
+        return None
+
     @classmethod
     def _collect_dashboard_stats(cls, user_id):
         total_interviews = Interview.query.filter_by(user_id=user_id).count()
@@ -195,6 +262,9 @@ class UserService:
             "avatar_url": user.avatar_url,
             "avatar": user.avatar_url,
             "avatarUrl": user.avatar_url,
+            "is_active": user.is_active,
+            "default_job": user.default_job.name if user.default_job else None,
+            # 原来的 front-end key（如 "java-backend"），可能为 null
             "defaultJob": default_job_key,
             "defaultJobId": user.default_job_id,
             "defaultJobName": user.default_job.name if user.default_job else None,
@@ -232,6 +302,29 @@ class UserService:
                 raise ValueError('昵称已存在，请更换')
             user.username = username
 
+        email = (data.get('email') or '').strip()
+        phone = (data.get('phone') or '').strip()
+        default_job_val = data.get('default_job') if 'default_job' in data else data.get('defaultJob')
+        if isinstance(default_job_val, str):
+            default_job = default_job_val.strip()
+        else:
+            default_job = default_job_val
+        is_active = data.get('is_active') if 'is_active' in data else data.get('isActive')
+
+        if email:
+            if not re.match(r'^[^\s@]+@[^\s@]+\.[^\s@]+$', email):
+                raise ValueError('邮箱格式不正确')
+            exists_email = User.query.filter_by(email=email).first()
+            if exists_email and exists_email.id != user.id:
+                raise ValueError('该邮箱已注册')
+            user.email = email
+        if phone:
+            if not re.match(r'^1[3-9]\d{9}$', phone):
+                raise ValueError('手机号格式不正确')
+            exists_phone = User.query.filter_by(phone=phone).first()
+            if exists_phone and exists_phone.id != user.id:
+                raise ValueError('该手机号已注册')
+            user.phone = phone
         if real_name:
             user.real_name = real_name
         if school:
@@ -243,8 +336,71 @@ class UserService:
         if avatar_url:
             user.avatar_url = avatar_url
 
+        if default_job:
+            try:
+                job_res = cls.update_default_job_preference(user.id, default_job)
+                # update user object from session stale data
+                user = db.session.get(User, user.id)
+            except ValueError:
+                # 允许设置为空字符串以清空岗位，或忽略无效岗位
+                pass
+
+        if isinstance(is_active, bool):
+            user.is_active = is_active
+        elif isinstance(is_active, str):
+            user.is_active = is_active.lower() in ['true', '1', 't', 'yes']
+
         db.session.commit()
         return cls.serialize_user(user)
+
+    @classmethod
+    def create_user(cls, data):
+        username = (data.get('username') or '').strip()
+        email = (data.get('email') or '').strip() or None
+        phone = (data.get('phone') or '').strip() or None
+        real_name = (data.get('real_name') or '').strip()
+        school = (data.get('school') or '').strip() or ''
+        major = (data.get('major') or '').strip() or ''
+        grade = (data.get('grade') or '').strip() or ''
+        password = data.get('password') or data.get('pwd')
+        default_job_val = data.get('default_job') if 'default_job' in data else data.get('defaultJob')
+        is_active = data.get('is_active') if 'is_active' in data else data.get('isActive')
+
+        if not username:
+            raise ValueError('用户名不能为空')
+        if not password:
+            raise ValueError('密码不能为空')
+
+        if User.query.filter_by(username=username).first():
+            raise ValueError('用户名已存在')
+        if email and User.query.filter_by(email=email).first():
+            raise ValueError('该邮箱已注册')
+        if phone and User.query.filter_by(phone=phone).first():
+            raise ValueError('该手机号已注册')
+
+        user = User(
+            username=username,
+            email=email,
+            phone=phone,
+            real_name=real_name,
+            school=school,
+            major=major,
+            grade=grade,
+            is_active=(bool(is_active) if isinstance(is_active, bool) else str(is_active).lower() in ['true', '1', 't', 'yes'])
+        )
+        user.set_password(password)
+
+        db.session.add(user)
+        db.session.commit()
+
+        if default_job_val:
+            try:
+                cls.update_default_job_preference(user.id, default_job_val)
+            except ValueError:
+                # 非必填, 忽略创建时非法岗位
+                pass
+
+        return cls.serialize_user(db.session.get(User, user.id))
 
     @staticmethod
     def change_password(user_id, old_password, new_password):

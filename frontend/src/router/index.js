@@ -79,6 +79,12 @@ const routes = [
     meta: { requiresAuth: true, requiresAdmin: true, showAdminNav: true, title: '题库管理' }
   },
   {
+    path: '/admin/jobs',
+    name: 'AdminJobs',
+    component: () => import('@/views/admin/JobManager.vue'),
+    meta: { requiresAuth: false, requiresAdmin: false, hideNavigation: true, title: '岗位管理' }
+  },
+  {
     path: '/admin/interviews',
     name: 'AdminInterviews',
     component: () => import('@/views/admin/InterviewManager.vue'),

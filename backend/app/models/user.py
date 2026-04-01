@@ -42,6 +42,7 @@ class User(db.Model):
             'grade': self.grade,
             'avatar_url': self.avatar_url,
             'default_job': self.default_job.name if self.default_job else None,
+            'default_job_id': self.default_job_id,
             'role': self.role,
             'is_active': self.is_active,
             'created_at': self.created_at.isoformat() if self.created_at else None
