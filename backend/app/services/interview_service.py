@@ -17,13 +17,15 @@ except Exception:
 
 from app.extensions import db
 from app.services.asr_service import global_speed_cache
+from app.services.tts_service import TTSService, bytes_to_b64
 from app.models.interview import Interview, InterviewChat
 from app.models.prompt import AiPrompt
 from app.models.learning import KnowledgeTag, UserKnowledgeMastery
 from app.models.example import Example
 from app.models.question import Question
+from app.models.interview import InterviewScore, Dimension, TTSAudio
 from app.utils.llm_client import DeepSeekClient
-from app.models.interview import InterviewScore, Dimension
+
 from openai import OpenAI
 from flask import current_app
 from sentence_transformers import SentenceTransformer
@@ -165,22 +167,97 @@ class InterviewService:
         response_stream = llm.generate_reply(messages, stream=True)
 
         full_reply = ""
+        audio_chunks = []
+        # === 新增：标点符号缓冲机制 ===
+        sentence_buffer = ""
+        # 匹配中文和英文的句末停顿符号
+        punctuation_pattern = re.compile(r'[。！？；\n\!\?\;]')
         for chunk in response_stream:
             content = chunk.choices[0].delta.content
             if content:
                 full_reply += content
-                # 直接将内容流式发给前端，前端需通过正则检测到 [INTERVIEW_OVER] 后自动调用 /finish 接口
-                yield f"data: {json.dumps({'chunk': content})}\n\n"
+                sentence_buffer += content
+
+                # 初始化准备传给前端的 payload，无论有没有音频，文字都要立刻传过去保证打字机效果
+                payload = {'chunk': content}
+
+                # 检查缓冲字符串是否以标点符号结尾（或者是包含换行符）
+                if punctuation_pattern.search(content):
+                    try:
+                        voice = getattr(prompt_config, 'preferred_voice', 'BV001_streaming') if prompt_config else 'BV001_streaming'
+
+                        # 仅将截断的这句话送去合成
+                        audio_bytes = TTSService.synthesize_bytes(sentence_buffer, voice=voice, fmt='mp3')
+
+                        if audio_bytes:
+                            audio_b64 = bytes_to_b64(audio_bytes)
+                            audio_chunks.append(audio_bytes)
+                            payload['audio_b64'] = audio_b64
+
+                        # 清空缓冲区，迎接下一句话
+                        sentence_buffer = ""
+                    except Exception as e:
+                        print('TTS synth failed for buffer:', e)
+
+                # 即使没有音频触发，文本流依然持续发出
+                yield f"data: {json.dumps(payload, ensure_ascii=False)}\n\n"
+
+        # 兜底：如果模型最后输出没有带标点符号，处理遗留的 buffer
+        if sentence_buffer.strip() and sentence_buffer != "[INTERVIEW_OVER]":
+            try:
+                voice = getattr(prompt_config, 'preferred_voice', 'BV001_streaming') if prompt_config else 'BV001_streaming'
+                audio_bytes = TTSService.synthesize_bytes(sentence_buffer, voice=voice, fmt='mp3')
+                if audio_bytes:
+                    audio_b64 = bytes_to_b64(audio_bytes)
+                    audio_chunks.append(audio_bytes)
+                    # 发送一个纯音频包补充结尾
+                    yield f"data: {json.dumps({'chunk': '', 'audio_b64': audio_b64}, ensure_ascii=False)}\n\n"
+            except Exception as e:
+                print('Final TTS synth failed:', e)
 
         # 5. 清理标识符并存入数据库
-        # 将特殊标记从存入数据库的真实对话中剔除，保持聊天记录干净
         clean_reply = full_reply.replace("[INTERVIEW_OVER]", "").strip()
         ai_chat = InterviewChat(interview_id=interview.id, role='ai', content=clean_reply)
         db.session.add(ai_chat)
 
-        # 可选：如果后端检测到结束，可将状态更为待评价
+        # === 修复保存录音记录的逻辑 ===
+        try:
+            if audio_chunks:
+                uploads_root = os.path.join(current_app.root_path, 'uploads')
+                tts_dir = os.path.join(uploads_root, 'tts', str(interview.id))
+                os.makedirs(tts_dir, exist_ok=True)
+                file_name = f"interview_{interview.id}_chat_{ai_chat.id}_{int(datetime.now().timestamp())}.mp3"
+                file_path = os.path.join(tts_dir, file_name)
+
+                # 对于纯二进制的 MP3，可以直接拼接 byte 文件存储用于回放
+                with open(file_path, 'wb') as f:
+                    for chunk_bytes in audio_chunks:
+                        f.write(chunk_bytes)
+
+                # tts_record = TTSAudio(
+                #     prompt_id=(prompt_config.id if prompt_config else None),
+                #     file_path=os.path.relpath(file_path, uploads_root).replace('\\', '/'),
+                #     format='mp3',
+                #     voice=voice
+                # )
+                tts_record = TTSAudio(
+                    prompt_id=prompt_config.id if prompt_config else None,
+                    file_path=os.path.relpath(file_path, current_app.root_path),  # 存储相对路径
+                    format='mp3',
+                    voice=getattr(prompt_config, 'preferred_voice', 'BV001_streaming') if prompt_config else 'BV001_streaming',
+                    duration=None  # 可选：后续可以用 pydub 或 mutagen
+                )
+                db.session.add(tts_record)
+                db.session.flush() # 生成 id
+
+                # 关联到聊天记录（我们上面新增了外键）
+                ai_chat.tts_audio_id = tts_record.id
+        except Exception as e:
+            print('Error while handling audio chunks persistence:', e)
+
         if "[INTERVIEW_OVER]" in full_reply:
             interview.status = 'evaluating'
+
         db.session.commit()
 
 # 写报告逻辑

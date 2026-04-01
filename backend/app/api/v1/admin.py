@@ -1400,8 +1400,15 @@ def update_prompt(prompt_id):
             prompt.questioning_style = data.get('questioning_style')
         if 'temperature' in data:
             prompt.temperature = data.get('temperature')
-        # if 'max_tokens' in data:
-        #     prompt.max_tokens = data.get('max_tokens')
+        if 'max_tokens' in data:
+            prompt.max_tokens = data.get('max_tokens')
+        if 'created_at' in data:
+            # 前端不应更新 created_at，但如果传了则尝试解析并更新
+            try:
+                parsed_time = datetime.fromisoformat(data.get('created_at').rstrip('Z'))
+                prompt.created_at = parsed_time
+            except Exception:
+                return error_response('created_at 格式无效，必须是 ISO 8601 字符串', 400)
         if 'is_active' in data:
             if not isinstance(data.get('is_active'), bool):
                 return error_response('is_active 必须是布尔值', 400)
