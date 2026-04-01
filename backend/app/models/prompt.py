@@ -14,6 +14,6 @@ class AiPrompt(db.Model):
     greeting_message = db.Column(db.Text)
     questioning_style = db.Column(db.String(50))
     temperature = db.Column(db.Numeric(2, 1), default=0.7)
-    # max_tokens = db.Column(db.Integer, default=500)
+    max_tokens = db.Column(db.Integer, default=500)
     is_active = db.Column(db.Boolean, default=True)
-    # created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)

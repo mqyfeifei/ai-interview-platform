@@ -45,6 +45,22 @@ class InterviewChat(db.Model):
     question_id = db.Column(db.Integer, db.ForeignKey('questions.id'))  # 关联题目
     # ---------------------------
 
+    # === 新增语音合成字段 ===
+    tts_audio_id = db.Column(db.Integer, db.ForeignKey('tts_audios.id', ondelete='SET NULL'), nullable=True)
+
+class TTSAudio(db.Model):
+    __tablename__ = 'tts_audios'
+
+    id = db.Column(db.Integer, primary_key=True)
+    prompt_id = db.Column(db.Integer, nullable=True) # 记录使用的是哪个配置
+    file_path = db.Column(db.String(255), nullable=False) # 相对路径
+    format = db.Column(db.String(20), default='mp3')
+    voice = db.Column(db.String(50)) # 记录当时使用的音色
+    duration = db.Column(db.Float, nullable=True) # 时长(秒)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # 建立反向关系，方便从音频查聊天记录
+    chat_record = db.relationship('InterviewChat', backref='tts_audio', lazy='dynamic')
 
 class Dimension(db.Model):
     __tablename__ = 'dimensions'
