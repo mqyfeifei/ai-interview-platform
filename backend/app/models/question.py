@@ -1,4 +1,5 @@
 # backend/app/models/question.py
+from datetime import datetime
 from app.extensions import db
 from sqlalchemy.dialects.postgresql import JSONB
 from pgvector.sqlalchemy import Vector  # 关键导入
@@ -26,6 +27,7 @@ class Question(db.Model):
     # --- 新增字段 ---
     source = db.Column(db.String(100))                 # 题目来源
     status = db.Column(db.String(20), default='draft') # 状态：draft/published
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
     embedding = db.Column(Vector(512))
 
