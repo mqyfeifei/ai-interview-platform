@@ -7,6 +7,8 @@
 from datetime import datetime
 from app.extensions import db
 from app.models.resume import Resume
+from app.models.job import Job, get_job_front_key
+from app.models.user import User
 import os
 import uuid
 from werkzeug.utils import secure_filename
@@ -20,6 +22,191 @@ class ResumeService:
     # 查询                                                                 #
     # ------------------------------------------------------------------ #
     ALLOWED_AVATAR_EXT = {"png", "jpg", "jpeg", "gif"}
+
+    # ================= 新增：简历填写指导 =================
+    @staticmethod
+    def get_resume_guidance(job_id: int = None) -> dict:
+        """
+        获取简历填写的指导和必填项要求（供前端初始化或切换岗位时展示）
+        """
+        guidance = {
+            "base_requirements": [
+                {"field": "personal.name", "label": "姓名", "importance": "required", "desc": "请填写真实姓名，用于投递和沟通"},
+                {"field": "personal.phone", "label": "联系电话", "importance": "required", "desc": "保持电话畅通，建议格式：138-xxxx-xxxx"},
+                {"field": "personal.email", "label": "电子邮箱", "importance": "required", "desc": "建议使用专业邮箱，避免过于随意的昵称"},
+                {"field": "education", "label": "教育经历", "importance": "required", "desc": "至少填写最高学历，包含就读院校和专业"}
+            ],
+            "job_specific_requirements": [],
+            "general_tips": [
+                "保持简历在一至两页纸，排版整洁，重点突出。",
+                "经历按照时间倒序排列（最近的经历放在最前面）。"
+            ]
+        }
+
+        if job_id:
+            job = Job.query.get(job_id)
+            job_key = get_job_front_key(job)
+
+            if job_key in ['backend', 'frontend', 'cv', 'network', 'qa']:
+                guidance["job_specific_requirements"] = [
+                    {"field": "skills", "label": "专业技能", "importance": "required", "desc": f"请详细列出您的技术栈，突出在{job.name if job else '该技术'}领域的熟练度（如：熟练掌握、熟悉、了解）。"},
+                    {"field": "achievements", "label": "量化产出", "importance": "required", "desc": "在工作或实习经历中，务必使用STAR法则描述，并包含具体的数据指标（如：QPS提升了xx%、耗时降低了xx%）。"}
+                ]
+                guidance["general_tips"].append(
+                    "技术类简历极度看重项目落地经验和代码能力，请将包含复杂架构或难点攻克的核心项目置于显眼位置。"
+                )
+
+        return guidance
+
+
+    # ================= 新增：简历填写指导与完成度计算 =================
+    @staticmethod
+    def calculate_completion(content: dict, job_id: int = None) -> dict:
+        """
+        实时分析简历内容，计算完成度百分比，并返回具体缺失项和建议
+        """
+        if not content:
+            content = {}
+
+        score = 0
+        missing_items = []
+        suggestions = []
+
+        # 1. 基础信息 (占比 30%)
+        personal = content.get('personal', {})
+        if personal.get('name'): score += 10
+        else: missing_items.append("个人信息：姓名")
+
+        if personal.get('phone'): score += 10
+        else: missing_items.append("个人信息：联系电话")
+
+        if personal.get('email'): score += 10
+        else: missing_items.append("个人信息：电子邮箱")
+
+        # 2. 教育经历 (占比 20%)
+        education = content.get('education', [])
+        if education and len(education) > 0 and education[0].get('school'):
+            score += 20
+        else:
+            missing_items.append("教育经历：就读院校")
+
+        # 3. 岗位差异化校验与评分 (占比 50%)
+        job_key = None
+        if job_id:
+            job = Job.query.get(job_id)
+            job_key = get_job_front_key(job)
+
+        if job_key in ['backend', 'frontend', 'cv', 'network', 'qa']:
+            # 技术岗位逻辑：专业技能(25%) + 实习/工作产出(25%)
+            skills = content.get('skills', [])
+            if skills:
+                score += 25
+            else:
+                missing_items.append("核心模块：专业技能")
+
+            works = content.get('workExperiences', [])
+            interns = content.get('internshipExperiences', [])
+            all_exps = works + interns
+
+            has_achievement = False
+            if all_exps:
+                for exp in all_exps:
+                    if exp.get('achievements'):
+                        has_achievement = True
+                        break
+
+            if has_achievement:
+                score += 25
+            else:
+                missing_items.append("经历描述：具体的量化业绩(Achievements)")
+                if not all_exps:
+                    suggestions.append("建议添加实习、工作或开源项目经历来证明您的技术实力。")
+                else:
+                    suggestions.append("您的经历描述中缺少具体的成果展示，建议补充数据指标（如降低延迟、提升并发等）。")
+        else:
+            # 非技术岗位或未选择岗位：均分给工作/实习/校园经历
+            works = content.get('workExperiences', [])
+            interns = content.get('internshipExperiences', [])
+            campus = content.get('campusExperiences', [])
+
+            if works or interns:
+                score += 35
+            else:
+                missing_items.append("核心模块：工作或实习经历")
+
+            if campus:
+                score += 15
+            else:
+                suggestions.append("补充校园经历（如社团、比赛）可进一步丰富您的背景。")
+
+        return {
+            "completion_rate": score,       # 0 - 100
+            "missing_items": missing_items, # 明确指出缺了什么
+            "suggestions": suggestions      # 给出软性优化建议
+        }
+
+    # ================= 新增：统一校验逻辑 =================
+    @staticmethod
+    def _validate_resume_content(content: dict, job_id: int = None, user_id: int = None):
+        """
+        校验简历内容的必填项与岗位差异化要求。
+        校验失败时直接抛出友好的 ValueError，由外层 API 捕获并返回给前端 400。
+        """
+        # 漏洞修复 1：禁止保存空壳简历
+        if not content:
+            raise ValueError("简历内容不能为空")
+
+        # 1. 最小通用必填校验 (个人信息)
+        personal = content.get('personal', {})
+        if not personal.get('name'):
+            raise ValueError("简历基础信息缺失：姓名为必填项")
+        if not personal.get('phone'):
+            raise ValueError("简历基础信息缺失：联系电话为必填项")
+        if not personal.get('email'):
+            raise ValueError("简历基础信息缺失：电子邮箱为必填项")
+
+        # 2. 最小通用必填校验 (教育经历)
+        education = content.get('education', [])
+        if not education or not isinstance(education, list):
+            raise ValueError("至少需要填写一段教育经历")
+        if not education[0].get('school'):
+            raise ValueError("教育经历不完整：就读院校为必填项")
+
+        # 漏洞修复 3：主简历无 job_id 时，兜底使用用户的 default_job_id 进行校验
+        if not job_id and user_id:
+            user = User.query.get(user_id)
+            if user and user.default_job_id:
+                job_id = user.default_job_id
+
+        # 3. 岗位差异化校验
+        if job_id:
+            job = Job.query.get(job_id)
+            job_key = get_job_front_key(job)
+
+            # 技术类岗位：强校验技能栈与项目产出
+            if job_key in ['backend', 'frontend', 'cv', 'network', 'qa']:
+                skills = content.get('skills', [])
+                if not skills:
+                    raise ValueError("技术类简历必须填写「专业技能」模块")
+
+                # 检查工作或实习经历是否填写了成绩
+                works = content.get('workExperiences', [])
+                interns = content.get('internshipExperiences', [])
+                all_exps = works + interns
+                if all_exps:
+                    for exp in all_exps:
+                        if not exp.get('achievements'):
+                            raise ValueError(f"技术类简历要求量化产出，请完善经历【{exp.get('company', '未命名公司')}】中的「业绩/成就」字段")
+
+            # # 产品/运营类岗位校验 (假设后续在 DEFAULT_JOBS 中增加了 product/operation)
+            # elif job_key in ['product', 'operation']:
+            #     works = content.get('workExperiences', [])
+            #     interns = content.get('internshipExperiences', [])
+            #     if not works and not interns:
+            #         raise ValueError("产品/运营类简历高度看重项目经验，请至少填写一段实习或工作经历")
+    # =======================================================
+
+
     @staticmethod
     def ensure_main_resume(user_id: int) -> Resume:
         """
@@ -87,6 +274,9 @@ class ResumeService:
         title = (title or '新简历').strip()
         content = content or {}
 
+        # 漏洞修复 1：移除 `if content:` 判断，强制触发全量校验
+        ResumeService._validate_resume_content(content, job_id, user_id=user_id)
+
         if is_main:
             existing = Resume.query.filter_by(user_id=user_id, is_main=True).first()
             if existing:
@@ -125,6 +315,8 @@ class ResumeService:
                 resume.title = title
 
         if content is not None:
+            # 漏洞修复 3：传入 user_id，使得主简历可以通过用户 default_job_id 进行岗位差异化校验
+            ResumeService._validate_resume_content(content, resume.job_id, user_id=user_id)
             resume.set_content(content)
 
         resume.updated_at = datetime.utcnow()
@@ -170,6 +362,10 @@ class ResumeService:
         main = Resume.query.filter_by(user_id=user_id, is_main=True).first()
         if not main:
             raise ValueError('主简历不存在，请先完善主简历')
+
+        # 漏洞修复 2：在覆写前，将主简历的内容结合目标简历的 job_id 强制校验一次
+        main_content = main.get_content()
+        ResumeService._validate_resume_content(main_content, target.job_id, user_id=user_id)
 
         target.set_content(main.get_content())
         target.updated_at = datetime.utcnow()
