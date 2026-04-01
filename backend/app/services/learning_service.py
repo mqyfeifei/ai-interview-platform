@@ -42,8 +42,31 @@ class LearningService:
     @staticmethod
     def get_weaknesses(user_id, limit=5):
         """获取用户的技能短板（掌握度最低的标签）"""
-        weak_masteries = UserKnowledgeMastery.query.filter_by(user_id=user_id) \
-            .order_by(UserKnowledgeMastery.mastery_level.asc()).limit(limit).all()
+        # === 新增逻辑：优先展示与用户最近一次面试（或预设岗位）相关联的短板 ===
+        from app.models.interview import Interview
+        from app.models.user import User
+        from app.models.question import Question, question_tags
+
+        target_job_id = None
+        last_interview = Interview.query.filter_by(user_id=user_id, status='completed').order_by(Interview.start_time.desc()).first()
+        if last_interview:
+            target_job_id = last_interview.job_id
+        else:
+            user = User.query.get(user_id)
+            if user and user.default_job:
+                target_job_id = user.default_job.id if hasattr(user.default_job, 'id') else user.default_job
+
+        query = UserKnowledgeMastery.query.filter_by(user_id=user_id)
+
+        if target_job_id:
+            # 过滤出隶属于该岗位的知识点
+            query = query.join(KnowledgeTag, UserKnowledgeMastery.tag_id == KnowledgeTag.id) \
+                .join(question_tags, KnowledgeTag.id == question_tags.c.tag_id) \
+                .join(Question, question_tags.c.question_id == Question.id) \
+                .filter(Question.job_id == target_job_id) \
+                .group_by(UserKnowledgeMastery.id)
+
+        weak_masteries = query.order_by(db.asc(UserKnowledgeMastery.mastery_level)).limit(limit).all()
 
         weaknesses = []
         for m in weak_masteries:
@@ -57,68 +80,115 @@ class LearningService:
                     "complexity": tag.complexity,
                     "estimated_hours": tag.estimated_hours
                 })
+
+        # === 兜底逻辑：如果目前用户尚无短板记录，动态从他的岗位找一些补充并初始化 ===
+        if not weaknesses:
+            from app.models.user import User
+            from app.models.question import Question
+            user = User.query.get(user_id)
+            if user and user.default_job:
+                job_id_val = user.default_job.id if hasattr(user.default_job, 'id') else user.default_job
+                # 找出岗位相关的一些题目及标签
+                qs = Question.query.filter_by(job_id=job_id_val).all()
+                added = 0
+                for q in qs:
+                    for t in q.knowledge_tags:
+                        if not any(w['tag_id'] == t.id for w in weaknesses):
+                            # 创建新的掌握度记录，并给个中等偏下的初始分
+                            mastery = UserKnowledgeMastery(user_id=user_id, tag_id=t.id, mastery_level=45)
+                            db.session.add(mastery)
+                            weaknesses.append({
+                                "tag_id": t.id,
+                                "name": t.name,
+                                "mastery_level": 45,
+                                "complexity": t.complexity,
+                                "estimated_hours": t.estimated_hours
+                            })
+                            added += 1
+                        if added >= limit:
+                            break
+                    if added >= limit:
+                        break
+                db.session.commit()
+
+        # 后续二次排序
+        weaknesses.sort(key=lambda x: x['mastery_level'])
         return weaknesses
 
     @staticmethod
     def get_personalized_recommendations(user_id, limit=5):
-        """基于技能短板的向量，在资源库中进行检索推荐
-
-        除了返回推荐资源外，还会计算每个资源的完成状态（从
-        UserLearning 表中读取）。注意：为了避免重复给用户同一
-        条资源推送，默认会把已完成的资源排除出查询结果，但
-        依然会在返回的结果中带上 completed 字段（通常为 False）。
-        前端可以另外调用 /records/completed 接口获取全部已完成
-        资源的 id，并决定是否把它们从缓存中补回列表中。
-        """
-        # 1. 找出最薄弱的知识点文本
+        """基于技能短板精准推荐学习资源"""
         weaknesses = LearningService.get_weaknesses(user_id, limit=3)
         if not weaknesses:
-            return []  # 如果没有短板数据，可返回默认热门资源
+            return []
 
-        weak_text = " ".join([w['name'] for w in weaknesses])
-
-        # 改进：用薄弱点向量检索相关 Example，扩充语义
-        weak_vector = local_embedding_model.encode(weak_text).tolist()
-        related_examples = Example.query.order_by(
-            Example.embedding.l2_distance(weak_vector)
-        ).limit(3).all()
-
-        # 将范例问题和框架补充进检索文本
-        if related_examples:
-            example_texts = " ".join([f"{e.question} {e.framework or ''}" for e in related_examples])
-            weak_text = weak_text + " " + example_texts
-
-        # 2. 将薄弱点转换为向量
-        target_vector = local_embedding_model.encode(weak_text).tolist()
-
-        # 3. 找出用户已经完成的资源ID，避免重复推荐
         completed_resources = UserLearning.query.filter_by(user_id=user_id, status='completed').all()
         completed_ids = [cr.resource_id for cr in completed_resources]
 
-        # 4. 向量检索：利用 pgvector 的 l2_distance 找出最相关的 Resource
-        query = Resource.query
-        if completed_ids:
-            query = query.filter(~Resource.id.in_(completed_ids))
-
-        # 确保结果唯一，防止数据库中存在重复记录或者 join 导致的重复
-        query = query.group_by(Resource.id)
-
-        recommended_resources = query.order_by(Resource.embedding.l2_distance(target_vector)).limit(limit).all()
-
         results = []
-        for r in recommended_resources:
-            results.append({
-                "id": r.id,
-                "title": r.title,
-                "type": r.type,  # article, video, book, example
-                "url": r.url,
-                "content": r.content,
-                "source": r.source,
-                "difficulty": r.difficulty,
-                "tags": r.tags,
-                # 前端需要这个字段来在已经加载的资源中显示徽章
-                "completed": r.id in completed_ids
-            })
+        recommended_ids = set()
+
+        # 1. 优先进行精确的标签匹配推荐
+        for w in weaknesses:
+            if len(results) >= limit:
+                break
+            
+            tag_id = w['tag_id']
+            tag_name = w['name']
+
+            from app.models.learning import resource_tags
+            query = Resource.query.join(resource_tags, Resource.id == resource_tags.c.resource_id)\
+                                  .filter(resource_tags.c.tag_id == tag_id)
+            
+            if completed_ids:
+                query = query.filter(~Resource.id.in_(completed_ids))
+            if recommended_ids:
+                query = query.filter(~Resource.id.in_(recommended_ids))
+            
+            # 每个短板挑出最多2个最相关的资源
+            resources = query.limit(2).all()
+            for r in resources:
+                results.append({
+                    "id": r.id,
+                    "title": r.title,
+                    "type": r.type,
+                    "url": r.url,
+                    "content": r.content,
+                    "source": r.source,
+                    "difficulty": r.difficulty,
+                    "tags": [t.name for t in r.knowledge_tags] if hasattr(r, 'knowledge_tags') else [],
+                    "completed": r.id in completed_ids,
+                    "relatedWeakness": tag_name  # 新增：明确告知前端这个资源是为了补齐哪个短板
+                })
+                recommended_ids.add(r.id)
+
+        # 2. 如果精确匹配数量不够 limit，则使用向量检索补充
+        if len(results) < limit:
+            weak_text = " ".join([w['name'] for w in weaknesses])
+            weak_vector = local_embedding_model.encode(weak_text).tolist()
+            
+            query = Resource.query
+            exclude_ids = list(set(completed_ids) | recommended_ids)
+            if exclude_ids:
+                query = query.filter(~Resource.id.in_(exclude_ids))
+                
+            query = query.group_by(Resource.id)
+            fallback_resources = query.order_by(Resource.embedding.l2_distance(weak_vector)).limit(limit - len(results)).all()
+            
+            for r in fallback_resources:
+                results.append({
+                    "id": r.id,
+                    "title": r.title,
+                    "type": r.type,
+                    "url": r.url,
+                    "content": r.content,
+                    "source": r.source,
+                    "difficulty": r.difficulty,
+                    "tags": [t.name for t in r.knowledge_tags] if hasattr(r, 'knowledge_tags') else [],
+                    "completed": r.id in completed_ids,
+                    "relatedWeakness": weaknesses[0]['name']  # 兜底给最弱的那个短板
+                })
+        
         return results
 
     @staticmethod

@@ -1,11 +1,17 @@
-// =============================================
+﻿// =============================================
 // frontend/src/store/modules/learning.js
 // Vuex 学习中心模块
 // =============================================
 
 import {
-  getGrowthCurve, getWeaknesses, getRecommendations,
-  toggleBookmark, markCompleted, getDailyPlan, updateTaskStatus
+  getGrowthCurve,
+  getWeaknessTags,
+  getCompletedResourceIds,
+  getRecommendedResources,
+  getDailyPlan,
+  toggleBookmark as apiToggleBookmark,
+  markCompleted as apiMarkCompleted,
+  updateTaskStatus as apiUpdateTaskStatus
 } from '@/api/learning'
 
 const state = () => ({
@@ -13,119 +19,98 @@ const state = () => ({
   weaknesses: [],
   recommendations: [],
   dailyPlan: null,
-  loading: false,
-  // 推荐筛选状态
-  activeFilter: 'all'
+  completedResourceIds: [],
+  loading: false
 })
 
 const mutations = {
-  SET_GROWTH_DATA(state, data) { state.growthData = data },
-  SET_WEAKNESSES(state, data) { state.weaknesses = Array.isArray(data) ? data : [] },
-  SET_RECOMMENDATIONS(state, data) {
-    if (Array.isArray(data)) {
-      // 去重，以 id 为准
-      const map = new Map()
-      data.forEach(item => { map.set(item.id, item) })
-      state.recommendations = Array.from(map.values())
-    } else {
-      state.recommendations = []
-    }
-  },
-  SET_DAILY_PLAN(state, data) { state.dailyPlan = data },
   SET_LOADING(state, v) { state.loading = v },
-  SET_ACTIVE_FILTER(state, v) { state.activeFilter = v },
-
-  TOGGLE_BOOKMARK(state, { resourceId, bookmarked }) {
-    const r = state.recommendations.find(x => x.id === resourceId)
-    if (r) r.bookmarked = bookmarked
+  SET_GROWTH_DATA(state, data) { state.growthData = data },
+  SET_WEAKNESSES(state, list) { state.weaknesses = list || [] },
+  SET_RECOMMENDATIONS(state, list) { state.recommendations = list || [] },
+  SET_DAILY_PLAN(state, plan) { state.dailyPlan = plan || null },
+  SET_COMPLETED_IDS(state, ids) { state.completedResourceIds = Array.isArray(ids) ? ids : [] },
+  UPDATE_RECOMMENDATION(state, { resourceId, patch }) {
+    state.recommendations = state.recommendations.map(item =>
+      item.id === resourceId ? { ...item, ...patch } : item
+    )
   },
-  MARK_COMPLETED(state, resourceId) {
-    const r = state.recommendations.find(x => x.id === resourceId)
-    if (r) r.completed = true
-  },
-  UPDATE_TASK_STATUS(state, { taskId, done }) {
-    if (!state.dailyPlan) return
-    const t = state.dailyPlan.tasks.find(x => x.id === taskId)
-    if (t) t.done = done
+  UPDATE_DAILY_TASK(state, { taskId, done }) {
+    if (!state.dailyPlan || !Array.isArray(state.dailyPlan.tasks)) return
+    state.dailyPlan.tasks = state.dailyPlan.tasks.map(task =>
+      task.id === taskId ? { ...task, done } : task
+    )
   }
 }
 
 const actions = {
-  async loadAll({ dispatch }) {
-    await Promise.all([
-      dispatch('loadGrowthData'),
-      dispatch('loadWeaknesses'),
-      dispatch('loadRecommendations'),
-      dispatch('loadDailyPlan')
-    ])
-  },
-
-  async loadGrowthData({ commit }) {
+  async loadAll({ commit }) {
+    commit('SET_LOADING', true)
     try {
-      const data = await getGrowthCurve()
-      commit('SET_GROWTH_DATA', data)
-    } catch (e) { console.warn('加载成长曲线失败', e) }
-  },
-
-  async loadWeaknesses({ commit }) {
-    try {
-      const data = await getWeaknesses()
-      commit('SET_WEAKNESSES', data)
-    } catch (e) { console.warn('加载技能短板失败', e) }
-  },
-
-  async loadRecommendations({ commit }, params = {}) {
-    try {
-      const data = await getRecommendations(params)
-      // 兼容后端返回数组或 {list: [...]} 格式
-      const list = Array.isArray(data) ? data : (data?.list || data || [])
-      commit('SET_RECOMMENDATIONS', list)
-    } catch (e) { console.warn('加载推荐失败', e) }
-  },
-
-  async loadDailyPlan({ commit }) {
-    try {
-      const data = await getDailyPlan()
-      commit('SET_DAILY_PLAN', data)
-    } catch (e) { console.warn('加载每日计划失败', e) }
+      const [growthData, weaknesses, recommendations, dailyPlan, completedIds] = await Promise.all([
+        getGrowthCurve(),
+        getWeaknessTags(),
+        getRecommendedResources(),
+        getDailyPlan(),
+        getCompletedResourceIds()
+      ])
+      commit('SET_GROWTH_DATA', growthData)
+      commit('SET_WEAKNESSES', weaknesses)
+      commit('SET_RECOMMENDATIONS', recommendations)
+      commit('SET_DAILY_PLAN', dailyPlan)
+      commit('SET_COMPLETED_IDS', completedIds)
+      return { growthData, weaknesses, recommendations, dailyPlan, completedIds }
+    } finally {
+      commit('SET_LOADING', false)
+    }
   },
 
   async toggleBookmark({ commit }, { resourceId, bookmarked }) {
-    commit('TOGGLE_BOOKMARK', { resourceId, bookmarked })
+    const normalizedBookmarked = bookmarked === undefined ? true : bookmarked
     try {
-      await toggleBookmark(resourceId, bookmarked)
+      await apiToggleBookmark(resourceId, normalizedBookmarked)
+      commit('UPDATE_RECOMMENDATION', { resourceId, patch: { bookmarked: normalizedBookmarked } })
+      return { success: true }
     } catch (e) {
-      // 回滚
-      commit('TOGGLE_BOOKMARK', { resourceId, bookmarked: !bookmarked })
+      console.warn('[learning] toggleBookmark 失败', e)
+      return { success: false }
     }
   },
 
   async markCompleted({ commit }, resourceId) {
-    commit('MARK_COMPLETED', resourceId)
     try {
-      await markCompleted(resourceId)
-    } catch (e) { console.warn('标记完成失败', e) }
+      const result = await apiMarkCompleted(resourceId)
+      commit('UPDATE_RECOMMENDATION', { resourceId, patch: { completed: true } })
+      return result
+    } catch (e) {
+      console.warn('[learning] markCompleted 失败', e)
+      return { success: false }
+    }
   },
 
   async updateTaskStatus({ commit }, { taskId, done }) {
-    commit('UPDATE_TASK_STATUS', { taskId, done })
     try {
-      await updateTaskStatus(taskId, done)
+      const result = await apiUpdateTaskStatus(taskId, done)
+      commit('UPDATE_DAILY_TASK', { taskId, done })
+      return result
     } catch (e) {
-      commit('UPDATE_TASK_STATUS', { taskId, done: !done })
+      console.warn('[learning] updateTaskStatus 失败', e)
+      throw e
     }
   }
 }
 
 const getters = {
-  growthData: s => s.growthData,
-  weaknesses: s => s.weaknesses,
-  recommendations: s => s.recommendations,
-  dailyPlan: s => s.dailyPlan,
-  isLoading: s => s.loading,
-  activeFilter: s => s.activeFilter,
-  completedTaskCount: s => s.dailyPlan?.tasks?.filter(t => t.done).length || 0,
-  totalTaskCount: s => s.dailyPlan?.tasks?.length || 0
+  growthData: state => state.growthData,
+  weaknesses: state => state.weaknesses,
+  recommendations: state => state.recommendations,
+  dailyPlan: state => state.dailyPlan,
+  completedTaskCount: state => {
+    if (!state.dailyPlan || !Array.isArray(state.dailyPlan.tasks)) return 0
+    return state.dailyPlan.tasks.filter(t => t.done).length
+  },
+  totalTaskCount: state => (state.dailyPlan?.tasks?.length || 0),
+  isLoading: state => state.loading
 }
 
 export default { namespaced: true, state, mutations, actions, getters }
