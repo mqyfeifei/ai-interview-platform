@@ -1,4 +1,5 @@
 
+from datetime import datetime
 from app.extensions import db
 from sqlalchemy.dialects.postgresql import JSONB
 
@@ -47,6 +48,7 @@ class Job(db.Model):
     description = db.Column(db.Text)
     tech_stack = db.Column(JSONB)  # JSON数组存储技术栈
     icon_url = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
     # 关系：反向关联题目（字符串引用避免循环导入）
     questions = db.relationship('Question', backref='job', lazy='dynamic')

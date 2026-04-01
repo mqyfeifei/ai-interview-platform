@@ -3,18 +3,14 @@
 
     <div class="am-main">
       <div class="am-content">
-        <div class="am-header" style="display:flex;align-items:center;justify-content:space-between;gap:16px;">
+        <div class="am-header">
           <div class="am-header__left">
             <h1 class="am-header__title">用户管理</h1>
             <p class="am-header__sub">共 <strong>{{ total }}</strong> 位用户</p>
           </div>
-          <button class="btn btn-primary" @click="addUser" style="display:flex;align-items:center;gap:6px;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="btn-icon" style="width:16px;height:16px;">
-              <line x1="12" y1="5" x2="12" y2="19"/>
-              <line x1="5" y1="12" x2="19" y2="12"/>
-            </svg>
-            新增用户
-          </button>
+          <div class="am-header__actions">
+            <button class="btn btn-primary btn-image" @click="addUser">新增用户</button>
+          </div>
         </div>
 
         <div v-if="toastText" :class="['toast', toastType === 'error' ? 'toast--error' : 'toast--success']">
@@ -38,18 +34,17 @@
             <option value="研三">研三</option>
             <option value="其它">其它</option>
           </select>
-          <input v-model="schoolFilter" class="filter-input" type="text" placeholder="按学校搜索" @keyup.enter="onSearch" />
-          <input v-model="majorFilter" class="filter-input" type="text" placeholder="按专业搜索" @keyup.enter="onSearch" />
-          <input v-model="usernameFilter" class="filter-input" type="text" placeholder="按用户名搜索" @keyup.enter="onSearch" />
-          <input v-model="emailFilter" class="filter-input" type="text" placeholder="按邮箱搜索" @keyup.enter="onSearch" />
+          <input v-model="schoolFilter" class="filter-input" type="text" placeholder="按学校搜索" @input="onSearch" />
+          <input v-model="majorFilter" class="filter-input" type="text" placeholder="按专业搜索" @input="onSearch" />
+          <input v-model="usernameFilter" class="filter-input" type="text" placeholder="按用户名搜索" @input="onSearch" />
+          <input v-model="emailFilter" class="filter-input" type="text" placeholder="按邮箱搜索" @input="onSearch" />
           <select v-model="createdRangeFilter" class="filter-select" @change="onFilterChange">
             <option value="">注册时间</option>
             <option value="7">近7天</option>
             <option value="30">近30天</option>
             <option value="all">全部</option>
           </select>
-          <button class="btn btn-primary" @click="onSearch">搜索</button>
-          <button v-if="hasFilters" class="btn-text" @click="clearFilters">清空筛选</button>
+          <button v-if="hasFilters" class="btn-clear" @click="clearFilters">清空筛选</button>
         </div>
 
         <div class="table-card">
@@ -1181,7 +1176,7 @@ export default {
   background: #f8fafc;
 }
 .am-content {
-  max-width: 1180px;
+  max-width: 1400px;
   margin: 20px auto;
   padding: 10px;
 }
@@ -1202,6 +1197,60 @@ export default {
 .am-header__actions {
   display: flex;
   gap: 8px;
+}
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 38px;
+  padding: 0 18px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  border: none;
+}
+.btn-primary {
+  background: #4338ca;
+  color: #fff;
+}
+.btn-primary:hover {
+  background: #3730a3;
+}
+.btn-image {
+  padding-left: 44px;
+  position: relative;
+}
+.btn-image::before {
+  content: '';
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='12' y1='5' x2='12' y2='19'/%3E%3Cline x1='5' y1='12' x2='19' y2='12'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+.btn-clear {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: none;
+  border: 1.5px solid #fecaca;
+  color: #ef4444;
+  font-size: 12.5px;
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.15s;
+}
+.btn-clear:hover {
+  background: #fef2f2;
 }
 .search-input {
   width: 220px;

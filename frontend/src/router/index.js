@@ -82,7 +82,7 @@ const routes = [
     path: '/admin/jobs',
     name: 'AdminJobs',
     component: () => import('@/views/admin/JobManager.vue'),
-    meta: { requiresAuth: false, requiresAdmin: false, hideNavigation: true, title: '岗位管理' }
+    meta: { requiresAuth: true, requiresAdmin: true, showAdminNav: true, title: '岗位管理' }
   },
   {
     path: '/admin/interviews',

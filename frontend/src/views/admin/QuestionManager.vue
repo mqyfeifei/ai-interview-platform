@@ -29,7 +29,7 @@
               </svg>
               批量导入
             </button>
-            <button class="btn btn-primary" @click="openCreate">
+            <button class="btn btn-primary btn-image" @click="openCreate">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
                 stroke-linecap="round" stroke-linejoin="round" class="btn-icon">
                 <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
@@ -47,7 +47,7 @@
           </select>
           <select v-model="filterType" class="filter-select" @change="onFilterChange">
             <option value="">全部类型</option>
-            <option v-for="t in (entity === 'resource' ? RESOURCE_TYPES : questionTypes)" :key="t.value" :value="t.value">{{ t.label }}</option>
+            <option v-for="t in (entity === 'resource' ? resourceTypes : questionTypes)" :key="t.value" :value="t.value">{{ t.label }}</option>
           </select>
           <select v-model="filterDifficulty" class="filter-select" @change="onFilterChange">
             <option value="">全部难度</option>
@@ -58,9 +58,16 @@
             <option value="draft">草稿</option>
             <option value="published">已发布</option>
           </select>
-          <input v-model="filterKeyword" class="filter-input" type="text" placeholder="按内容/标题搜索" @keyup.enter="onFilterChange" />
-          <button class="btn btn-outline" @click="onFilterChange">搜索</button>
-          <button v-if="hasFilters" class="btn-text" @click="clearFilters">清空筛选</button>
+          <div class="qm-search" style="flex: 1; min-width: 220px; max-width: 360px;">
+            <div class="qm-search-box">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="qm-search-box__icon">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+              <input v-model="filterKeyword" type="text" placeholder="按内容/标题搜索" class="qm-search-box__input" @input="onSearchDebounce" />
+              <button v-if="filterKeyword" class="qm-search-box__clear" @click="clearSearch">✕</button>
+            </div>
+          </div>
+          <button v-if="hasFilters" class="btn-clear" @click="clearFilters">清空筛选</button>
           <button v-if="entity === 'question' && filterStatus === 'draft' && items.length > 0" 
                   class="btn btn-primary btn-sm" 
                   @click="bulkPublish" 
@@ -92,7 +99,7 @@
                 <th style="width:60px">ID</th>
                 <th style="width:120px">岗位</th>
                 <th>内容</th>
-                <th style="width:80px">类型</th>
+                <th style="width:90px">类型</th>
                 <th style="width:90px">难度</th>
                 <th style="width:160px">关键点</th>
                 <th style="width:160px">参考答案</th>
@@ -208,22 +215,24 @@
                   <option v-for="j in jobs" :key="j.id" :value="j.id">{{ j.name }}</option>
                 </select>
               </div>
-              <!-- 类型 -->
-              <div class="form-group form-group--quarter">
-                <label class="form-label">{{ entity === 'question' ? '题目类型' : '资源类型' }} <span class="req">*</span></label>
-                <select v-model="form.type" class="form-control">
-                  <option value="">请选择</option>
-                  <option v-for="t in (entity === 'resource' ? RESOURCE_TYPES : questionTypes)" :key="t.value" :value="t.value">{{ t.label }}</option>
-                </select>
-              </div>
-              <!-- 难度 -->
-              <div class="form-group form-group--quarter">
-                <label class="form-label">难度</label>
-                <select v-model="form.difficulty" class="form-control">
-                  <option value="">请选择</option>
-                  <option v-for="d in difficulties" :key="d.value" :value="d.value">{{ d.label }}</option>
-                </select>
-              </div>
+              <template v-if="entity === 'question'">
+                <!-- 类型 -->
+                <div class="form-group form-group--quarter">
+                  <label class="form-label">题目类型 <span class="req">*</span></label>
+                  <select v-model="form.type" class="form-control">
+                    <option value="">请选择</option>
+                    <option v-for="t in questionTypes" :key="t.value" :value="t.value">{{ t.label }}</option>
+                  </select>
+                </div>
+                <!-- 难度 -->
+                <div class="form-group form-group--quarter">
+                  <label class="form-label">难度</label>
+                  <select v-model="form.difficulty" class="form-control">
+                    <option value="">请选择</option>
+                    <option v-for="d in difficulties" :key="d.value" :value="d.value">{{ d.label }}</option>
+                  </select>
+                </div>
+              </template>
               <template v-if="entity === 'question'">
                 <div class="form-group form-group--full">
                   <label class="form-label">题目内容 <span class="req">*</span></label>
@@ -257,10 +266,8 @@
                 <div class="form-group form-group--half">
                   <label class="form-label">资源类型 <span class="req">*</span></label>
                   <select v-model="form.type" class="form-control">
-                    <option value="article">文章</option>
-                    <option value="video">视频</option>
-                    <option value="course">课程</option>
-                    <option value="example">示例</option>
+                    <option value="">请选择</option>
+                    <option v-for="t in resourceTypes" :key="t.value" :value="t.value">{{ t.label }}</option>
                   </select>
                 </div>
                 <div class="form-group form-group--half">
@@ -270,6 +277,17 @@
                 <div class="form-group form-group--full">
                   <label class="form-label">内容简介 <span class="req">*</span></label>
                   <textarea v-model="form.content" class="form-control form-textarea" rows="4" placeholder="请输入资源简介…"></textarea>
+                </div>
+                <div class="form-group form-group--half">
+                  <label class="form-label">来源</label>
+                  <input v-model="form.source" type="text" class="form-control" placeholder="例如：官方文档、社区" />
+                </div>
+                <div class="form-group form-group--half">
+                  <label class="form-label">难度</label>
+                  <select v-model="form.difficulty" class="form-control">
+                    <option value="">请选择</option>
+                    <option v-for="d in difficulties" :key="d.value" :value="d.value">{{ d.label }}</option>
+                  </select>
                 </div>
                 <div class="form-group form-group--full">
                   <label class="form-label">知识标签</label>
@@ -336,7 +354,7 @@
                 {{ entity === 'question' ? '支持上传本地 YAML 文件或服务器 FuChuangTiKu 目录。' : '支持上传本地 YAML 文件或服务器 resourcesKu 目录。' }}
               </p>
               <div class="form-group">
-                <label class="form-label">上传 YAML 文件（优先）</label>
+                <label class="form-label">上传 YAML 文件（优先），若不上传YAML文件则默认上传服务器文件目录下的资源</label>
                 <input type="file" accept=".yaml,.yml" @change="onImportFileChange" />
                 <p class="option-hint">{{ entity === 'resource' ? '上传后自动写入数据库并发布' : '预览模式上传则为草稿状态，否则直接为发布状态' }}</p>
               </div>
@@ -504,6 +522,7 @@ export default {
       // options
       jobs: [],
       questionTypes: QUESTION_TYPES,
+      resourceTypes: RESOURCE_TYPES,
       difficulties: DIFFICULTIES,
 
       // form modal
@@ -528,7 +547,10 @@ export default {
       importClearExisting: false,
       importFile: null,
       importResult: null,
-      importError: ''
+      importError: '',
+
+      // search debounce
+      searchTimer: null
     }
   },
 
@@ -587,7 +609,7 @@ export default {
         if (this.filterKeyword) params.q = this.filterKeyword.trim()
 
         const res = await listQuestions(params)
-        this.items = res.list || []
+        this.items = (res.list || []).slice().sort((a, b) => Number(a.id || 0) - Number(b.id || 0))
         this.total = res.total || 0
       } catch (e) {
         console.error('加载题目失败', e)
@@ -597,6 +619,20 @@ export default {
     },
 
     onFilterChange() {
+      this.page = 1
+      this.loadData()
+    },
+
+    onSearchDebounce() {
+      clearTimeout(this.searchTimer)
+      this.searchTimer = setTimeout(() => {
+        this.page = 1
+        this.loadData()
+      }, 400)
+    },
+
+    clearSearch() {
+      this.filterKeyword = ''
       this.page = 1
       this.loadData()
     },
@@ -683,9 +719,10 @@ export default {
 
     async submitForm() {
       this.formError = ''
-      if (!this.form.job_id) { this.formError = '请选择关联岗位'; return }
+      if (this.entity === 'question' && !this.form.job_id) { this.formError = '请选择关联岗位'; return }
       if (this.entity === 'question' && !this.form.content.trim()) { this.formError = '题目内容不能为空'; return }
       if (this.entity === 'resource' && !this.form.title.trim()) { this.formError = '资源标题不能为空'; return }
+      if (this.entity === 'resource' && !this.form.type) { this.formError = '请选择资源类型'; return }
       if (this.entity === 'resource' && !this.form.content.trim()) { this.formError = '内容简介不能为空'; return }
 
       let data
@@ -891,11 +928,63 @@ export default {
   margin: 0 auto;
 }
 
-/* ── 页头 ── */
+  .qm-search-box {
+    position: relative;
+    max-width: 100%;
+  }
+  .qm-search-box__icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+    width: 16px;
+    height: 16px;
+    pointer-events: none;
+  }
+  .qm-search-box__input {
+    width: 100%;
+    height: 38px;
+    padding: 0 36px 0 38px;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 13px;
+    color: #374151;
+    background: white;
+    outline: none;
+  }
+  .qm-search-box__input:focus {
+    border-color: #4338ca;
+    box-shadow: 0 0 0 3px rgba(67,56,202,0.1);
+  }
+  .qm-search-box__clear {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 18px;
+    height: 18px;
+    border: none;
+    border-radius: 50%;
+    background: #e5e7eb;
+    color: #6b7280;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    padding: 0;
+  }
+  .qm-search-box__clear:hover {
+    background: #d1d5db;
+  }
+
+
 .qm-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
+  flex-wrap: wrap;
   margin-bottom: 20px;
   gap: 16px;
 
@@ -982,7 +1071,40 @@ export default {
   &-sm { height: 32px; padding: 0 14px; font-size: 12px; }
   &:disabled { opacity: 0.6; cursor: not-allowed; }
 }
+.btn-image {
+  padding-left: 44px;
+  position: relative;
+}
+.btn-image::before {
+  content: '';
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='12' y1='5' x2='12' y2='19'/%3E%3Cline x1='5' y1='12' x2='19' y2='12'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-size: contain;
+}
 .btn-icon { width: 14px; height: 14px; flex-shrink: 0; }
+.btn-clear {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: none;
+  border: 1.5px solid #fecaca;
+  color: #ef4444;
+  font-size: 12.5px;
+  cursor: pointer;
+  padding: 5px 12px;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.15s;
+}
+.btn-clear:hover {
+  background: #fef2f2;
+}
 .btn-text {
   background: none;
   border: none;
