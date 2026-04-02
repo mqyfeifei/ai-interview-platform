@@ -3,6 +3,7 @@ from app.services.interview_service import InterviewService
 from app.services.asr_service import ASRService
 from app.services.auth_service import AuthService
 from app.models.job import Job, DEFAULT_JOBS
+from app.services.resume_service import ResumeService
 
 interview_bp = Blueprint('interview', __name__)
 
@@ -87,7 +88,43 @@ def start_interview():
 #     except Exception as e:
 #         return jsonify({"code": 500, "msg": str(e)}), 500
 
+@interview_bp.route('/check-resume', methods=['GET'])
+def check_resume():
+    """检测当前用户简历是否已填写，供前端岗位选择页使用"""
+    user_id = get_current_user_id()
+    if not user_id:
+        return jsonify({"code": 401, "msg": "请先登录"}), 401
 
+    try:
+        resume_data = ResumeService.get_main_resume(user_id)
+        content = resume_data.get('content', {})
+        has_experience = bool(
+            content.get('workExperiences') or
+            content.get('internshipExperiences') or
+            content.get('campusExperiences')
+        )
+        has_skills = bool(content.get('skills'))
+        has_resume = has_experience or has_skills
+
+        return jsonify({
+            "code": 200,
+            "data": {
+                "has_resume": has_resume,
+                "warning": None if has_resume else "简历未完善，AI 将无法根据您的经历进行个性化提问，建议先完善简历。"
+            },
+            "msg": "success"
+        }), 200
+
+    except Exception:
+        # 查不到简历（用户从未填写），统一返回 false
+        return jsonify({
+            "code": 200,
+            "data": {
+                "has_resume": False,
+                "warning": "未检测到简历，请前往「简历制作」页面填写。"
+            },
+            "msg": "success"
+        }), 200
 
 #注：前端开发人员需配合，在接收 SSE 流的过程中监听 [INTERVIEW_OVER]，一旦匹配到，立刻终止录音/输入，并请求 /finish 接口生成报告。
 @interview_bp.route('/<int:interview_id>/chat/stream', methods=['POST'])

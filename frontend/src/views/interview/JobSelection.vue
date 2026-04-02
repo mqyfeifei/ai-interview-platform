@@ -31,7 +31,17 @@
       <p>选好目标，开始 AI 模拟面试</p>
     </div>
   </div>
-
+  <!-- 简历未完善警告横幅 -->
+<div v-if="resumeChecked && !hasResume" class="resume-warning-bar">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+    stroke-linecap="round" stroke-linejoin="round" class="resume-warning-bar__icon">
+    <circle cx="12" cy="12" r="10"/>
+    <line x1="12" y1="8" x2="12" y2="12"/>
+    <line x1="12" y1="16" x2="12.01" y2="16"/>
+  </svg>
+  <span>{{ resumeWarning }}</span>
+  <button class="resume-warning-bar__btn" @click="$router.push('/resume')">去完善 →</button>
+</div>
   <div class="search-row">
     <div class="search-box">
       <span class="search-box__icon">
@@ -223,6 +233,38 @@
     </div>
   </div>
 </transition>
+
+<!-- 简历缺失拦截弹窗 -->
+<transition name="modal">
+  <div v-if="showResumeAlert" class="modal-overlay" @click.self="showResumeAlert = false">
+    <div class="modal-sheet">
+      <div class="modal-header-bar" style="background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);">
+        <h2 class="modal-header-title">📄 简历未完善</h2>
+        <p class="modal-header-sub">面试效果将大打折扣</p>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:14px; color:#374151; line-height:1.7; margin: 0 0 20px;">
+          {{ resumeWarning }}<br/>
+          <strong>完善简历后，AI 面试官将根据你的真实经历提问</strong>，让每一次面试都更有针对性。
+        </p>
+        <div class="modal-actions">
+          <button class="btn-cancel" @click="forceStart()">
+            忽略，直接开始
+          </button>
+          <button class="btn-confirm" style="background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%); box-shadow: 0 4px 16px rgba(245,158,11,0.4);"
+            @click="showResumeAlert = false; $router.push('/resume')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+              stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+            去完善简历
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</transition>
   </div>
 </template>
 
@@ -246,7 +288,12 @@ export default {
       ],
 
       jobs: [], // 后端岗位数据
-      popularIds: [] // 热门岗位 id 顺序，前端用于排序与标记
+      popularIds: [], // 热门岗位 id 顺序，前端用于排序与标记
+
+      hasResume: true,          // 默认 true，避免闪烁
+      resumeWarning: null,      // 后端返回的提示文本
+      resumeChecked: false,     // 是否已完成检测
+      showResumeAlert: false,   // 是否显示简历提示弹窗
     }
   },
   computed: {
@@ -335,6 +382,20 @@ export default {
     }
     // 初始应用默认岗位（或 interview store 中已选岗位）
     this.applyDefaultJob()
+
+// ↓ 新增：检测简历状态
+  try {
+    const { checkResume } = await import('@/api/interview')
+    const res = await checkResume()
+    this.hasResume = res.has_resume
+    this.resumeWarning = res.warning
+  } catch (e) {
+    // 网络失败时不阻断流程，允许继续
+    console.warn('简历检测失败', e)
+    this.hasResume = true
+  } finally {
+    this.resumeChecked = true
+  }
 
     // 如果用户信息或岗位列表后续发生变化，同样重新应用
     this.$watch(
@@ -445,10 +506,23 @@ async handleStart() {
       }
     }
 },
-    async confirmStart() {
-      this.showStartConfirm = false
-      await this.handleStart() // 原有逻辑不动
-    },
+async confirmStart() {
+  // ↓ 新增：简历为空时拦截，显示提示弹窗
+  if (!this.hasResume) {
+    this.showStartConfirm = false   // 先关掉原确认弹窗
+    this.showResumeAlert = true     // 打开简历提示弹窗
+    return
+  }
+  // ↓ 原有逻辑不动
+  this.showStartConfirm = false
+  await this.handleStart()
+},
+
+// 新增：用户在简历提示弹窗里选择"忽略，直接开始"
+async forceStart() {
+  this.showResumeAlert = false
+  await this.handleStart()
+},
   }
 }
 </script>
@@ -1027,4 +1101,54 @@ async handleStart() {
 .modal-enter-active { animation: overlayIn 0.3s ease both; }
 .modal-leave-active { animation: overlayIn 0.2s ease reverse both; }
 @keyframes overlayIn { from { opacity: 0; } to { opacity: 1; } }
+
+
+
+/* 简历未完善警告横幅 */
+.resume-warning-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px;
+  background: #fffbeb;
+  border-top: 1px solid #fde68a;
+  font-size: 12px;
+  color: #92400e;
+
+  /* 👇 核心居中代码 👇 */
+  max-width: 1300px;
+  width: 100%;
+  margin: 0 auto; /* 水平居中 */
+  box-sizing: border-box; /* 防止内边距撑破宽度 */
+}
+
+.resume-warning-bar__icon {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  color: #f59e0b;
+}
+
+.resume-warning-bar span {
+  flex: 1;
+  line-height: 1.4;
+}
+
+.resume-warning-bar__btn {
+  flex-shrink: 0;
+  padding: 4px 10px;
+  border-radius: 8px;
+  border: 1px solid #f59e0b;
+  background: white;
+  color: #b45309;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+
+.resume-warning-bar__btn:hover {
+  background: #fef3c7;
+}
 </style>

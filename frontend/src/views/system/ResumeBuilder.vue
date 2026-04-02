@@ -60,7 +60,23 @@
             </button>
           </div>
         </section>
-
+      <!-- 必填项状态栏 -->
+      <div v-if="missingRequiredFields.length > 0" class="required-bar">
+        <span class="required-bar-title">⚠ 待填必填项</span>
+        <div class="required-tags">
+          <button
+            v-for="item in missingRequiredFields"
+            :key="item.field"
+            class="required-tag"
+            @click="navigateToRequired(item)"
+          >
+            {{ item.label }}
+          </button>
+        </div>
+      </div>
+      <div v-else class="required-bar required-bar--done">
+        ✓ 所有必填项已完成
+      </div>
         <!-- 个人信息 -->
         <section class="section-config" v-if="activeSection === 'personal'">
           <h3>个人信息</h3>
@@ -72,10 +88,17 @@
               <input ref="avatarInput" type="file" accept="image/*" @change="onAvatarChange" hidden />
             </div>
           </div>
-          <div class="row">
-            <label>姓名</label>
-            <input v-model="personal.name" type="text" placeholder="输入你的真实姓名" maxlength="20" />
-          </div>
+        <div class="row">
+          <label>姓名 <span class="req-star">*</span></label>
+          <input
+            v-model="personal.name"
+            data-field="name"
+            type="text"
+            placeholder="输入你的真实姓名"
+            maxlength="20"
+            :class="{ 'input-required': !personal.name?.trim() }"
+          />
+        </div>
           <div class="row">
             <label>年龄</label>
             <input v-model.number="personal.age" type="number" min="0" max="99" />
@@ -89,8 +112,24 @@
             <input v-model.number="personal.experience" type="number" min="0" max="40" />
           </div>
           <div class="row">
-            <label>联系方式</label>
-            <input v-model="personal.contact" type="text" placeholder="手机号" />
+            <label>手机号码 <span class="req-star">*</span></label>
+            <input
+              v-model="personal.phone"
+              data-field="phone"
+              type="text"
+              placeholder="手机号"
+              :class="{ 'input-required': !personal.phone?.trim() }"
+            />
+          </div>
+          <div class="row">
+            <label>电子邮箱 <span class="req-star">*</span></label>
+            <input
+              v-model="personal.email"
+              data-field="email"
+              type="email"
+              placeholder="邮箱地址"
+              :class="{ 'input-required': !personal.email?.trim() }"
+            />
           </div>
         </section>
 
@@ -148,8 +187,14 @@
               <input v-model="item.end" type="date" />
             </div>
             <div class="row">
-              <label>学校名称</label>
-              <input v-model="item.school" type="text" maxlength="40" />
+              <label>学校名称 <span class="req-star">*</span></label>
+              <input
+                v-model="item.school"
+                data-field="school"
+                type="text"
+                maxlength="40"
+                :class="{ 'input-required': !item.school?.trim() }"
+              />
               <span class="char-count">{{ item.school.length }}/40</span>
             </div>
             <div class="row">
@@ -198,6 +243,7 @@
             <div class="row"><label>起止时间</label><input v-model="item.start" type="date" /><span>至</span><input v-model="item.end" type="date" /></div>
             <div class="row"><label>经历名称</label><input v-model="item.title" type="text" /></div>
             <div class="row"><label>详情描述</label><textarea v-model="item.description" rows="3"></textarea></div>
+            <div class="row"><label>业绩/成就 <span style="color:#ef4444;font-size:11px">（技术岗必填，请用数据量化）</span></label><textarea v-model="item.achievements" rows="3" maxlength="200" placeholder="如：独立完成xx模块开发，上线后降低bug率40%"></textarea></div> 
             <button class="btn-danger" v-if="campusExperiences.length > 1" @click="removeCampusExperience(idx)">删除</button>
             <hr />
           </div>
@@ -209,6 +255,7 @@
             <div class="row"><label>实习公司</label><input v-model="item.place" type="text" /></div>
             <div class="row"><label>实习岗位</label><input v-model="item.title" type="text" /></div>
             <div class="row"><label>详情描述</label><textarea v-model="item.description" rows="3"></textarea></div>
+            <div class="row"><label>业绩/成就 <span style="color:#ef4444;font-size:11px">（技术岗必填，请用数据量化）</span></label><textarea v-model="item.achievements" rows="3" maxlength="200" placeholder="如：独立完成xx模块开发，上线后降低bug率40%"></textarea></div>
             <button class="btn-danger" v-if="internshipExperiences.length > 1" @click="removeInternshipExperience(idx)">删除</button>
             <hr />
           </div>
@@ -221,6 +268,7 @@
             <div class="row"><label>主要职责</label><input v-model="item.role" type="text" maxlength="35" /><span class="char-count">{{ item.role.length }}/35</span></div>
             <div class="row"><label>工作内容</label><textarea v-model="item.description" rows="4" maxlength="200"></textarea></div>
             <div class="content-count">{{ item.description.length }}/200</div>
+            <div class="row"><label>业绩/成就 <span style="color:#ef4444;font-size:11px">（技术岗必填，请用数据量化）</span></label><textarea v-model="item.achievements" rows="3" maxlength="200" placeholder="如：优化接口响应时间30%，QPS提升至5000"></textarea></div>
             <button class="btn-danger" v-if="workExperiences.length > 1" @click="removeWorkExperience(idx)">删除</button>
             <hr />
           </div>
@@ -544,7 +592,7 @@ const AUTOFILL_SEEN_KEY = 'resumeAutoFillSeen_'   // prefix + resumeId
 // Default empty content factory
 function emptyContent() {
   return {
-    personal: { name: '', age: 0, experience: 0, email: '', avatar: '', address: '', contact: '', summary: '' },
+    personal: { name: '', age: 0, experience: 0, email: '', phone: '', avatar: '', address: '', summary: '' },
     objective: { jobType: '实习', position: '', city: '', salary: '', status: '' },
     education: [{ id: 1, start: '', end: '', school: '', major: '', degree: '' }],
     skills: [{ id: 1, name: '' }],
@@ -627,6 +675,18 @@ export default {
   },
 
   computed: {
+    missingRequiredFields() {
+      const missing = []
+      if (!this.personal.name?.trim())
+        missing.push({ label: '姓名', section: 'personal', field: 'name' })
+      if (!this.personal.phone?.trim())
+        missing.push({ label: '手机号码', section: 'personal', field: 'phone' })
+      if (!this.personal.email?.trim())
+        missing.push({ label: '电子邮箱', section: 'personal', field: 'email' })
+      if (!this.education.length || !this.education[0]?.school?.trim())
+        missing.push({ label: '就读院校', section: 'education', field: 'school' })
+      return missing
+    },    
     currentResume() {
       return this.resumeList.find(r => r.id === this.currentResumeId) || null
     },
@@ -692,7 +752,18 @@ export default {
     // ─────────────────────────────────────────────────────────────────────────
     // Resume list & switching
     // ─────────────────────────────────────────────────────────────────────────
-
+      navigateToRequired(item) {
+        // 1. 切换到对应 section
+        this.activeSection = item.section
+        // 2. 等 DOM 渲染后定位并聚焦输入框
+        this.$nextTick(() => {
+          const el = this.$el.querySelector(`[data-field="${item.field}"]`)
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+            el.focus()
+          }
+        })
+      },
     async loadResumeList() {
       this.globalLoading = true
       this.globalLoadingText = '加载简历列表…'
@@ -809,12 +880,24 @@ export default {
       if (!title) { alert('请填写简历名称'); return }
       this.creating = true
       try {
-        // Create empty resume first
+        // 若勾选从主简历复制，先获取主简历内容随创建请求一起发送，避免后端空内容校验失败
+        let initialContent = {}
+        if (this.createForm.copyFromMain) {
+          try {
+            const mainRes = await getMainResume()
+            initialContent = mainRes.content || {}
+          } catch (e) {
+            alert('获取主简历失败，请先完善主简历再创建定制简历')
+            this.creating = false
+            return
+          }
+        }
+
         const res = await createResume({
           title,
           isMain: false,
           jobId: this.createForm.jobId || null,
-          content: {},
+          content: initialContent,
         })
         const newResume = res
         this.resumeList.push({
@@ -824,22 +907,13 @@ export default {
           jobId: newResume.jobId,
           jobName: newResume.jobName,
         })
-
-        // Copy from main if requested
         if (this.createForm.copyFromMain) {
-          try {
-            await copyFromMain(newResume.id)
-            localStorage.setItem(AUTOFILL_SEEN_KEY + newResume.id, '1')
-          } catch (e) {
-            console.warn('从主简历复制失败', e)
-          }
+          localStorage.setItem(AUTOFILL_SEEN_KEY + newResume.id, '1')
         }
-
         this.showCreateDialog = false
-        // Switch to new resume
         await this.loadResumeContent(newResume.id)
       } catch (e) {
-        alert(e?.message || '创建失败，请重试')
+        alert(e?.response?.data?.message || e?.message || '创建失败，请先完善主简历的姓名、手机、邮箱和教育经历')
       } finally {
         this.creating = false
       }
@@ -925,6 +999,7 @@ export default {
 
     async manualSave() {
       clearTimeout(this.autoSaveTimer)
+      this.autoSaveTimer = null 
       await this.doSave()
     },
 
@@ -940,7 +1015,12 @@ export default {
       } catch (e) {
         console.error('保存失败', e)
         this.saveState = 'error'
-        // Persist to localStorage as fallback
+        // 提取后端返回的具体校验错误信息（如"姓名为必填项"）
+        const errMsg = e?.response?.data?.message || e?.response?.data?.msg || e?.message || '保存失败'
+        // 仅手动保存时弹出提示，自动保存静默处理
+        if (!this.autoSaveTimer) {
+          alert('保存失败：' + errMsg)
+        }
         localStorage.setItem(LOCAL_KEY + this.currentResumeId, JSON.stringify(this.buildContent()))
       }
     },
@@ -996,13 +1076,13 @@ export default {
     removeCampusExperience(idx) { this.campusExperiences.splice(idx, 1) },
 
     addInternshipExperience() {
-      this.internshipExperiences.push({ id: Date.now(), start: '', end: '', place: '', title: '', description: '' })
+      this.internshipExperiences.push({ id: Date.now(), start: '', end: '', place: '', title: '', description: '', achievements: '' })
       this.ensureBlockVisible('internship')
     },
     removeInternshipExperience(idx) { this.internshipExperiences.splice(idx, 1) },
 
     addWorkExperience() {
-      this.workExperiences.push({ id: Date.now(), start: '', end: '', company: '', role: '', description: '' })
+      this.workExperiences.push({ id: Date.now(), start: '', end: '', company: '', role: '', description: '', achievements: '' })
       this.ensureBlockVisible('work')
     },
     removeWorkExperience(idx) { this.workExperiences.splice(idx, 1) },
@@ -1719,4 +1799,68 @@ export default {
 .fade-enter-active { transition: opacity 0.2s; }
 .fade-leave-active { transition: opacity 0.2s; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
+
+
+/* ── Required fields bar ──────────────────────────────────────────────────── */
+.required-bar {
+  margin: 8px 0 4px;
+  padding: 8px 12px 10px;
+  background: #fff8f0;
+  border: 1px solid #fde8c8;
+  border-radius: 8px;
+}
+.required-bar--done {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+  color: #16a34a;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 7px 12px;
+  border-radius: 8px;
+  margin: 8px 0 4px;
+}
+.required-bar-title {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  color: #b45309;
+  margin-bottom: 6px;
+  letter-spacing: 0.03em;
+}
+.required-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.required-tag {
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: #fef3c7;
+  border: 1px solid #f59e0b;
+  color: #92400e;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+  line-height: 1.6;
+}
+.required-tag:hover {
+  background: #fde68a;
+  transform: translateY(-1px);
+}
+
+/* ── Required field indicators ───────────────────────────────────────────── */
+.req-star {
+  color: #ef4444;
+  font-size: 13px;
+  margin-left: 2px;
+}
+.input-required {
+  border-color: #fca5a5 !important;
+  background: #fff9f9 !important;
+}
+.input-required:focus {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.15);
+}
 </style>
