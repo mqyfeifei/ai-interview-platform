@@ -139,3 +139,12 @@ export const uploadAudio = async (audioBlob) => {
   console.log('ASR识别结果：', res)
   return res
 }
+
+
+/**
+ * 检测当前用户简历是否已填写
+ * @returns {Promise<{ has_resume: boolean, warning: string|null }>}
+ */
+export const checkResume = async () => {
+  return request.get('/interviews/check-resume')
+}
