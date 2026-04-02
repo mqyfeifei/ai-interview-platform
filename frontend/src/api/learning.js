@@ -4,9 +4,6 @@
 // =============================================
 
 import request from '@/utils/request'
-// disable mocking: always fetch from backend database
-const USE_MOCK = false
-const mockDelay = (ms = 600) => new Promise(resolve => setTimeout(resolve, ms))
 
 // ---- 常量 ----
 
@@ -31,7 +28,6 @@ const fmtDate = d => {
  * 获取能力成长曲线数据
  * 对后端发起 6 次并行请求（1 次总分 + 5 次各维度），
  * 组装为前端 renderChart() 需要的 {overall, dimensions, dates} 结构。
- * 若后端不可用或无数据则降级为 Mock。
  */
 export const getGrowthCurve = async () => {
   try {

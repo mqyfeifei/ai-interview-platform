@@ -5,33 +5,10 @@
 
 import request from '@/utils/request'
 
-const mockDelay = (ms = 600) => new Promise(resolve => setTimeout(resolve, ms))
-// 临时强制关闭 mock 模式以便联调后端（调试完成后可改回或通过 env 控制）
-const USE_MOCK = false
-
 /**
  * 获取当前用户信息
  */
 export const getUserInfo = async () => {
-  if (USE_MOCK) {
-    await mockDelay()
-    return {
-      id: 1,
-      username: '张三',
-      email: 'test@example.com',
-      phone: '13800138000',
-      school: '北京大学',
-      major: '计算机科学与技术',
-      grade: '大三',
-      avatar: null,
-      defaultJob: 'java-backend',
-      totalInterviews: 12,
-      avgScore: 78,
-      lastInterviewScore: 82,
-      lastInterviewAt: '2024-12-20',
-      createdAt: '2024-09-01'
-    }
-  }
   return request.get('/users/me')
 }
 
@@ -40,11 +17,6 @@ export const getUserInfo = async () => {
  * @param {Object} data - 可包含 username, school, major, grade, avatar
  */
 export const updateUserInfo = async (data) => {
-  if (USE_MOCK) {
-    await mockDelay()
-    // Mock a successful update
-    return { success: true, ...data }
-  }
   return request.put('/users/me', data)
 }
 
@@ -53,11 +25,6 @@ export const updateUserInfo = async (data) => {
  * @param {Object} data - { oldPassword, newPassword }
  */
 export const changePassword = async (data) => {
-  if (USE_MOCK) {
-    await mockDelay(800)
-    if (data.oldPassword !== '123456') throw new Error('原密码错误')
-    return { success: true }
-  }
   return request.post('/users/me/change-password', data)
 }
 
@@ -66,10 +33,6 @@ export const changePassword = async (data) => {
  * @param {string} jobId
  */
 export const updateDefaultJob = async (jobId) => {
-  if (USE_MOCK) {
-    await mockDelay(400)
-    return { defaultJob: jobId }
-  }
   return request.patch('/users/me/preferences', { defaultJob: jobId })
 }
 
@@ -78,12 +41,6 @@ export const updateDefaultJob = async (jobId) => {
  * @param {FormData} formData
  */
 export const uploadAvatar = async (formData) => {
-  if (USE_MOCK) {
-    await mockDelay(1000)
-    return {
-      url: 'https://fuss10.elemecdn.com/e/5d/4a731a90594a4af544c0c25941171jpeg.jpeg'
-    }
-  }
   return request.post('/users/me/avatar', formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
   })
@@ -94,12 +51,6 @@ export const uploadAvatar = async (formData) => {
  * @param {string} phone
  */
 export const bindPhone = async (phone) => {
-  if (USE_MOCK) {
-    await mockDelay(700)
-    const p = String(phone || '').trim()
-    if (!/^1\d{10}$/.test(p)) throw new Error('手机号格式不正确')
-    return { phone: p }
-  }
   return request.post('/users/me/bind-phone', { phone })
 }
 
@@ -111,10 +62,6 @@ export const bindPhone = async (phone) => {
  * 获取用户仪表盘数据
  */
 export const getDashboardData = async () => {
-  if (USE_MOCK) {
-    await mockDelay()
-    return MOCK_DASHBOARD
-  }
   return request.get('/users/me/dashboard')
 }
 
