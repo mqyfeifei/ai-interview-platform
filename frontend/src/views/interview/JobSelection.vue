@@ -248,17 +248,18 @@
           <strong>完善简历后，AI 面试官将根据你的真实经历提问</strong>，让每一次面试都更有针对性。
         </p>
         <div class="modal-actions">
-          <button class="btn-cancel" @click="forceStart()">
-            忽略，直接开始
+          <button class="btn-cancel" @click="showResumeAlert = false">
+            稍后再说
           </button>
-          <button class="btn-confirm" style="background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%); box-shadow: 0 4px 16px rgba(245,158,11,0.4);"
-            @click="showResumeAlert = false; $router.push('/resume')">
+          <button class="btn-confirm"
+            style="background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%); box-shadow: 0 4px 16px rgba(245,158,11,0.4);"
+            @click="goToResume()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
               stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px">
               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
               <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
             </svg>
-            去完善简历
+            立即完善简历
           </button>
         </div>
       </div>
