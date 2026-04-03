@@ -70,3 +70,43 @@ export function deleteResume(id) {
 export function copyFromMain(id) {
   return request({ url: `/resumes/${id}/copy-from-main`, method: 'post' })
 }
+
+/**
+ * Upload resume avatar.
+ * @param {FormData} formData - FormData containing the avatar file
+ * @returns {Promise<Object>} upload result with url
+ */
+export function uploadResumeAvatar(formData) {
+  return request({
+    url: '/resumes/avatar/upload',
+    method: 'post',
+    data: formData,
+    headers: { 'Content-Type': 'multipart/form-data' }
+  })
+}
+
+/**
+ * Get resume guidance for completion tips.
+ * @param {number} jobId - Optional job ID for job-specific guidance
+ * @returns {Promise<Object>} guidance data
+ */
+export function getResumeGuidance(jobId) {
+  return request({
+    url: '/resumes/guidance',
+    method: 'get',
+    params: jobId ? { job_id: jobId } : {}
+  })
+}
+
+/**
+ * Analyze resume completion and missing items.
+ * @param {Object} data - { content: Object, jobId?: number }
+ * @returns {Promise<Object>} analysis result
+ */
+export function analyzeResumeCompletion(data) {
+  return request({
+    url: '/resumes/analyze',
+    method: 'post',
+    data
+  })
+}
