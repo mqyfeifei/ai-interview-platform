@@ -28,6 +28,12 @@ class Config:
     EMBEDDING_BASE_URL = os.environ.get('EMBEDDING_BASE_URL')
     UPLOAD_ROOT = os.environ.get('UPLOAD_ROOT')
 
+    # --- 火山引擎 TTS 配置 ---
+    VOLC_APP_ID = os.environ.get('VOLC_APP_ID')
+    VOLC_ACCESS_TOKEN = os.environ.get('VOLC_ACCESS_TOKEN')
+    VOLC_SECRET_KEY = os.environ.get('VOLC_SECRET_KEY')
+    USE_VOLC = os.environ.get('USE_VOLC', '0') == '1'
+
 
 class DevelopmentConfig(Config):
     """开发环境配置"""

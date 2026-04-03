@@ -2,6 +2,8 @@
 import os
 import re
 import json
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
 
 # 启用 Hugging Face 在线模式并配置中国镜像站
 os.environ["HF_HUB_OFFLINE"] = "0"
@@ -46,6 +48,23 @@ local_embedding_model.max_seq_length = 512
 # =============================================================
 
 class InterviewService:
+    # === 新增：全局线程池，用于异步 TTS 合成 ===
+    # max_workers=5 表示最多同时处理 5 个 TTS 请求
+    tts_executor = ThreadPoolExecutor(max_workers=5)
+    
+    @staticmethod
+    def _synthesize_audio_async(text, voice, fmt='mp3'):
+        """
+        异步 TTS 合成包装器
+        在线程池中执行同步的 synthesize_bytes，避免阻塞主线程
+        """
+        try:
+            # 使用火山引擎或本地 pyttsx3 合成音频
+            audio_bytes = TTSService.synthesize_bytes(text, voice=voice, fmt=fmt)
+            return audio_bytes
+        except Exception as e:
+            print(f'异步 TTS 合成失败：{e}')
+            return None
     # @staticmethod
     # def get_embedding(text):
     #     """调用嵌入模型获取文本的 1536 维向量"""
@@ -181,28 +200,28 @@ class InterviewService:
     def process_chat_round_stream(interview_id, user_answer):
         """处理对话并返回流式生成器"""
         interview = Interview.query.get(interview_id)
-
+    
         # ================= 直接从全局缓存中获取语速 =================
         # 如果当前回答的文本刚好在缓存里，说明是刚才语音识别来的，拿到语速并删掉缓存
         actual_speed = global_speed_cache.pop(user_answer, None)
         # ============================================================
-
+    
         # 1. 记录用户回答
         user_chat = InterviewChat(interview_id=interview.id, role='user', content=user_answer)
         db.session.add(user_chat)
         interview.question_count += 1
-
+    
         # 2. 向量检索：匹配相关的考察知识点或参考答案
         user_vector = InterviewService.get_embedding(user_answer)
         # 依据 L2 距离查询最相关的知识库条目
         related_question = Question.query.filter_by(job_id=interview.job_id, status='published') \
             .order_by(Question.embedding.l2_distance(user_vector)).limit(1).first()
-
+    
         # 3. 组装上下文与 RAG 提示词
         prompt_config = AiPrompt.query.filter_by(job_id=interview.job_id, is_active=True).first()
-        base_prompt = prompt_config.system_prompt if prompt_config else "你是面试官，【核心指令】：当你觉得已经问了足够多的问题（例如超过5题），或者你认为已经充分评估了该候选人的能力时，请主动结束面试。结束时，请务必在你的回复文本的最后面加上特殊标记 [INTERVIEW_OVER]。"
-
-        # ================= 优化点：动态注入“面试大纲” =================
+        base_prompt = prompt_config.system_prompt if prompt_config else "你是面试官，【核心指令】：当你觉得已经问了足够多的问题（例如超过 5 题），或者你认为已经充分评估了该候选人的能力时，请主动结束面试。结束时，请务必在你的回复文本的最后面加上特殊标记 [INTERVIEW_OVER]。"
+    
+        # ================= 优化点：动态注入"面试大纲" =================
         # 从数据库拉取真实的知识点，约束 AI 只能在这个范围内提问
         # 获取当前岗位下所有题目的关联标签
         questions = Question.query.filter_by(job_id=interview.job_id).all()
@@ -211,7 +230,7 @@ class InterviewService:
             for tag in q.knowledge_tags:
                 tag_set.add(tag.name)
         valid_tags_str = "、".join(list(tag_set))
-
+    
         # ================= 动态拼装情感安抚指令 =================
         emotion_instruction = ""
         if actual_speed is not None:
@@ -222,98 +241,136 @@ class InterviewService:
                 请你结合语速和文本内容，简单分析候选人当前的情绪状态，并**在本次回复的最开头，用一两句话自然地给予情绪反馈或安抚**（例如：“听得出你有些紧张，没关系...”）。
                     """
         # ========================================================
-
+    
         resume_context = InterviewService._extract_resume_context(interview.user_id)
-
+    
         enhanced_system_prompt = f"""
                 {base_prompt}
                 {emotion_instruction}
                 {resume_context}
                 【提问策略调整指令】：
-                如果你在上述“候选人简历摘要”中看到了相关的项目和技能，请尽量结合 TA 的实际过往经历进行提问（例如：“你在X公司的Y项目中用到了Z技术，能具体说说...”）。如果简历为空，则直接进入常规提问。
-                
+                如果你在上述“候选人简历摘要”中看到了相关的项目和技能，请尽量结合 TA 的实际过往经历进行提问（例如：“你在 X 公司的 Y 项目中用到了 Z 技术，能具体说说...”）。如果简历为空，则直接进入常规提问。
+                    
                 【面试提问大纲约束】：
                 为了保证面试的标准化，请你**严格**围绕以下“面试大纲”中的知识点向候选人提问。
                 - 每次提问请挑选 1 个具体的知识点进行深入考察。
                 - 请不要提出大纲范围之外（天马行空）的技术问题。
                 - 如果候选人回答不会，请宽慰他，并从大纲中换一个全新的知识点继续提问。
-                
+                    
                 面试大纲（标准知识点库）：
                 [{valid_tags_str}]
                 """
         # ===============================================================
-
+    
         messages = [{"role": "system", "content": enhanced_system_prompt}]
-
+    
         if related_question:
             messages.append({"role": "system",
                      "content": f"参考题目：{related_question.content}。参考答案要点：{related_question.reference_answer}。请围绕此知识点对候选人进行专业追问。"})
-
+    
         # 加载历史对话
         history = InterviewChat.query.filter_by(interview_id=interview_id).order_by(InterviewChat.timestamp).all()
         for msg in history:
             messages.append({"role": "user" if msg.role == 'user' else "assistant", "content": msg.content})
-
-
+    
+    
         # 4. 调用大模型流式输出
         llm = DeepSeekClient()
         response_stream = llm.generate_reply(messages, stream=True)
-
+    
         full_reply = ""
         audio_chunks = []
         # === 新增：标点符号缓冲机制 ===
         sentence_buffer = ""
         # 匹配中文和英文的句末停顿符号
         punctuation_pattern = re.compile(r'[。！？；\n\!\?\;]')
+            
+        # === 新增：音频队列，用于缓存异步 TTS 的结果 ===
+        import queue
+        audio_queue = queue.Queue()
+            
         for chunk in response_stream:
             content = chunk.choices[0].delta.content
             if content:
                 full_reply += content
                 sentence_buffer += content
-
+    
                 # 初始化准备传给前端的 payload，无论有没有音频，文字都要立刻传过去保证打字机效果
                 payload = {'chunk': content}
-
+    
+                # === 使用异步 TTS 合成，不阻塞流式响应 ===
                 # 检查缓冲字符串是否以标点符号结尾（或者是包含换行符）
                 if punctuation_pattern.search(content):
                     try:
                         voice = getattr(prompt_config, 'preferred_voice', 'BV001_streaming') if prompt_config else 'BV001_streaming'
-
-                        # 仅将截断的这句话送去合成
-                        audio_bytes = TTSService.synthesize_bytes(sentence_buffer, voice=voice, fmt='mp3')
-
-                        if audio_bytes:
-                            audio_b64 = bytes_to_b64(audio_bytes)
-                            audio_chunks.append(audio_bytes)
-                            payload['audio_b64'] = audio_b64
-
+                            
+                        # 在线程池中异步执行 TTS 合成，立即返回不阻塞
+                        future = InterviewService.tts_executor.submit(
+                            InterviewService._synthesize_audio_async,
+                            sentence_buffer,
+                            voice,
+                            'mp3'
+                        )
+                            
+                        # 添加回调函数，当 TTS 完成后将音频数据放入队列
+                        def tts_callback(fut):
+                            try:
+                                audio_bytes = fut.result()
+                                if audio_bytes:
+                                    audio_b64 = bytes_to_b64(audio_bytes)
+                                    audio_chunks.append(audio_bytes)
+                                    # 将音频数据放入队列，供后续发送
+                                    audio_queue.put(audio_b64)
+                            except Exception as e:
+                                print(f'TTS 回调失败：{e}')
+                            
+                        future.add_done_callback(tts_callback)
+    
                         # 清空缓冲区，迎接下一句话
                         sentence_buffer = ""
                     except Exception as e:
-                        print('TTS synth failed for buffer:', e)
-
-                # 即使没有音频触发，文本流依然持续发出
+                        print('TTS 异步合成失败:', e)
+    
+                # === 检查是否有已完成的 TTS 音频需要发送 ===
+                try:
+                    # 非阻塞获取队列中的音频数据
+                    audio_b64_from_queue = audio_queue.get_nowait()
+                    payload['audio_b64'] = audio_b64_from_queue
+                except queue.Empty:
+                    pass
+    
+                # 立即发送文本 chunk（如果有音频，会一起发送）
                 yield f"data: {json.dumps(payload, ensure_ascii=False)}\n\n"
 
-        # 兜底：如果模型最后输出没有带标点符号，处理遗留的 buffer
+        # === 使用异步 TTS 处理最后不带标点的 buffer ===
         if sentence_buffer.strip() and sentence_buffer != "[INTERVIEW_OVER]":
             try:
                 voice = getattr(prompt_config, 'preferred_voice', 'BV001_streaming') if prompt_config else 'BV001_streaming'
+                
+                # 同步合成最后的音频（因为流已经结束，可以等待）
                 audio_bytes = TTSService.synthesize_bytes(sentence_buffer, voice=voice, fmt='mp3')
                 if audio_bytes:
                     audio_b64 = bytes_to_b64(audio_bytes)
                     audio_chunks.append(audio_bytes)
-                    # 发送一个纯音频包补充结尾
+                    # 发送最后一个音频包
                     yield f"data: {json.dumps({'chunk': '', 'audio_b64': audio_b64}, ensure_ascii=False)}\n\n"
             except Exception as e:
-                print('Final TTS synth failed:', e)
+                print('Final TTS failed:', e)
+        
+        # === 发送队列中剩余的音频数据 ===
+        while not audio_queue.empty():
+            try:
+                remaining_audio = audio_queue.get_nowait()
+                yield f"data: {json.dumps({'chunk': '', 'audio_b64': remaining_audio}, ensure_ascii=False)}\n\n"
+            except queue.Empty:
+                break
 
         # 5. 清理标识符并存入数据库
         clean_reply = full_reply.replace("[INTERVIEW_OVER]", "").strip()
         ai_chat = InterviewChat(interview_id=interview.id, role='ai', content=clean_reply)
         db.session.add(ai_chat)
 
-        # === 修复保存录音记录的逻辑 ===
+        # === 恢复音频文件保存逻辑 ===
         try:
             if audio_chunks:
                 uploads_root = os.path.join(current_app.root_path, 'uploads')
@@ -327,18 +384,12 @@ class InterviewService:
                     for chunk_bytes in audio_chunks:
                         f.write(chunk_bytes)
 
-                # tts_record = TTSAudio(
-                #     prompt_id=(prompt_config.id if prompt_config else None),
-                #     file_path=os.path.relpath(file_path, uploads_root).replace('\\', '/'),
-                #     format='mp3',
-                #     voice=voice
-                # )
                 tts_record = TTSAudio(
                     prompt_id=prompt_config.id if prompt_config else None,
                     file_path=os.path.relpath(file_path, current_app.root_path),  # 存储相对路径
                     format='mp3',
                     voice=getattr(prompt_config, 'preferred_voice', 'BV001_streaming') if prompt_config else 'BV001_streaming',
-                    duration=None  # 可选：后续可以用 pydub 或 mutagen
+                    duration=None  # 可选：后续可以用 pydub 或 mutagen 获取时长
                 )
                 db.session.add(tts_record)
                 db.session.flush() # 生成 id

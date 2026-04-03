@@ -45,7 +45,7 @@ export const sendAnswer = async (sessionId, answer) => {
 // 原 sendAnswer 返回 { reply, nextQuestion, isFinished }
 // 后端是 SSE 流，通过 fetch 手动处理，检测 [INTERVIEW_OVER] 标记
 // api/interview.js  sendAnswerStream
-export const sendAnswerStream = (sessionId, answer, { onChunk, onFinish, onStreamEnd, onError }) => {
+export const sendAnswerStream = (sessionId, answer, { onChunk, onFinish, onStreamEnd, onError, onAudio }) => {
   const API_BASE = process.env.VUE_APP_API_BASE_URL || '/api/v1'
   const token = localStorage.getItem('ai_interview_token')
 
@@ -80,6 +80,11 @@ export const sendAnswerStream = (sessionId, answer, { onChunk, onFinish, onStrea
           const json = JSON.parse(line.slice(6))
           const chunk = json.chunk || ''
           fullText += chunk
+
+          // ✅ 处理音频数据（如果有）
+          if (json.audio_b64 && onAudio) {
+            onAudio(json.audio_b64)
+          }
 
           // ✅ 用 fullText 判断，不再用单个 chunk
           if (!isOver && fullText.includes('[INTERVIEW_OVER]')) {

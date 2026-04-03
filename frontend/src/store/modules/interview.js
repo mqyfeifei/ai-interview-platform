@@ -120,9 +120,52 @@ const actions = {
     commit('ADD_MESSAGE', { id: Date.now() + 1, role: 'ai', content: '', timestamp: Date.now(), streaming: true })
 
     const { sendAnswerStream } = await import('@/api/interview')
+    
+    // ✅ 创建音频播放器
+    let audioQueue = []
+    let isPlaying = false
+    const playBase64Audio = (base64Str) => {
+      try {
+        const audio = new Audio(`data:audio/mp3;base64,${base64Str}`)
+        audioQueue.push(audio)
+        
+        // 如果当前没有在播放，立即开始播放队列中的音频
+        if (!isPlaying && audioQueue.length > 0) {
+          playNextAudio()
+        }
+      } catch (err) {
+        console.error('音频播放失败:', err)
+      }
+    }
+    
+    const playNextAudio = () => {
+      if (audioQueue.length === 0) {
+        isPlaying = false
+        return
+      }
+      
+      isPlaying = true
+      const currentAudio = audioQueue.shift()
+      currentAudio.play().catch(err => {
+        console.error('播放出错:', err)
+        // 如果播放失败，继续播放下一个
+        playNextAudio()
+      })
+      
+      // 监听播放结束事件，自动播放下一个
+      currentAudio.onended = () => {
+        playNextAudio()
+      }
+    }
+    
     sendAnswerStream(state.currentSession.sessionId, answerText, {
       onChunk(chunk) {
         commit('APPEND_AI_CHUNK', chunk)
+      },
+
+      // ✅ 新增：处理音频数据
+      onAudio(base64Audio) {
+        playBase64Audio(base64Audio)
       },
 
       onStreamEnd() {
