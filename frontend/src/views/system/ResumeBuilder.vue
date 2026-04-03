@@ -100,6 +100,26 @@
           />
         </div>
           <div class="row">
+          <label>性别 <span class="req-star">*</span></label>
+          <!-- <input
+            v-model="personal.gender"
+            data-field="gender"
+            type="text"
+            placeholder="男/女"
+            maxlength="20"
+            :class="{ 'input-required': !personal.gender?.trim() }"
+          /> -->
+          <select
+            v-model="personal.gender"
+            data-field="gender"
+            :class="{ 'input-required': !personal.gender?.trim() }"
+          >
+            <option value="">请选择性别</option>
+            <option value="男">男</option>
+            <option value="女">女</option>
+          </select>
+        </div>
+          <div class="row">
             <label>年龄</label>
             <input v-model.number="personal.age" type="number" min="0" max="99" />
           </div>
@@ -592,7 +612,7 @@ const AUTOFILL_SEEN_KEY = 'resumeAutoFillSeen_'   // prefix + resumeId
 // Default empty content factory
 function emptyContent() {
   return {
-    personal: { name: '', age: 0, experience: 0, email: '', phone: '', avatar: '', address: '', summary: '' },
+    personal: { name: '', gender: '', age: 0, experience: 0, email: '', phone: '', avatar: '', address: '', summary: '' },
     objective: { jobType: '实习', position: '', city: '', salary: '', status: '' },
     education: [{ id: 1, start: '', end: '', school: '', major: '', degree: '' }],
     skills: [{ id: 1, name: '' }],
@@ -679,6 +699,8 @@ export default {
       const missing = []
       if (!this.personal.name?.trim())
         missing.push({ label: '姓名', section: 'personal', field: 'name' })
+      if (!this.personal.gender?.trim())
+        missing.push({ label: '性别', section: 'personal', field: 'gender' })
       if (!this.personal.phone?.trim())
         missing.push({ label: '手机号码', section: 'personal', field: 'phone' })
       if (!this.personal.email?.trim())
@@ -913,7 +935,7 @@ export default {
         this.showCreateDialog = false
         await this.loadResumeContent(newResume.id)
       } catch (e) {
-        alert(e?.response?.data?.message || e?.message || '创建失败，请先完善主简历的姓名、手机、邮箱和教育经历')
+        alert(e?.response?.data?.message || e?.message || '创建失败，请先完善主简历的姓名、性别、手机、邮箱和教育经历')
       } finally {
         this.creating = false
       }

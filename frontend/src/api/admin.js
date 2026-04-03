@@ -65,7 +65,6 @@ export function listInterviews(params = {}) {
   return request.get('/interviews', { params, admin: true })
 }
 
-/** 获取面试详情（含对话记录、维度评分、报告） */
 export function getInterviewDetail(id) {
   return request.get(`/interviews/${id}/details`, { admin: true })
 }
