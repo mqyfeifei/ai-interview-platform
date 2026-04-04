@@ -255,9 +255,6 @@
                   <div class="mode-option__title">
                     文字面试
                   </div>
-                  <div class="mode-option__desc">键盘输入 · 每题 5 分钟</div>
-                </div>
-                <div v-if="!voiceMode" class="mode-option__selected-icon">
                 </div>
               </div>
 
@@ -274,9 +271,6 @@
                   <div class="mode-option__title">
                     语音面试
                   </div>
-                  <div class="mode-option__desc">语音输入 · 每题 3 分钟</div>
-                </div>
-                <div v-if="voiceMode" class="mode-option__selected-icon">
                 </div>
               </div>
             </div>
@@ -836,13 +830,13 @@ export default {
   padding-inline: 3%;
   h1 {
     font-family: $font-family-display;
-    font-size: $font-size-xl;
+    font-size: $font-size-2xl;
     font-weight: $font-weight-extrabold;
     color: #111827;
     margin-bottom: 2px;
     line-height: 1.2;
   }
-  p { font-size: $font-size-xs; color: #9ca3af; }
+  p { font-size: $font-size-base; color: #9ca3af; }
 }
 
 .search-row {
@@ -928,8 +922,8 @@ export default {
 // ──────────────────────────────────────────────
 .dual-layout {
   display: grid;
-  grid-template-columns: 1fr 380px;
-  gap: 24px;
+  grid-template-columns: 1fr 450px;
+  gap: 25px;
   max-width: 1300px;
   margin: 0 auto;
   padding: 24px 24px 48px;
@@ -955,7 +949,7 @@ export default {
 }
 
 .pane-title {
-  font-size: 15px;
+  font-size: 20px;
   font-weight: 700;
   color: #111827;
 }
@@ -970,7 +964,7 @@ export default {
   border-radius: 6px;
   border: 1px solid $border-color;
   background: transparent;
-  font-size: $font-size-xs;
+  font-size: $font-size-base;
   font-weight: $font-weight-medium;
   color: rgba(49, 40, 164, 0.5);
   cursor: pointer;
@@ -993,7 +987,7 @@ export default {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 14px 16px;
+  padding: 15px 18px;
   border: 1px solid #e9ebf0;
   border-radius: 12px;
   cursor: pointer;
@@ -1050,7 +1044,7 @@ export default {
     margin-bottom: 2px;
   }
 
-  &__name { font-size: 14px; font-weight: 600; color: #111; }
+  &__name { font-size: 15px; font-weight: 600; color: #111; }
 
   &__score {
     font-size: 11px; color: #6366f1;
@@ -1059,7 +1053,7 @@ export default {
   }
 
   &__desc {
-    font-size: 12px; color: #9ca3af;
+    font-size: 13px; color: #9ca3af;
     margin: 0 0 4px; line-height: 1.4;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
@@ -1070,6 +1064,7 @@ export default {
     flex-shrink: 0; margin-left: 8px;
     display: flex; align-items: center;
     padding-right: 28px;
+
   }
 }
 
@@ -1080,7 +1075,7 @@ export default {
 }
 
 .btn-set-default {
-  font-size: 11px; color: #6b7280;
+  font-size: 13px; color: #6b7280;
   border: 1px solid #e5e7eb; background: white;
   padding: 3px 9px; border-radius: 8px;
   cursor: pointer; transition: all 0.15s; white-space: nowrap;
@@ -1089,7 +1084,7 @@ export default {
 }
 
 .default-badge {
-  font-size: 11px; color: #3b82f6;
+  font-size: 13px; color: #3b82f6;
   background: #eff6ff; padding: 3px 9px;
   border-radius: 8px; white-space: nowrap;
 }
@@ -1165,7 +1160,7 @@ export default {
 
 // 配置区块通用
 .config-section {
-  padding: 18px 18px 0;
+  padding: 24px 20px 0;
 
   &:last-of-type { padding-bottom: 18px; }
 
@@ -1287,18 +1282,16 @@ export default {
 
 // ─── 简历校验提示 ───
 .resume-validation-alert {
-  margin-top: 10px;
+  margin-top: 12px;
   padding: 10px 12px;
-  // background: #fffbeb;
-  // border: 1px solid #fde68a;
   border-radius: 8px;
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
   gap: 6px;
-  font-size: 12px;
+  font-size: 14px;
   color: #d81919;
-  line-height: 1.5;
+  line-height: 1;
 
   span { flex: 1; min-width: 160px; }
 
@@ -1311,7 +1304,7 @@ export default {
 
 .rva-btn {
   padding: 4px 10px; border-radius: 6px;
-  font-size: 11px; font-weight: 600; cursor: pointer;
+  font-size: 13px; font-weight: 600; cursor: pointer;
   font-family: $font-family-base; transition: all 0.15s;
 
   &--view {
@@ -1328,7 +1321,7 @@ export default {
 // ─── 面试模式切换 ───
 .mode-switch {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: 8px;
   margin-bottom: 14px;
 }
@@ -1338,16 +1331,14 @@ export default {
   align-items: center;
   gap: 10px;
   padding: 12px 14px;
-  border: 1.5px solid #e5e7eb;
   border-radius: 10px;
   cursor: pointer;
   transition: all 0.18s;
   background: #fafafa;
 
-  &:hover { border-color: rgba(67,56,202,0.3); background: #f8f9ff; }
+  &:hover { background: #f8f9ff; }
 
   &.active {
-    border-color: $primary;
     background: #f0f4ff;
   }
 
@@ -1375,15 +1366,6 @@ export default {
     font-size: 13px; font-weight: 600; color: #111827;
     display: flex; align-items: center; gap: 5px;
   }
-
-  &__desc { font-size: 11px; color: #9ca3af; margin-top: 2px; }
-
-  &__selected-icon {
-    width: 20px; height: 20px; border-radius: 50%;
-    background: $primary; display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0; color: white;
-    svg { width: 10px; height: 10px; }
-  }
 }
 
 // ─── 语音角色选择 ───
@@ -1395,7 +1377,7 @@ export default {
   border: 1px solid #e0e7ff;
 
   &__title {
-    font-size: 12px; font-weight: 600; color: #4338ca;
+    font-size: 15px; font-weight: 600; color: #4338ca;
     display: flex; align-items: center; gap: 5px;
     margin-bottom: 10px;
   }

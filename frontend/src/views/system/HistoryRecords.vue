@@ -510,7 +510,7 @@ export default {
 
   .page-container {
     margin: 0 auto;
-    padding: 8px 16px; /* 控制内容上下间距 */
+    padding: 12px 20px; /* 控制内容上下间距 */
   }
 
   &::before {
@@ -531,60 +531,60 @@ export default {
   &__text {
     h1 {
       font-family: $font-family-base;
-      font-size: 18px; font-weight: $font-weight-bold;
-      color: #202b42; margin-bottom: 2px;
+      font-size: 21px; font-weight: $font-weight-bold;
+      color: #202b42; margin-bottom: 4px;
     }
-    p { font-size: 12px; color: #738096; margin: 0; }
+    p { font-size: 14px; color: #738096; margin: 0; }
   }
 }
 
 .header-stats {
-  display: flex; align-items: center; gap: $spacing-sm;
+  display: flex; align-items: center; gap: $spacing-md;
   background: #f8f9fb;
   border: 1px solid #e8edf5;
-  border-radius: $border-radius;
-  padding: 1px 10px;
+  border-radius: 6px;
+  padding: 4px 12px;
 }
 
 .header-stat {
   display: flex; flex-direction: column; align-items: flex-start;
-  gap: 2px;
+  gap: 4px;
   &__value {
     font-family: $font-family-display;
-    font-size: 14px; font-weight: $font-weight-bold;
+    font-size: 16px; font-weight: $font-weight-bold;
     color: #242f45; line-height: 1;
   }
-  &__label { font-size: 11px; color: #8d9cb4; }
+  &__label { font-size: 13px; color: #8d9cb4; }
 }
 
-.header-stat-divider { width: 1px; height: 24px; background: #dbe2ed; }
+.header-stat-divider { width: 1px; height: 28px; background: #dbe2ed; }
 
 .search-box {
   position: relative; z-index: 1;
-  margin: 1px 0;
+  margin: 4px 0;
 
   &__icon {
-    position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+    position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
     color: #9baac5; display: flex; align-items: center; pointer-events: none;
-    svg { width: 14px; height: 14px; }
+    svg { width: 16px; height: 16px; }
   }
 
   &__input {
-    width: 100%; height: 38px;
-    padding: 0 38px 0 36px;
+    width: 100%; height: 42px;
+    padding: 0 42px 0 40px;
     background: #f9fbff; border: 1px solid #dbe2ed;
-    border-radius: $border-radius-full;
-    font-size: 13px; color: #1f3047;
+    border-radius: 8px;
+    font-size: 15px; color: #1f3047;
     outline: none; font-family: $font-family-base;
     box-shadow: none;
     &::placeholder { color: #9baac5; }
   }
 
   &__clear {
-    position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+    position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
     background: #dbe2ed; border: none;
-    width: 20px; height: 20px; border-radius: 50%;
-    cursor: pointer; font-size: $font-size-xs; color: #607698;
+    width: 22px; height: 22px; border-radius: 50%;
+    cursor: pointer; font-size: 14px; color: #607698;
     display: flex; align-items: center; justify-content: center;
     &:hover { background: #b8c8e4; }
   }
@@ -594,18 +594,18 @@ export default {
 .page-body {
   padding:0;
   /* 给出一定间距，但不需要完整头部高度 */
-  padding-top: $spacing-sm; /* 缩减顶部间距 */
+  padding-top: $spacing-md; /* 缩减顶部间距 */
 }
 
 .filter-row {
   display: flex; align-items: center;
   justify-content: space-between;
-  gap: $spacing-xs;
-  margin-top: 6px;
+  gap: $spacing-sm;
+  margin-top: 8px;
   background: #fff;
   border: 1px solid #e4eaf2;
-  border-radius: $border-radius;
-  padding: 6px $spacing-base;
+  border-radius: 6px;
+  padding: 8px $spacing-lg;
   width: 100%;
   box-sizing: border-box;
 }
@@ -618,15 +618,15 @@ export default {
 }
 
 .filter-tabs {
-  display: flex; gap: $spacing-xs;
+  display: flex; gap: $spacing-sm;
   overflow-x: auto; flex: 1;
   &::-webkit-scrollbar { display: none; }
 }
 
 .filter-tab {
-  padding: 6px 14px; border-radius: $border-radius-full;
+  padding: 8px 16px; border-radius: 8px;
   border: 1.5px solid $border-color; background: white;
-  font-size: $font-size-xs; font-weight: $font-weight-medium;
+  font-size: 14px; font-weight: $font-weight-medium;
   color: $text-secondary; cursor: pointer;
   font-family: $font-family-base; transition: all $transition-fast;
   white-space: nowrap; flex-shrink: 0;
@@ -642,24 +642,24 @@ export default {
 
 .sort-select {
   appearance: none;
-  padding: 7px 28px 7px 12px;
-  border: 1.5px solid $border-color; border-radius: $border-radius;
-  background: white; font-size: $font-size-xs; color: $text-secondary;
+  padding: 9px 30px 9px 14px;
+  border: 1.5px solid $border-color; border-radius: 6px;
+  background: white; font-size: 14px; color: $text-secondary;
   font-family: $font-family-base; cursor: pointer; outline: none;
   transition: border-color $transition-fast;
   &:focus { border-color: $primary; }
 }
 
 .sort-select-icon {
-  position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
-  width: 14px; height: 14px; color: $text-muted; pointer-events: none;
+  position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+  width: 16px; height: 16px; color: $text-muted; pointer-events: none;
 }
 
 // ---- 骨架屏 ----
-.loading-wrap { display: flex; flex-direction: column; gap: $spacing-md; }
+.loading-wrap { display: flex; flex-direction: column; gap: $spacing-lg; }
 
 .skeleton-card {
-  height: 88px; border-radius: $border-radius-lg;
+  height: 96px; border-radius: 6px;
   background: linear-gradient(90deg, $gray-100 25%, $gray-200 37%, $gray-100 63%);
   background-size: 400px 100%;
   animation: skeleton-loading 1.4s ease infinite;
@@ -671,23 +671,23 @@ export default {
 }
 
 // ---- 月份分组 ----
-.month-group { margin-bottom: $spacing-lg; }
+.month-group { margin-bottom: $spacing-xl; }
 
 .month-label {
-  font-size: $font-size-xs; font-weight: $font-weight-bold;
+  font-size: 14px; font-weight: $font-weight-bold;
   color: $text-muted; text-transform: uppercase; letter-spacing: 0.08em;
-  margin-bottom: $spacing-sm;
+  margin-bottom: $spacing-md;
   display: flex; align-items: center; gap: $spacing-sm;
   &::after { content: ''; flex: 1; height: 1px; background: $border-color; }
 }
 
-.record-list { display: flex; flex-direction: column; gap: $spacing-sm; }
+.record-list { display: flex; flex-direction: column; gap: $spacing-md; }
 
 // ---- 记录卡片 ----
 .record-card {
-  background: white; border-radius: $border-radius-lg;
-  padding: $spacing-base;
-  display: flex; align-items: center; gap: $spacing-sm;
+  background: white; border-radius: 6px;
+  padding: $spacing-lg;
+  display: flex; align-items: center; gap: $spacing-md;
   cursor: pointer; transition: all $transition-fast;
   border: 1px solid #e3e8f0; box-shadow: 0 1px 3px rgba(31,45,61,.08);
   animation: fadeSlideUp 0.3s ease both;
@@ -702,7 +702,7 @@ export default {
 
 // 得分圆环
 .record-score {
-  position: relative; width: 48px; height: 48px;
+  position: relative; width: 52px; height: 52px;
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
 }
@@ -713,43 +713,43 @@ export default {
 
 .score-num {
   font-family: $font-family-display;
-  font-size: $font-size-base; font-weight: $font-weight-extrabold;
+  font-size: 18px; font-weight: $font-weight-extrabold;
   position: relative; z-index: 1; line-height: 1;
 }
 
 // 记录信息
 .record-info {
   flex: 1; min-width: 0;
-  display: flex; flex-direction: column; gap: 6px;
+  display: flex; flex-direction: column; gap: 8px;
 
   &__top {
-    display: flex; align-items: center; gap: 8px;
+    display: flex; align-items: center; gap: 10px;
     flex-wrap: wrap;
   }
 }
 
 .record-job-icon {
-  width: 28px; height: 28px; border-radius: $border-radius-sm;
+  width: 32px; height: 32px; border-radius: 4px;
   display: flex; align-items: center; justify-content: center;
-  font-size: 15px; flex-shrink: 0;
+  font-size: 17px; flex-shrink: 0;
   overflow: hidden;
 }
 
 .record-job-icon__img {
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   object-fit: contain;
   display: block;
 }
 .record-job-name {
-  font-size: $font-size-base; font-weight: $font-weight-semibold;
+  font-size: 17px; font-weight: $font-weight-semibold;
   color: $text-primary; flex: 1;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
 .grade-pill {
-  font-size: $font-size-xs; font-weight: $font-weight-semibold;
-  padding: 2px 8px; border-radius: $border-radius-full; flex-shrink: 0;
+  font-size: 14px; font-weight: $font-weight-semibold;
+  padding: 4px 10px; border-radius: 8px; flex-shrink: 0;
 
   &.grade-excellent { background: $success-bg; color: darken($success, 10%); }
   &.grade-good { background: $info-bg; color: $info; }
@@ -759,17 +759,17 @@ export default {
 }
 
 .record-info__meta {
-  display: flex; align-items: center; gap: $spacing-base; flex-wrap: wrap;
+  display: flex; align-items: center; gap: $spacing-lg; flex-wrap: wrap;
 }
 
 .meta-item {
-  display: flex; align-items: center; gap: 3px;
-  font-size: $font-size-xs; color: $text-muted;
-  svg { width: 11px; height: 11px; }
+  display: flex; align-items: center; gap: 4px;
+  font-size: 14px; color: $text-muted;
+  svg { width: 13px; height: 13px; }
 }
 
 .record-arrow {
-  width: 16px; height: 16px; color: $gray-300; flex-shrink: 0;
+  width: 18px; height: 18px; color: $gray-300; flex-shrink: 0;
   transition: color $transition-fast;
   .record-card:hover & { color: $primary; }
 }
@@ -777,21 +777,21 @@ export default {
 // ---- 加载更多 ----
 .load-more {
   display: flex; justify-content: center;
-  padding: $spacing-lg 0;
+  padding: $spacing-xl 0;
 }
 
 .load-more-btn {
   display: flex; align-items: center; gap: $spacing-sm;
-  padding: 10px $spacing-xl; border-radius: $border-radius-full;
+  padding: 12px $spacing-2xl; border-radius: 8px;
   border: 1.5px solid $border-color; background: white;
-  font-size: $font-size-sm; color: $text-secondary; cursor: pointer;
+  font-size: 16px; color: $text-secondary; cursor: pointer;
   font-family: $font-family-base; transition: all $transition-fast;
   &:hover { border-color: $primary; color: $primary; background: $primary-bg; }
   &:disabled { opacity: 0.6; cursor: not-allowed; }
 }
 
 .mini-spinner {
-  width: 14px; height: 14px; border-radius: 50%;
+  width: 16px; height: 16px; border-radius: 50%;
   border: 2px solid $primary-bg; border-top-color: $primary;
   animation: spin 0.8s linear infinite; flex-shrink: 0;
 }
@@ -802,14 +802,14 @@ export default {
 .empty-state-wrap {
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
-  padding: $spacing-4xl $spacing-xl;
-  gap: $spacing-sm; text-align: center;
+  padding: $spacing-4xl $spacing-2xl;
+  gap: $spacing-md; text-align: center;
 }
 
 .empty-title {
-  font-size: $font-size-lg; font-weight: $font-weight-semibold;
+  font-size: 20px; font-weight: $font-weight-semibold;
   color: $text-secondary; margin-top: $spacing-sm;
 }
 
-.empty-sub { font-size: $font-size-sm; color: $text-muted; line-height: $line-height-relaxed; }
+.empty-sub { font-size: 16px; color: $text-muted; line-height: $line-height-relaxed; }
 </style>
