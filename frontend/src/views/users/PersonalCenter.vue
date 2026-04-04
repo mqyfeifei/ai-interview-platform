@@ -45,11 +45,11 @@
 
               <div class="user-info-list">
                 <div class="user-info-row" v-for="item in infoRows" :key="item.key">
-                  <span class="user-info-key">{{ item.icon }} {{ item.label }}</span>
+                  <span class="user-info-key">{{ item.label }}</span>
                   <span class="user-info-value">{{ item.value || '未填写' }}</span>
                 </div>
                 <div class="user-info-row">
-                  <span class="user-info-key">🎯 默认岗位</span>
+                  <span class="user-info-key">默认岗位</span>
                   <span class="user-info-value">{{ defaultJobDisplayName }}</span>
                 </div>
               </div>
@@ -199,21 +199,25 @@
             <button class="edit-modal-close" @click="showEditModal = false">✕</button>
           </div>
           <div class="edit-modal-body">
-            <div class="form-group">
-              <label><span class="field-icon">👤</span>昵称</label>
+            <div class="form-row">
+              <label class="form-label">真实姓名</label>
+              <input v-model="editForm.realName" type="text" class="form-control" placeholder="请输入真实姓名" />
+            </div>
+            <div class="form-row">
+              <label class="form-label">昵称</label>
               <input v-model="editForm.username" type="text" class="form-control" placeholder="请输入昵称" />
             </div>
             <!-- 邮箱和手机号由其它流程维护，此处不允许直接编辑 -->
-            <div class="form-group">
-              <label><span class="field-icon">🏫</span>学校</label>
+            <div class="form-row">
+              <label class="form-label">学校</label>
               <input v-model="editForm.school" type="text" class="form-control" placeholder="请输入学校名称" />
             </div>
-            <div class="form-group">
-              <label><span class="field-icon">📖</span>专业</label>
+            <div class="form-row">
+              <label class="form-label">专业</label>
               <input v-model="editForm.major" type="text" class="form-control" placeholder="请输入专业名称" />
             </div>
-            <div class="form-group">
-              <label><span class="field-icon">📅</span>年级</label>
+            <div class="form-row">
+              <label class="form-label">年级</label>
               <select v-model="editForm.grade" class="form-control form-select">
                 <option value="">选择年级</option>
                 <option v-for="g in gradeOptions" :key="g" :value="g">{{ g }}</option>
@@ -427,7 +431,7 @@ export default {
       loggingOut: false,
       // 编辑表单只包含后端 PUT /users/me 支持的字段
       // 编辑表单只包含后端 PUT /users/me 支持的字段
-      editForm: { username: '', school: '', major: '', grade: '' },
+      editForm: { realName: '', username: '', school: '', major: '', grade: '' },
       pwdForm: { oldPassword: '', newPassword: '', confirmPassword: '' },
       pwdErrors: {},
       pwdError: '',
@@ -508,12 +512,13 @@ export default {
     infoRows() {
       const u = this.userInfo || {}
       return [
-        { key: 'username', icon: '👤', label: '昵称', value: u.username },
-        { key: 'email', icon: '📧', label: '邮箱', value: u.email },
-        { key: 'phone', icon: '📱', label: '手机', value: u.phone ? u.phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2') : null },
-        { key: 'school', icon: '🎓', label: '学校', value: u.school },
-        { key: 'major', icon: '📖', label: '专业', value: u.major },
-        { key: 'grade', icon: '📅', label: '年级', value: u.grade }
+        { key: 'realName', label: '真实姓名', value: u.real_name },
+        { key: 'username', label: '昵称', value: u.username },
+        { key: 'email', label: '邮箱', value: u.email },
+        { key: 'phone', label: '手机', value: u.phone ? u.phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2') : null },
+        { key: 'school', label: '学校', value: u.school },
+        { key: 'major', label: '专业', value: u.major },
+        { key: 'grade', label: '年级', value: u.grade }
       ]
     },
 
@@ -827,6 +832,7 @@ export default {
       const u = this.userInfo || {};
       // only copy fields that are editable through the profile API
       this.editForm = {
+        realName: u.real_name || '',
         username: u.username || '',
         school: u.school || '',
         major: u.major || '',
@@ -863,6 +869,7 @@ export default {
       try {
         // 构建仅包含后端支持字段的 payload
         const payload = {
+          real_name: this.editForm.realName,
           username: this.editForm.username,
           school: this.editForm.school,
           major: this.editForm.major,
@@ -1431,7 +1438,16 @@ export default {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.card-header h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
 }
 
 .user-card-body {
@@ -1459,41 +1475,72 @@ export default {
 }
 
 .user-info-list {
-  margin-top: 12px;
+  margin-top: 16px;
   display: grid;
-  gap: 10px;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 16px;
 }
 
 .user-info-row {
   display: flex;
-  justify-content: space-between;
-  font-size: 14px;
-  color: #666;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 12px;
+  background: #f8fafc;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  transition: all 0.2s ease;
+}
+
+.user-info-row:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
 }
 
 .user-info-key {
-  display: inline-flex;
-  gap: 6px;
+  font-size: 11px;
   font-weight: 500;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.user-info-value {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1e293b;
+  word-break: break-word;
 }
 
 .user-center {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 12px;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 20px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
 }
 
 .user-avatar-wrap {
-  width: 110px;
-  height: 110px;
-  border: 3px solid #8b5cf6; /* 紫色边框 */
+  position: relative;
+  width: 100px;
+  height: 100px;
+  border: 3px solid #6366f1;
   border-radius: 50%;
-  padding: 4px;
-  box-shadow: 0 0 0 8px rgba(139, 92, 246, 0.1); /* 紫色晕染阴影 */
+  padding: 3px;
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.12);
   overflow: hidden;
   background: #fff;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.user-avatar-wrap:hover {
+  transform: scale(1.03);
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.15);
 }
 
 .user-avatar-wrap .avatar-lg {
@@ -1501,13 +1548,25 @@ export default {
   height: 100%;
   border-radius: 50%;
   border: none;
-  background: #f3f3f3;
+  background: #f3f4f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
 }
 
 .user-avatar-wrap .avatar-lg img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.user-name {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+  text-align: center;
 }
 
 .user-level {
@@ -1634,31 +1693,32 @@ export default {
 
 // 编辑按钮样式调整
 .edit-btn {
-  background: linear-gradient(90deg, #8e2de2 0%, #4a00e0 100%);
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
   color: #fff;
   border: none;
-  border-radius: 18px;
-  padding: 6px 20px;
-  font-size: 15px;
-  font-weight: 500;
+  border-radius: 16px;
+  padding: 6px 18px;
+  font-size: 13px;
+  font-weight: 600;
   cursor: pointer;
-  transition: box-shadow 0.2s;
-  box-shadow: 0 2px 8px rgba(142, 45, 226, 0.10);
-  margin-left: 12px;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.15);
+  margin-left: 8px;
 }
 .edit-btn:hover {
-  box-shadow: 0 4px 16px rgba(142, 45, 226, 0.18);
-  opacity: 0.92;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+  opacity: 0.95;
 }
 
 // 编辑弹窗图片卡片风格
 .edit-modal-sheet {
-  min-width: 340px;
-  max-width: 440px;
-  padding: 0 0 18px 0;
-  border-radius: 18px;
+  min-width: 320px;
+  max-width: 400px;
+  padding: 0 0 16px 0;
+  border-radius: 12px;
   background: #fff;
-  box-shadow: 0 6px 32px rgba(76, 0, 153, 0.10);
+  box-shadow: 0 6px 32px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1669,33 +1729,68 @@ export default {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: linear-gradient(90deg, #8e2de2 0%, #4a00e0 100%);
-  padding: 22px 28px 16px 28px;
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 20px 24px 14px 24px;
 }
 .edit-modal-title {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 600;
-  color: #fff;
+  color: #111827;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 .edit-modal-title .edit-modal-title-icon {
-  font-size: 22px;
+  font-size: 18px;
 }
 .edit-modal-close {
   background: none;
   border: none;
-  font-size: 20px;
+  font-size: 18px;
   cursor: pointer;
-  color: #fff;
+  color: #6b7280;
 }
 .edit-modal-body {
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  padding: 24px 28px 0 28px;
+  gap: 12px;
+  padding: 20px 24px 0 24px;
+}
+
+.form-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.form-label {
+  min-width: 80px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  flex-shrink: 0;
+}
+
+.form-control {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  background: #fff;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
+}
+
+.form-select {
+  cursor: pointer;
 }
 .edit-modal-footer {
   width: 100%;
