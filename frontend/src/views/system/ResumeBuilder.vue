@@ -1,3 +1,7 @@
+<!-- 简历构建器
+frontend/src/views/system/ResumeBuilder.vue
+-->
+ 
 <template>
   <div class="resume-builder-page">
 

@@ -226,14 +226,18 @@
                   <line x1="12" y1="16" x2="12.01" y2="16"/>
                 </svg>
                 <span>简历必填信息不完整：{{ missingFieldsText }}</span>
-                <div class="resume-validation-alert__actions">
-                  <button class="rva-btn rva-btn--view" @click="showResumeDetailModal = true">查看简历</button>
-                  <button class="rva-btn rva-btn--edit" @click="$router.push('/resume')">编辑简历</button>
-                </div>
               </div>
             </transition>
+           <!-- ─── 简历操作 ─── -->
+
+              <div class="resume-actions">
+                <button class="rva-btn rva-btn--view" @click="showResumeDetailModal = true">查看简历</button>
+                <button class="rva-btn rva-btn--edit" @click="$router.push('/resume')">前往编辑</button>
+              </div>
           </div>
           <!-- /简历选择 -->
+
+
 
           <!-- ─── 面试模式 ─── -->
           <div class="config-section">
@@ -410,44 +414,28 @@
     <!-- ===== 简历详情查看弹窗 ===== -->
     <transition name="modal">
       <div v-if="showResumeDetailModal" class="modal-overlay" @click.self="showResumeDetailModal = false">
-        <div class="modal-sheet">
-          <div class="modal-header-bar" style="background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)">
-            <h2 class="modal-header-title">简历信息</h2>
-            <p class="modal-header-sub">{{ selectedResume && selectedResume.title }}</p>
+        <div class="modal-sheet" style="width: 90%; max-width: 900px; max-height: 85vh; display: flex; flex-direction: column;">
+          <div class="modal-header-bar" style="background: #fff; border-bottom: 1px solid #e5e7eb; flex-shrink: 0;">
+            <h2 class="modal-header-title" style="color: #1f2937;">简历预览</h2>
+            <p class="modal-header-sub" style="color: #6b7280;">{{ selectedResume && selectedResume.title }}</p>
           </div>
-          <div class="modal-body">
-            <p style="font-size:13px; color:#6b7280; margin: 0 0 16px;">
-              以下必填字段尚未完善，请编辑简历后再开始面试：
+          <div class="modal-body" style="flex: 1; overflow-y: auto; padding: 0;">
+            <ResumePreview :content="resumeContent" />
+          </div>
+          <div class="modal-footer-bar" style="background: #f9fafb; border-top: 1px solid #e5e7eb; padding: 16px; flex-shrink: 0; display: flex; gap: 12px; justify-content: flex-end; align-items: center;">
+            <p v-if="missingFields.length > 0" style="font-size:12px; color:#dc2626; margin: 0; flex: 1; text-align: left; line-height: 1.4;">
+              <strong>⚠ 必填信息不完整：</strong>{{ missingFieldsText }}
             </p>
-            <div class="missing-fields-list">
-              <div
-                v-for="f in missingFields"
-                :key="f.key"
-                class="missing-field-item"
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                  stroke-linecap="round" stroke-linejoin="round"
-                  style="width:14px;height:14px;color:#f59e0b;flex-shrink:0">
-                  <circle cx="12" cy="12" r="10"/>
-                  <line x1="12" y1="8" x2="12" y2="12"/>
-                  <line x1="12" y1="16" x2="12.01" y2="16"/>
-                </svg>
-                {{ f.label }}
-              </div>
-            </div>
-            <div class="modal-actions" style="margin-top:20px">
-              <button class="btn-cancel" @click="showResumeDetailModal = false">关闭</button>
-              <button class="btn-confirm"
-                style="background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%); box-shadow: 0 4px 16px rgba(245,158,11,.4)"
-                @click="showResumeDetailModal = false; $router.push('/resume')">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                  stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px">
-                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                </svg>
-                立即编辑简历
-              </button>
-            </div>
+            <button class="btn-cancel" @click="showResumeDetailModal = false">关闭</button>
+            <button class="btn-confirm" style="background: #6366f1; box-shadow: 0 4px 16px rgba(99,102,241,.2)"
+              @click="showResumeDetailModal = false; $router.push('/resume')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+              </svg>
+              编辑简历
+            </button>
           </div>
         </div>
       </div>
@@ -457,6 +445,8 @@
 </template>
 
 <script>
+import ResumePreview from '@/components/interview/ResumePreview.vue'
+
 // ===================== 简历必填字段定义 =====================
 const REQUIRED_FIELDS = [
   { key: 'name',    label: '姓名',   path: r => r?.personal?.name },
@@ -479,6 +469,10 @@ const VOICE_ROLES_PLACEHOLDER = [
 
 export default {
   name: 'JobSelection',
+
+  components: {
+    ResumePreview
+  },
 
   data() {
     return {
@@ -506,6 +500,7 @@ export default {
       resumeValidationFailed: false,
       missingFields: [],          // [{ key, label }]
       showResumeDetailModal: false,
+      resumeContent: {},          // 完整的简历内容用于预览
 
       // ── 面试模式 ──
       voiceMode: false,
@@ -716,6 +711,7 @@ export default {
         }
       }
 
+      this.resumeContent = content
       this.validateResume(content)
     },
 
@@ -1161,8 +1157,13 @@ export default {
 // 配置区块通用
 .config-section {
   padding: 24px 20px 0;
+  margin-bottom: 22px; /* 新增：区块之间更大间距 */
 
-  &:last-of-type { padding-bottom: 18px; }
+  &:last-of-type {
+    padding-bottom: 18px;
+    margin-bottom: 0; /* 最后一个区块不额外加间距 */
+  }
+
 
   &__label {
     display: flex;
@@ -1282,8 +1283,8 @@ export default {
 
 // ─── 简历校验提示 ───
 .resume-validation-alert {
-  margin-top: 12px;
-  padding: 10px 12px;
+  margin-top: 10px;
+  padding: 6px 10px;
   border-radius: 8px;
   display: flex;
   flex-wrap: wrap;
@@ -1302,19 +1303,27 @@ export default {
   }
 }
 
+.resume-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+  margin-left: 2%;
+}
+
 .rva-btn {
-  padding: 4px 10px; border-radius: 6px;
-  font-size: 13px; font-weight: 600; cursor: pointer;
+  padding: 5px 10px; border-radius: 6px;
+  font-size: 13px; font-weight: 520; cursor: pointer;
   font-family: $font-family-base; transition: all 0.15s;
 
   &--view {
-    border: 1px solid #f59e0b; background: white; color: #b45309;
-    &:hover { background: #fef3c7; }
+    border: 1px solid #6366f1; background: white; color: #6366f1;
+    &:hover { background: #eef2ff; border-color: #4f46e5; }
   }
 
   &--edit {
-    border: none; background: #f59e0b; color: white;
-    &:hover { background: #d97706; }
+    border: none; background: #6366f1; color: white;
+    &:hover { background: #4f46e5; }
   }
 }
 
