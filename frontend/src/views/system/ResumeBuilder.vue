@@ -358,11 +358,11 @@ frontend/src/views/system/ResumeBuilder.vue
                     <h2>{{ personal.name || '未设置' }}</h2>
                     <div class="label-row">
                       <span>年龄：{{ personal.age || '未设置' }} 岁</span>
-                      <span>籍贯：{{ personal.address || '未设置' }}</span>
+                      <span>籍贯：{{ personal.address || '未设置' }}{{ personal.gender ? ' 性别：' + personal.gender : '' }}</span>
                     </div>
                     <div class="label-row">
                       <span>工作经验：{{ personal.experience || 0 }} 年</span>
-                      <span>联系方式：{{ personal.contact || '未设置' }}</span>
+                      <span>联系方式：{{ contactInfo }}</span>
                     </div>
                   </div>
                 </div>
@@ -423,7 +423,7 @@ frontend/src/views/system/ResumeBuilder.vue
                       <div>时间：{{ item.start || '起' }} — {{ item.end || '止' }}</div>
                       <div>名称：{{ item.title || '经历名称' }}</div>
                     </div>
-                    <p>{{ item.description || '经历描述…' }}</p>
+                    <p>详情描述：{{ renderDetailText(item, '经历描述…') }}</p>
                   </div>
                 </div>
                 <div v-else class="experience-item">
@@ -440,7 +440,7 @@ frontend/src/views/system/ResumeBuilder.vue
                       <div>公司：{{ item.place || '公司名称' }}</div>
                       <div>岗位：{{ item.title || '岗位名称' }}</div>
                     </div>
-                    <p>{{ item.description || '实习内容…' }}</p>
+                    <p>详情描述：{{ renderDetailText(item, '实习内容…') }}</p>
                   </div>
                 </div>
                 <div v-else class="experience-item"><p>暂无实习经历</p></div>
@@ -455,7 +455,7 @@ frontend/src/views/system/ResumeBuilder.vue
                       <div>公司：{{ item.company || '公司名称' }}</div>
                       <div>岗位：{{ item.role || '岗位名称' }}</div>
                     </div>
-                    <p>{{ item.description || '工作内容…' }}</p>
+                    <p>详情描述：{{ renderDetailText(item, '工作内容…') }}</p>
                   </div>
                 </div>
                 <div v-else class="experience-item"><p>暂无工作经验</p></div>
@@ -470,7 +470,7 @@ frontend/src/views/system/ResumeBuilder.vue
                       <div>角色：{{ item.role || '角色' }}</div>
                       <div>技术栈：{{ item.techStack || '技术栈' }}</div>
                     </div>
-                    <p>{{ item.description || '项目描述…' }}</p>
+                    <p>详情描述：{{ renderDetailText(item, '项目描述…') }}</p>
                   </div>
                 </div>
                 <div v-else class="experience-item"><p>暂无项目经验</p></div>
@@ -726,6 +726,15 @@ export default {
         fontFamily: '微软雅黑, PingFang SC, sans-serif',
         background: '#fff',
       }
+    },
+    contactInfo() {
+      if (this.personal.contact?.trim()) {
+        return this.personal.contact
+      }
+      const items = []
+      if (this.personal.phone?.trim()) items.push(this.personal.phone.trim())
+      if (this.personal.email?.trim()) items.push(this.personal.email.trim())
+      return items.length ? items.join(' / ') : '未设置'
     },
     visibleBlocks() {
       return this.blockOrder.map(key => {
@@ -1096,7 +1105,7 @@ export default {
     removeSkill(idx) { this.skills.splice(idx, 1) },
 
     addCampusExperience() {
-      this.campusExperiences.push({ id: Date.now(), start: '', end: '', title: '', description: '' })
+      this.campusExperiences.push({ id: Date.now(), start: '', end: '', title: '', description: '', achievements: '' })
       this.ensureBlockVisible('campus')
     },
     removeCampusExperience(idx) { this.campusExperiences.splice(idx, 1) },
@@ -1112,6 +1121,15 @@ export default {
       this.ensureBlockVisible('work')
     },
     removeWorkExperience(idx) { this.workExperiences.splice(idx, 1) },
+
+    renderDetailText(item, defaultText) {
+      const detail = item.description?.trim() || defaultText
+      const achievement = item.achievements?.trim()
+      if (achievement) {
+        return `${detail}；${achievement}`
+      }
+      return detail
+    },
 
     addPrice() {
       this.prices.push({ id: Date.now(), award: '', period: '', level: '' })
