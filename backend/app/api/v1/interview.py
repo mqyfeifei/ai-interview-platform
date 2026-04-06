@@ -160,4 +160,4 @@ def finish_interview(interview_id):
         result = InterviewService.finish_interview(interview_id)
         return jsonify({"code": 200, "data": result, "msg": "success"}), 200
     except Exception as e:
-        return jsonify({"code": 500, "msg": str(e)}), 500
+        return jsonify({"code": 500, "msg": "报告生成失败，请稍后重试"}), 500
