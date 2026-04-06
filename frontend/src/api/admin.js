@@ -19,6 +19,13 @@ export function listQuestions(params = {}) {
   })
 }
 
+/**
+ * 获取管理员后台统计大盘数据
+ */
+export function getAdminDashboardStats() {
+  return request.get('/dashboard', { admin: true })
+}
+
 /** 创建题目/知识项 */
 export function createQuestion(data, entity = 'question') {
   return request.post('/questions', { entity, ...data }, { admin: true })

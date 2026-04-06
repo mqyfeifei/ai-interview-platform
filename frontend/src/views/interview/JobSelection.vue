@@ -102,7 +102,15 @@
             </div>
 
             <!-- 左侧图标 -->
-            <div class="job-row__icon">{{ job.icon }}</div>
+            <div class="job-row__icon">
+              <img
+                v-if="isImageUrl(job.iconUrl || job.icon)"
+                :src="job.iconUrl || job.icon"
+                alt="岗位图标"
+                class="job-row__icon-img"
+              />
+              <span v-else>{{ job.icon }}</span>
+            </div>
 
             <!-- 中间信息区 -->
             <div class="job-row__body">
@@ -146,7 +154,15 @@
           <!-- 当前选中岗位提示 -->
           <div class="selected-job-hint" :class="{ 'has-job': !!currentSelected }">
             <template v-if="currentSelected">
-              <span class="selected-job-hint__icon">{{ currentSelected.icon }}</span>
+              <span class="selected-job-hint__icon">
+                <img
+                  v-if="isImageUrl(currentSelected.iconUrl || currentSelected.icon)"
+                  :src="currentSelected.iconUrl || currentSelected.icon"
+                  alt="岗位图标"
+                  class="selected-job-hint__icon-img"
+                />
+                <span v-else>{{ currentSelected.icon }}</span>
+              </span>
               <span class="selected-job-hint__name">{{ currentSelected.name }}</span>
               <span class="selected-job-hint__badge">已选</span>
             </template>
@@ -445,7 +461,7 @@
 </template>
 
 <script>
-import ResumePreview from '@/components/interview/ResumePreview.vue'
+import ResumePreview from '@/components/common/ResumePreview.vue'
 
 // ===================== 简历必填字段定义 =====================
 const REQUIRED_FIELDS = [
@@ -610,7 +626,8 @@ export default {
         jobs = (jobs || []).map(j => ({
           ...j,
           techStack: j.tech_stack || [],
-          icon: j.icon_url || '💼',
+          iconUrl: j.icon_url || null,
+          icon: j.icon || '💼',
           level: j.level || '',
           avg_score: avgMap[j.id] != null ? avgMap[j.id] : (j.avg_score || 0),
           questionTypes: j.question_types || [],
@@ -636,6 +653,10 @@ export default {
         const found = this.jobs.find(j => String(j.id) === defaultJobId || String(j.dbId) === defaultJobId)
         if (found) { this.currentSelected = found }
       }
+    },
+
+    isImageUrl(value) {
+      return typeof value === 'string' && value.trim() !== '' && /^(\/|https?:\/\/)/.test(value)
     },
 
     toggleSelect(job) {
@@ -1031,6 +1052,13 @@ export default {
     border-radius: 10px; background: #f3f4f6;
     display: flex; align-items: center; justify-content: center;
     flex-shrink: 0;
+    overflow: hidden;
+
+    &-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
   }
 
   &__body { flex: 1; min-width: 0; }
@@ -1144,7 +1172,17 @@ export default {
 
   &.has-job { background: linear-gradient(90deg, #f0f4ff 0%, #f8f9ff 100%); }
 
-  &__icon { font-size: 20px; flex-shrink: 0; }
+  &__icon {
+    font-size: 20px; flex-shrink: 0;
+
+    &-img {
+      width: 20px;
+      height: 20px;
+      object-fit: cover;
+      border-radius: 4px;
+      display: inline-block;
+    }
+  }
   &__name { font-size: 14px; font-weight: 600; color: #111827; flex: 1; }
   &__badge {
     font-size: 11px; color: $primary; background: #e0e7ff;

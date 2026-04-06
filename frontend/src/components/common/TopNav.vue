@@ -20,9 +20,9 @@
       </router-link>
     </nav>
 
-    <!-- 右侧：用户信息 + 统计弹窗 -->
+    <!-- 右侧：用户信息 + 头像下拉菜单 -->
     <div class="top-nav__user-wrapper">
-      <div class="top-nav__user" @click="toggleUserStats">
+      <div class="top-nav__user" @click="toggleUserMenu">
         <img
           v-if="userInfo && userInfo.avatar"
           :src="resolvedAvatarSrc"
@@ -31,11 +31,21 @@
         />
         <span v-else class="user-avatar user-avatar--fallback">{{ avatarLetter }}</span>
       </div>
-      <div class="user-stats-popover" v-if="showUserStats">
-        <div class="stats-row">练习次数 <strong>{{ userTotalInterviews }}</strong></div>
-        <div class="stats-row">平均得分 <strong>{{ userAvgScore }}</strong></div>
-        <div class="stats-row">最近得分 <strong>{{ userLastScore }}</strong></div>
-        <div class="stats-row">连续天数 <strong>{{ userStreakDays }}</strong></div>
+      <div class="user-menu-popover" v-if="showUserMenu">
+        <div class="menu-header">
+          <div class="menu-avatar">
+            <img v-if="userInfo && userInfo.avatar" :src="resolvedAvatarSrc" alt="头像" />
+            <span v-else>{{ avatarLetter }}</span>
+          </div>
+          <div class="menu-user-info">
+            <div class="menu-user-name">{{ userName }}</div>
+          </div>
+        </div>
+        <div class="menu-sections">
+          <button class="menu-item" type="button" @click="goToProfile('help')">帮助</button>
+          <button class="menu-item" type="button" @click="goToProfile('version')">版本信息</button>
+          <button class="menu-item menu-item--danger" type="button" @click="logoutAndRedirect()">退出登录</button>
+        </div>
       </div>
     </div>
   </header>
@@ -48,7 +58,7 @@ export default {
   name: 'TopNav',
   data() {
     return {
-      showUserStats: false,
+      showUserMenu: false,
       navItems: [
         { name: 'Dashboard', path: '/dashboard', label: '首页' },
         { name: 'LearningCenter', path: '/learning', label: '学习中心' },
@@ -97,12 +107,38 @@ export default {
       return withStamp(asString)
     }
   },
+  mounted() {
+    document.addEventListener('click', this.handleDocumentClick)
+  },
+  beforeUnmount() {
+    document.removeEventListener('click', this.handleDocumentClick)
+  },
   methods: {
     isActive(item) {
       return this.$route.path === item.path || this.$route.name === item.name
     },
-    toggleUserStats() {
-      this.showUserStats = !this.showUserStats
+    toggleUserMenu() {
+      this.showUserMenu = !this.showUserMenu
+    },
+    handleDocumentClick(e) {
+      if (!this.showUserMenu) return
+      if (!this.$el.contains(e.target)) {
+        this.showUserMenu = false
+      }
+    },
+    goToProfile(action = '') {
+      const query = {}
+      if (action) query.action = action
+      this.showUserMenu = false
+      this.$router.push({ path: '/profile', query })
+    },
+    async logoutAndRedirect() {
+      try {
+        await this.$store.dispatch('user/logout')
+      } finally {
+        this.showUserMenu = false
+        this.$router.push('/login')
+      }
     }
   }
 }
@@ -179,9 +215,9 @@ export default {
   }
 
   &__user {
-    width: 38px;
-    height: 38px;
-    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
     border: 2px solid #d9cbff;
     background: #ffffff;
     overflow: hidden;
@@ -198,33 +234,97 @@ export default {
     }
   }
 
-  .user-stats-popover {
+  .user-menu-popover {
     position: absolute;
     top: 52px;
     right: 0;
     background: #ffffff;
-    border-radius: 12px;
+    border-radius: 16px;
     border: 1px solid #e7d8ff;
-    box-shadow: 0 10px 30px rgba(31, 21, 69, 0.17);
-    padding: 10px 14px;
-    width: 220px;
+    box-shadow: 0 14px 38px rgba(31, 21, 69, 0.18);
+    padding: 14px;
+    width: 240px;
     z-index: 1000;
 
-    .stats-row {
+    .menu-header {
       display: flex;
-      justify-content: space-between;
-      padding: 6px 0;
-      color: #342f4b;
-      font-size: 13px;
+      align-items: center;
+      gap: 10px;
+      padding-bottom: 10px;
       border-bottom: 1px solid rgba(215, 204, 255, 0.4);
+      margin-bottom: 10px;
+    }
 
-      &:last-child {
-        border-bottom: none;
-      }
+    .menu-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 12px;
+      background: #f4efff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      font-weight: 700;
+      color: #4c3aa2;
+    }
 
-      strong {
-        color: #633fdd;
-      }
+    .menu-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .menu-user-info {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .menu-user-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: #24174e;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .menu-user-meta {
+      font-size: 12px;
+      color: #7c6dd7;
+      margin-top: 2px;
+    }
+
+    .menu-sections {
+      display: grid;
+      gap: 8px;
+    }
+
+    .menu-item {
+      width: 100%;
+      text-align: left;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: none;
+      background: #f8f5ff;
+      color: #3b2d7d;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    .menu-item:hover {
+      background: #ede7ff;
+    }
+
+    .menu-item--danger {
+      background: #fff2f2;
+      color: #bf1650;
+    }
+
+    .menu-item--danger:hover {
+      background: #ffe1e9;
     }
   }
 
@@ -241,24 +341,6 @@ export default {
 
   &__label {
     line-height: 1;
-  }
-
-  // 右侧用户区
-  &__user {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-shrink: 0;
-    cursor: pointer;
-    padding: 5px 10px;
-    border-radius: 6px;
-    transition: background 0.15s;
-      justify-content: flex-end; // ← 靠右对齐
-  margin-left: 0;
-
-    &:hover {
-      background: #f3f4f6;
-    }
   }
 }
 
