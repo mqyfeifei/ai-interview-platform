@@ -62,15 +62,15 @@
 
         <section class="homepage-stats">
         <div class="stat-card">
-          <div class="stat-number">320,000+</div>
+          <div class="stat-number">{{ formatNumber(platformStats.users) }}</div>
           <div class="stat-label">使用用户数目</div>
         </div>
         <div class="stat-card">
-          <div class="stat-number">1,600,000+</div>
+          <div class="stat-number">{{ formatNumber(platformStats.interviews) }}</div>
           <div class="stat-label">平台面试次数</div>
         </div>
         <div class="stat-card">
-          <div class="stat-number">12,000+</div>
+          <div class="stat-number">{{ formatNumber(platformStats.jobs) }}</div>
           <div class="stat-label">针对性岗位数目</div>
         </div>
       </section>
@@ -221,7 +221,8 @@
 <script>
 import { mapGetters, mapActions } from 'vuex'
 import { getDashboardStats } from '@/api/user'
-import { fetchJobs, fetchPopularJobs } from '@/api/job'
+import { fetchJobs, fetchPopularJobs, fetchJobAvgScores } from '@/api/job'
+import { getAdminDashboardStats } from '@/api/admin'
 import { JOB_TYPES } from '@/utils/constants'
 import HelpGuideModal from '@/components/common/HelpGuideModal.vue'
 
@@ -253,6 +254,11 @@ export default {
           learning: 0
         }
 
+      },
+      platformStats: {
+        users: 0,
+        interviews: 0,
+        jobs: 0
       },
       platformFeatures: [
   { icon: '🤖', title: 'AI智能面试官', desc: '基于大语言模型，真实模拟面试场景' },
@@ -522,7 +528,8 @@ export default {
     if (this.isLoggedIn) {
       await this.fetchUserInfo()
     }
-    this.loadJobs() 
+    this.loadJobs()
+    this.loadPlatformStats()
     this.loadStats()
     this.maybeAutoShowHelpGuide()
   },
@@ -597,6 +604,37 @@ export default {
       }
     },
 
+    async loadPlatformStats() {
+      try {
+        const data = await getAdminDashboardStats()
+        this.platformStats = {
+          users: data.total_users ?? 0,
+          interviews: data.total_interviews ?? 0,
+          jobs: data.total_jobs ?? 0
+        }
+      } catch (e) {
+        console.warn('加载管理员平台统计数据失败，回退到可访问的岗位汇总统计', e)
+        try {
+          const jobStats = await fetchJobAvgScores()
+          const interviews = jobStats.reduce((sum, job) => sum + (job.interview_count || 0), 0)
+          const users = Math.max(0, ...jobStats.map(job => job.user_count || 0))
+          const jobs = jobStats.length
+          this.platformStats = {
+            users,
+            interviews,
+            jobs
+          }
+        } catch (innerErr) {
+          console.warn('加载岗位统计数据失败，首页统计继续显示为0', innerErr)
+          this.platformStats = {
+            users: 0,
+            interviews: 0,
+            jobs: 0
+          }
+        }
+      }
+    },
+
     async loadStats() {
       // 未登录时不加载数据
       if (!this.isLoggedIn) return
@@ -615,6 +653,11 @@ export default {
       } catch (e) {
         console.warn('加载统计数据失败', e)
       }
+    },
+
+    formatNumber(value) {
+      if (value === null || value === undefined) return '0'
+      return Number(value).toLocaleString()
     },
 
     formatDate(dateStr) {

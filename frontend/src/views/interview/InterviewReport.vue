@@ -139,16 +139,25 @@
                 <span class="improvement-item__num">{{ i + 1 }}</span>
                 <p class="improvement-item__point" v-html="renderMarkdown(imp.point)" />
               </div>
-              <div v-if="imp.resource" class="improvement-item__resource" @click="$router.push('/learning')">
+              <a
+                v-if="imp.resource"
+                class="improvement-item__resource"
+                :href="imp.resource.url"
+                target="_blank"
+                rel="noreferrer noopener"
+              >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;flex-shrink:0">
                   <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
                   <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
                 </svg>
-                <span>推荐学习：{{ imp.resource }}</span>
+                <div class="resource-text">
+                  <span class="resource-title">推荐学习：{{ imp.resource.title || imp.resource.type || '学习资源' }}</span>
+                  <span class="resource-source">· {{ imp.resource.source || imp.resource.type || '资料链接' }}</span>
+                </div>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px;margin-left:auto;flex-shrink:0">
                   <polyline points="9 18 15 12 9 6"/>
                 </svg>
-              </div>
+              </a>
             </div>
           </div>
         </section>
@@ -771,8 +780,26 @@ export default {
     border-top: 1px solid rgba(67,56,202,0.1);
     cursor: pointer;
     font-size: $font-size-xs; color: $primary; font-weight: $font-weight-medium;
+    text-decoration: none;
     transition: background $transition-fast;
     &:hover { background: darken(#EEF2FF, 3%); }
+  }
+
+  .resource-text {
+    display: flex; align-items: center; gap: 4px;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .resource-title {
+    font-size: $font-size-sm; font-weight: $font-weight-semibold;
+    color: #1f1974; line-height: 1.3;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+
+  .resource-source {
+    font-size: $font-size-xs; color: $text-muted;
+    white-space: nowrap;
   }
 }
 

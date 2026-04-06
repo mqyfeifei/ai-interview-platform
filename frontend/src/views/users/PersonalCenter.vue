@@ -154,21 +154,6 @@
         </div>
       </section>
 
-      <!-- 其它 -->
-      <section class="profile-section">
-        <h2 class="section-title" style="margin-bottom: 12px">其它</h2>
-        <div class="menu-card menu-card--other">
-          <button class="menu-item" v-for="item in otherMenu" :key="item.label" @click="item.action && item.action()">
-            <span class="menu-item__icon" :style="{ background: item.iconBg }">{{ item.icon }}</span>
-            <div class="menu-item__content">
-              <span class="menu-item__label">{{ item.label }}</span>
-              <span class="menu-item__sub" v-if="item.sub">{{ item.sub }}</span>
-            </div>
-            <span class="menu-item__arrow" v-if="item.action">›</span>
-          </button>
-        </div>
-      </section>
-
       <!-- 退出登录 -->
       <section class="profile-section">
         <button class="logout-btn" @click="confirmLogout">
@@ -740,6 +725,15 @@ export default {
     this.selectedJobId = this.defaultJob
     this.loadDashboardStats()
   },
+  watch: {
+    '$route.query.action': {
+      immediate: true,
+      handler(action) {
+        if (!action) return
+        this.handleProfileAction(action)
+      }
+    }
+  },
   mounted() {
     // 页面加载时从数据库同步最新用户信息
     this.syncUserInfo()
@@ -768,6 +762,19 @@ export default {
         this.selectedJobId = this.defaultJob
       } catch (err) {
         console.error('同步用户信息失败', err)
+      }
+    },
+
+    handleProfileAction(action) {
+      const normalized = String(action || '').toLowerCase()
+      if (normalized === 'password') {
+        this.showPasswordModal = true
+      } else if (normalized === 'phone') {
+        this.showBindPhoneModal = true
+      } else if (normalized === 'help') {
+        this.showHelpGuide = true
+      } else if (normalized === 'version') {
+        this.showVersionCard = true
       }
     },
 
