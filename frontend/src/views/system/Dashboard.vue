@@ -7,7 +7,7 @@
   <div class="dashboard-page">
 
     <!-- 主内容区 -->
-    <div class="dashboard-body page-container">
+    <div class="dashboard-body">
 
       <div class="homepage-hero-container">
         <div class="homepage-hero">
@@ -74,39 +74,7 @@
           <div class="stat-label">针对性岗位数目</div>
         </div>
       </section>
-    </div>
-
-
-
-      <!-- 未登录时显示平台特色 -->
-      <section class="section feature-section" v-if="!isLoggedIn">
-        <h2 class="feature-section__title">✨ 为什么选择 AI面试助手？</h2>
-        <div class="feature-grid">
-          <div class="feature-box">
-            <div class="feature-box__icon">🤖</div>
-            <h3 class="feature-box__title">AI智能面试官</h3>
-            <p class="feature-box__desc">基于大语言模型，真实模拟面试场景，智能追问深入考察</p>
-          </div>
-          <div class="feature-box">
-            <div class="feature-box__icon">📊</div>
-            <h3 class="feature-box__title">多维能力评估</h3>
-            <p class="feature-box__desc">从专业知识、逻辑思维、表达能力等多个维度全面分析</p>
-          </div>
-          <div class="feature-box">
-            <div class="feature-box__icon">📈</div>
-            <h3 class="feature-box__title">个性化学习路径</h3>
-            <p class="feature-box__desc">AI分析薄弱点，智能推荐学习内容，高效提升</p>
-          </div>
-          <div class="feature-box">
-            <div class="feature-box__icon">🎯</div>
-            <h3 class="feature-box__title">精准题库覆盖</h3>
-            <p class="feature-box__desc">覆盖Java、前端、Python等热门方向，紧跟面试趋势</p>
-          </div>
-        </div>
-      </section>
-
-      <!-- 每日提示 -->
-      <section class="section">
+        <!-- 每日提示 -->
         <div class="daily-tip-card">
           <div class="daily-tip-card__header">
             <span>💡</span>
@@ -114,7 +82,7 @@
           </div>
           <p class="daily-tip-card__content">{{ dailyTip }}</p>
         </div>
-      </section>
+    </div>
 
     </div>
 
@@ -260,12 +228,6 @@ export default {
         interviews: 0,
         jobs: 0
       },
-      platformFeatures: [
-  { icon: '🤖', title: 'AI智能面试官', desc: '基于大语言模型，真实模拟面试场景' },
-  { icon: '📊', title: '多维能力评估', desc: '从专业知识、逻辑、表达等多维度分析' },
-  { icon: '📈', title: '个性化学习路径', desc: 'AI分析薄弱点，智能推荐学习内容' },
-  { icon: '🎯', title: '精准题库覆盖', desc: '覆盖Java、前端、Python等热门方向' },
-],
       heroTab: 'interview',
       dailyTips: [
         '回答时采用 STAR 法则（情境-任务-行动-结果），让回答更有结构和说服力。',
@@ -273,14 +235,6 @@ export default {
         '技术问题不会时，不要沉默，大声思考推理过程同样体现能力。',
         '多使用数字和具体案例，比如"优化后性能提升了40%"比"优化了很多"更有说服力。',
         '复杂问题先说结论，再展开细节，让面试官第一时间抓住重点。'
-      ],
-      // 成就徽章 - 根据真实数据动态计算
-      badges:[
-        { id: 1, icon: '🌟', name: '初次面试', condition: 'firstInterview' },
-        { id: 2, icon: '🔥', name: '连续3天', condition: 'streak3' },
-        { id: 3, icon: '💪', name: '突破80分', condition: 'score80' },
-        { id: 4, icon: '🏅', name: '面试达人', condition: 'interviews10' },
-        { id: 5, icon: '👑', name: '全能王者', condition: 'score90' }
       ],
       // 弹窗状态
       showConfirmModal: false,
@@ -292,11 +246,6 @@ export default {
     }
   },
   computed: {
-    heroDate() {
-  const d = new Date()
-  const days = ['周日','周一','周二','周三','周四','周五','周六']
-  return `${d.getMonth()+1}月${d.getDate()}日 ${days[d.getDay()]}`
-},
     ...mapGetters('user', ['userInfo', 'userName', 'defaultJob', 'defaultJobName', 'isLoggedIn']),
 
     currentJobName() {
@@ -315,13 +264,6 @@ export default {
       return "未设置"
     },
 
-    heroTitle() {
-      if (this.heroTab === 'learning') {
-        return '打造你的个性化学习资源'
-      }
-      return '你的专属AI面试教练'
-    },
-
     heroDesc() {
       if (this.heroTab === 'learning') {
         return '展示多维度能力曲线，针对薄弱点进行学习与练习，持续提升面试表现'
@@ -333,186 +275,15 @@ export default {
       return this.heroTab === 'learning' ? '开始学习' : '开始面试'
     },
 
-    timeGreeting() {
-      const hour = new Date().getHours()
-      if (hour < 6) return '夜深了，注意休息'
-      if (hour < 12) return '早上好'
-      if (hour < 14) return '中午好'
-      if (hour < 18) return '下午好'
-      return '晚上好'
-    },
-
-    avatarLetter() {
-      if (!this.isLoggedIn) return '客'
-      const name = this.userName || '用'
-      return name.charAt(0)
-    },
-
-    resolvedAvatarSrc() {
-      const raw = this.userInfo && this.userInfo.avatar
-      if (!raw) return ''
-      const asString = String(raw)
-      const stamp = Date.now()
-
-      const withStamp = (url) => url.includes('?') ? `${url}&t=${stamp}` : `${url}?t=${stamp}`
-      if (/^https?:\/\//i.test(asString)) return withStamp(asString)
-
-      const origin = (process.env.VUE_APP_BACKEND_ORIGIN || '').replace(/\/$/, '')
-      if (origin) {
-        return withStamp(`${origin}${asString.startsWith('/') ? '' : '/'}${asString}`)
-      }
-      return withStamp(asString)
-    },
-
     defaultJobName() {
       if (!this.defaultJob) return ''
       const job = this.jobs.find(j => String(j.id) === String(this.defaultJob))
       return job ? job.name : ''
     },
 
-    topHotJobs() {
-      return this.jobs.slice(0, 3)
-    },
-
-    scoreCircumference() {
-      return 2 * Math.PI * 24
-    },
-
-    scoreOffset() {
-      const score = this.stats.lastInterviewScore || 0
-      const pct = score / 100
-      return this.scoreCircumference * (1 - pct)
-    },
-
     dailyTip() {
       const idx = new Date().getDate() % this.dailyTips.length
       return this.dailyTips[idx]
-    },
-
-    // 连续学习天数
-    streakDays() {
-      return this.stats.streakDays || this.stats.weeklyPractice || 0
-    },
-
-    // 雷达图数据点
-    radarPoints() {
-      const a = this.stats.abilities || { knowledge: 0, logic: 0, expression: 0, problemSolving: 0, coding: 0, learning: 0 }
-      const center = 100
-      const maxRadius = 80
-      // 六边形顶点角度（从顶部开始，顺时针）
-      const angles = [-90, -30, 30, 90, 150, 210].map(d => d * Math.PI / 180)
-      const values = [a.knowledge, a.logic, a.expression, a.problemSolving, a.coding, a.learning]
-      
-      // 如果所有值都为0，显示一个小的默认形状（10%）
-      const hasData = values.some(v => v > 0)
-      const defaultValue = hasData ? 0 : 10
-      
-      return values.map((v, i) => {
-        const actualValue = v > 0 ? v : defaultValue
-        const r = (actualValue / 100) * maxRadius
-        const x = center + r * Math.cos(angles[i])
-        const y = center + r * Math.sin(angles[i])
-        return `${x},${y}`
-      }).join(' ')
-    },
-
-    // 雷达图上的点
-    radarDots() {
-      const a = this.stats.abilities || { knowledge: 0, logic: 0, expression: 0, problemSolving: 0, coding: 0, learning: 0 }
-      const center = 100
-      const maxRadius = 80
-      const angles = [-90, -30, 30, 90, 150, 210].map(d => d * Math.PI / 180)
-      const values = [a.knowledge, a.logic, a.expression, a.problemSolving, a.coding, a.learning]
-      
-      // 如果所有值都为0，显示一个小的默认形状
-      const hasData = values.some(v => v > 0)
-      const defaultValue = hasData ? 0 : 10
-      
-      return values.map((v, i) => {
-        const actualValue = v > 0 ? v : defaultValue
-        const r = (actualValue / 100) * maxRadius
-        return {
-          x: center + r * Math.cos(angles[i]),
-          y: center + r * Math.sin(angles[i])
-        }
-      })
-    },
-
-    // 是否有能力数据
-    hasAbilityData() {
-      const a = this.stats.abilities
-      if (!a) return false
-      return Object.values(a).some(v => v > 0)
-    },
-
-    // 能力评语
-    abilityComment() {
-      if (!this.hasAbilityData) return '完成面试后解锁能力分析'
-      const avg = this.stats.avgScore || 0
-      if (avg >= 85) return '表现优秀，继续保持！'
-      if (avg >= 70) return '整体良好，部分能力可加强'
-      if (avg >= 60) return '有提升空间，建议多练习'
-      return '建议从基础开始系统学习'
-    },
-
-    // 显示的徽章（根据真实数据计算解锁状态）
-    displayBadges() {
-      return this.badges.map(badge => {
-        let unlocked = false
-        switch (badge.condition) {
-          case 'firstInterview':
-            unlocked = this.stats.totalInterviews >= 1
-            break
-          case 'streak3':
-            unlocked = this.stats.streakDays >= 3
-            break
-          case 'score80':
-            unlocked = this.stats.maxScore >= 80 || this.stats.avgScore >= 80
-            break
-          case 'interviews10':
-            unlocked = this.stats.totalInterviews >= 10
-            break
-          case 'score90':
-            unlocked = this.stats.maxScore >= 90 || this.stats.avgScore >= 90
-            break
-        }
-        return { ...badge, unlocked }
-      })
-    },
-
-    // 最近活动
-    recentActivities() {
-      const activities = []
-      if (this.stats.lastInterviewAt) {
-        activities.push({
-          icon: '🎯',
-          text: `完成了 ${this.stats.lastInterviewJob || '面试'} 面试`,
-          time: this.formatDate(this.stats.lastInterviewAt)
-        })
-      }
-      if (this.stats.totalInterviews > 0) {
-        activities.push({
-          icon: '📈',
-          text: `累计面试 ${this.stats.totalInterviews} 次`,
-          time: '总计'
-        })
-      }
-      if (this.streakDays > 0) {
-        activities.push({
-          icon: '🔥',
-          text: `连续学习 ${this.streakDays} 天`,
-          time: '进行中'
-        })
-      }
-      // 如果没有活动，显示提示
-      if (activities.length === 0) {
-        activities.push({
-          icon: '💡',
-          text: '开始你的第一次面试练习吧',
-          time: '待解锁'
-        })
-      }
-      return activities.slice(0, 3)
     },
 
   },
@@ -528,7 +299,6 @@ export default {
     if (this.isLoggedIn) {
       await this.fetchUserInfo()
     }
-    this.loadJobs()
     this.loadPlatformStats()
     this.loadStats()
     this.maybeAutoShowHelpGuide()
@@ -541,35 +311,6 @@ export default {
       const u = this.userInfo || {}
       return u.id ?? u.user_id ?? u.userId ?? u.uid ?? u.email ?? null
     },
-    async loadJobs() {
-  try {
-    // 优先用热门岗位填充快捷标签，失败则回退到全量列表前3个
-    const popular = await fetchPopularJobs()
-    if (popular && popular.length > 0) {
-      this.jobs = popular.map(j => ({
-        ...j,
-        icon: j.icon_url || '💼',
-        techStack: j.tech_stack || [],
-        color: j.color || '#888',
-        colorBg: j.color_bg || 'rgba(139, 92, 246, 0.1)',
-        colorHoverBg: j.color_hover_bg || 'rgba(139, 92, 246, 0.2)',
-      }))
-    } else {
-      const all = await fetchJobs()
-      this.jobs = (all || []).slice(0, 3).map(j => ({
-        ...j,
-        icon: j.icon_url || '💼',
-        techStack: j.tech_stack || [],
-        color: j.color || '#888',
-        colorBg: j.color_bg || 'rgba(139, 92, 246, 0.1)',
-        colorHoverBg: j.color_hover_bg || 'rgba(139, 92, 246, 0.2)',
-      }))
-    }
-  } catch (e) {
-    console.warn('加载岗位失败', e)
-    this.jobs = []
-  }
-},
 
     computeHelpGuideStorageKey() {
       const userKey = this.getHelpGuideUserKey()
@@ -717,11 +458,14 @@ export default {
 
 <style lang="scss" scoped>
 .dashboard-page {
+  height: 100vh;
   min-height: 100vh;
   background: #f8f8fb;
   padding-bottom: $bottom-nav-height;
   position: relative;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .dashboard-page::after {
@@ -741,11 +485,15 @@ export default {
 .homepage-hero-container {
   position: relative;
   background: url('@/assets/backgroundA.jpg') center/cover no-repeat;
-  border-radius: 20px;
-  padding: 20px;
-  margin-bottom: 18px;
+  border-radius: 0;
+  padding: 40px 20px;
+  margin-bottom: 0;
   box-shadow: 0 10px 26px rgba(76, 66, 143, 0.14);
   overflow: hidden;
+  width: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .homepage-hero-container::before {
@@ -767,13 +515,15 @@ export default {
 .homepage-hero {
   position: relative;
   background: transparent;
-  border-radius: 18px;
+  border-radius: 0;
   min-height: 420px;
-  margin-bottom: 18px;
+  margin-bottom: 0;
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 100%;
+  flex: 1;
 }
 
 .homepage-hero__bg {
@@ -922,7 +672,11 @@ export default {
   display: grid;
   grid-template-columns: repeat(3, minmax(180px, 1fr));
   gap: 14px;
-  margin-bottom: 20px;
+  margin-bottom: 0;
+  width: 100%;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0);
+  flex-shrink: 0;
 }
 
 .stat-card {
@@ -986,6 +740,12 @@ export default {
 .dashboard-body {
   padding: 0;
   animation: fadeSlideUp 0.4s ease both;
+  width: 100%;
+  max-width: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  margin-top: 0;
 }
 
 
@@ -1167,6 +927,8 @@ export default {
 // Section
 .section {
   margin-bottom: $spacing-xl;
+  padding: 0 20px;
+  flex-shrink: 0;
 }
 
 .section-header {
@@ -1243,66 +1005,6 @@ export default {
   aspect-ratio: 1;
 }
 
-// 未登录 - 平台特色区域
-.feature-section {
-  margin-bottom: $spacing-xl;
-
-  &__title {
-    font-size: $font-size-lg;
-    font-weight: $font-weight-bold;
-    color: $text-primary;
-    text-align: center;
-    margin-bottom: $spacing-lg;
-  }
-}
-
-.feature-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: $spacing-md;
-}
-
-.feature-box {
-  background: white;
-  border-radius: $border-radius-lg;
-  padding: $spacing-base;
-  text-align: center;
-  box-shadow: $shadow;
-  border: 1px solid $border-color;
-  transition: all 0.2s ease;
-
-  &:hover {
-    transform: translateY(-4px);
-    box-shadow: $shadow-lg;
-    border-color: $primary;
-  }
-
-  &__icon {
-    font-size: 36px;
-    margin-bottom: $spacing-sm;
-  }
-
-  &__title {
-    font-size: $font-size-sm;
-    font-weight: $font-weight-bold;
-    color: $text-primary;
-    margin-bottom: $spacing-xs;
-  }
-
-  &__desc {
-    font-size: $font-size-xs;
-    color: $text-secondary;
-    line-height: 1.5;
-  }
-}
-
-// 热门面试题
-.section-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: $spacing-md;
-}
 
 .section-title {
   font-size: $font-size-base;
@@ -1391,6 +1093,8 @@ export default {
   border: 1px solid #FDE68A;
   border-radius: $border-radius-lg;
   padding: $spacing-base;
+  margin-top:$spacing-lg;
+  z-index: 1;
 
   &__header {
     display: flex;
@@ -1539,17 +1243,6 @@ export default {
   .two-column-section {
     grid-template-columns: 1fr;
   }
-
-  // 未登录特色区域也改为单栏
-  .feature-grid {
-    grid-template-columns: 1fr;
-  }
-
-  // 雷达图卡片调整
-  .ability-card {
-    padding: $spacing-md;
-  }
-
   .radar-preview {
     max-width: 160px;
   }
@@ -1561,23 +1254,6 @@ export default {
   // 成就卡片调整
   .achievement-card {
     padding: $spacing-md;
-  }
-
-  .badges-row {
-    justify-content: flex-start;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scroll-snap-type: x mandatory;
-    
-    &::-webkit-scrollbar {
-      height: 0;
-    }
-  }
-
-  .badge-item {
-    min-width: 56px;
-    scroll-snap-align: start;
   }
 
   // 热门岗位标签换行
@@ -1629,26 +1305,6 @@ export default {
     max-width: 140px;
   }
 
-  .badge-item {
-    min-width: 48px;
-    padding: 6px 4px;
-    
-    &__icon {
-      font-size: 16px;
-    }
-    
-    &__name {
-      font-size: 8px;
-    }
-  }
-
-  .streak-badge {
-    padding: 3px 8px;
-    
-    &__text {
-      font-size: 10px;
-    }
-  }
 
   .activity-item {
     padding: 4px 6px;
@@ -1663,21 +1319,6 @@ export default {
     }
   }
 
-  .feature-box {
-    padding: $spacing-sm;
-    
-    &__icon {
-      font-size: 28px;
-    }
-    
-    &__title {
-      font-size: $font-size-xs;
-    }
-    
-    &__desc {
-      font-size: 10px;
-    }
-  }
 }
 
 // 平板适配 (768px - 1024px)
@@ -1688,10 +1329,6 @@ export default {
 
   .radar-preview {
     max-width: 150px;
-  }
-
-  .badge-item {
-    min-width: 50px;
   }
 }
 
