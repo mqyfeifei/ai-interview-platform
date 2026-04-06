@@ -58,6 +58,7 @@ def start_interview():
     # 优先从 Token 获取 user_id，其次从请求体获取
     user_id = get_current_user_id() or data.get('user_id')
     job_id_input = data.get('job_id')
+    voice_mode = bool(data.get('voice_mode', False))
 
     # 参数验证
     if not user_id:
@@ -71,7 +72,7 @@ def start_interview():
         return jsonify({"code": 400, "msg": f"无效的岗位: {job_id_input}，请确认岗位已在数据库中创建"}), 400
 
     try:
-        result = InterviewService.start_interview(user_id, job_id)
+        result = InterviewService.start_interview(user_id, job_id, voice_mode=voice_mode)
         return jsonify({"code": 200, "data": result, "msg": "success"}), 200
     except Exception as e:
         return jsonify({"code": 500, "msg": str(e)}), 500
@@ -131,10 +132,11 @@ def check_resume():
 def chat_stream(interview_id):
     data = request.get_json()
     user_answer = data.get('answer')
+    voice_mode = bool(data.get('voice_mode', False))
 
     # 返回 SSE 响应
     return Response(
-        stream_with_context(InterviewService.process_chat_round_stream(interview_id, user_answer)),
+        stream_with_context(InterviewService.process_chat_round_stream(interview_id, user_answer, voice_mode=voice_mode)),
         mimetype='text/event-stream'
     )
 
@@ -158,4 +160,4 @@ def finish_interview(interview_id):
         result = InterviewService.finish_interview(interview_id)
         return jsonify({"code": 200, "data": result, "msg": "success"}), 200
     except Exception as e:
-        return jsonify({"code": 500, "msg": str(e)}), 500
+        return jsonify({"code": 500, "msg": "报告生成失败，请稍后重试"}), 500

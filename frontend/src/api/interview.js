@@ -18,13 +18,15 @@ const USE_MOCK = process.env.VUE_APP_USE_MOCK !== 'false'
 export const startInterview = async (data) => {
   const res = await request.post('/interviews/start', {
     user_id: data.userId,   // 暂时从 data 传入，待JWT完善后从拦截器注入
-    job_id: data.jobDbId 
+    job_id: data.jobDbId,
+    voice_mode: !!data.voiceMode
   })
   // 响应拦截器已解包，res 就是后端返回的 data 对象
   // 统一适配为前端期望的格式
   return {
     sessionId: String(res.interview_id),
     firstQuestion: res.question,
+    firstQuestionAudio: res.audio_b64 || null,
     isFinished: false
   }
 }
@@ -45,7 +47,7 @@ export const sendAnswer = async (sessionId, answer) => {
 // 原 sendAnswer 返回 { reply, nextQuestion, isFinished }
 // 后端是 SSE 流，通过 fetch 手动处理，检测 [INTERVIEW_OVER] 标记
 // api/interview.js  sendAnswerStream
-export const sendAnswerStream = (sessionId, answer, { onChunk, onFinish, onStreamEnd, onError, onAudio }) => {
+export const sendAnswerStream = (sessionId, answer, { onChunk, onFinish, onStreamEnd, onError, onAudio, voiceMode = false }) => {
   const API_BASE = process.env.VUE_APP_API_BASE_URL || '/api/v1'
   const token = localStorage.getItem('ai_interview_token')
 
@@ -55,7 +57,7 @@ export const sendAnswerStream = (sessionId, answer, { onChunk, onFinish, onStrea
       'Content-Type': 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {})
     },
-    body: JSON.stringify({ answer })
+    body: JSON.stringify({ answer, voice_mode: !!voiceMode })
   }).then(async (response) => {
     const reader = response.body.getReader()
     const decoder = new TextDecoder()
