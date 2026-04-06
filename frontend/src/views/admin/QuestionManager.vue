@@ -465,8 +465,8 @@ import {
 const QUESTION_TYPES = [
   { value: 'technical', label: '技术题' },
   { value: 'basic', label: '基础知识' },
-  { value: 'scenario', label: '场景设计' },
-  { value: 'followup', label: '追问题' },
+  { value: 'scenario_design', label: '场景设计' },
+  { value: 'project_deep_dive', label: '项目深度剖析' },
   { value: 'behavioral', label: '行为面试' },
 ]
 
@@ -1193,7 +1193,7 @@ export default {
     text-transform: uppercase;
     letter-spacing: 0.04em;
     padding: 11px 16px;
-    text-align: left;
+    text-align: center;
     border-bottom: 1px solid #f3f4f6;
     white-space: nowrap;
   }
@@ -1207,6 +1207,7 @@ export default {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    text-align: center;
   }
 
   &__row {
@@ -1217,7 +1218,7 @@ export default {
 }
 
 .td-id { color: #9ca3af; font-size: 12px; font-weight: 500; }
-.td-content { max-width: 320px; }
+.td-content { max-width: 390px; }
 .td-source { max-width: 260px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .content-preview {
   display: block;
@@ -1227,7 +1228,7 @@ export default {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 300px;
+  max-width: 400px;
 }
 .td-job { color: #6b7280; }
 
@@ -1236,7 +1237,7 @@ export default {
   display: inline-block;
   padding: 2px 8px;
   border-radius: 4px;
-  font-size: 11px;
+  font-size: 11.5px;
   font-weight: 600;
   white-space: nowrap;
 }
@@ -1244,8 +1245,8 @@ export default {
 .badge-type {
   &--technical { background: #dbeafe; color: #1e40af; }
   &--basic     { background: #d1fae5; color: #065f46; }
-  &--scenario  { background: #ede9fe; color: #5b21b6; }
-  &--followup  { background: #fef3c7; color: #92400e; }
+  &--scenario_design  { background: #ede9fe; color: #5b21b6; }
+  &--project_deep_dive  { background: #fef3c7; color: #92400e; }
   &--behavioral{ background: #fce7f3; color: #9d174d; }
 }
 
