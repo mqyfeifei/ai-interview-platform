@@ -3,6 +3,7 @@ import os
 import re
 import json
 import asyncio
+import threading
 from concurrent.futures import ThreadPoolExecutor
 
 # 启用 Hugging Face 在线模式并配置中国镜像站
@@ -51,6 +52,7 @@ class InterviewService:
     # === 新增：全局线程池，用于异步 TTS 合成 ===
     # max_workers=5 表示最多同时处理 5 个 TTS 请求
     tts_executor = ThreadPoolExecutor(max_workers=5)
+    _speed_cache_lock = threading.Lock()
 
     _MEANINGLESS_ANSWER_PATTERN = re.compile(
         r'^(好|好的|嗯|嗯嗯|嗯哼|哦|噢|啊|行|可以|是|对|没了|没有了|不知道|ok|okay|yes|no|1|2|3|4|5|6|7|8|9|0|[，。！？、\s]+)$',
@@ -233,7 +235,8 @@ class InterviewService:
     
         # ================= 直接从全局缓存中获取语速 =================
         # 如果当前回答的文本刚好在缓存里，说明是刚才语音识别来的，拿到语速并删掉缓存
-        actual_speed = global_speed_cache.pop(normalized_answer, None)
+        with InterviewService._speed_cache_lock:
+            actual_speed = global_speed_cache.pop(normalized_answer, None)
         # ============================================================
     
         # 1. 记录用户回答

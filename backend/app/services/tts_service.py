@@ -234,6 +234,10 @@ class TTSService:
         if cursor + 4 <= len(message):
             payload_len = struct.unpack(">I", message[cursor:cursor + 4])[0]
             cursor += 4
+            if payload_len < 0 or payload_len > 50 * 1024 * 1024:
+                raise RuntimeError("invalid TTS payload length")
+            if cursor + payload_len > len(message):
+                raise RuntimeError("truncated TTS payload")
             payload = message[cursor:cursor + payload_len]
         return event, identity, payload
 
