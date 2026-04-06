@@ -60,17 +60,44 @@
           </span>
         </div>
 
-        <!-- 类型筛选 -->
-        <div class="type-filters">
-          <button
-            v-for="f in typeFilters"
-            :key="f.key"
-            :class="['type-filter-btn', { active: activeTypeFilter === f.key }]"
-            @click="activeTypeFilter = f.key"
-          >
-            <span>{{ f.icon }}</span>
-            <span>{{ f.label }}</span>
-          </button>
+        <!-- 类型筛选、难度筛选和搜索 -->
+        <div class="resource-filters">
+          <!-- 类型筛选 -->
+          <div class="type-filters">
+            <button
+              v-for="f in typeFilters"
+              :key="f.key"
+              :class="['type-filter-btn', { active: activeTypeFilter === f.key }]"
+              @click="activeTypeFilter = f.key"
+            >
+              <span>{{ f.icon }}</span>
+              <span>{{ f.label }}</span>
+            </button>
+          </div>
+          
+          <!-- 难度筛选 -->
+          <div class="difficulty-filter">
+            <select v-model="activeDifficultyFilter" class="difficulty-select">
+              <option value="all">全部难度</option>
+              <option value="初级">初级</option>
+              <option value="中级">中级</option>
+              <option value="高级">高级</option>
+            </select>
+          </div>
+          
+          <!-- 搜索框 -->
+          <div class="search-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="search-icon">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input
+              type="text"
+              v-model="searchKeyword"
+              placeholder="搜索学习资源..."
+              class="search-input"
+            />
+          </div>
         </div>
 
         <!-- 资源卡片列表 -->
@@ -361,6 +388,8 @@ export default {
       activeCurveTab: 'overall',
       activeTypeFilter: 'all',
       activeWeaknessFilter: null,
+      searchKeyword: '',
+      activeDifficultyFilter: 'all',
       chartInstance: null,
       showResourceDetail: false,
       selectedResource: {},
@@ -445,6 +474,23 @@ trendingActiveTab: 'all',
         const filterType = this.activeTypeFilter === 'course' ? 'course' : this.activeTypeFilter
         list = list.filter(r => (r.type === filterType) || (filterType === 'course' && r.type === 'book'))
       }
+      
+      // 难度筛选
+      if (this.activeDifficultyFilter !== 'all') {
+        list = list.filter(r => r.difficulty === this.activeDifficultyFilter)
+      }
+      
+      // 搜索筛选
+      if (this.searchKeyword) {
+        const keyword = this.searchKeyword.toLowerCase()
+        list = list.filter(r => {
+          if (r.title && r.title.toLowerCase().includes(keyword)) return true
+          if (r.summary && r.summary.toLowerCase().includes(keyword)) return true
+          if (r.tags && r.tags.some(tag => tag.toLowerCase().includes(keyword))) return true
+          return false
+        })
+      }
+      
       // 短板筛选
       if (this.activeWeaknessFilter) {
         const tag = this.activeWeaknessFilter
@@ -498,8 +544,10 @@ async created() {
       if (echarts && this.growthData && this.enableCharts) this.safeRenderChart()
     },
   activeTypeFilter() { this.currentPage = 1 },
-activeWeaknessFilter() { this.currentPage = 1 },
-pageSize() { this.currentPage = 1 },
+    activeWeaknessFilter() { this.currentPage = 1 },
+    activeDifficultyFilter() { this.currentPage = 1 },
+    searchKeyword() { this.currentPage = 1 },
+    pageSize() { this.currentPage = 1 },
   },
   methods: {
     ...mapActions('learning', ['toggleBookmark', 'markCompleted', 'updateTaskStatus']),
@@ -1028,10 +1076,75 @@ goToQuestionDetail(item) {
   &:hover { background: darken(#EEF2FF, 4%); }
 }
 
+.resource-filters {
+  display: flex; gap: $spacing-md; margin-bottom: $spacing-base;
+  align-items: center;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
 .type-filters {
   display: flex; gap: $spacing-xs; overflow-x: auto;
-  padding-bottom: 2px; margin-bottom: $spacing-base;
+  padding-bottom: 2px;
+  flex-shrink: 0;
   &::-webkit-scrollbar { display: none; }
+}
+
+.difficulty-filter {
+  min-width: 120px;
+  flex-shrink: 0;
+}
+
+.difficulty-select {
+  width: 100%;
+  padding: $spacing-sm $spacing-md;
+  border: 1.5px solid $border-color;
+  border-radius: $border-radius-lg;
+  font-size: $font-size-sm;
+  background: white;
+  cursor: pointer;
+  transition: all $transition-fast;
+  
+  &:focus {
+    outline: none;
+    border-color: $primary;
+    box-shadow: 0 0 0 3px rgba($primary, 0.1);
+  }
+}
+
+.search-box {
+  position: relative;
+  flex: 1;
+  min-width: 200px;
+}
+
+.search-icon {
+  position: absolute;
+  left: $spacing-sm;
+  top: 50%;
+  transform: translateY(-50%);
+  color: $text-muted;
+  width: 16px;
+  height: 16px;
+}
+
+.search-input {
+  width: 100%;
+  padding: $spacing-sm $spacing-sm $spacing-sm 36px;
+  border: 1.5px solid $border-color;
+  border-radius: $border-radius-lg;
+  font-size: $font-size-sm;
+  transition: all $transition-fast;
+  
+  &:focus {
+    outline: none;
+    border-color: $primary;
+    box-shadow: 0 0 0 3px rgba($primary, 0.1);
+  }
+  
+  &::placeholder {
+    color: $text-muted;
+  }
 }
 
 .type-filter-btn {
