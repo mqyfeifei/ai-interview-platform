@@ -3,6 +3,7 @@ import os
 import re
 import json
 import asyncio
+import threading
 from concurrent.futures import ThreadPoolExecutor
 
 # 启用 Hugging Face 在线模式并配置中国镜像站
@@ -51,6 +52,12 @@ class InterviewService:
     # === 新增：全局线程池，用于异步 TTS 合成 ===
     # max_workers=5 表示最多同时处理 5 个 TTS 请求
     tts_executor = ThreadPoolExecutor(max_workers=5)
+    _speed_cache_lock = threading.Lock()
+
+    _MEANINGLESS_ANSWER_PATTERN = re.compile(
+        r'^(好|好的|嗯|嗯嗯|嗯哼|哦|噢|啊|行|可以|是|对|没了|没有了|不知道|ok|okay|yes|no|1|2|3|4|5|6|7|8|9|0|[，。！？、\s]+)$',
+        re.IGNORECASE
+    )
     
     @staticmethod
     def _synthesize_audio_async(text, voice, fmt='mp3'):
@@ -65,6 +72,19 @@ class InterviewService:
         except Exception as e:
             print(f'异步 TTS 合成失败：{e}')
             return None
+
+    @staticmethod
+    def _normalize_answer_text(text):
+        return (text or '').strip()
+
+    @classmethod
+    def _is_meaningless_answer(cls, text):
+        t = cls._normalize_answer_text(text)
+        if not t:
+            return True
+        if len(t) <= 2:
+            return True
+        return bool(cls._MEANINGLESS_ANSWER_PATTERN.match(t))
     # @staticmethod
     # def get_embedding(text):
     #     """调用嵌入模型获取文本的 1536 维向量"""
@@ -144,7 +164,7 @@ class InterviewService:
             return ""
 
     @staticmethod
-    def start_interview(user_id, job_id):
+    def start_interview(user_id, job_id, voice_mode=False):
         # 0. 【修复点】：提前拉取简历，判断是否为空
         resume_data = ResumeService.get_main_resume(user_id)
         content = resume_data.get('content', {})
@@ -189,30 +209,63 @@ class InterviewService:
         db.session.add(chat)
         db.session.commit()
 
+        greeting_audio_b64 = None
+        if voice_mode:
+            try:
+                voice = getattr(prompt_config, 'preferred_voice', 'BV001_streaming') if prompt_config else 'BV001_streaming'
+                audio_bytes = TTSService.synthesize_bytes(greeting, voice=voice, fmt='mp3')
+                if audio_bytes:
+                    greeting_audio_b64 = bytes_to_b64(audio_bytes)
+            except Exception as e:
+                print(f"开场白 TTS 失败: {str(e)}")
+
         # 5. 【修复点】：下发 warning 字段，供前端弹窗/Toast提示
         return {
             "interview_id": interview.id,
             "question": greeting,
+            "audio_b64": greeting_audio_b64,
             "warning": "系统检测到您的简历未完善，本次面试将进入「标准盲面」模式，无法为您进行个性化项目追问。" if is_resume_empty else None
         }
 
     @staticmethod
-    def process_chat_round_stream(interview_id, user_answer):
+    def process_chat_round_stream(interview_id, user_answer, voice_mode=False):
         """处理对话并返回流式生成器"""
         interview = Interview.query.get(interview_id)
+        normalized_answer = InterviewService._normalize_answer_text(user_answer)
     
         # ================= 直接从全局缓存中获取语速 =================
         # 如果当前回答的文本刚好在缓存里，说明是刚才语音识别来的，拿到语速并删掉缓存
-        actual_speed = global_speed_cache.pop(user_answer, None)
+        with InterviewService._speed_cache_lock:
+            actual_speed = global_speed_cache.pop(normalized_answer, None)
         # ============================================================
     
         # 1. 记录用户回答
-        user_chat = InterviewChat(interview_id=interview.id, role='user', content=user_answer)
+        user_chat = InterviewChat(interview_id=interview.id, role='user', content=normalized_answer)
         db.session.add(user_chat)
         interview.question_count += 1
+
+        if InterviewService._is_meaningless_answer(normalized_answer):
+            reminder = "我只收到了较短的确认词（如“好/嗯嗯”）。请你围绕上一题给出更具体的回答，至少包含观点、做法或一个真实例子。"
+            ai_chat = InterviewChat(interview_id=interview.id, role='ai', content=reminder)
+            db.session.add(ai_chat)
+            db.session.commit()
+
+            if voice_mode:
+                try:
+                    prompt_config = AiPrompt.query.filter_by(job_id=interview.job_id, is_active=True).first()
+                    voice = getattr(prompt_config, 'preferred_voice', 'BV001_streaming') if prompt_config else 'BV001_streaming'
+                    audio_bytes = TTSService.synthesize_bytes(reminder, voice=voice, fmt='mp3')
+                    if audio_bytes:
+                        yield f"data: {json.dumps({'chunk': reminder, 'audio_b64': bytes_to_b64(audio_bytes)}, ensure_ascii=False)}\n\n"
+                        return
+                except Exception as e:
+                    print(f'短回答提醒 TTS 失败: {e}')
+
+            yield f"data: {json.dumps({'chunk': reminder}, ensure_ascii=False)}\n\n"
+            return
     
         # 2. 向量检索：匹配相关的考察知识点或参考答案
-        user_vector = InterviewService.get_embedding(user_answer)
+        user_vector = InterviewService.get_embedding(normalized_answer)
         # 依据 L2 距离查询最相关的知识库条目
         related_question = Question.query.filter_by(job_id=interview.job_id, status='published') \
             .order_by(Question.embedding.l2_distance(user_vector)).limit(1).first()
@@ -300,7 +353,7 @@ class InterviewService:
     
                 # === 使用异步 TTS 合成，不阻塞流式响应 ===
                 # 检查缓冲字符串是否以标点符号结尾（或者是包含换行符）
-                if punctuation_pattern.search(content):
+                if voice_mode and punctuation_pattern.search(content):
                     try:
                         voice = getattr(prompt_config, 'preferred_voice', 'BV001_streaming') if prompt_config else 'BV001_streaming'
                             
@@ -343,7 +396,7 @@ class InterviewService:
                 yield f"data: {json.dumps(payload, ensure_ascii=False)}\n\n"
 
         # === 使用异步 TTS 处理最后不带标点的 buffer ===
-        if sentence_buffer.strip() and sentence_buffer != "[INTERVIEW_OVER]":
+        if voice_mode and sentence_buffer.strip() and sentence_buffer != "[INTERVIEW_OVER]":
             try:
                 voice = getattr(prompt_config, 'preferred_voice', 'BV001_streaming') if prompt_config else 'BV001_streaming'
                 
@@ -358,7 +411,7 @@ class InterviewService:
                 print('Final TTS failed:', e)
         
         # === 发送队列中剩余的音频数据 ===
-        while not audio_queue.empty():
+        while voice_mode and (not audio_queue.empty()):
             try:
                 remaining_audio = audio_queue.get_nowait()
                 yield f"data: {json.dumps({'chunk': '', 'audio_b64': remaining_audio}, ensure_ascii=False)}\n\n"
@@ -372,7 +425,7 @@ class InterviewService:
 
         # === 恢复音频文件保存逻辑 ===
         try:
-            if audio_chunks:
+            if voice_mode and audio_chunks:
                 uploads_root = os.path.join(current_app.root_path, 'uploads')
                 tts_dir = os.path.join(uploads_root, 'tts', str(interview.id))
                 os.makedirs(tts_dir, exist_ok=True)

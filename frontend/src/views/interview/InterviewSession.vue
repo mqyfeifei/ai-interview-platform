@@ -445,6 +445,13 @@ isFinished(val) {
   methods: {
     ...mapActions('interview', ['startSession', 'submitAnswer', 'endInterview']),
 
+    isMeaningfulVoiceText(text) {
+      const t = (text || '').trim()
+      if (!t) return false
+      if (t.length <= 2) return false
+      return !/^(好|好的|嗯|嗯嗯|嗯哼|哦|噢|啊|行|可以|是|对|没了|没有了|不知道|ok|okay|yes|no|[，。！？、\s]+)$/i.test(t)
+    },
+
     // methods 中新增
     startProgressBar() {
       const DURATION = 20000   // 20s 跑到 95%
@@ -579,10 +586,11 @@ renderMarkdown(text) {
             const text = result && result.text ? result.text.trim() : ''
             console.log('[语音] 后端返回文字：', text)
 
-            if (text) {
+            if (this.isMeaningfulVoiceText(text)) {
               await this.submitAnswer(text)
             } else {
-              console.warn('[语音] 返回文字为空，跳过提交')
+              console.warn('[语音] 返回文字无效或过短，跳过提交')
+              alert('识别到的回答过短（如“好/嗯嗯”），请补充更完整的回答后再提交。')
             }
           } catch (err) {
             console.error('[语音] 发送失败：', err)

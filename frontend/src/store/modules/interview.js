@@ -97,7 +97,8 @@ const actions = {
       console.log('当前岗位ID:', state.jobDbId)
       const res = await startInterview({
         userId,                    // 传给后端的 user_id
-        jobDbId: state.jobDbId     // 传给后端的 job_id（数字）
+        jobDbId: state.jobDbId,     // 传给后端的 job_id（数字）
+        voiceMode: state.voiceMode
       })
       commit('SET_SESSION', { sessionId: res.sessionId, totalQuestions: 10 })
       commit('ADD_MESSAGE', {
@@ -106,6 +107,14 @@ const actions = {
         content: res.firstQuestion,
         timestamp: new Date()
       })
+      if (state.voiceMode && res.firstQuestionAudio) {
+        try {
+          const openingAudio = new Audio(`data:audio/mp3;base64,${res.firstQuestionAudio}`)
+          openingAudio.play().catch(() => {})
+        } catch (e) {
+          console.warn('开场语音播放失败', e)
+        }
+      }
       commit('SET_QUESTION_INDEX', 1)
       return res
     } finally {
@@ -159,6 +168,7 @@ const actions = {
     }
     
     sendAnswerStream(state.currentSession.sessionId, answerText, {
+      voiceMode: state.voiceMode,
       onChunk(chunk) {
         commit('APPEND_AI_CHUNK', chunk)
       },
@@ -235,7 +245,6 @@ const getters = {
 }
 
 export default { namespaced: true, state, mutations, actions, getters }
-
 
 
 
