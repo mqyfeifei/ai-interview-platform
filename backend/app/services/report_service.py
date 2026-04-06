@@ -21,6 +21,11 @@ class ReportService:
         '应变能力': 'adaptability'
     }
 
+    _MEANINGLESS_ANSWER_PATTERN = re.compile(
+        r'^(好|好的|嗯|嗯嗯|嗯哼|哦|噢|啊|行|可以|是|对|没了|没有了|不知道|ok|okay|yes|no|1|2|3|4|5|6|7|8|9|0|[，。！？、\s]+)$',
+        re.IGNORECASE
+    )
+
     @staticmethod
     def _split_text_to_list(raw_text):
         if not raw_text:
@@ -40,6 +45,15 @@ class ReportService:
         cleaned = re.sub(r'^```\s*', '', cleaned)
         cleaned = re.sub(r'\s*```$', '', cleaned)
         return cleaned.strip()
+
+    @classmethod
+    def _is_meaningless_answer(cls, text):
+        t = (text or '').strip()
+        if not t:
+            return True
+        if len(t) <= 2:
+            return True
+        return bool(cls._MEANINGLESS_ANSWER_PATTERN.match(t))
 
     @classmethod
     def _get_recommended_resource(cls, point_text):
@@ -196,7 +210,9 @@ class ReportService:
             answer = ''
             for j in range(idx + 1, len(chats)):
                 if chats[j].role == 'user':
-                    answer = chats[j].content
+                    maybe_answer = chats[j].content or ''
+                    if not cls._is_meaningless_answer(maybe_answer):
+                        answer = maybe_answer
                     break
                 if chats[j].role == 'ai':
                     break
@@ -351,7 +367,8 @@ class ReportService:
             user_reply = None
             for j in range(idx + 1, len(chats)):
                 if chats[j].role == 'user':
-                    user_reply = chats[j]
+                    if not cls._is_meaningless_answer(chats[j].content or ''):
+                        user_reply = chats[j]
                     break
                 if chats[j].role == 'ai':
                     break
