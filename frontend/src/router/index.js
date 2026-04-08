@@ -60,6 +60,12 @@ const routes = [
     meta: { hideNavigation: true, requiresAuth: true, title: '模拟面试', hideNav: true }
   },
   {
+    path: '/interview/voice-session',
+    name: 'VoiceInterviewSession',
+    component: () => import('@/views/interview/VoiceInterviewSession.vue'),
+    meta: { hideNavigation: true, requiresAuth: true, title: '语音面试', hideNav: true }
+  },
+  {
     path: '/interview/report/:reportId',
     name: 'InterviewReport',
     component: () => import('@/views/interview/InterviewReport.vue'),

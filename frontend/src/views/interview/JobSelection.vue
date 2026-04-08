@@ -461,7 +461,7 @@
 </template>
 
 <script>
-import ResumePreview from '@/components/common/ResumePreview.vue'
+import ResumePreview from '@/components/interview/ResumePreview.vue'
 
 // ===================== 简历必填字段定义 =====================
 const REQUIRED_FIELDS = [
@@ -771,7 +771,13 @@ export default {
         this.$store.commit('interview/SET_JOB_DB_ID', jobDbId)
         this.$store.commit('interview/SET_VOICE_MODE', this.voiceMode)
         await this.$store.dispatch('interview/selectJob', this.currentSelected)
-        this.$router.push('/interview/session')
+        // 根据面试模式跳转到不同页面
+        if (this.voiceMode) {
+          this.$router.push('/interview/session')
+          // this.$router.push('/interview/voice-session')
+        } else {
+          this.$router.push('/interview/session')
+        }
       } catch (err) {
         console.error('启动面试失败：', err)
         alert('启动面试失败，请重试！')
