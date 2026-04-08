@@ -34,6 +34,12 @@ class Config:
     VOLC_SECRET_KEY = os.environ.get('VOLC_SECRET_KEY')
     USE_VOLC = os.environ.get('USE_VOLC', '0') == '1'
 
+    # 阿里云百炼平台配置
+    USE_ALIYUN_DASHSCOPE = os.environ.get('USE_ALIYUN_DASHSCOPE', '0') == '1'
+    DASHSCOPE_API_KEY = os.environ.get('DASHSCOPE_API_KEY')
+    DASHSCOPE_BASE_URL = os.environ.get('DASHSCOPE_BASE_URL', 'https://dashscope.aliyuncs.com/compatible-mode/v1')
+    DASHSCOPE_MODEL_NAME = os.environ.get('DASHSCOPE_MODEL_NAME', 'qwen3-max')
+
 
 class DevelopmentConfig(Config):
     """开发环境配置"""

@@ -1,13 +1,23 @@
 from openai import OpenAI
 from flask import current_app
 
+
 class DeepSeekClient:
     def __init__(self):
-        self.client = OpenAI(
-            api_key=current_app.config['DEEPSEEK_API_KEY'],
-            base_url=current_app.config['DEEPSEEK_BASE_URL']
-        )
-        self.model = current_app.config['LLM_MODEL_NAME']
+        # 检查是否使用阿里云百炼平台
+        if current_app.config.get('USE_ALIYUN_DASHSCOPE', False):
+            self.client = OpenAI(
+                api_key=current_app.config['DASHSCOPE_API_KEY'],
+                base_url=current_app.config['DASHSCOPE_BASE_URL']
+            )
+            self.model = current_app.config['DASHSCOPE_MODEL_NAME']
+        else:
+            # 保持原有 DeepSeek 配置
+            self.client = OpenAI(
+                api_key=current_app.config['DEEPSEEK_API_KEY'],
+                base_url=current_app.config['DEEPSEEK_BASE_URL']
+            )
+            self.model = current_app.config['LLM_MODEL_NAME']
 
     def generate_reply(self, messages, stream=False):
         """
@@ -16,12 +26,15 @@ class DeepSeekClient:
         :param stream: 是否流式输出
         """
         try:
-            response = self.client.chat.completions.create(
-                model=self.model,
-                messages=messages,
-                stream=stream,
-                temperature=0.7
-            )
+            # 构建请求参数
+            request_params = {
+                'model': self.model,
+                'messages': messages,
+                'stream': stream,
+                'temperature': 0.7
+            }
+
+            response = self.client.chat.completions.create(**request_params)
             if stream:
                 return response
             return response.choices[0].message.content
