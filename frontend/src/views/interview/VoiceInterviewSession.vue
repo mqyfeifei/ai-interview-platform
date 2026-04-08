@@ -1,7 +1,7 @@
 <!--
   =============================================
-  frontend/src/views/interview/InterviewSession.vue
-  面试会话页组件
+  frontend/src/views/interview/VoiceInterviewSession.vue
+  语音面试会话页组件
   ============================================= -->
 <template>
   <div class="interview-page">
@@ -19,7 +19,7 @@
           </span>
           <div>
             <p class="job-info__name">{{ selectedJob ? selectedJob.name : '模拟面试' }}</p>
-            <p v-if="voiceMode" class="job-info__progress">
+            <p class="job-info__progress">
               <span class="voice-mode-badge">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
                   stroke-linecap="round" stroke-linejoin="round" style="width:10px;height:10px">
@@ -60,167 +60,239 @@
       </div>
     </header>
 
-    <!-- <div class="interview-body page-container"> -->
-      <!-- 消息流 -->
-      <div class="messages-container page-container" ref="messagesContainer">
-        <!-- 面试开始提示 -->
-        <div class="messages-inner"> 
-          <div class="session-start-tip">
-            <div class="session-start-tip__line" />
-            <span>面试正式开始</span>
-            <div class="session-start-tip__line" />
-          </div>
-        </div>
-
-        <!-- 消息气泡 -->
-        <transition-group name="message" tag="div" class="messages-list">
-          <div
-            v-for="msg in messages"
-            :key="msg.id"
-            :class="['message-item', 'message-item--' + msg.role]"
-            v-show="!(msg.role === 'ai' && msg.streaming && !msg.content)"
-            >
-            <!-- AI 头像 -->
-            <div v-if="msg.role === 'ai'" class="message-avatar message-avatar--ai">
-              <span>🤖</span>
+    <!-- 主内容区 - 左右分屏 -->
+    <div class="interview-body">
+      <!-- 左边：语音转文字对话框 -->
+      <div class="left-panel">
+        <div class="messages-container" ref="messagesContainer">
+          <!-- 面试开始提示 -->
+          <div class="messages-inner"> 
+            <div class="session-start-tip">
+              <div class="session-start-tip__line" />
+              <span>面试正式开始</span>
+              <div class="session-start-tip__line" />
             </div>
+          </div>
 
-            <div class="message-bubble-wrap">
-              <!-- 追问标识 -->
-              <div v-if="msg.isFollowUp" class="followup-badge">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px">
-                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-                </svg>
-                追问
+          <!-- 消息气泡 -->
+          <transition-group name="message" tag="div" class="messages-list">
+            <div
+              v-for="msg in messages"
+              :key="msg.id"
+              :class="['message-item', 'message-item--' + msg.role]"
+              v-show="!(msg.role === 'ai' && msg.streaming && !msg.content)"
+              >
+              <!-- AI 头像 -->
+              <div v-if="msg.role === 'ai'" class="message-avatar message-avatar--ai">
+                <span>🤖</span>
               </div>
 
-              <div :class="['message-bubble', 'message-bubble--' + msg.role]" v-show="msg.content">
-              <div
-                v-if="msg.role === 'ai'"
-                class="message-text markdown-body"
-                v-html="renderMarkdown(msg.content)"
-              />
-              <p v-else class="message-text">{{ msg.content }}</p>
+              <div class="message-bubble-wrap">
+                <!-- 追问标识 -->
+                <div v-if="msg.isFollowUp" class="followup-badge">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                  </svg>
+                  追问
+                </div>
+
+                <div :class="['message-bubble', 'message-bubble--' + msg.role]" v-show="msg.content">
+                <div
+                  v-if="msg.role === 'ai'"
+                  class="message-text markdown-body"
+                  v-html="renderMarkdown(msg.content)"
+                />
+                <p v-else class="message-text">{{ msg.content }}</p>
+                </div>
+
+                <span class="message-time" v-show="msg.content">{{ formatTime(msg.timestamp) }}</span>
               </div>
 
-              <span class="message-time" v-show="msg.content">{{ formatTime(msg.timestamp) }}</span>
+              <!-- 用户头像 -->
+              <div v-if="msg.role === 'user'" class="message-avatar message-avatar--user">
+                <img v-if="userAvatarUrl" :src="userAvatarUrl" class="avatar-img" alt="avatar" />
+                <span v-else>{{ userAvatarLetter }}</span>
+              </div>
             </div>
+          </transition-group>
 
-            <!-- 用户头像 -->
-            <div v-if="msg.role === 'user'" class="message-avatar message-avatar--user">
-              <img v-if="userAvatarUrl" :src="userAvatarUrl" class="avatar-img" alt="avatar" />
-              <span v-else>{{ userAvatarLetter }}</span>
+          <!-- AI 思考中动画 -->
+          <transition name="fade">
+            <div v-if="isLoading && !hasStreamingMessage" class="message-item message-item--ai thinking-row">
+              <div class="message-avatar message-avatar--ai">
+                <span>🤖</span>
+              </div>
+              <div class="thinking-bubble">
+                <span class="thinking-dot" />
+                <span class="thinking-dot" />
+                <span class="thinking-dot" />
+              </div>
             </div>
+          </transition>
+
+          <!-- 面试结束提示 -->
+          <div v-if="isFinished" class="session-end-tip">
+            <div class="session-end-tip__icon">🎉</div>
+            <p class="session-end-tip__title">面试已完成</p>
+            <p class="session-end-tip__sub">面试报告已生成，且已保存在历史记录中</p>
+                <transition name="fade">
+                <button class="view-report-btn" @click="goToReport">
+                  查看面试报告 →
+                </button>
+              </transition>
           </div>
-        </transition-group>
 
-        <!-- AI 思考中动画 -->
-        <transition name="fade">
-          <div v-if="isLoading && !hasStreamingMessage" class="message-item message-item--ai thinking-row">
-            <div class="message-avatar message-avatar--ai">
-              <span>🤖</span>
-            </div>
-            <div class="thinking-bubble">
-              <span class="thinking-dot" />
-              <span class="thinking-dot" />
-              <span class="thinking-dot" />
-            </div>
-          </div>
-        </transition>
-
-        <!-- 面试结束提示 -->
-        <div v-if="isFinished" class="session-end-tip">
-          <div class="session-end-tip__icon">🎉</div>
-          <p class="session-end-tip__title">面试已完成</p>
-          <p class="session-end-tip__sub">面试报告已生成，且已保存在历史记录中</p>
-              <transition name="fade">
-              <button class="view-report-btn" @click="goToReport">
-                查看面试报告 →
-              </button>
-            </transition>
+          <div style="height: 16px;" />
         </div>
-
-        <div style="height: 16px;" />
       </div>
 
-      <!-- 底部输入区 -->
-      <div class="input-area" :class="{ disabled: isFinished || isLoading }">
-        <!-- 语音状态提示条 -->
-        <transition name="slide-up">
-          <div v-if="isRecording" class="recording-bar">
-            <div class="recording-bar__wave">
-              <span v-for="n in 5" :key="n" class="wave-bar" :style="{ animationDelay: n * 0.1 + 's' }" />
+      <!-- 右边：语音聊天动画和输入区 -->
+      <div class="right-panel">
+        <div class="voice-animation-container">
+          <!-- 语音动画 -->
+          <div class="voice-animation">
+            <!-- 面试官动画 -->
+            <div class="voice-character voice-character--ai">
+              <div class="character-avatar">
+                <span>🤖</span>
+              </div>
+              <div class="character-name">AI 面试官</div>
+              <div class="voice-wave" v-if="isAISpeaking">
+                <span v-for="n in 5" :key="n" class="wave-bar" :style="{ animationDelay: n * 0.1 + 's' }" />
+              </div>
             </div>
-            <span class="recording-bar__text">正在录音... 再次点击麦克风停止</span>
-            <span class="recording-bar__time">{{ recordingTime }}s</span>
+
+            <!-- 连接线 -->
+            <div class="voice-connection">
+              <div class="connection-line" :class="{ active: isRecording || isAISpeaking }"></div>
+            </div>
+
+            <!-- 候选人动画 -->
+            <div class="voice-character voice-character--user">
+              <div class="character-avatar">
+                <img v-if="userAvatarUrl" :src="userAvatarUrl" class="avatar-img" alt="avatar" />
+                <span v-else>{{ userAvatarLetter }}</span>
+              </div>
+              <div class="character-name">{{ userName || '我' }}</div>
+              <div class="voice-wave" v-if="isRecording">
+                <span v-for="n in 5" :key="n" class="wave-bar" :style="{ animationDelay: n * 0.1 + 's' }" />
+              </div>
+            </div>
           </div>
-        </transition>
-        <div v-if="isSending" class="transcribing-tip">
-          📡 语音发送中，请稍候...
-        </div>
 
+          <!-- 语音状态提示 -->
+          <div class="voice-status">
+            <div v-if="isRecording" class="status-item status-item--recording">
+              <span class="status-dot"></span>
+              <span>正在录音...</span>
+              <span class="status-time">{{ recordingTime }}s</span>
+            </div>
+            <div v-else-if="isAISpeaking" class="status-item status-item--ai-speaking">
+              <span class="status-dot"></span>
+              <span>AI 正在说话...</span>
+            </div>
+            <div v-else class="status-item status-item--waiting">
+              <span class="status-dot"></span>
+              <span>等待中...</span>
+            </div>
+          </div>
 
-        <div class="input-row">
-          <!-- 语音按钮 -->
-          <button
-            :class="['voice-btn', { active: isRecording }]"
-            @click="toggleRecording"
-            :disabled="isFinished || isLoading || !voiceMode"
-            :title="!voiceMode ? '文字面试模式下不支持语音输入' : isRecording ? '停止录音' : '语音输入'"
-            >
-            <svg v-if="!isRecording" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
-              <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-              <line x1="12" y1="19" x2="12" y2="23"/>
-              <line x1="8" y1="23" x2="16" y2="23"/>
-            </svg>
-            <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="6" y="6" width="12" height="12" rx="2"/>
-            </svg>
-          </button>
-
-
-
-          <!-- 文本输入框 -->
-          <div class="textarea-wrapper">
-            <textarea
-              ref="inputRef"
-              v-model="inputText"
-              :placeholder="isLoading ? 'AI 正在思考中...' : '在此输入你的回答，支持换行...'"
+          <!-- 语音控制按钮 -->
+          <div class="voice-controls">
+            <button
+              :class="['voice-control-btn', { active: isRecording }]"
+              @click="toggleRecording"
               :disabled="isFinished || isLoading"
-              class="input-textarea"
-              rows="1"
-              @keydown.enter.exact.prevent="handleSend"
-              @input="autoResize"
-            />
-            <span class="input-hint">Enter 发送 · Shift+Enter 换行</span>
+              >
+              <svg v-if="!isRecording" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                <line x1="12" y1="19" x2="12" y2="23"/>
+                <line x1="8" y1="23" x2="16" y2="23"/>
+              </svg>
+              <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="6" y="6" width="12" height="12" rx="2"/>
+              </svg>
+              {{ isRecording ? '停止录音' : '开始录音' }}
+            </button>
+          </div>
+        </div>
+
+        <!-- 输入区 -->
+        <div class="input-area" :class="{ disabled: isFinished || isLoading }">
+          <!-- 语音状态提示条 -->
+          <transition name="slide-up">
+            <div v-if="isRecording" class="recording-bar">
+              <div class="recording-bar__wave">
+                <span v-for="n in 5" :key="n" class="wave-bar" :style="{ animationDelay: n * 0.1 + 's' }" />
+              </div>
+              <span class="recording-bar__text">正在录音... 再次点击麦克风停止</span>
+              <span class="recording-bar__time">{{ recordingTime }}s</span>
+            </div>
+          </transition>
+          <div v-if="isSending" class="transcribing-tip">
+            📡 语音发送中，请稍候...
           </div>
 
-          <!-- 发送按钮 -->
-          <button
-            :class="['send-btn', { ready: inputText.trim() && !isLoading && !isFinished }]"
-            :disabled="!inputText.trim() || isLoading || isFinished"
-            @click="handleSend"
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="22" y1="2" x2="11" y2="13"/>
-              <polygon points="22 2 15 22 11 13 2 9 22 2"/>
-            </svg>
-          </button>
+          <div class="input-row">
+            <!-- 语音按钮 -->
+            <button
+              :class="['voice-btn', { active: isRecording }]"
+              @click="toggleRecording"
+              :disabled="isFinished || isLoading"
+              :title="isRecording ? '停止录音' : '语音输入'"
+              >
+              <svg v-if="!isRecording" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                <line x1="12" y1="19" x2="12" y2="23"/>
+                <line x1="8" y1="23" x2="16" y2="23"/>
+              </svg>
+              <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="6" y="6" width="12" height="12" rx="2"/>
+              </svg>
+            </button>
+
+            <!-- 文本输入框 -->
+            <div class="textarea-wrapper">
+              <textarea
+                ref="inputRef"
+                v-model="inputText"
+                :placeholder="isLoading ? 'AI 正在思考中...' : '在此输入你的回答，支持换行...'"
+                :disabled="isFinished || isLoading"
+                class="input-textarea"
+                rows="1"
+                @keydown.enter.exact.prevent="handleSend"
+                @input="autoResize"
+              />
+              <span class="input-hint">Enter 发送 · Shift+Enter 换行</span>
+            </div>
+
+            <!-- 发送按钮 -->
+            <button
+              :class="['send-btn', { ready: inputText.trim() && !isLoading && !isFinished }]"
+              :disabled="!inputText.trim() || isLoading || isFinished"
+              @click="handleSend"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="22" y1="2" x2="11" y2="13"/>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
+    </div>
 
-    <!-- </div> -->
-
-        <!-- ↓ 新增：面试结束/报告生成中 遮罩 -->
+    <!-- 面试结束/报告生成中 遮罩 -->
     <transition name="ending-fade">
       <div v-if="showEndingOverlay" class="ending-overlay">
-        <div class="ending-card" :class="{ 'report-ready': reportReady }">
+        <div class="ending-card">
           <div class="ending-icon-wrap">
             <svg class="ending-spin-ring" viewBox="0 0 60 60">
               <circle cx="30" cy="30" r="26" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="5"/>
               <circle cx="30" cy="30" r="26" fill="none" stroke="white" stroke-width="5"
-                stroke-linecap="round" :stroke-dasharray="reportReady ? '163' : '50 114'" transform="rotate(-90 30 30)"/>
+                stroke-linecap="round" stroke-dasharray="50 114" transform="rotate(-90 30 30)"/>
             </svg>
             <span class="ending-emoji">🎯</span>
           </div>
@@ -240,7 +312,6 @@
     </transition>
 
     <!-- 结束确认弹窗 -->
-
     <transition name="modal">
       <div v-if="showEndConfirm" class="modal-overlay" @click.self="showEndConfirm = false">
         <div class="modal-sheet">
@@ -293,12 +364,9 @@
 <script>
 import { mapGetters, mapActions } from 'vuex'
 import { marked } from 'marked'
-// marked.setOptions({ breaks: false })  
-
-// const QUESTION_TIME_LIMIT = 120 // 每题时限（秒）
 
 export default {
-  name: 'InterviewSession',
+  name: 'VoiceInterviewSession',
   data() {
     return {
       inputText: '',
@@ -307,35 +375,35 @@ export default {
       showEndConfirm: false,
       endingInterview: false,
       // 计时相关
-      questionTimer: 300,
+      questionTimer: 180, // 语音模式3分钟
       timerInterval: null,
       recordingInterval: null,
       // 语音识别
       mediaRecorder: null,
       audioChunks: [],
-      // ✅ 新增：语音转写状态（用于显示加载中）
+      // 语音转写状态
       isTranscribing: false,
       showBackConfirm: false,
       showEndingOverlay: false,
       reportReady: false,        // 报告已生成完毕
-      progressWidth: 0,  
-      isSending: false
+      progressWidth: 0,
+      isSending: false,
+      isAISpeaking: false
     }
   },
   computed: {
     ...mapGetters('user', ['userName','userInfo']),
     ...mapGetters('interview', [
       'selectedJob', 'messages', 'questionIndex',
-      'isEnding', 
-      'totalQuestions', 'isFinished', 'isLoading', 'reportId','voiceMode'  
+      'isEnding',
+      'totalQuestions', 'isFinished', 'isLoading', 'reportId'
     ]),
     questionTimeLimit() {
-      return this.voiceMode ? 180 : 300  // 语音3分钟，文字5分钟
+      return 180 // 语音3分钟
     },
     progressBarStyle() {
       return {
         width: this.progressWidth + '%',
-        // 跑到100%时加个短暂过渡，视觉上有个"冲刺"感
         transition: this.progressWidth === 100
           ? 'width 0.4s ease-in-out'
           : 'none'
@@ -345,8 +413,8 @@ export default {
       return (this.userName || '我').charAt(0)
     },
     userAvatarUrl() {
-  return this.userInfo?.avatar || this.userInfo?.avatarUrl || null
-},
+      return this.userInfo?.avatar || this.userInfo?.avatarUrl || null
+    },
 
     timerDisplay() {
       const m = Math.floor(this.questionTimer / 60)
@@ -366,8 +434,8 @@ export default {
       return this.progressCircle * (1 - this.questionTimer / this.questionTimeLimit)
     },
     hasStreamingMessage() {
-  return this.messages.some(m => m.streaming  && m.content.length > 0)
-}
+      return this.messages.some(m => m.streaming && m.content.length > 0)
+    }
   },
   async created() {
     // 如果没有选择岗位，重定向到岗位选择
@@ -393,38 +461,36 @@ export default {
         this.questionTimer = this.questionTimeLimit
       }
     },
-    // isEnding 一旦为 true 立即停止计时器（不等 reportId）
+    // isEnding 一旦为 true 立即停止计时器
     isEnding(val) {
       if (val) {
         this.clearTimers()
-        this.showEndingOverlay = true  
-        this.startProgressBar() 
+        this.showEndingOverlay = true
+        this.startProgressBar()
       }
     },
 
-isFinished(val) {
-  if (val) {
-    // showEndingOverlay 已由 isEnding 设好，这里只处理按钮逻辑
-    const tryShowButton = (reportId) => {
-      if (!reportId) return
-      // 停掉爬行 timer，冲到 100%，0.4s 后显示按钮
-      if (this._progressTimer) {
-        clearInterval(this._progressTimer)
-        this._progressTimer = null
-      }
-      this.progressWidth = 100
-      setTimeout(() => { this.reportReady = true }, 400)
-    }
+    isFinished(val) {
+      if (val) {
+        const tryShowButton = (reportId) => {
+          if (!reportId) return
+          if (this._progressTimer) {
+            clearInterval(this._progressTimer)
+            this._progressTimer = null
+          }
+          this.progressWidth = 100
+          setTimeout(() => { this.reportReady = true }, 400)
+        }
 
-    if (this.reportId) {
-      tryShowButton(this.reportId)
-    } else {
-      const unwatch = this.$watch('reportId', (id) => {
-        if (id) { unwatch(); tryShowButton(id) }
-      })
-    }
-  }
-},
+        if (this.reportId) {
+          tryShowButton(this.reportId)
+        } else {
+          const unwatch = this.$watch('reportId', (id) => {
+            if (id) { unwatch(); tryShowButton(id) }
+          })
+        }
+      }
+    },
     // 消息更新自动滚底
     messages() {
       this.$nextTick(this.scrollToBottom)
@@ -432,12 +498,15 @@ isFinished(val) {
     isLoading(val) {
       this.$nextTick(this.scrollToBottom)
       // 语音模式：AI 回复完毕后自动开始录音
-      if (!val && this.voiceMode && !this.isFinished && !this.isEnding && !this.isRecording && !this.isSending) {
+      if (!val && !this.isFinished && !this.isEnding && !this.isRecording && !this.isSending) {
+        this.isAISpeaking = false
         setTimeout(() => {
           if (!this.isLoading && !this.isFinished && !this.isEnding) {
             this.startRecording()
           }
         }, 800)
+      } else if (val) {
+        this.isAISpeaking = true
       }
     },
   },
@@ -451,7 +520,6 @@ isFinished(val) {
       return !/^(好|好的|嗯|嗯嗯|嗯哼|哦|噢|啊|行|可以|是|对|没了|没有了|不知道|ok|okay|yes|no|[，。！？、\s]+)$/i.test(t)
     },
 
-    // methods 中新增
     startProgressBar() {
       const DURATION = 20000   // 20s 跑到 95%
       const TARGET = 95
@@ -465,16 +533,14 @@ isFinished(val) {
         if (this.progressWidth < TARGET) {
           this.progressWidth = Math.min(this.progressWidth + step, TARGET)
         } else {
-          // 到 95% 后停住，等 reportReady
           clearInterval(this._progressTimer)
           this._progressTimer = null
         }
       }, INTERVAL)
     },
-        // ---- 发送回答 ----
     async handleSend() {
       const text = this.inputText.trim()
-      if (!text || this.isLoading || this.isFinished || this.isTranscribing) return // ✅ 新增：转写中禁止发送
+      if (!text || this.isLoading || this.isFinished || this.isTranscribing) return
       this.inputText = ''
       this.resetTextarea()
       // 重置题目计时
@@ -485,7 +551,6 @@ isFinished(val) {
       this.showEndingOverlay = false
       this.$router.push(`/interview/report/${this.reportId}`)
     },
-    // ---- 结束面试 ----
     async handleEnd() {
       this.endingInterview = true
       this.showEndConfirm = false
@@ -500,23 +565,21 @@ isFinished(val) {
       this.showBackConfirm = false
       this.$router.replace('/interview/select')
     },
-renderMarkdown(text) {
-  if (!text) return '';
-  marked.setOptions({ breaks: false });
-  const cleaned = text
-    .replace(/\r\n|\r/g, '\n')
-    .replace(/\n{3,}/g, '\n\n')
-    .trim();
-  let html = marked.parse(cleaned);
-  html = html
-    .replace(/<p><br\s*\/?><\/p>/gi, '')
-    .replace(/<p>\s*<\/p>/gi, '')
-    .replace(/<br\s*\/?>\s*(<\/p>)/gi, '$1')
-    // 去掉 li 内部多余的 <p> 包裹（这是大量空白的核心原因）
-    .replace(/<li>\s*<p>([\s\S]*?)<\/p>\s*<\/li>/gi, '<li>$1</li>');
-  return html;
-},
-    // ---- 计时器 ----
+    renderMarkdown(text) {
+      if (!text) return '';
+      marked.setOptions({ breaks: false });
+      const cleaned = text
+        .replace(/\r\n|\r/g, '\n')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim();
+      let html = marked.parse(cleaned);
+      html = html
+        .replace(/<p><br\s*\/?><\/p>/gi, '')
+        .replace(/<p>\s*<\/p>/gi, '')
+        .replace(/<br\s*\/?>\s*(<\/p>)/gi, '$1')
+        .replace(/<li>\s*<p>([\s\S]*?)<\/p>\s*<\/li>/gi, '<li>$1</li>');
+      return html;
+    },
     startQuestionTimer() {
       this.clearTimers()
       this.timerInterval = setInterval(() => {
@@ -527,24 +590,21 @@ renderMarkdown(text) {
         if (this.questionTimer > 0) {
           this.questionTimer--
         } else if (this.questionTimer === 0) {
-          // 超时自动发送（发送空回答，AI会继续下一题）
-          this.questionTimer = -1 // 防止重复触发
+          // 超时自动发送
+          this.questionTimer = -1
           this.autoSubmitOnTimeout()
         }
       }, 1000)
     },
 
     autoSubmitOnTimeout() {
-      // isLoading 或 isTranscribing 时跳过，等流结束后计时器已被 watch(questionIndex) 重置
       if (this.isLoading || this.isFinished || this.isTranscribing) {
-        // 还原为0，等 loading 结束后下次 tick 不会再触发（因为 watch questionIndex 会重置为120）
         this.questionTimer = this.questionTimeLimit
         return
       }
       const text = this.inputText.trim() || '（超时，跳过此题）'
       this.inputText = ''
       this.resetTextarea()
-      // 提交前先重置计时器，submitAnswer 完成后 watch(questionIndex) 也会重置
       this.questionTimer = this.questionTimeLimit
       this.submitAnswer(text)
     },
@@ -554,7 +614,6 @@ renderMarkdown(text) {
       if (this.recordingInterval) { clearInterval(this.recordingInterval); this.recordingInterval = null }
     },
 
-    // ---- 语音输入 ----
     async toggleRecording() {
       if (this.isRecording) {
         this.stopRecording()
@@ -616,9 +675,6 @@ renderMarkdown(text) {
       if (this.recordingInterval) { clearInterval(this.recordingInterval); this.recordingInterval = null }
     },
 
-    // ✅ 移除原有空的 handleRecordingStop 方法（已整合到 onstop 中）
-
-    // ---- 工具方法 ----
     scrollToBottom() {
       const el = this.$refs.messagesContainer
       if (el) {
@@ -726,17 +782,6 @@ renderMarkdown(text) {
 
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 
-
-// .interview-body {
-//   flex: 1;                    // ← 占满剩余高度
-//   display: flex;              // ← 内部继续 flex 列布局
-//   flex-direction: column;
-//   overflow: hidden;           // ← 防止撑破父容器
-//   min-height: 0;              // ← flex 子元素必须加，否则 flex:1 不生效
-//   padding: 0;
-//   animation: fadeSlideUp 0.4s ease both;
-// }
-
 .end-btn {
   padding: 7px $spacing-md;
   border-radius: $border-radius-full;
@@ -753,11 +798,27 @@ renderMarkdown(text) {
   }
 }
 
-// ---- 消息流 ----
+// ---- 主内容区 - 左右分屏 ----
+.interview-body {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+  min-height: 0;
+}
+
+// 左边面板：语音转文字对话框
+.left-panel {
+  flex: 1;
+  overflow: hidden;
+  border-right: 1px solid #DDE1F9;
+  display: flex;
+  flex-direction: column;
+}
+
 .messages-container {
   flex: 1;
   overflow-y: auto;
-  padding: 0;
+  padding: 0 $spacing-base;
   scroll-behavior: smooth;
 
   &::-webkit-scrollbar { width: 3px; }
@@ -782,7 +843,7 @@ renderMarkdown(text) {
 
   &--user {
       flex-direction: row;
-      justify-content: flex-end;  // 靠右排列，头像自然在气泡右边
+      justify-content: flex-end;
   }
 }
 
@@ -807,7 +868,7 @@ renderMarkdown(text) {
   display: flex; flex-direction: column; gap: 4px;
   max-width: calc(100% - 80px);
 
-  .message-item--user & { align-items: flex-end; }  // 时间戳、气泡靠右对齐
+  .message-item--user & { align-items: flex-end; }
   .message-item--ai &   { align-items: flex-start; }
 }
 
@@ -828,7 +889,7 @@ renderMarkdown(text) {
   border: 1px solid #DDE1F9;
   border-bottom-left-radius: $border-radius-sm;
   box-shadow: $shadow-sm;
-  padding: $spacing-base $spacing-lg;  // 上下16px，左右20px
+  padding: $spacing-base $spacing-lg;
 }
 
   &--user {
@@ -853,7 +914,6 @@ renderMarkdown(text) {
 .message-time {
   padding: 2px 4px 0 4px; 
   font-size: $font-size-xs; color: $text-muted;
-  // padding: 0 4px;
 }
 
 // AI 思考动画
@@ -898,7 +958,221 @@ renderMarkdown(text) {
   &__sub { font-size: $font-size-sm; color: $text-muted; }
 }
 
-@keyframes spin { to { transform: rotate(360deg); } }
+// 右边面板：语音聊天动画
+.right-panel {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: #f8f9ff;
+  border-left: 1px solid #DDE1F9;
+}
+
+.voice-animation-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: $spacing-2xl;
+  overflow-y: auto;
+}
+
+.voice-animation {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $spacing-2xl;
+  width: 100%;
+  max-width: 300px;
+}
+
+.voice-character {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $spacing-sm;
+
+  &--ai {
+    order: 1;
+  }
+  
+  &--user {
+    order: 3;
+  }
+}
+
+.character-avatar {
+  width: 80px; height: 80px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 32px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  
+  .voice-character--ai & {
+    background: $primary-bg;
+    border: 2px solid rgba(67,56,202,0.2);
+  }
+  
+  .voice-character--user & {
+    background: $gradient-primary;
+    color: white;
+  }
+}
+
+.character-name {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $text-primary;
+}
+
+.voice-wave {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: $spacing-sm;
+}
+
+.voice-connection {
+  order: 2;
+  width: 100%;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.connection-line {
+  width: 2px;
+  height: 100%;
+  background: #DDE1F9;
+  position: relative;
+  transition: all 0.3s ease;
+  
+  &::before, &::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #DDE1F9;
+  }
+  
+  &::before {
+    top: -5px;
+  }
+  
+  &::after {
+    bottom: -5px;
+  }
+  
+  &.active {
+    background: #7C6FF7;
+    
+    &::before, &::after {
+      background: #7C6FF7;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    
+    &::before {
+      animation-delay: 0s;
+    }
+    
+    &::after {
+      animation-delay: 0.75s;
+    }
+  }
+}
+
+.voice-status {
+  margin-top: $spacing-2xl;
+  padding: $spacing-md;
+  background: white;
+  border-radius: $border-radius-lg;
+  box-shadow: $shadow-sm;
+  width: 100%;
+  max-width: 300px;
+}
+
+.status-item {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  font-size: $font-size-sm;
+  
+  &--recording {
+    color: $danger;
+  }
+  
+  &--ai-speaking {
+    color: $primary;
+  }
+  
+  &--waiting {
+    color: $text-muted;
+  }
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.status-time {
+  margin-left: auto;
+  font-family: $font-family-mono;
+  font-weight: $font-weight-bold;
+}
+
+.voice-controls {
+  margin-top: $spacing-lg;
+  width: 100%;
+  max-width: 300px;
+  display: flex;
+  justify-content: center;
+}
+
+.voice-control-btn {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  padding: $spacing-md $spacing-xl;
+  border-radius: $border-radius-full;
+  border: 2px solid #b6bce8;
+  background: white;
+  color: $text-secondary;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  cursor: pointer;
+  transition: all $transition-base;
+  
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+  
+  &:hover {
+    border-color: $primary;
+    color: $primary;
+    background: $primary-bg;
+  }
+  
+  &.active {
+    background: $danger;
+    border-color: $danger;
+    color: white;
+    animation: recordPulse 1.5s ease-in-out infinite;
+  }
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
 
 // ---- 输入区域 ----
 .input-area {
@@ -908,10 +1182,6 @@ renderMarkdown(text) {
   padding-bottom: calc(#{$spacing-sm} + env(safe-area-inset-bottom));
   box-shadow: 0 -4px 16px rgba(0,0,0,0.06);
   flex-shrink: 0;
-  .input-row {
-    // max-width: 800px;   // ← 新增
-    margin: 0 auto;     // ← 新增
-  }
   &.disabled { opacity: 0.6; pointer-events: none; }
 }
 
@@ -931,7 +1201,7 @@ renderMarkdown(text) {
 
 .wave-bar {
   width: 3px; border-radius: 2px;
-  background: $danger;
+  background: currentColor;
   animation: wave 0.8s ease-in-out infinite alternate;
 
   @for $i from 1 through 5 {
@@ -952,6 +1222,7 @@ renderMarkdown(text) {
   display: flex;
   align-items: flex-end;
   gap: $spacing-sm;
+  width: 100%;
 }
 
 .voice-btn {
@@ -971,26 +1242,7 @@ renderMarkdown(text) {
     &:disabled:not(.active) {
     opacity: 0.35;
     cursor: not-allowed;
-    pointer-events: none;  // title tooltip 在 pointer-events:none 时不显示，去掉这行改用 cursor
-    cursor: not-allowed;
   }
-}
-
-.text-mode-tip {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: $font-size-xs;
-  color: $text-muted;
-  background: rgba(0,0,0,0.04);
-  border-radius: $border-radius-sm;
-  padding: 4px $spacing-md;
-  margin-bottom: 6px;
-}
-
-@keyframes recordPulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba($danger, 0.4); }
-  50% { box-shadow: 0 0 0 8px rgba($danger, 0); }
 }
 
 .textarea-wrapper {
@@ -1056,8 +1308,6 @@ renderMarkdown(text) {
   padding: $spacing-xl;
 }
 
-
-// ---- 弹窗（统一风格） ----
 .modal-sheet {
   background: white;
   border-radius: 24px;
@@ -1076,10 +1326,6 @@ renderMarkdown(text) {
   background: linear-gradient(135deg, #4338ca 0%, #7c3aed 100%);
   padding: 24px 24px 18px;
   text-align: center;
-
-  // &--danger {
-  //   background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
-  // }
 }
 .modal-header-title { font-size: 18px; font-weight: 700; color: white; margin: 0 0 4px; }
 .modal-header-sub   { font-size: 12px; color: rgba(255,255,255,0.7); margin: 0; }
@@ -1144,14 +1390,6 @@ renderMarkdown(text) {
 }
 
 .btn-spinner {
-  width: 14px; height: 14px;
-  border: 2px solid rgba(255,255,255,0.35);
-  border-top-color: white;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
-.btn-spinner {
   width: 15px; height: 15px;
   border: 2px solid rgba(255,255,255,0.3);
   border-top-color: white;
@@ -1159,8 +1397,6 @@ renderMarkdown(text) {
   animation: spin 0.8s linear infinite;
   &--danger { border-color: rgba($danger, 0.3); border-top-color: $danger; }
 }
-
-
 
 /* ---- 面试结束遮罩 ---- */
 .ending-overlay {
@@ -1182,14 +1418,6 @@ renderMarkdown(text) {
   width: 300px;
   text-align: center;
   box-shadow: 0 24px 60px rgba(0,0,0,0.4);
-  
-  &.report-ready {
-    .ending-spin-ring {
-      animation: none;
-      stroke-dasharray: 163; /* 2 * π * 26 */
-      stroke-dashoffset: 0;
-    }
-  }
 }
 .ending-icon-wrap {
   position: relative;
@@ -1201,13 +1429,6 @@ renderMarkdown(text) {
   position: absolute;
   inset: 0;
   animation: spin 2s linear infinite;
-  
-  /* 当进度条到达100%时停止旋转并填满 */
-  .report-ready & {
-    animation: none;
-    stroke-dasharray: 163; /* 2 * π * 26 */
-    stroke-dashoffset: 0;
-  }
 }
 .ending-emoji {
   position: absolute;
@@ -1253,7 +1474,10 @@ renderMarkdown(text) {
 .ending-fade-enter-from, .ending-fade-leave-to { opacity: 0; }
 
 @keyframes spin { to { transform: rotate(360deg); } }
-@keyframes progress-slide { from { width: 0 } to { width: 95% } }
+@keyframes recordPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba($danger, 0.4); }
+  50% { box-shadow: 0 0 0 8px rgba($danger, 0); }
+}
 
 .modal-enter-active { animation: modalIn 0.3s ease both; }
 .modal-leave-active { animation: modalOut 0.2s ease both; }
@@ -1290,62 +1514,39 @@ renderMarkdown(text) {
   &:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
 }
 .messages-inner {
-  max-width: 800px;
+  max-width: 100%;
   margin: 0 auto;
   width: 100%;
 }
 
-
-::v-deep .markdown-body {
-  font-size: $font-size-base;
-  line-height: 1.6;
-  color: $text-primary;
-  word-break: break-word;
-
-  // 段落间距压缩
-  p {
-    margin: 0 0 4px !important;
-    &:last-child { margin-bottom: 0 !important; }
+// 响应式适配
+@media (max-width: 768px) {
+  .interview-body {
+    flex-direction: column;
   }
-
-  strong { font-weight: $font-weight-semibold; color: #3730A3; }
-
-  // 列表整体间距
-  ul, ol {
-    padding-left: 20px;
-    margin: 4px 0 !important;
+  
+  .left-panel {
+    border-right: none;
+    border-bottom: 1px solid #DDE1F9;
+    flex: 1;
   }
-
-  // 列表项间距
-  li {
-    margin-bottom: 2px !important;
-    line-height: 1.6;
-    // 消灭 li 内 p 标签造成的额外空间
-    > p { margin: 0 !important; display: inline; }
+  
+  .right-panel {
+    flex: 0 0 auto;
+    border-left: none;
+    border-top: 1px solid #DDE1F9;
   }
-
-  // 嵌套列表
-  li > ul, li > ol {
-    margin: 2px 0 !important;
+  
+  .voice-animation-container {
+    padding: $spacing-lg;
   }
-
-  code {
-    background: $gray-100; border-radius: 4px;
-    padding: 1px 5px; font-family: $font-family-mono; font-size: 13px;
+  
+  .voice-animation {
+    gap: $spacing-lg;
   }
-  pre {
-    background: $gray-100; border-radius: 8px;
-    padding: 10px 12px; overflow-x: auto; margin: 6px 0;
-    code { background: none; padding: 0; }
+  
+  .voice-connection {
+    height: 80px;
   }
-
-  // 标题压缩
-  h1, h2, h3, h4 {
-    margin: 6px 0 4px !important;
-    font-weight: $font-weight-semibold;
-  }
-
-  // 分隔线
-  hr { margin: 8px 0 !important; border-color: $border-color; }
 }
 </style>
