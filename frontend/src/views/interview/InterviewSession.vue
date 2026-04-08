@@ -439,6 +439,14 @@ isFinished(val) {
           }
         }, 800)
       }
+      // 文字模式：AI 回复完毕后自动聚焦输入框
+      if (!val && !this.voiceMode && !this.isFinished && !this.isEnding) {
+        this.$nextTick(() => {
+          if (this.$refs.inputRef) {
+            this.$refs.inputRef.focus()
+          }
+        })
+      }
     },
   },
   methods: {
