@@ -478,9 +478,10 @@ const REQUIRED_FIELDS = [
 
 // ===================== 语音角色（预留，待接口开发后替换） =====================
 const VOICE_ROLES_PLACEHOLDER = [
-  { id: 'role_calm',   name: '沉稳导师', style: '专业冷静' },
-  { id: 'role_warm',   name: '温和伙伴', style: '亲切鼓励'},
-  { id: 'role_strict', name: '严格考官', style: '挑战压力' },
+  { id: 'zh_female_shuangkuaisisi_uranus_bigtts', name: '爽快思思 2.0', style: '干练清晰' },
+  { id: 'zh_female_xiaohe_uranus_bigtts', name: '小何 2.0', style: '温和自然' },
+  { id: 'zh_female_vv_uranus_bigtts', name: 'Vivi 2.0', style: '知性多变' },
+  { id: 'zh_male_m191_uranus_bigtts', name: '云舟 2.0', style: '沉稳男声' }
 ]
 
 export default {
@@ -596,6 +597,11 @@ export default {
     // 加载用户简历列表（新增）
     await this.loadResumeList()
 
+    const storeVoice = this.$store.getters['interview/ttsVoice']
+    if (storeVoice && this.voiceRoles.some(role => role.id === storeVoice)) {
+      this.selectedVoiceRole = storeVoice
+    }
+
     // 监听
     this.$watch(() => this.normalizedDefaultJobId, () => this.applyDefaultJob())
     this.$watch(() => this.jobs, () => this.applyDefaultJob())
@@ -611,6 +617,37 @@ export default {
   },
 
   methods: {
+    async primeAudioPlayback() {
+      if (!this.voiceMode || typeof window === 'undefined') return
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext
+        if (!AudioCtx) return
+
+        if (!window.__aiInterviewAudioContext) {
+          window.__aiInterviewAudioContext = new AudioCtx()
+        }
+
+        const ctx = window.__aiInterviewAudioContext
+        if (ctx.state === 'suspended') {
+          await ctx.resume()
+        }
+
+        if (window.__dummyOsc) {
+          try { window.__dummyOsc.stop() } catch (e) {}
+        }
+        const osc = ctx.createOscillator()
+        const gain = ctx.createGain()
+        gain.gain.value = 0.00001
+        osc.connect(gain)
+        gain.connect(ctx.destination)
+        osc.start()
+        // Keep it running to prevent iOS Safari/Chrome from relocking the context during long TTS fetch
+        window.__dummyOsc = osc
+      } catch (err) {
+        console.warn('语音播放预解锁失败', err)
+      }
+    },
+
     // ─── 岗位加载 ───
     async loadJobs() {
       try {
@@ -748,8 +785,7 @@ export default {
     // ─── 语音角色选择（预留，后续替换为接口数据）───
     selectVoiceRole(roleId) {
       this.selectedVoiceRole = roleId
-      // TODO: 对接接口时在此处携带 roleId 传递给后端
-      // e.g. await setVoiceRole({ roleId })
+      this.$store.commit('interview/SET_TTS_VOICE', roleId)
     },
 
     // TODO: 后端接口就绪后取消注释并调用
@@ -766,15 +802,18 @@ export default {
     async handleStart() {
       if (!this.currentSelected) return
       try {
+        await this.primeAudioPlayback()
         const jobDbId = this.currentSelected.id
         await this.$store.dispatch('interview/resetInterview')
         this.$store.commit('interview/SET_JOB_DB_ID', jobDbId)
         this.$store.commit('interview/SET_VOICE_MODE', this.voiceMode)
+        if (this.voiceMode) {
+          this.$store.commit('interview/SET_TTS_VOICE', this.selectedVoiceRole)
+        }
         await this.$store.dispatch('interview/selectJob', this.currentSelected)
         // 根据面试模式跳转到不同页面
         if (this.voiceMode) {
-          this.$router.push('/interview/session')
-          // this.$router.push('/interview/voice-session')
+          this.$router.push('/interview/voice-session')
         } else {
           this.$router.push('/interview/session')
         }

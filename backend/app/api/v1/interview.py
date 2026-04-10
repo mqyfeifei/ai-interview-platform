@@ -59,6 +59,7 @@ def start_interview():
     user_id = get_current_user_id() or data.get('user_id')
     job_id_input = data.get('job_id')
     voice_mode = bool(data.get('voice_mode', False))
+    voice = (data.get('voice') or '').strip() or None
 
     # 参数验证
     if not user_id:
@@ -72,7 +73,7 @@ def start_interview():
         return jsonify({"code": 400, "msg": f"无效的岗位: {job_id_input}，请确认岗位已在数据库中创建"}), 400
 
     try:
-        result = InterviewService.start_interview(user_id, job_id, voice_mode=voice_mode)
+        result = InterviewService.start_interview(user_id, job_id, voice_mode=voice_mode, voice=voice)
         return jsonify({"code": 200, "data": result, "msg": "success"}), 200
     except Exception as e:
         return jsonify({"code": 500, "msg": str(e)}), 500
@@ -130,15 +131,32 @@ def check_resume():
 #注：前端开发人员需配合，在接收 SSE 流的过程中监听 [INTERVIEW_OVER]，一旦匹配到，立刻终止录音/输入，并请求 /finish 接口生成报告。
 @interview_bp.route('/<int:interview_id>/chat/stream', methods=['POST'])
 def chat_stream(interview_id):
-    data = request.get_json()
+    data = request.get_json() or {}
     user_answer = data.get('answer')
     voice_mode = bool(data.get('voice_mode', False))
+    voice = (data.get('voice') or '').strip() or None
 
-    # 返回 SSE 响应
-    return Response(
-        stream_with_context(InterviewService.process_chat_round_stream(interview_id, user_answer, voice_mode=voice_mode)),
-        mimetype='text/event-stream'
+    def _event_stream():
+        # 首包心跳：帮助代理和浏览器尽早建立流式渲染通道。
+        yield ': connected\n\n'
+        for item in InterviewService.process_chat_round_stream(
+            interview_id,
+            user_answer,
+            voice_mode=voice_mode,
+            voice=voice,
+        ):
+            yield item
+        yield ': done\n\n'
+
+    response = Response(
+        stream_with_context(_event_stream()),
+        mimetype='text/event-stream; charset=utf-8'
     )
+    response.headers['Cache-Control'] = 'no-cache, no-transform'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['X-Accel-Buffering'] = 'no'
+    response.headers['Connection'] = 'keep-alive'
+    return response
 
 
 @interview_bp.route('/upload-audio', methods=['POST'])

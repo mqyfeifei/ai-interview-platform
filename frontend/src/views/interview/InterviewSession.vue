@@ -319,7 +319,8 @@ export default {
       showEndingOverlay: false,
       reportReady: false,        // 报告已生成完毕
       progressWidth: 0,  
-      isSending: false
+      isSending: false,
+      autoRecordTimer: null
     }
   },
   computed: {
@@ -327,7 +328,7 @@ export default {
     ...mapGetters('interview', [
       'selectedJob', 'messages', 'questionIndex',
       'isEnding', 
-      'totalQuestions', 'isFinished', 'isLoading', 'reportId','voiceMode'  
+      'totalQuestions', 'isFinished', 'isLoading', 'isAISpeaking', 'reportId','voiceMode'  
     ]),
     questionTimeLimit() {
       return this.voiceMode ? 180 : 300  // 语音3分钟，文字5分钟
@@ -431,14 +432,7 @@ isFinished(val) {
     },
     isLoading(val) {
       this.$nextTick(this.scrollToBottom)
-      // 语音模式：AI 回复完毕后自动开始录音
-      if (!val && this.voiceMode && !this.isFinished && !this.isEnding && !this.isRecording && !this.isSending) {
-        setTimeout(() => {
-          if (!this.isLoading && !this.isFinished && !this.isEnding) {
-            this.startRecording()
-          }
-        }, 800)
-      }
+      this.tryScheduleAutoRecording()
       // 文字模式：AI 回复完毕后自动聚焦输入框
       if (!val && !this.voiceMode && !this.isFinished && !this.isEnding) {
         this.$nextTick(() => {
@@ -448,6 +442,9 @@ isFinished(val) {
         })
       }
     },
+    isAISpeaking() {
+      this.tryScheduleAutoRecording()
+    }
   },
   methods: {
     ...mapActions('interview', ['startSession', 'submitAnswer', 'endInterview']),
@@ -560,6 +557,40 @@ renderMarkdown(text) {
     clearTimers() {
       if (this.timerInterval) { clearInterval(this.timerInterval); this.timerInterval = null }
       if (this.recordingInterval) { clearInterval(this.recordingInterval); this.recordingInterval = null }
+      if (this.autoRecordTimer) { clearTimeout(this.autoRecordTimer); this.autoRecordTimer = null }
+    },
+
+    tryScheduleAutoRecording() {
+      if (this.autoRecordTimer) {
+        clearTimeout(this.autoRecordTimer)
+        this.autoRecordTimer = null
+      }
+
+      // 语音模式下，必须等 AI 思考完成且音频播完，才自动开麦
+      if (
+        this.voiceMode &&
+        !this.isLoading &&
+        !this.isAISpeaking &&
+        !this.isFinished &&
+        !this.isEnding &&
+        !this.isRecording &&
+        !this.isSending
+      ) {
+        this.autoRecordTimer = setTimeout(() => {
+          this.autoRecordTimer = null
+          if (
+            this.voiceMode &&
+            !this.isLoading &&
+            !this.isAISpeaking &&
+            !this.isFinished &&
+            !this.isEnding &&
+            !this.isRecording &&
+            !this.isSending
+          ) {
+            this.startRecording()
+          }
+        }, 800)
+      }
     },
 
     // ---- 语音输入 ----

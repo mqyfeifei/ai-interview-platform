@@ -11,7 +11,7 @@ import router from '@/router'
 // 创建axios实例
 const request = axios.create({
   baseURL: process.env.VUE_APP_API_BASE_URL || '/api',
-  timeout: 15000,
+  timeout: 30000,  // 增加全局超时到 30 秒，避免启动面试时 TTS 初始化超时
   headers: {
     'Content-Type': 'application/json'
   }
@@ -104,7 +104,9 @@ request.interceptors.response.use(
         return Promise.reject(new Error(backendMsg))
       }
     } else if (error.code === 'ECONNABORTED') {
-      console.error('请求超时，请检查网络')
+      const url = error.config?.url || '未知接口'
+      console.error(`[请求超时] ${url}，请检查网络或联系后端。`)
+      return Promise.reject(new Error(`请求超时（${url}），请稍后重试`))
     }
     return Promise.reject(error)
   }
