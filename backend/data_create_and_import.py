@@ -288,6 +288,22 @@ def import_knowledge_base():
                             )
                             db.session.add(tag)
                             db.session.flush()
+                        else:
+                            updated = False
+                            if not tag.category:
+                                tag.category = category
+                                updated = True
+                            if not tag.complexity:
+                                tag.complexity = complexity
+                                updated = True
+                            if not tag.estimated_hours:
+                                tag.estimated_hours = estimated_hours
+                                updated = True
+                            if not tag.embedding:
+                                tag.embedding = model.encode(f"模块: {category} 知识点: {point_name}").tolist()
+                                updated = True
+                            if updated:
+                                db.session.add(tag)
 
                         # 遍历关联的学习资源
                         for res in resources:

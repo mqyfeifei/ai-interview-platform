@@ -7,7 +7,7 @@ from app.models.interview import Interview, InterviewChat, InterviewScore, Dimen
 from app.models.job import Job, DEFAULT_JOBS, get_job_front_key
 from app.models.question import Question
 from app.models.example import Example
-from app.models.learning import Resource  # 【新增】导入学习资源模型，用于推荐提升资源
+from app.models.learning import Resource, KnowledgeTag, UserKnowledgeMastery  # 图谱推荐依赖模型
 from app.services.interview_service import InterviewService
 from app.utils.llm_client import DeepSeekClient
 
@@ -56,30 +56,167 @@ class ReportService:
         return bool(cls._MEANINGLESS_ANSWER_PATTERN.match(t))
 
     @classmethod
-    def _get_recommended_resource(cls, point_text):
+    def _get_recommended_resource(cls, point_text, user_id):
         """
-        【新增】为 AI 总结的改进点（提升项）推荐相关的学习资源
-        依赖于 learning.py 中的 Resource 模型以及向量检索
+        基于图谱断层进行资源推荐：
+        1) 将改进点文本匹配到 KnowledgeTag 节点
+        2) 优先推荐该节点下资源
+        3) 若无资源，沿 parent_id 向上降级推荐
         """
         if not point_text:
             return None
-        try:
-            # 1. 对 AI 给出的“待提升点”文本进行向量化
-            vec = InterviewService.get_embedding(point_text)
 
-            # 2. 从学习资源表中寻找最接近该知识点的文档或视频
-            res = Resource.query.order_by(Resource.embedding.l2_distance(vec)).first()
+        try:
+            matched_tag = KnowledgeTag.query.filter(KnowledgeTag.name.ilike(f"%{point_text}%")).first()
+
+            if not matched_tag:
+                token_candidates = [
+                    token.strip() for token in re.split(r'[，。；、,\s]+', str(point_text))
+                    if token and token.strip()
+                ]
+                token_candidates.sort(key=len, reverse=True)
+                for token in token_candidates[:5]:
+                    tag = KnowledgeTag.query.filter(KnowledgeTag.name.ilike(f"%{token}%")).first()
+                    if tag:
+                        matched_tag = tag
+                        break
+
+            if not matched_tag:
+                return None
+
+            visited_ids = set()
+            current_tag = matched_tag
+            used_fallback = False
+
+            while current_tag and current_tag.id not in visited_ids:
+                visited_ids.add(current_tag.id)
+
+                query = Resource.query.join(Resource.knowledge_tags).filter(KnowledgeTag.id == current_tag.id)
+
+                mastery = UserKnowledgeMastery.query.filter_by(
+                    user_id=user_id,
+                    tag_id=current_tag.id
+                ).first()
+
+                if mastery:
+                    target_level = mastery.mastery_level or 0
+                    if target_level < 40:
+                        query = query.order_by(Resource.difficulty.asc(), Resource.id.asc())
+                    elif target_level > 70:
+                        query = query.order_by(Resource.difficulty.desc(), Resource.id.asc())
+                    else:
+                        query = query.order_by(Resource.id.asc())
+                else:
+                    query = query.order_by(Resource.id.asc())
+
+                res = query.first()
+                if res:
+                    reason = f"系统检测到您的{matched_tag.name}知识薄弱，推荐该资源帮助补齐短板。"
+                    if used_fallback:
+                        reason = f"系统检测到您的{matched_tag.name}知识薄弱，当前子节点资源不足，已为您降级推荐上层知识点【{current_tag.name}】资源。"
+
+                    return {
+                        'id': res.id,
+                        'title': res.title,
+                        'type': res.type,
+                        'url': res.url,
+                        'source': res.source,
+                        'matchedTag': matched_tag.name,
+                        'resourceTag': current_tag.name,
+                        'reason': reason
+                    }
+
+                if current_tag.parent_id:
+                    current_tag = KnowledgeTag.query.get(current_tag.parent_id)
+                    used_fallback = True
+                else:
+                    current_tag = None
+
+        except Exception as e:
+            print(f"[Error] Failed to fetch recommended resource: {e}")
+
+        return None
+
+    @classmethod
+    def _get_recommended_resource_by_tag(cls, tag, user_id):
+        if not tag:
+            return None
+
+        visited_ids = set()
+        current_tag = tag
+        used_fallback = False
+
+        while current_tag and current_tag.id not in visited_ids:
+            visited_ids.add(current_tag.id)
+
+            query = Resource.query.filter(Resource.tag_id == current_tag.id)
+
+            mastery = UserKnowledgeMastery.query.filter_by(
+                user_id=user_id,
+                tag_id=current_tag.id
+            ).first()
+            if mastery and (mastery.mastery_level or 0) < 40:
+                query = query.order_by(Resource.difficulty.asc().nullslast(), Resource.id.asc())
+            else:
+                query = query.order_by(Resource.id.asc())
+
+            res = query.first()
             if res:
+                reason = f"系统检测到您在【{tag.name}】上的掌握度较低，推荐该资源进行补强。"
+                if used_fallback:
+                    reason = f"系统检测到您在【{tag.name}】上的掌握度较低，当前节点资源不足，已为您降级推荐上层知识点【{current_tag.name}】资源。"
+
                 return {
                     'id': res.id,
                     'title': res.title,
                     'type': res.type,
                     'url': res.url,
-                    'source': res.source
+                    'source': res.source,
+                    'matchedTag': tag.name,
+                    'resourceTag': current_tag.name,
+                    'reason': reason
                 }
-        except Exception as e:
-            print(f"[Error] Failed to fetch recommended resource: {e}")
+
+            if current_tag.parent_id:
+                current_tag = KnowledgeTag.query.get(current_tag.parent_id)
+                used_fallback = True
+            else:
+                current_tag = None
+
         return None
+
+    @classmethod
+    def _build_gap_resources(cls, interview):
+        questions = Question.query.filter_by(job_id=interview.job_id).all()
+        core_tags = {}
+        for q in questions:
+            for tag in q.knowledge_tags:
+                core_tags[tag.id] = tag
+
+        if not core_tags:
+            return []
+
+        weak_rows = UserKnowledgeMastery.query.filter(
+            UserKnowledgeMastery.user_id == interview.user_id,
+            UserKnowledgeMastery.tag_id.in_(list(core_tags.keys())),
+            UserKnowledgeMastery.mastery_level < 60
+        ).order_by(UserKnowledgeMastery.mastery_level.asc()).all()
+
+        results = []
+        seen_resource_ids = set()
+        for row in weak_rows:
+            tag = core_tags.get(row.tag_id)
+            if not tag:
+                continue
+            resource = cls._get_recommended_resource_by_tag(tag, interview.user_id)
+            if not resource or resource['id'] in seen_resource_ids:
+                continue
+            seen_resource_ids.add(resource['id'])
+            results.append(resource)
+            if len(results) >= 5:
+                break
+
+        return results
 
     @classmethod
     def _build_reply_text_evaluations(cls, pairs):
@@ -279,7 +416,7 @@ class ReportService:
         for item in raw_improvements:
             improvements.append({
                 'point': item,
-                'resource': cls._get_recommended_resource(item) # 动态检索并嵌入资源对象
+                'resource': cls._get_recommended_resource(item, interview.user_id) # 图谱匹配+降级推荐
             })
 
         suggestions = cls._split_text_to_list(interview.evaluation_suggestions)
@@ -315,6 +452,10 @@ class ReportService:
             'highlights': highlights,
             'improvements': improvements,
             'suggestions': suggestions,
+            'graphCoverageRate': interview.graph_coverage_rate or 0,
+            'graphDepthRate': interview.graph_depth_rate or 0,
+            'graphCoverageMeta': interview.graph_coverage_meta or {},
+            'graphResources': cls._build_gap_resources(interview),
             'questions': questions,
             'chatDetails': cls._build_chat_details(interview.id)
         }

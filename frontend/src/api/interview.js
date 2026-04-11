@@ -19,7 +19,9 @@ export const startInterview = async (data) => {
   const res = await request.post('/interviews/start', {
     user_id: data.userId,   // 暂时从 data 传入，待JWT完善后从拦截器注入
     job_id: data.jobDbId,
-    voice_mode: !!data.voiceMode
+    voice_mode: !!data.voiceMode,
+    interview_style: data.interviewStyle,
+    voice_role: data.voiceRole
   })
   // 响应拦截器已解包，res 就是后端返回的 data 对象
   // 统一适配为前端期望的格式
