@@ -5,6 +5,8 @@
 
 import { startInterview, sendAnswer, finishInterview } from '@/api/interview'
 
+const DEFAULT_TTS_VOICE = 'zh_female_shuangkuaisisi_uranus_bigtts'
+
 // 清理文本中的冗余换行，保持对话紧凑
 function cleanContent(text) {
   if (!text) return ''
@@ -18,6 +20,199 @@ function cleanContent(text) {
   return t
 }
 
+function base64ToUint8Array(base64) {
+  const binary = atob(base64 || '')
+  const bytes = new Uint8Array(binary.length)
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i)
+  }
+  return bytes
+}
+
+function getSharedAudioContext() {
+  if (typeof window === 'undefined') return null
+  const AudioCtx = window.AudioContext || window.webkitAudioContext
+  if (!AudioCtx) return null
+
+  if (!window.__aiInterviewAudioContext) {
+    window.__aiInterviewAudioContext = new AudioCtx()
+  }
+  return window.__aiInterviewAudioContext
+}
+
+function isAutoplayError(err) {
+  const name = err?.name || ''
+  const msg = String(err || '').toLowerCase()
+  return (
+    name === 'NotAllowedError' ||
+    msg.includes('notallowederror') ||
+    msg.includes('play() failed') ||
+    msg.includes('user gesture')
+  )
+}
+
+function base64ToObjectUrl(base64, mimeType = 'audio/mpeg') {
+  const bytes = base64ToUint8Array(base64)
+  const blob = new Blob([bytes], { type: mimeType })
+  const objectUrl = URL.createObjectURL(blob)
+  return {
+    objectUrl,
+    audio: new Audio(objectUrl)
+  }
+}
+
+function base64ToDataUriAudio(base64, mimeType = 'audio/mp3') {
+  return {
+    objectUrl: null,
+    audio: new Audio(`data:${mimeType};base64,${base64 || ''}`)
+  }
+}
+
+function bindAudioUnlockOnce(callback) {
+  if (typeof window === 'undefined') return
+
+  const events = ['pointerdown', 'keydown', 'touchstart']
+  const handler = () => {
+    events.forEach((eventName) => {
+      window.removeEventListener(eventName, handler, true)
+    })
+    callback && callback()
+  }
+
+  events.forEach((eventName) => {
+    window.addEventListener(eventName, handler, true)
+  })
+}
+
+function waitForUserGesture(timeoutMs = 12000) {
+  return new Promise((resolve) => {
+    let settled = false
+    const timer = setTimeout(() => {
+      if (settled) return
+      settled = true
+      resolve(false)
+    }, timeoutMs)
+
+    bindAudioUnlockOnce(() => {
+      if (settled) return
+      settled = true
+      clearTimeout(timer)
+      resolve(true)
+    })
+  })
+}
+
+async function playWithWebAudio(base64) {
+  const audioContext = getSharedAudioContext()
+  if (!audioContext) {
+    throw new Error('WebAudio 不可用')
+  }
+
+  if (audioContext.state === 'suspended') {
+    await audioContext.resume()
+    if (audioContext.state === 'suspended') {
+      const err = new Error('NotAllowedError: WebAudio context is suspended and cannot be resumed without user interaction.')
+      err.name = 'NotAllowedError'
+      throw err
+    }
+  }
+
+  const bytes = base64ToUint8Array(base64)
+  const arrayBuffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength)
+  const decodedBuffer = await audioContext.decodeAudioData(arrayBuffer)
+
+  await new Promise((resolve) => {
+    const source = audioContext.createBufferSource()
+    source.buffer = decodedBuffer
+    source.connect(audioContext.destination)
+    source.onended = () => resolve()
+    source.start(0)
+  })
+}
+
+function playWithHtmlAudio(base64, mode = 'blob') {
+  return new Promise((resolve, reject) => {
+    const source = mode === 'blob'
+      ? base64ToObjectUrl(base64)
+      : base64ToDataUriAudio(base64)
+
+    const { audio, objectUrl } = source
+    let settled = false
+
+    const cleanup = () => {
+      audio.onended = null
+      audio.onerror = null
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl)
+      }
+    }
+
+    const finishResolve = () => {
+      if (settled) return
+      settled = true
+      cleanup()
+      resolve()
+    }
+
+    const finishReject = (err) => {
+      if (settled) return
+      settled = true
+      cleanup()
+      reject(err)
+    }
+
+    audio.onended = () => finishResolve()
+    audio.onerror = (err) => finishReject(err || new Error('HTMLAudio onerror'))
+
+    const playPromise = audio.play()
+    if (playPromise && typeof playPromise.catch === 'function') {
+      playPromise.catch((err) => finishReject(err))
+    }
+  })
+}
+
+async function playBase64AudioReliable(base64, tag = 'stream', waitTimeoutMs = 12000) {
+  if (!base64) return
+
+  const tryWebAudio = async () => {
+    await playWithWebAudio(base64)
+    return 'webaudio'
+  }
+
+  try {
+    return await tryWebAudio()
+  } catch (err) {
+    if (isAutoplayError(err)) {
+      console.warn(`[TTS][${tag}] WebAudio 被拦截，等待用户交互后重试`, err)
+      const unlocked = await waitForUserGesture(waitTimeoutMs)
+      if (!unlocked) {
+        throw new Error('等待用户交互超时（WebAudio）')
+      }
+      return await tryWebAudio()
+    }
+    console.warn(`[TTS][${tag}] WebAudio 播放失败，回退 HTMLAudio`, err)
+  }
+
+  try {
+    await playWithHtmlAudio(base64, 'blob')
+    return 'html-blob'
+  } catch (err) {
+    if (isAutoplayError(err)) {
+      console.warn(`[TTS][${tag}] HTMLAudio 被拦截，等待用户交互后重试`, err)
+      const unlocked = await waitForUserGesture(waitTimeoutMs)
+      if (!unlocked) {
+        throw new Error('等待用户交互超时（HTMLAudio）')
+      }
+      await playWithHtmlAudio(base64, 'blob')
+      return 'html-blob'
+    }
+    console.warn(`[TTS][${tag}] HTMLAudio(blob) 失败，回退 data URI`, err)
+  }
+
+  await playWithHtmlAudio(base64, 'data-uri')
+  return 'html-data'
+}
+
 const state = () => ({
   currentSession: null,    // { sessionId, totalQuestions }
   selectedJob: null,       // 选中的岗位对象（来自 constants.js JOB_TYPES）
@@ -27,11 +222,16 @@ const state = () => ({
   isEnding: false,
   reportId: null,
   isLoading: false,        // AI 正在"思考"中
+  isAISpeaking: false,     // AI 音频仍在播放中
   elapsedSeconds: 0,        // 已用时（秒）
   jobDbId: null,  // 后端数据库真实岗位id
   voiceMode: false,
+<<<<<<< HEAD
   interviewStyle: 'confident',
   voiceRole: 'role_calm'
+=======
+  ttsVoice: DEFAULT_TTS_VOICE
+>>>>>>> 488266599dcf05c5de15b636bfd23194aa8d438e
 })
 
 const mutations = {
@@ -45,8 +245,13 @@ const mutations = {
   SET_MESSAGES(state, msgs) { state.messages = msgs },
   SET_QUESTION_INDEX(state, idx) { state.questionIndex = idx },
   SET_VOICE_MODE(state, v) { state.voiceMode = v },
+<<<<<<< HEAD
   SET_INTERVIEW_STYLE(state, v) { state.interviewStyle = v || 'confident' },
   SET_VOICE_ROLE(state, v) { state.voiceRole = v || 'role_calm' },
+=======
+  SET_TTS_VOICE(state, v) { state.ttsVoice = (v || DEFAULT_TTS_VOICE) },
+  SET_AI_SPEAKING(state, v) { state.isAISpeaking = v },
+>>>>>>> 488266599dcf05c5de15b636bfd23194aa8d438e
   SET_FINISHED(state, reportId) {
     state.isFinished = true
     state.isEnding = false
@@ -79,10 +284,15 @@ const mutations = {
     state.isEnding = false
     state.reportId = null
     state.isLoading = false
+    state.isAISpeaking = false
     state.elapsedSeconds = 0
     state.voiceMode = false
+<<<<<<< HEAD
     state.interviewStyle = 'confident'
     state.voiceRole = 'role_calm'
+=======
+    state.ttsVoice = DEFAULT_TTS_VOICE
+>>>>>>> 488266599dcf05c5de15b636bfd23194aa8d438e
   }
 }
 
@@ -96,6 +306,12 @@ const actions = {
   async startSession({ commit, state, rootGetters }, options = {}) {
     commit('SET_LOADING', true)
     try {
+      // 在进入异步耗时任务之前，立刻尝试初始化 AudioContext，利用现有的用户交互手势！
+      const ctx = getSharedAudioContext();
+      if (ctx && ctx.state === 'suspended') {
+        ctx.resume().catch(e => console.warn('唤醒由于没有活跃手势被拒绝', e));
+      }
+      
       // 从 user 模块拿数字 id
       const userInfo = rootGetters['user/userInfo']
       const userId = userInfo?.id  // 数字，如 1
@@ -105,8 +321,12 @@ const actions = {
         userId,                    // 传给后端的 user_id
         jobDbId: state.jobDbId,     // 传给后端的 job_id（数字）
         voiceMode: state.voiceMode,
+<<<<<<< HEAD
         interviewStyle: state.interviewStyle,
         voiceRole: state.voiceRole
+=======
+        voice: state.ttsVoice
+>>>>>>> 488266599dcf05c5de15b636bfd23194aa8d438e
       })
       commit('SET_SESSION', { sessionId: res.sessionId, totalQuestions: 10 })
       commit('ADD_MESSAGE', {
@@ -116,12 +336,24 @@ const actions = {
         timestamp: new Date()
       })
       if (state.voiceMode && res.firstQuestionAudio) {
-        try {
-          const openingAudio = new Audio(`data:audio/mp3;base64,${res.firstQuestionAudio}`)
-          openingAudio.play().catch(() => {})
-        } catch (e) {
-          console.warn('开场语音播放失败', e)
-        }
+        console.log('[TTS][opening] 收到开场白音频，base64长度=', res.firstQuestionAudio.length)
+        commit('SET_AI_SPEAKING', true)
+        // ✅ 修复：确保开场白音频完整播放后才解除 isAISpeaking，防止与录音冲突
+        playBase64AudioReliable(res.firstQuestionAudio, 'opening', 30000)
+          .then(() => {
+            console.log('[TTS][opening] 开场白播放完毕')
+          })
+          .catch((err) => {
+            console.error('[TTS][opening] 播放失败，尝试最终兜底重播：', err)
+            return playWithHtmlAudio(res.firstQuestionAudio, 'data-uri')
+              .catch((fallbackErr) => {
+                console.error('[TTS][opening] data-uri 兜底仍失败：', fallbackErr)
+              })
+          })
+          .finally(() => {
+            commit('SET_AI_SPEAKING', false)
+            console.log('[TTS][opening] 已解除 isAISpeaking 标志，用户可以开始操作')
+          })
       }
       commit('SET_QUESTION_INDEX', 1)
       return res
@@ -136,47 +368,60 @@ const actions = {
     commit('SET_LOADING', true)
     commit('ADD_MESSAGE', { id: Date.now() + 1, role: 'ai', content: '', timestamp: Date.now(), streaming: true })
 
+    // 在长耗时异步开始前激活音频上下文
+    const ctx = getSharedAudioContext();
+    if (ctx && ctx.state === 'suspended') {
+      ctx.resume().catch(e => console.warn('音频激活失败', e));
+    }
+
     const { sendAnswerStream } = await import('@/api/interview')
     
-    // ✅ 创建音频播放器
-    let audioQueue = []
-    let isPlaying = false
-    const playBase64Audio = (base64Str) => {
-      try {
-        const audio = new Audio(`data:audio/mp3;base64,${base64Str}`)
-        audioQueue.push(audio)
-        
-        // 如果当前没有在播放，立即开始播放队列中的音频
-        if (!isPlaying && audioQueue.length > 0) {
-          playNextAudio()
-        }
-      } catch (err) {
-        console.error('音频播放失败:', err)
+    // ✅ 创建音频播放器（仅当流结束且音频播放完毕，才进入下一轮）
+    let streamDone = false
+    let shouldFinishInterview = false
+    let pendingAudioCount = 0
+    let playbackChain = Promise.resolve()
+
+    const tryCompleteTurn = () => {
+      if (!streamDone || pendingAudioCount > 0) return
+
+      commit('SET_AI_SPEAKING', false)
+      commit('SET_LOADING', false)
+      commit('MARK_STREAM_DONE')
+
+      if (shouldFinishInterview) {
+        dispatch('endInterview')
+      } else {
+        commit('SET_QUESTION_INDEX', state.questionIndex + 1)
       }
     }
-    
-    const playNextAudio = () => {
-      if (audioQueue.length === 0) {
-        isPlaying = false
-        return
-      }
-      
-      isPlaying = true
-      const currentAudio = audioQueue.shift()
-      currentAudio.play().catch(err => {
-        console.error('播放出错:', err)
-        // 如果播放失败，继续播放下一个
-        playNextAudio()
-      })
-      
-      // 监听播放结束事件，自动播放下一个
-      currentAudio.onended = () => {
-        playNextAudio()
-      }
+
+    const playBase64Audio = (base64Str) => {
+      pendingAudioCount += 1
+      commit('SET_AI_SPEAKING', true)
+
+      playbackChain = playbackChain
+        .then(() => playBase64AudioReliable(base64Str, 'stream', 12000))
+        .catch(async (err) => {
+          console.error('[TTS][stream] 音频播放失败，尝试 data-uri 兜底：', err)
+          try {
+            await playWithHtmlAudio(base64Str, 'data-uri')
+          } catch (retryErr) {
+            console.error('[TTS][stream] 兜底重播失败，跳过该片段：', retryErr)
+          }
+        })
+        .finally(() => {
+          pendingAudioCount = Math.max(0, pendingAudioCount - 1)
+          if (pendingAudioCount === 0) {
+            commit('SET_AI_SPEAKING', false)
+            tryCompleteTurn()
+          }
+        })
     }
     
     sendAnswerStream(state.currentSession.sessionId, answerText, {
       voiceMode: state.voiceMode,
+      voice: state.ttsVoice,
       onChunk(chunk) {
         commit('APPEND_AI_CHUNK', chunk)
       },
@@ -187,16 +432,17 @@ const actions = {
       },
 
       onStreamEnd() {
-        commit('SET_LOADING', false)
-        commit('MARK_STREAM_DONE')
-        commit('SET_QUESTION_INDEX', state.questionIndex + 1)
+        streamDone = true
+        tryCompleteTurn()
       },
       onFinish() {
-        commit('SET_LOADING', false)
-        commit('MARK_STREAM_DONE')
-        dispatch('endInterview')
+        shouldFinishInterview = true
+        streamDone = true
+        tryCompleteTurn()
       },
       onError(err) {
+        pendingAudioCount = 0
+        commit('SET_AI_SPEAKING', false)
         commit('SET_LOADING', false)
         commit('MARK_STREAM_DONE')
         console.error('SSE error', err)
@@ -248,7 +494,9 @@ const getters = {
   isEnding: s => s.isEnding,
   reportId: s => s.reportId,
   isLoading: s => s.isLoading,
+  isAISpeaking: s => s.isAISpeaking,
   voiceMode: s => s.voiceMode,
+  ttsVoice: s => s.ttsVoice,
   elapsedSeconds: s => s.elapsedSeconds
 }
 

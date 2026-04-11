@@ -67,4 +67,16 @@ def create_app(config_name=None):
     def health_check():
         return "OK", 200
 
+    # ---- 预热 Whisper ASR 模型（后台线程，避免首次请求超时）----
+    def _prewarm_asr():
+        try:
+            from app.services.asr_service import get_whisper_model
+            get_whisper_model()
+            print("[ASR] Whisper 模型预加载完成")
+        except Exception as e:
+            print(f"[ASR] Whisper 模型预加载失败（将在首次请求时重试）：{e}")
+
+    import threading
+    threading.Thread(target=_prewarm_asr, daemon=True).start()
+
     return app

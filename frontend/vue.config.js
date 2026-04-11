@@ -15,6 +15,12 @@ module.exports = defineConfig({
       '/api': {
         target: 'http://127.0.0.1:5000',
         changeOrigin: true,
+        onProxyRes(proxyRes, req) {
+          if (req.url && req.url.includes('/interviews/') && req.url.includes('/chat/stream')) {
+            proxyRes.headers['cache-control'] = 'no-cache, no-transform'
+            proxyRes.headers['x-accel-buffering'] = 'no'
+          }
+        },
         // 若后端路由包含/api前缀则不需要rewrite，否则开启
         // pathRewrite: { '^/api': '' }
       },
