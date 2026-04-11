@@ -5,6 +5,8 @@ from app.extensions import db
 from app.models.interview import Interview, InterviewScore, Dimension
 from app.models.learning import UserKnowledgeMastery, KnowledgeTag, Resource, UserLearning
 from app.models.example import Example
+from app.models.job import Job
+from app.models.user import User
 
 
 class LearningService:
@@ -38,11 +40,10 @@ class LearningService:
     @staticmethod
     def get_weaknesses(user_id, limit=5):
         """获取用户的技能短板（掌握度最低的标签）"""
-        # === 新增逻辑：优先展示与用户最近一次面试（或预设岗位）相关联的短板 ===
-        from app.models.interview import Interview
-        from app.models.user import User
-        from app.models.question import Question, question_tags
+        if not user_id:
+            return []
 
+        # === 新增逻辑：优先展示与用户最近一次面试（或预设岗位）相关联的短板 ===
         target_job_id = None
         last_interview = Interview.query.filter_by(user_id=user_id, status='completed').order_by(Interview.start_time.desc()).first()
         if last_interview:
@@ -52,17 +53,21 @@ class LearningService:
             if user and user.default_job:
                 target_job_id = user.default_job.id if hasattr(user.default_job, 'id') else user.default_job
 
-        query = UserKnowledgeMastery.query.filter_by(user_id=user_id)
+        base_query = UserKnowledgeMastery.query.filter_by(user_id=user_id)
+        query = base_query
 
         if target_job_id:
-            # 过滤出隶属于该岗位的知识点
-            query = query.join(KnowledgeTag, UserKnowledgeMastery.tag_id == KnowledgeTag.id) \
-                .join(question_tags, KnowledgeTag.id == question_tags.c.tag_id) \
-                .join(Question, question_tags.c.question_id == Question.id) \
-                .filter(Question.job_id == target_job_id) \
-                .group_by(UserKnowledgeMastery.id)
+            # M2M 改造后基于 Job.knowledge_tags 过滤岗位知识点
+            target_job = Job.query.get(target_job_id)
+            if target_job:
+                job_tag_ids = [t.id for t in target_job.knowledge_tags.all()]
+                if job_tag_ids:
+                    query = query.filter(UserKnowledgeMastery.tag_id.in_(job_tag_ids))
 
         weak_masteries = query.order_by(db.asc(UserKnowledgeMastery.mastery_level)).limit(limit).all()
+        if not weak_masteries and query is not base_query:
+            # 岗位范围为空时回退到全局短板，避免页面完全无数据
+            weak_masteries = base_query.order_by(db.asc(UserKnowledgeMastery.mastery_level)).limit(limit).all()
 
         weaknesses = []
         for m in weak_masteries:
@@ -79,30 +84,25 @@ class LearningService:
 
         # === 兜底逻辑：如果目前用户尚无短板记录，动态从他的岗位找一些补充并初始化 ===
         if not weaknesses:
-            from app.models.user import User
-            from app.models.question import Question
             user = User.query.get(user_id)
             if user and user.default_job:
-                job_id_val = user.default_job.id if hasattr(user.default_job, 'id') else user.default_job
-                # 找出岗位相关的一些题目及标签
-                qs = Question.query.filter_by(job_id=job_id_val).all()
+                job = user.default_job
+                # M2M 改造后直接从岗位知识点初始化短板
+                job_tags = job.knowledge_tags.order_by(KnowledgeTag.id.asc()).all() if hasattr(job, 'knowledge_tags') else []
                 added = 0
-                for q in qs:
-                    for t in q.knowledge_tags:
-                        if not any(w['tag_id'] == t.id for w in weaknesses):
-                            # 创建新的掌握度记录，并给个中等偏下的初始分
-                            mastery = UserKnowledgeMastery(user_id=user_id, tag_id=t.id, mastery_level=45)
-                            db.session.add(mastery)
-                            weaknesses.append({
-                                "tag_id": t.id,
-                                "name": t.name,
-                                "mastery_level": 45,
-                                "complexity": t.complexity,
-                                "estimated_hours": t.estimated_hours
-                            })
-                            added += 1
-                        if added >= limit:
-                            break
+                for t in job_tags:
+                    if not any(w['tag_id'] == t.id for w in weaknesses):
+                        # 创建新的掌握度记录，并给个中等偏下的初始分
+                        mastery = UserKnowledgeMastery(user_id=user_id, tag_id=t.id, mastery_level=45)
+                        db.session.add(mastery)
+                        weaknesses.append({
+                            "tag_id": t.id,
+                            "name": t.name,
+                            "mastery_level": 45,
+                            "complexity": t.complexity,
+                            "estimated_hours": t.estimated_hours
+                        })
+                        added += 1
                     if added >= limit:
                         break
                 db.session.commit()
@@ -191,8 +191,81 @@ class LearningService:
     @staticmethod
     def get_completed_resource_ids(user_id):
         """返回指定用户所有已完成资源的 ID 列表"""
+        if not user_id:
+            return []
         records = UserLearning.query.filter_by(user_id=user_id, status='completed').all()
         return [rec.resource_id for rec in records]
+
+    @staticmethod
+    def get_daily_plan(user_id):
+        """根据用户短板与推荐资源生成每日学习计划"""
+        if not user_id:
+            return {"tasks": [], "progress": 0}
+
+        weaknesses = LearningService.get_weaknesses(user_id, limit=3)
+        recommendations = LearningService.get_personalized_recommendations(user_id, limit=3)
+        completed_ids = set(LearningService.get_completed_resource_ids(user_id))
+
+        tasks = []
+        for idx, resource in enumerate(recommendations):
+            tasks.append({
+                "id": f"res-{resource.get('id')}",
+                "title": resource.get('title') or f"学习任务 {idx + 1}",
+                "done": resource.get('id') in completed_ids,
+                "type": "resource",
+                "resource_id": resource.get('id')
+            })
+
+        for weakness in weaknesses:
+            task_id = f"wk-{weakness['tag_id']}"
+            if any(t['id'] == task_id for t in tasks):
+                continue
+            tasks.append({
+                "id": task_id,
+                "title": f"复习薄弱点：{weakness['name']}",
+                "done": False,
+                "type": "weakness",
+                "tag_id": weakness['tag_id']
+            })
+            if len(tasks) >= 5:
+                break
+
+        progress = int((sum(1 for t in tasks if t['done']) / len(tasks)) * 100) if tasks else 0
+        return {"tasks": tasks, "progress": progress}
+
+    @staticmethod
+    def update_task_status(user_id, task_id, done):
+        """更新学习中心每日任务状态。
+
+        仅资源任务支持持久化：task_id 形如 res-<resource_id>。
+        其他任务（例如 weakness）只返回成功，由前端本地态维护展示。
+        """
+        if not task_id:
+            return {"success": False, "message": "invalid task id"}
+
+        if task_id.startswith('res-'):
+            if not user_id:
+                return {"success": False, "message": "missing user id"}
+
+            try:
+                resource_id = int(task_id.split('-', 1)[1])
+            except (ValueError, IndexError):
+                return {"success": False, "message": "invalid resource task id"}
+
+            if done:
+                LearningService.start_learning(user_id, resource_id)
+                LearningService.finish_learning(user_id, resource_id)
+                return {"success": True, "task_id": task_id, "done": True}
+
+            record = UserLearning.query.filter_by(user_id=user_id, resource_id=resource_id).first()
+            if record:
+                record.status = 'in_progress'
+                record.progress = 0
+                record.finish_time = None
+                db.session.commit()
+            return {"success": True, "task_id": task_id, "done": False}
+
+        return {"success": True, "task_id": task_id, "done": bool(done)}
 
     @staticmethod
     def start_learning(user_id, resource_id):

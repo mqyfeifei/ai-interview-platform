@@ -43,6 +43,18 @@ def get_recommendations():
         return jsonify({"code": 500, "msg": str(e)})
 
 
+@learning_bp.route('/daily-plan', methods=['GET'])
+def get_daily_plan():
+    """获取每日学习计划"""
+    user_id = request.args.get('user_id', type=int)
+
+    try:
+        data = LearningService.get_daily_plan(user_id)
+        return jsonify({"code": 200, "data": data, "msg": "success"})
+    except Exception as e:
+        return jsonify({"code": 500, "msg": str(e)})
+
+
 @learning_bp.route('/records/start', methods=['POST'])
 def start_learning_record():
     """记录：开始学习资源"""
@@ -77,5 +89,19 @@ def get_completed_records():
     try:
         ids = LearningService.get_completed_resource_ids(user_id)
         return jsonify({"code": 200, "data": ids, "msg": "success"})
+    except Exception as e:
+        return jsonify({"code": 500, "msg": str(e)})
+
+
+@learning_bp.route('/tasks/<task_id>/status', methods=['POST'])
+def update_task_status(task_id):
+    """更新每日计划任务状态"""
+    data = request.get_json() or {}
+    done = bool(data.get('done', False))
+    user_id = data.get('user_id')
+
+    try:
+        res = LearningService.update_task_status(user_id=user_id, task_id=task_id, done=done)
+        return jsonify({"code": 200, "data": res, "msg": "success"})
     except Exception as e:
         return jsonify({"code": 500, "msg": str(e)})
