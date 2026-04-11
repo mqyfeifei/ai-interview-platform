@@ -1,0 +1,574 @@
+# backend/app/services/interview_graph_helper.py
+"""
+面试服务 - 知识图谱辅助模块
+负责简历解析、知识点匹配、题目推荐、图谱覆盖率计算等
+"""
+
+import re
+from datetime import datetime
+from difflib import SequenceMatcher
+
+from app.extensions import db
+from app.models.learning import KnowledgeTag, UserKnowledgeMastery
+from app.models.question import Question
+from app.models.job import Job
+from app.models.interview import InterviewChat
+from app.services.resume_service import ResumeService
+
+
+class InterviewGraphHelper:
+    """知识图谱辅助工具类"""
+    
+    # === 技能别名映射表 ===
+    _SKILL_ALIAS_MAP = {
+        'vue3': 'vue',
+        'vuejs': 'vue',
+        'reactjs': 'react',
+        'nodejs': 'node.js',
+        'springboot': 'springboot',
+        'typescript': 'ts',
+    }
+    
+    # === 技能等级到分数映射 ===
+    _SKILL_LEVEL_MAPPING = {
+        '精通': 80,
+        '熟悉': 60,
+        '了解': 45,
+        '入门': 30,
+        'beginner': 30,
+        'familiar': 60,
+        'intermediate': 60,
+        'proficient': 80,
+        'expert': 90,
+    }
+    
+    @staticmethod
+    def normalize_tag_name(name):
+        """
+        标准化标签名称(去除空格、标点、大小写统一)
+        
+        Args:
+            name: 原始标签名
+            
+        Returns:
+            str: 标准化后的标签名
+        """
+        text = (name or '').strip().lower()
+        text = re.sub(r'[\s\-_()（）\[\]【】,.，。/\\]+', '', text)
+        return text
+    
+    @staticmethod
+    def skill_level_to_score(skill_item):
+        """
+        将技能等级转换为分数
+        
+        Args:
+            skill_item: 技能项(可以是字典或字符串)
+            
+        Returns:
+            int: 对应的分数(0-100)
+        """
+        if isinstance(skill_item, dict):
+            # 从字典中提取等级字段
+            for key in ('mastery', 'mastery_level', 'score', 'level', 'proficiency'):
+                if skill_item.get(key) is not None:
+                    raw_value = skill_item.get(key)
+                    break
+            else:
+                raw_value = None
+            
+            if isinstance(raw_value, (int, float)):
+                return int(raw_value)
+            
+            text = str(raw_value or '').strip().lower()
+        else:
+            text = str(skill_item or '').strip().lower()
+        
+        return InterviewGraphHelper._SKILL_LEVEL_MAPPING.get(text, 60)
+    
+    @staticmethod
+    def extract_resume_context(user_id, max_chars=800):
+        """
+        拉取并解析用户主简历,进行去敏与核心要点抽取
+        
+        Args:
+            user_id: 用户ID
+            max_chars: 最大字符数限制
+            
+        Returns:
+            str: 简历摘要文本
+        """
+        try:
+            resume_data = ResumeService.get_main_resume(user_id)
+            content = resume_data.get('content', {})
+            if not content:
+                return ""
+            
+            # 1. 基础信息去敏(禁止加入手机号和邮箱)
+            personal = content.get('personal', {})
+            name = personal.get('name', '候选人')
+            
+            # 2. 技能抽取(Top-10)
+            skills_list = content.get('skills', [])
+            skills_names = [s.get('name', '') for s in skills_list if s.get('name')]
+            skills_str = "、".join(skills_names[:10])
+            
+            # 3. 合并工作、实习、校园经历
+            works = content.get('workExperiences', [])
+            interns = content.get('internshipExperiences', [])
+            campus = content.get('campusExperiences', [])
+            all_exps = []
+            
+            for w in works:
+                all_exps.append({
+                    'org': w.get('company', '某公司'),
+                    'role': w.get('role', '某职位'),
+                    'period': f"{w.get('startDate', '')} 至 {w.get('endDate', '')}",
+                    'desc': w.get('description', '')
+                })
+            for i in interns:
+                all_exps.append({
+                    'org': i.get('company', '某公司'),
+                    'role': i.get('role', '实习生'),
+                    'period': f"{i.get('startDate', '')} 至 {i.get('endDate', '')}",
+                    'desc': i.get('description', '')
+                })
+            for c in campus:
+                org_name = c.get('school') or c.get('organization') or '某学校/组织'
+                all_exps.append({
+                    'org': org_name,
+                    'role': c.get('role', '成员'),
+                    'period': f"{c.get('startDate', '')} 至 {c.get('endDate', '')}",
+                    'desc': c.get('description', '')
+                })
+            
+            # 取最前面的3条经历
+            work_context = ""
+            for exp in all_exps[:3]:
+                desc = exp['desc'].replace('\n', ' ')[:100] if exp['desc'] else ''
+                work_context += f"- {exp['org']} | {exp['role']} ({exp['period']})\n  核心职责/成就: {desc}...\n"
+            
+            # 4. 组装简历摘要模块
+            resume_text = f"""
+            【候选人简历摘要】
+            - 姓名: {name}
+            - 核心技能: {skills_str if skills_str else '未填写'}
+            - 近期经历:
+            {work_context if work_context else '未填写'}
+            """
+            
+            # 5. 安全硬截断
+            return resume_text.strip()[:max_chars]
+        
+        except Exception as e:
+            print(f"简历摘要提取失败: {str(e)}")
+            return ""
+    
+    @staticmethod
+    def align_resume_entities(resume_skills_list):
+        """
+        根据简历技能对用户知识图谱进行实体对齐
+        
+        策略:
+        1. 精确匹配
+        2. 别名匹配
+        3. 模糊匹配(SequenceMatcher)
+        4. 向量相似度匹配(兜底)
+        
+        Args:
+            resume_skills_list: 简历中的技能列表
+            
+        Returns:
+            list: 对齐后的实体列表
+        """
+        if not resume_skills_list:
+            return []
+        
+        all_tags = KnowledgeTag.query.all()
+        if not all_tags:
+            return []
+        
+        aligned = []
+        for skill in resume_skills_list:
+            if isinstance(skill, dict):
+                raw_name = (skill.get('name') or skill.get('skill') or skill.get('tag') or '').strip()
+            else:
+                raw_name = str(skill).strip()
+            
+            if not raw_name:
+                continue
+            
+            normalized = InterviewGraphHelper.normalize_tag_name(raw_name)
+            alias = InterviewGraphHelper._SKILL_ALIAS_MAP.get(normalized, normalized)
+            
+            matched_tag = None
+            best_score = 0.0
+            
+            # 遍历所有标签进行匹配
+            for tag in all_tags:
+                candidate = InterviewGraphHelper.normalize_tag_name(tag.name)
+                score = 0.0
+                
+                # 精确匹配
+                if candidate == alias or candidate == normalized:
+                    score = 1.0
+                # 包含关系匹配
+                elif alias and (alias in candidate or candidate in alias):
+                    score = 0.9
+                # 模糊匹配
+                else:
+                    score = SequenceMatcher(None, alias, candidate).ratio()
+                
+                if score > best_score:
+                    best_score = score
+                    matched_tag = tag
+            
+            # 如果模糊匹配失败,尝试向量匹配
+            if not matched_tag or best_score < 0.35:
+                try:
+                    from app.services.interview_service import InterviewService
+                    vec = InterviewService.get_embedding(raw_name)
+                    matched_tag = KnowledgeTag.query.order_by(
+                        KnowledgeTag.embedding.l2_distance(vec)
+                    ).first()
+                    best_score = max(best_score, 0.5 if matched_tag else 0.0)
+                except Exception:
+                    matched_tag = None
+            
+            if not matched_tag:
+                continue
+            
+            aligned.append({
+                'raw_name': raw_name,
+                'tag': matched_tag,
+                'matched_by': 'alias_or_fuzzy' if best_score < 1.0 else 'exact',
+                'mastery_level': InterviewGraphHelper.skill_level_to_score(skill),
+            })
+        
+        return aligned
+    
+    @staticmethod
+    def initialize_user_graph_from_resume(user_id, resume_skills_list, base_score=60):
+        """
+        根据简历技能对用户知识图谱进行冷启动初始化
+        
+        Args:
+            user_id: 用户ID
+            resume_skills_list: 简历技能列表
+            base_score: 基础分数(默认60)
+        """
+        if not resume_skills_list:
+            return
+        
+        aligned_entities = InterviewGraphHelper.align_resume_entities(resume_skills_list)
+        if not aligned_entities:
+            return
+        
+        for entity in aligned_entities:
+            tag = entity['tag']
+            score = max(base_score, entity['mastery_level'])
+            
+            mastery = UserKnowledgeMastery.query.filter_by(
+                user_id=user_id, tag_id=tag.id
+            ).first()
+            
+            if not mastery:
+                db.session.add(
+                    UserKnowledgeMastery(
+                        user_id=user_id,
+                        tag_id=tag.id,
+                        mastery_level=score,
+                        last_updated=datetime.utcnow()
+                    )
+                )
+            else:
+                mastery.mastery_level = max(mastery.mastery_level or 0, score)
+                mastery.last_updated = datetime.utcnow()
+    
+    @staticmethod
+    def get_job_graph_snapshot(job_id):
+        """
+        获取岗位的知识图谱快照(题目+标签)
+        
+        Args:
+            job_id: 岗位ID
+            
+        Returns:
+            tuple: (questions列表, tag_map字典)
+        """
+        job = db.session.get(Job, int(job_id)) if job_id is not None else None
+        if not job:
+            return [], {}
+        
+        # 获取已发布的题目
+        questions_rel = job.questions
+        if hasattr(questions_rel, 'filter_by'):
+            questions = questions_rel.filter_by(status='published').all()
+            if not questions:
+                questions = questions_rel.all()
+        else:
+            questions = list(questions_rel or [])
+            published_questions = [q for q in questions if getattr(q, 'status', None) == 'published']
+            if published_questions:
+                questions = published_questions
+        
+        # 收集所有相关标签
+        tags_rel = job.knowledge_tags
+        if hasattr(tags_rel, 'all'):
+            job_tags = tags_rel.all()
+        else:
+            job_tags = list(tags_rel or [])
+        
+        tag_map = {}
+        for tag in job_tags:
+            tag_map[tag.id] = tag
+        for question in questions:
+            for tag in question.knowledge_tags:
+                tag_map[tag.id] = tag
+        
+        return questions, tag_map
+    
+    @staticmethod
+    def estimate_target_depth(mastery_level):
+        """
+        根据掌握度估算目标深度
+        
+        Args:
+            mastery_level: 掌握度分数(0-100)
+            
+        Returns:
+            int: 目标深度(1-3)
+        """
+        if mastery_level >= 75:
+            return 3
+        if mastery_level >= 45:
+            return 2
+        return 1
+    
+    @staticmethod
+    def assign_questions(job_id, user_id, limit=5, recent_tag_ids=None):
+        """
+        为用户智能分配面试题目
+        
+        评分策略:
+        1. 深度匹配度(主要权重)
+        2. 掌握度加成
+        3. 最近提问惩罚(避免重复)
+        
+        Args:
+            job_id: 岗位ID
+            user_id: 用户ID
+            limit: 返回题目数量
+            recent_tag_ids: 最近提问的标签ID列表
+            
+        Returns:
+            list: 排序后的题目标记列表
+        """
+        questions, tag_map = InterviewGraphHelper.get_job_graph_snapshot(job_id)
+        
+        if not questions:
+            return []
+        
+        recent_tag_ids = set(recent_tag_ids or [])
+        
+        # 获取用户对各标签的掌握度
+        mastery_rows = UserKnowledgeMastery.query.filter(
+            UserKnowledgeMastery.user_id == user_id,
+            UserKnowledgeMastery.tag_id.in_(list(tag_map.keys()) or [0])
+        ).all() if tag_map else []
+        mastery_map = {row.tag_id: row.mastery_level or 0 for row in mastery_rows}
+        
+        # 为每个题目计算综合得分
+        ranked = []
+        for question in questions:
+            question_tags = list(question.knowledge_tags or [])
+            tag_ids = [tag.id for tag in question_tags]
+            mastery_values = [mastery_map.get(tag_id, 0) for tag_id in tag_ids]
+            avg_mastery = sum(mastery_values) / len(mastery_values) if mastery_values else 0
+            
+            target_depth = InterviewGraphHelper.estimate_target_depth(avg_mastery)
+            depth = question.reference_answer_depth or 1
+            depth_gap = abs(depth - target_depth)
+            
+            # 基础分: 深度匹配度
+            score = (100 - depth_gap * 25) + avg_mastery * 0.35
+            
+            # 完美匹配加分
+            if depth == target_depth:
+                score += 20
+            
+            # 最近提问惩罚
+            if recent_tag_ids and recent_tag_ids.intersection(tag_ids):
+                score -= 35
+            elif recent_tag_ids:
+                score -= 8
+            
+            ranked.append({
+                'question': question,
+                'tag_ids': tag_ids,
+                'tag_names': [tag.name for tag in question_tags],
+                'avg_mastery': avg_mastery,
+                'target_depth': target_depth,
+                'score': score,
+            })
+        
+        # 按得分降序排列
+        ranked.sort(key=lambda item: (-item['score'], -item['avg_mastery'], item['question'].id))
+        return ranked[:limit]
+    
+    @staticmethod
+    def get_recent_asked_tag_ids(interview_id, limit=3):
+        """
+        获取最近提问过的标签ID列表
+        
+        Args:
+            interview_id: 面试ID
+            limit: 回溯的题目数量
+            
+        Returns:
+            list: 标签ID列表
+        """
+        recent_ai_questions = (
+            InterviewChat.query
+            .filter_by(interview_id=interview_id, role='ai')
+            .filter(InterviewChat.question_id.isnot(None))
+            .order_by(InterviewChat.timestamp.desc(), InterviewChat.id.desc())
+            .limit(limit)
+            .all()
+        )
+        
+        recent_tag_ids = []
+        seen_tag_ids = set()
+        for chat in recent_ai_questions:
+            question = Question.query.get(chat.question_id)
+            if not question:
+                continue
+            for tag in question.knowledge_tags or []:
+                if tag.id not in seen_tag_ids:
+                    seen_tag_ids.add(tag.id)
+                    recent_tag_ids.append(tag.id)
+        
+        return recent_tag_ids
+    
+    @staticmethod
+    def build_adjacent_tag_context(tag_ids, interview_style='confident'):
+        """
+        构建相邻标签上下文(用于提示词扩展)
+        
+        Args:
+            tag_ids: 当前标签ID列表
+            interview_style: 面试风格(pressure/confident/teaching)
+            
+        Returns:
+            str: 相邻标签名称字符串
+        """
+        if not tag_ids:
+            return ''
+        
+        tags = KnowledgeTag.query.filter(KnowledgeTag.id.in_(list(set(tag_ids)))).all()
+        if not tags:
+            return ''
+        
+        related_names = []
+        seen = set()
+        
+        def push(tag_name):
+            if tag_name and tag_name not in seen:
+                seen.add(tag_name)
+                related_names.append(tag_name)
+        
+        for tag in tags:
+            if interview_style == 'pressure':
+                # 压力面: 追问子节点
+                for child in tag.children or []:
+                    push(child.name)
+            elif interview_style == 'teaching':
+                # 教学面: 展示父节点和兄弟节点
+                if tag.parent:
+                    push(tag.parent.name)
+                    for sibling in tag.parent.children or []:
+                        if sibling.id != tag.id:
+                            push(sibling.name)
+            else:
+                # 自信面: 展示父节点和子节点
+                if tag.parent:
+                    push(tag.parent.name)
+                for child in tag.children or []:
+                    push(child.name)
+        
+        if not related_names:
+            return ''
+        
+        return '、'.join(related_names[:12])
+    
+    @staticmethod
+    def compute_graph_coverage(interview):
+        """
+        计算知识图谱覆盖率和深度率
+        
+        Args:
+            interview: Interview对象
+            
+        Returns:
+            dict: 覆盖率统计结果
+        """
+        questions, tag_map = InterviewGraphHelper.get_job_graph_snapshot(interview.job_id)
+        core_tag_ids = list(tag_map.keys())
+        
+        if not core_tag_ids:
+            return {
+                'coverage_rate': 0.0,
+                'depth_rate': 0.0,
+                'meta': {
+                    'core_nodes': [],
+                    'touched_nodes': [],
+                    'max_depth': 0,
+                    'core_count': 0,
+                    'touched_count': 0,
+                }
+            }
+        
+        # 获取用户已掌握的标签
+        mastery_rows = UserKnowledgeMastery.query.filter(
+            UserKnowledgeMastery.user_id == interview.user_id,
+            UserKnowledgeMastery.tag_id.in_(core_tag_ids)
+        ).all()
+        
+        touched_tag_ids = [row.tag_id for row in mastery_rows if (row.mastery_level or 0) > 0]
+        touched_set = set(touched_tag_ids)
+        
+        # 计算最大深度
+        def get_depth(tag):
+            depth = 1
+            visited = set()
+            current = tag
+            while current and current.parent_id and current.parent_id not in visited:
+                visited.add(current.id)
+                current = KnowledgeTag.query.get(current.parent_id)
+                if current:
+                    depth += 1
+            return depth
+        
+        max_depth = 0
+        for tag_id in touched_set:
+            tag = tag_map.get(tag_id) or KnowledgeTag.query.get(tag_id)
+            if tag:
+                max_depth = max(max_depth, get_depth(tag))
+        
+        # 计算覆盖率
+        core_count = len(core_tag_ids)
+        touched_count = len(touched_set)
+        coverage_rate = round((touched_count / core_count) * 100, 2) if core_count else 0.0
+        depth_rate = round((min(max_depth, 3) / 3) * 100, 2) if max_depth else 0.0
+        
+        return {
+            'coverage_rate': coverage_rate,
+            'depth_rate': depth_rate,
+            'meta': {
+                'core_nodes': [tag_map[tag_id].name for tag_id in core_tag_ids if tag_id in tag_map],
+                'touched_nodes': [tag_map[tag_id].name for tag_id in touched_set if tag_id in tag_map],
+                'max_depth': max_depth,
+                'core_count': core_count,
+                'touched_count': touched_count,
+            }
+        }
