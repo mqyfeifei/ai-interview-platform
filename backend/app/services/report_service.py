@@ -7,7 +7,7 @@ from app.models.interview import Interview, InterviewChat, InterviewScore, Dimen
 from app.models.job import Job, DEFAULT_JOBS, get_job_front_key
 from app.models.question import Question
 from app.models.example import Example
-from app.models.learning import Resource, KnowledgeTag, UserKnowledgeMastery  # 图谱推荐依赖模型
+from app.models.learning import Resource, KnowledgeTag, UserKnowledgeMastery, UserLearning  # 图谱推荐依赖模型
 from app.services.interview_service import InterviewService
 from app.utils.llm_client import DeepSeekClient
 
@@ -55,6 +55,23 @@ class ReportService:
             return True
         return bool(cls._MEANINGLESS_ANSWER_PATTERN.match(t))
 
+    @staticmethod
+    def _tag_depth(tag):
+        depth = 1
+        visited = set()
+        current = tag
+        while current and current.parent_id and current.id not in visited:
+            visited.add(current.id)
+            current = KnowledgeTag.query.get(current.parent_id)
+            if current:
+                depth += 1
+        return depth
+
+    @staticmethod
+    def _get_completed_resource_ids(user_id):
+        rows = UserLearning.query.filter_by(user_id=user_id, status='completed').all()
+        return {row.resource_id for row in rows}
+
     @classmethod
     def _get_recommended_resource(cls, point_text, user_id):
         """
@@ -65,6 +82,8 @@ class ReportService:
         """
         if not point_text:
             return None
+
+        completed_resource_ids = cls._get_completed_resource_ids(user_id)
 
         try:
             matched_tag = KnowledgeTag.query.filter(KnowledgeTag.name.ilike(f"%{point_text}%")).first()
@@ -81,6 +100,14 @@ class ReportService:
                         matched_tag = tag
                         break
 
+            # 文本匹配失败时，使用向量检索知识点进行兜底
+            if not matched_tag:
+                try:
+                    vec = InterviewService.get_embedding(point_text)
+                    matched_tag = KnowledgeTag.query.order_by(KnowledgeTag.embedding.l2_distance(vec)).first()
+                except Exception:
+                    matched_tag = None
+
             if not matched_tag:
                 return None
 
@@ -92,6 +119,8 @@ class ReportService:
                 visited_ids.add(current_tag.id)
 
                 query = Resource.query.join(Resource.knowledge_tags).filter(KnowledgeTag.id == current_tag.id)
+                if completed_resource_ids:
+                    query = query.filter(~Resource.id.in_(list(completed_resource_ids)))
 
                 mastery = UserKnowledgeMastery.query.filter_by(
                     user_id=user_id,
@@ -123,6 +152,8 @@ class ReportService:
                         'source': res.source,
                         'matchedTag': matched_tag.name,
                         'resourceTag': current_tag.name,
+                        'resourceTagId': current_tag.id,
+                        'resourceTagDepth': cls._tag_depth(current_tag),
                         'reason': reason
                     }
 
@@ -142,6 +173,8 @@ class ReportService:
         if not tag:
             return None
 
+        completed_resource_ids = cls._get_completed_resource_ids(user_id)
+
         visited_ids = set()
         current_tag = tag
         used_fallback = False
@@ -150,6 +183,8 @@ class ReportService:
             visited_ids.add(current_tag.id)
 
             query = Resource.query.filter(Resource.tag_id == current_tag.id)
+            if completed_resource_ids:
+                query = query.filter(~Resource.id.in_(list(completed_resource_ids)))
 
             mastery = UserKnowledgeMastery.query.filter_by(
                 user_id=user_id,
@@ -174,6 +209,8 @@ class ReportService:
                     'source': res.source,
                     'matchedTag': tag.name,
                     'resourceTag': current_tag.name,
+                    'resourceTagId': current_tag.id,
+                    'resourceTagDepth': cls._tag_depth(current_tag),
                     'reason': reason
                 }
 
@@ -187,11 +224,27 @@ class ReportService:
 
     @classmethod
     def _build_gap_resources(cls, interview):
-        questions = Question.query.filter_by(job_id=interview.job_id).all()
+        job = db.session.get(Job, interview.job_id)
+        if not job:
+            return []
+
         core_tags = {}
-        for q in questions:
-            for tag in q.knowledge_tags:
-                core_tags[tag.id] = tag
+        tags_rel = job.knowledge_tags
+        if hasattr(tags_rel, 'all'):
+            job_tags = tags_rel.all()
+        else:
+            job_tags = list(tags_rel or [])
+
+        for tag in job_tags:
+            core_tags[tag.id] = tag
+
+        # 兜底：若岗位大纲为空，则从岗位题目反推一次
+        if not core_tags:
+            questions_rel = job.questions
+            questions = questions_rel.all() if hasattr(questions_rel, 'all') else list(questions_rel or [])
+            for q in questions:
+                for tag in q.knowledge_tags:
+                    core_tags[tag.id] = tag
 
         if not core_tags:
             return []
@@ -215,6 +268,9 @@ class ReportService:
             results.append(resource)
             if len(results) >= 5:
                 break
+
+        # 按图谱深度排序形成学习路径：基础概念在前，进阶原理在后
+        results.sort(key=lambda item: (item.get('resourceTagDepth', 999), item.get('id', 0)))
 
         return results
 
@@ -334,7 +390,15 @@ class ReportService:
     @classmethod
     def _build_questions(cls, interview_id, fallback_score):
         interview = db.session.get(Interview, int(interview_id))
-        job_id = interview.job_id if interview else None
+        job = db.session.get(Job, interview.job_id) if interview else None
+
+        if job and hasattr(job.questions, 'all'):
+            job_questions = job.questions.filter_by(status='published').all() or job.questions.all()
+        elif job:
+            job_questions = list(job.questions or [])
+        else:
+            job_questions = []
+        job_question_ids = [q.id for q in job_questions]
 
         chats = InterviewChat.query.filter_by(interview_id=interview_id).order_by(InterviewChat.timestamp.asc()).all()
         questions = []
@@ -358,11 +422,11 @@ class ReportService:
             is_follow_up = ('追问' in q_text) or ('继续' in q_text and '请' in q_text)
 
             reference = None
-            if job_id:
+            if job_question_ids:
                 try:
                     q_vec = InterviewService.get_embedding(q_text[:200])
                     # 【核心逻辑】依赖 question.py：查询题库匹配原题的标准知识点/参考答案
-                    matched_q = Question.query.filter_by(job_id=job_id) \
+                    matched_q = Question.query.filter(Question.id.in_(job_question_ids)) \
                         .order_by(Question.embedding.l2_distance(q_vec)).first()
                     if matched_q:
                         reference = matched_q.reference_answer

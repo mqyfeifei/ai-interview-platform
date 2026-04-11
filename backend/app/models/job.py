@@ -2,6 +2,7 @@
 from datetime import datetime
 from app.extensions import db
 from sqlalchemy.dialects.postgresql import JSONB
+from .associations import job_tags, job_questions
 
 # ================= 新增：全局统一的岗位映射字典 =================
 # 集中维护岗位默认映射，避免在导入脚本和 API 路由中重复硬编码
@@ -50,8 +51,21 @@ class Job(db.Model):
     icon_url = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
-    # 关系：反向关联题目（字符串引用避免循环导入）
-    questions = db.relationship('Question', backref='job', lazy='dynamic')
+    # 关系：岗位知识大纲（Job <-> KnowledgeTag）
+    knowledge_tags = db.relationship(
+        'KnowledgeTag',
+        secondary=job_tags,
+        backref=db.backref('jobs', lazy='dynamic'),
+        lazy='dynamic'
+    )
+
+    # 关系：岗位题库（Job <-> Question）
+    questions = db.relationship(
+        'Question',
+        secondary=job_questions,
+        back_populates='jobs',
+        lazy='dynamic'
+    )
 
     def to_dict(self):
         return {

@@ -3,6 +3,7 @@ from datetime import datetime
 from app.extensions import db
 from sqlalchemy.dialects.postgresql import JSONB
 from pgvector.sqlalchemy import Vector  # 关键导入
+from .associations import job_questions
 
 # --- 新增：题目与知识点标签的多对多关联表 ---
 question_tags = db.Table('question_tags',
@@ -14,7 +15,6 @@ class Question(db.Model):
     __tablename__ = 'questions'
 
     id = db.Column(db.Integer, primary_key=True)
-    job_id = db.Column(db.Integer, db.ForeignKey('jobs.id'), nullable=False)
     content = db.Column(db.Text, nullable=False)
 
     # 扩大长度限制以兼容 technical, behavioral, project_deep_dive, scenario_design
@@ -39,6 +39,9 @@ class Question(db.Model):
     # --- 新增字段：建立与 KnowledgeTag 的ORM关系 ---
     # 使用字符串 'KnowledgeTag' 避免和 learning.py 产生循环导入问题
     knowledge_tags = db.relationship('KnowledgeTag', secondary=question_tags, backref=db.backref('questions', lazy='dynamic'))
+
+    # 与岗位多对多，支持题目跨岗位复用
+    jobs = db.relationship('Job', secondary=job_questions, back_populates='questions', lazy='dynamic')
 
     def to_dict(self):
         return {
