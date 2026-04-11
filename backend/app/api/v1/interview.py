@@ -84,6 +84,7 @@ def start_interview():
             voice_mode=voice_mode,
             interview_style=interview_style,
             voice_role=voice_role,
+            voice=voice,
         )
 
         return jsonify({"code": 200, "data": result, "msg": "success"}), 200
