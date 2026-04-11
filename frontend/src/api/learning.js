@@ -272,7 +272,13 @@ function _getCachedItem(id) {
  */
 export const getDailyPlan = async () => {
   try {
-    return await request.get('/learning/daily-plan')
+    const cached = localStorage.getItem('ai_interview_user')
+    const userId = cached ? (JSON.parse(cached).id || JSON.parse(cached).user_id) : null
+    if (!userId) {
+      console.warn('[DailyPlan] 未找到用户ID')
+      return null
+    }
+    return await request.get('/learning/daily-plan', { params: { user_id: userId } })
   } catch (err) {
     console.warn('[DailyPlan] 请求失败', err)
     return null
@@ -337,5 +343,7 @@ export const markCompleted = async (resourceId) => {
  * @param {boolean} done - 完成状态
  */
 export const updateTaskStatus = async (taskId, done) => {
-  return request.post(`/learning/tasks/${taskId}/status`, { done })
+  const cached = localStorage.getItem('ai_interview_user')
+  const userId = cached ? (JSON.parse(cached).id || JSON.parse(cached).user_id) : null
+  return request.post(`/learning/tasks/${taskId}/status`, { done, user_id: userId })
 }
