@@ -5,6 +5,7 @@ import json
 import asyncio
 import threading
 import time
+import random
 from concurrent.futures import ThreadPoolExecutor
 from difflib import SequenceMatcher
 
@@ -65,6 +66,12 @@ class InterviewService:
     _TTS_FORCE_SPLIT_MAX_SPEAKABLE_CHARS = 70
     _TTS_HEAD_BLOCK_TIMEOUT_SECONDS = 30
     _STREAM_DISPLAY_CHUNK_CHARS = 10
+    _DIVERSE_GREETING_FALLBACKS = [
+        "你好，欢迎来到模拟面试。今天我们会从一个你熟悉的场景开始，逐步深入。",
+        "欢迎你，先放轻松。我们先从一个基础问题热身，再进入进阶环节。",
+        "你好，接下来我会以真实面试节奏和你交流，我们从你最擅长的方向切入。",
+        "欢迎参加本轮面试。你可以把这当成一次实战演练，我们边问边优化。",
+    ]
 
     @staticmethod
     def _get_tts_voice(prompt_config=None, selected_voice=None):
@@ -87,6 +94,46 @@ class InterviewService:
         except Exception as e:
             print(f'异步 TTS 合成失败：{e}')
             return None
+
+    @staticmethod
+    def _clamp(value, min_v, max_v):
+        return max(min_v, min(max_v, value))
+
+    @staticmethod
+    def _resolve_generation_temperature(prompt_config=None, default_temp=0.85, seed=None):
+        """基于配置和会话种子计算温度，增加小幅抖动以降低重复问法。"""
+        try:
+            raw_temp = getattr(prompt_config, 'temperature', None) if prompt_config else None
+            base_temp = float(raw_temp) if raw_temp is not None else float(default_temp)
+        except Exception:
+            base_temp = float(default_temp)
+
+        base_temp = InterviewService._clamp(base_temp, 0.2, 1.2)
+        if seed is None:
+            return base_temp
+
+        rng = random.Random(int(seed))
+        jitter = rng.uniform(-0.08, 0.08)
+        return InterviewService._clamp(base_temp + jitter, 0.2, 1.2)
+
+    @staticmethod
+    def _pick_diverse_questions(assigned_questions, interview_id, round_index, pick_count=2):
+        """从高分候选题中做受控随机抽样，避免每轮都锁死同一题。"""
+        if not assigned_questions:
+            return []
+
+        top_window = min(len(assigned_questions), max(pick_count + 2, 3))
+        pool = list(assigned_questions[:top_window])
+        seed = (int(interview_id or 0) * 131) + (int(round_index or 1) * 17)
+        random.Random(seed).shuffle(pool)
+        return pool[:max(1, pick_count)]
+
+    @staticmethod
+    def _build_fallback_greeting(base_greeting, interview_id):
+        """无简历场景下给开场白加入多样化，避免每次完全一致。"""
+        fallback_pool = [base_greeting] + InterviewService._DIVERSE_GREETING_FALLBACKS
+        idx = int(interview_id or 0) % len(fallback_pool)
+        return fallback_pool[idx]
 
     @staticmethod
     def _normalize_answer_text(text):
@@ -492,13 +539,15 @@ class InterviewService:
         return 1
 
     @staticmethod
-    def _assign_questions(job_id, user_id, limit=5):
+    def _assign_questions(job_id, user_id, limit=5, recent_tag_ids=None):
         questions = Question.query.filter_by(job_id=job_id, status='published').all()
         if not questions:
             questions = Question.query.filter_by(job_id=job_id).all()
 
         if not questions:
             return []
+
+        recent_tag_ids = set(recent_tag_ids or [])
 
         _, tag_map = InterviewService._get_job_graph_snapshot(job_id)
         mastery_rows = UserKnowledgeMastery.query.filter(
@@ -519,6 +568,10 @@ class InterviewService:
             score = (100 - depth_gap * 25) + avg_mastery * 0.35
             if depth == target_depth:
                 score += 20
+            if recent_tag_ids and recent_tag_ids.intersection(tag_ids):
+                score -= 35
+            elif recent_tag_ids:
+                score -= 8
             ranked.append({
                 'question': question,
                 'tag_ids': tag_ids,
@@ -530,6 +583,29 @@ class InterviewService:
 
         ranked.sort(key=lambda item: (-item['score'], -item['avg_mastery'], item['question'].id))
         return ranked[:limit]
+
+    @staticmethod
+    def _get_recent_asked_tag_ids(interview_id, limit=3):
+        recent_ai_questions = (
+            InterviewChat.query
+            .filter_by(interview_id=interview_id, role='ai')
+            .filter(InterviewChat.question_id.isnot(None))
+            .order_by(InterviewChat.timestamp.desc(), InterviewChat.id.desc())
+            .limit(limit)
+            .all()
+        )
+
+        recent_tag_ids = []
+        seen_tag_ids = set()
+        for chat in recent_ai_questions:
+            question = Question.query.get(chat.question_id)
+            if not question:
+                continue
+            for tag in question.knowledge_tags or []:
+                if tag.id not in seen_tag_ids:
+                    seen_tag_ids.add(tag.id)
+                    recent_tag_ids.append(tag.id)
+        return recent_tag_ids
 
     @staticmethod
     def _build_adjacent_tag_context(tag_ids, interview_style='confident'):
@@ -744,7 +820,7 @@ class InterviewService:
         # 2. 动态获取角色设定与提示词
         prompt_config = AiPrompt.query.filter_by(job_id=job_id, is_active=True).first()
         base_greeting = prompt_config.greeting_message if prompt_config else "你好，我们开始面试吧。"
-        greeting = base_greeting
+        greeting = InterviewService._build_fallback_greeting(base_greeting, interview.id)
 
         # 3. 【修复点】：结合简历生成个性化开场白
         if not is_resume_empty:
@@ -754,7 +830,15 @@ class InterviewService:
                 # 要求 LLM 融合基础配置和简历信息，生成一句话开场
                 sys_msg = f"你是一个专业的面试官。请根据候选人简历摘要，结合默认开场白：【{base_greeting}】，生成一句自然、友好的个性化开场欢迎语（要求：绝对不要提问，只打招呼并简短提及对方的背景，字数控制在80字左右）。\n\n{resume_context}"
 
-                greeting_reply = llm.generate_reply([{"role": "system", "content": sys_msg}])
+                greeting_temp = InterviewService._resolve_generation_temperature(
+                    prompt_config=prompt_config,
+                    default_temp=0.9,
+                    seed=interview.id,
+                )
+                greeting_reply = llm.generate_reply(
+                    [{"role": "system", "content": sys_msg}],
+                    temperature=greeting_temp,
+                )
                 if greeting_reply:
                     greeting = greeting_reply.strip()
             except Exception as e:
@@ -859,10 +943,22 @@ class InterviewService:
         valid_tags_str = "、".join([tag.name for tag in job_tag_map.values()])
 
         session_style = getattr(getattr(interview, 'session_config', None), 'interview_style', 'confident')
-        assigned_questions = InterviewService._assign_questions(interview.job_id, interview.user_id, limit=3)
+        recent_tag_ids = InterviewService._get_recent_asked_tag_ids(interview.id, limit=3)
+        assigned_questions = InterviewService._assign_questions(
+            interview.job_id,
+            interview.user_id,
+            limit=6,
+            recent_tag_ids=recent_tag_ids,
+        )
+        diverse_refs = InterviewService._pick_diverse_questions(
+            assigned_questions,
+            interview_id=interview.id,
+            round_index=interview.question_count,
+            pick_count=2,
+        )
         assigned_question_lines = []
         assigned_tag_ids = []
-        for item in assigned_questions:
+        for item in diverse_refs:
             assigned_tag_ids.extend(item['tag_ids'])
             assigned_question_lines.append(
                 f"- 深度{item['target_depth']}候选题：{item['question'].content[:80]}（标签：{'、'.join(item['tag_names'])}）"
@@ -929,6 +1025,7 @@ class InterviewService:
             {assigned_question_prompt}
             与候选题相关的相邻图谱节点：{graph_edge_context or '暂无'}。
             所有追问必须严格限定在下方“面试大纲（标准知识点库）”的范围内。
+            避免连续两轮围绕完全相同的知识点提问，优先切换到同层相邻节点或同岗位另一核心能力点。
 
                     
                 【面试提问大纲约束】：
@@ -945,11 +1042,23 @@ class InterviewService:
         messages = [{"role": "system", "content": enhanced_system_prompt}]
 
     
-        related_question = assigned_questions[0]['question'] if assigned_questions else None
+        related_question = diverse_refs[0]['question'] if diverse_refs else None
 
         if related_question:
             messages.append({"role": "system",
                              "content": f"参考题目：{related_question.content}。参考答案要点：{related_question.reference_answer}。请围绕此知识点对候选人进行专业追问。"})
+
+        if recent_tag_ids:
+            recent_tag_names = []
+            for tag_id in recent_tag_ids:
+                tag = job_tag_map.get(tag_id) or KnowledgeTag.query.get(tag_id)
+                if tag and tag.name not in recent_tag_names:
+                    recent_tag_names.append(tag.name)
+            if recent_tag_names:
+                messages.append({
+                    "role": "system",
+                    "content": f"最近几轮已经覆盖过的知识点：{ '、'.join(recent_tag_names[:6]) }。请优先切换到其他知识点，不要连续重复提问同一主题。"
+                })
 
         # 加载历史对话
         history = InterviewChat.query.filter_by(interview_id=interview_id).order_by(InterviewChat.timestamp).all()
@@ -959,7 +1068,12 @@ class InterviewService:
 
         # 4. 调用大模型流式输出
         llm = DeepSeekClient()
-        response_stream = llm.generate_reply(messages, stream=True)
+        stream_temp = InterviewService._resolve_generation_temperature(
+            prompt_config=prompt_config,
+            default_temp=0.88,
+            seed=(interview.id * 1000 + interview.question_count),
+        )
+        response_stream = llm.generate_reply(messages, stream=True, temperature=stream_temp)
 
         tts_voice = InterviewService._get_tts_voice(prompt_config, voice) if voice_mode else None
 
@@ -1145,7 +1259,12 @@ class InterviewService:
                 print(f"⚠️  [TTS] 警告：合成覆盖率低于 80%，未合成 {missing_chars} 个字符")
 
 
-        ai_chat = InterviewChat(interview_id=interview.id, role='ai', content=clean_reply)
+        ai_chat = InterviewChat(
+            interview_id=interview.id,
+            role='ai',
+            content=clean_reply,
+            question_id=related_question.id if related_question else None,
+        )
         db.session.add(ai_chat)
 
         # === 恢复音频文件保存逻辑 ===

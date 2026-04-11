@@ -19,7 +19,7 @@ class DeepSeekClient:
             )
             self.model = current_app.config['LLM_MODEL_NAME']
 
-    def generate_reply(self, messages, stream=False):
+    def generate_reply(self, messages, stream=False, temperature=0.7):
         """
         调用大模型生成回复
         :param messages: 对话上下文列表，例如 [{"role": "system", "content": "..."}, {"role": "user", "content": "..."}]
@@ -31,7 +31,7 @@ class DeepSeekClient:
                 'model': self.model,
                 'messages': messages,
                 'stream': stream,
-                'temperature': 0.7
+                'temperature': temperature
             }
 
             response = self.client.chat.completions.create(**request_params)
