@@ -59,12 +59,11 @@ def start_interview():
     user_id = get_current_user_id() or data.get('user_id')
     job_id_input = data.get('job_id')
     voice_mode = bool(data.get('voice_mode', False))
-<<<<<<< HEAD
+
     interview_style = data.get('interview_style')
     voice_role = data.get('voice_role')
-=======
     voice = (data.get('voice') or '').strip() or None
->>>>>>> 488266599dcf05c5de15b636bfd23194aa8d438e
+
 
     # 参数验证
     if not user_id:
@@ -78,7 +77,7 @@ def start_interview():
         return jsonify({"code": 400, "msg": f"无效的岗位: {job_id_input}，请确认岗位已在数据库中创建"}), 400
 
     try:
-<<<<<<< HEAD
+
         result = InterviewService.start_interview(
             user_id,
             job_id,
@@ -86,9 +85,7 @@ def start_interview():
             interview_style=interview_style,
             voice_role=voice_role,
         )
-=======
-        result = InterviewService.start_interview(user_id, job_id, voice_mode=voice_mode, voice=voice)
->>>>>>> 488266599dcf05c5de15b636bfd23194aa8d438e
+
         return jsonify({"code": 200, "data": result, "msg": "success"}), 200
     except Exception as e:
         return jsonify({"code": 500, "msg": str(e)}), 500
