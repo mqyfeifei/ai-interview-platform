@@ -226,12 +226,9 @@ const state = () => ({
   elapsedSeconds: 0,        // 已用时（秒）
   jobDbId: null,  // 后端数据库真实岗位id
   voiceMode: false,
-<<<<<<< HEAD
   interviewStyle: 'confident',
-  voiceRole: 'role_calm'
-=======
+  voiceRole: 'role_calm',
   ttsVoice: DEFAULT_TTS_VOICE
->>>>>>> 488266599dcf05c5de15b636bfd23194aa8d438e
 })
 
 const mutations = {
@@ -245,13 +242,10 @@ const mutations = {
   SET_MESSAGES(state, msgs) { state.messages = msgs },
   SET_QUESTION_INDEX(state, idx) { state.questionIndex = idx },
   SET_VOICE_MODE(state, v) { state.voiceMode = v },
-<<<<<<< HEAD
   SET_INTERVIEW_STYLE(state, v) { state.interviewStyle = v || 'confident' },
   SET_VOICE_ROLE(state, v) { state.voiceRole = v || 'role_calm' },
-=======
   SET_TTS_VOICE(state, v) { state.ttsVoice = (v || DEFAULT_TTS_VOICE) },
   SET_AI_SPEAKING(state, v) { state.isAISpeaking = v },
->>>>>>> 488266599dcf05c5de15b636bfd23194aa8d438e
   SET_FINISHED(state, reportId) {
     state.isFinished = true
     state.isEnding = false
@@ -287,12 +281,9 @@ const mutations = {
     state.isAISpeaking = false
     state.elapsedSeconds = 0
     state.voiceMode = false
-<<<<<<< HEAD
     state.interviewStyle = 'confident'
     state.voiceRole = 'role_calm'
-=======
     state.ttsVoice = DEFAULT_TTS_VOICE
->>>>>>> 488266599dcf05c5de15b636bfd23194aa8d438e
   }
 }
 
@@ -321,12 +312,9 @@ const actions = {
         userId,                    // 传给后端的 user_id
         jobDbId: state.jobDbId,     // 传给后端的 job_id（数字）
         voiceMode: state.voiceMode,
-<<<<<<< HEAD
         interviewStyle: state.interviewStyle,
-        voiceRole: state.voiceRole
-=======
+        voiceRole: state.voiceRole,
         voice: state.ttsVoice
->>>>>>> 488266599dcf05c5de15b636bfd23194aa8d438e
       })
       commit('SET_SESSION', { sessionId: res.sessionId, totalQuestions: 10 })
       commit('ADD_MESSAGE', {

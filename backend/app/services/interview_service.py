@@ -705,7 +705,7 @@ class InterviewService:
         }
 
     @staticmethod
-    def start_interview(user_id, job_id, voice_mode=False, interview_style=None, voice_role=None):
+    def start_interview(user_id, job_id, voice_mode=False, interview_style=None, voice_role=None, voice=None):
 
         # 0. 【修复点】：提前拉取简历，判断是否为空
         resume_data = ResumeService.get_main_resume(user_id)

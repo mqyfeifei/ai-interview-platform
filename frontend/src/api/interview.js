@@ -20,14 +20,11 @@ export const startInterview = async (data) => {
     user_id: data.userId,   // 暂时从 data 传入，待JWT完善后从拦截器注入
     job_id: data.jobDbId,
     voice_mode: !!data.voiceMode,
-<<<<<<< HEAD
     interview_style: data.interviewStyle,
-    voice_role: data.voiceRole
-=======
+    voice_role: data.voiceRole,
     voice: data.voice || null
   }, {
     timeout: 60000  // 单独设置 60 秒，确保 TTS 初始化和音频生成有充足时间
->>>>>>> 488266599dcf05c5de15b636bfd23194aa8d438e
   })
   // 响应拦截器已解包，res 就是后端返回的 data 对象
   // 统一适配为前端期望的格式

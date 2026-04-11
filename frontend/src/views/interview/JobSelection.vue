@@ -818,21 +818,14 @@ export default {
         await this.$store.dispatch('interview/resetInterview')
         this.$store.commit('interview/SET_JOB_DB_ID', jobDbId)
         this.$store.commit('interview/SET_VOICE_MODE', this.voiceMode)
-<<<<<<< HEAD
         this.$store.commit('interview/SET_INTERVIEW_STYLE', interviewStyle)
-        this.$store.commit('interview/SET_VOICE_ROLE', this.selectedVoiceRole)
-        await this.$store.dispatch('interview/selectJob', this.currentSelected)
-        // 根据面试模式跳转到不同页面
-        if (this.voiceMode) {
-          // this.$router.push('/interview/session')
-=======
+        this.$store.commit('interview/SET_VOICE_ROLE', this.voiceMode ? this.selectedVoiceRole : 'role_calm')
         if (this.voiceMode) {
           this.$store.commit('interview/SET_TTS_VOICE', this.selectedVoiceRole)
         }
         await this.$store.dispatch('interview/selectJob', this.currentSelected)
         // 根据面试模式跳转到不同页面
         if (this.voiceMode) {
->>>>>>> 488266599dcf05c5de15b636bfd23194aa8d438e
           this.$router.push('/interview/voice-session')
         } else {
           this.$router.push('/interview/session')
