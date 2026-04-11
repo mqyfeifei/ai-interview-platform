@@ -20,8 +20,14 @@ export const startInterview = async (data) => {
     user_id: data.userId,   // 暂时从 data 传入，待JWT完善后从拦截器注入
     job_id: data.jobDbId,
     voice_mode: !!data.voiceMode,
+<<<<<<< HEAD
     interview_style: data.interviewStyle,
     voice_role: data.voiceRole
+=======
+    voice: data.voice || null
+  }, {
+    timeout: 60000  // 单独设置 60 秒，确保 TTS 初始化和音频生成有充足时间
+>>>>>>> 488266599dcf05c5de15b636bfd23194aa8d438e
   })
   // 响应拦截器已解包，res 就是后端返回的 data 对象
   // 统一适配为前端期望的格式
@@ -49,65 +55,110 @@ export const sendAnswer = async (sessionId, answer) => {
 // 原 sendAnswer 返回 { reply, nextQuestion, isFinished }
 // 后端是 SSE 流，通过 fetch 手动处理，检测 [INTERVIEW_OVER] 标记
 // api/interview.js  sendAnswerStream
-export const sendAnswerStream = (sessionId, answer, { onChunk, onFinish, onStreamEnd, onError, onAudio, voiceMode = false }) => {
+export const sendAnswerStream = (sessionId, answer, { onChunk, onFinish, onStreamEnd, onError, onAudio, voiceMode = false, voice = null }) => {
   const API_BASE = process.env.VUE_APP_API_BASE_URL || '/api/v1'
   const token = localStorage.getItem('ai_interview_token')
+
+  const readErrorMessage = async (response) => {
+    const contentType = response.headers.get('content-type') || ''
+    try {
+      if (contentType.includes('application/json')) {
+        const data = await response.clone().json()
+        return data?.message || data?.msg || data?.error || `请求失败（${response.status}）`
+      }
+
+      const text = await response.clone().text()
+      return text?.trim() || `请求失败（${response.status}）`
+    } catch (err) {
+      return `请求失败（${response.status}）`
+    }
+  }
 
   fetch(`${API_BASE}/interviews/${sessionId}/chat/stream`, {
     method: 'POST',
     headers: {
+      'Accept': 'text/event-stream',
       'Content-Type': 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {})
     },
-    body: JSON.stringify({ answer, voice_mode: !!voiceMode })
+    cache: 'no-store',
+    body: JSON.stringify({ answer, voice_mode: !!voiceMode, voice: voice || null })
   }).then(async (response) => {
+    if (!response.ok) {
+      throw new Error(await readErrorMessage(response))
+    }
+
+    if (!response.body) {
+      throw new Error('服务器未返回可读取的流响应')
+    }
+
     const reader = response.body.getReader()
     const decoder = new TextDecoder()
-    let buffer = ''       // ✅ 用 buffer 拼接不完整的 SSE 行
+    let buffer = ''
     let fullText = ''
     let isOver = false
+
+    const handleSseEvent = (rawEvent) => {
+      if (!rawEvent) return
+
+      const dataLines = rawEvent
+        .split('\n')
+        .filter(line => line.startsWith('data:'))
+        .map(line => line.slice(5).trimStart())
+
+      if (!dataLines.length) return
+
+      try {
+        const json = JSON.parse(dataLines.join('\n'))
+        const chunk = json.chunk || ''
+        fullText += chunk
+
+        if (json.audio_b64 && onAudio) {
+          onAudio(json.audio_b64)
+        }
+
+        if (!isOver && fullText.includes('[INTERVIEW_OVER]')) {
+          isOver = true
+          const cleanChunk = chunk.replace('[INTERVIEW_OVER]', '')
+          if (cleanChunk && onChunk) onChunk(cleanChunk)
+          return
+        }
+
+        if (!isOver && chunk && onChunk) {
+          onChunk(chunk)
+        }
+      } catch {
+        // 忽略无法解析的事件，保证主流不中断
+      }
+    }
 
     while (true) {
       const { done, value } = await reader.read()
       if (done) break
 
-      // ✅ 把本次字节追加到 buffer，而不是直接 split
-      buffer += decoder.decode(value, { stream: true })
+      buffer += decoder.decode(value, { stream: true }).replace(/\r\n/g, '\n')
 
-      // 按完整行切割，保留末尾不完整的部分留到下次
-      const lines = buffer.split('\n')
-      buffer = lines.pop()   // 最后一段可能不完整，留给下次
-
-      for (const line of lines) {
-        if (!line.startsWith('data: ')) continue
-        try {
-          const json = JSON.parse(line.slice(6))
-          const chunk = json.chunk || ''
-          fullText += chunk
-
-          // ✅ 处理音频数据（如果有）
-          if (json.audio_b64 && onAudio) {
-            onAudio(json.audio_b64)
-          }
-
-          // ✅ 用 fullText 判断，不再用单个 chunk
-          if (!isOver && fullText.includes('[INTERVIEW_OVER]')) {
-            isOver = true
-            // 把干净内容（去掉标记）推给 UI
-            const cleanChunk = chunk.replace('[INTERVIEW_OVER]', '')
-            if (cleanChunk) onChunk(cleanChunk)
-            setTimeout(() => { onFinish && onFinish() }, 3000)
-            return  // 提前退出，不再触发 onStreamEnd
-          }
-
-          if (!isOver) {
-            onChunk(chunk)
-          }
-        } catch { /* JSON 解析失败跳过 */ }
+      let delimiterIndex = buffer.indexOf('\n\n')
+      while (delimiterIndex !== -1) {
+        const rawEvent = buffer.slice(0, delimiterIndex)
+        buffer = buffer.slice(delimiterIndex + 2)
+        handleSseEvent(rawEvent)
+        delimiterIndex = buffer.indexOf('\n\n')
       }
     }
 
-    if (!isOver) {
+    const tail = decoder.decode()
+    if (tail) {
+      buffer += tail.replace(/\r\n/g, '\n')
+    }
+
+    if (buffer.trim()) {
+      handleSseEvent(buffer)
+    }
+
+    if (isOver) {
+      onFinish && onFinish()
+    } else {
       onStreamEnd && onStreamEnd()
     }
   }).catch(onError)
@@ -138,12 +189,15 @@ export const getInterviewList = async (params = {}) => {
 }
 
 
-// ---- uploadAudio（新增，对接 ASR）----
+// ---- uploadAudio（对接 ASR）----
+// 注意：Whisper 模型在 CPU 上运行，首次调用时需加载模型，耗时可能超过 15s。
+// 这里单独设置 timeout: 60000（60秒），覆盖全局的 15s，避免超时报错。
 export const uploadAudio = async (audioBlob) => {
   const formData = new FormData()
   formData.append('audio', audioBlob, 'recording.wav')
   const res = await request.post('/interviews/upload-audio', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' }
+    headers: { 'Content-Type': 'multipart/form-data' },
+    timeout: 60000  // ASR 单独设置 60s 超时，Whisper CPU 推理首次加载较慢
   })
   console.log('ASR识别结果：', res)
   return res

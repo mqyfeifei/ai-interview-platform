@@ -307,6 +307,33 @@ export default {
     ...mapActions('user', ['fetchUserInfo']),
     ...mapActions('interview', ['selectJob']),
 
+    async primeAudioPlayback() {
+      if (!this.voiceMode || typeof window === 'undefined') return
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext
+        if (!AudioCtx) return
+
+        if (!window.__aiInterviewAudioContext) {
+          window.__aiInterviewAudioContext = new AudioCtx()
+        }
+
+        const ctx = window.__aiInterviewAudioContext
+        if (ctx.state === 'suspended') {
+          await ctx.resume()
+        }
+
+        const osc = ctx.createOscillator()
+        const gain = ctx.createGain()
+        gain.gain.value = 0.00001
+        osc.connect(gain)
+        gain.connect(ctx.destination)
+        osc.start()
+        osc.stop(ctx.currentTime + 0.01)
+      } catch (err) {
+        console.warn('语音播放预解锁失败', err)
+      }
+    },
+
     getHelpGuideUserKey() {
       const u = this.userInfo || {}
       return u.id ?? u.user_id ?? u.userId ?? u.uid ?? u.email ?? null
@@ -433,12 +460,18 @@ export default {
       
       const job = this.selectedJob  // 先保存引用
       this.closeConfirmModal()       // 关闭弹窗（会把 selectedJob 置 null）
+
+      await this.primeAudioPlayback()
       
       await this.$store.dispatch('interview/resetInterview')
       this.$store.commit('interview/SET_JOB_DB_ID', job.id)  // 用保存的引用
       this.$store.commit('interview/SET_VOICE_MODE', this.voiceMode)
       await this.$store.dispatch('interview/selectJob', job)
-      this.$router.push('/interview/session')
+      if (this.voiceMode) {
+        this.$router.push('/interview/voice-session')
+      } else {
+        this.$router.push('/interview/session')
+      }
     },
 
     selectJobAndStart(job) {

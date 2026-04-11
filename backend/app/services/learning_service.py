@@ -5,10 +5,6 @@ from app.extensions import db
 from app.models.interview import Interview, InterviewScore, Dimension
 from app.models.learning import UserKnowledgeMastery, KnowledgeTag, Resource, UserLearning
 from app.models.example import Example
-from sentence_transformers import SentenceTransformer
-
-# 复用全局加载的模型
-local_embedding_model = SentenceTransformer('BAAI/bge-small-zh-v1.5')
 
 
 class LearningService:
@@ -164,8 +160,9 @@ class LearningService:
 
         # 2. 如果精确匹配数量不够 limit，则使用向量检索补充
         if len(results) < limit:
+            from app.services.interview_service import InterviewService
             weak_text = " ".join([w['name'] for w in weaknesses])
-            weak_vector = local_embedding_model.encode(weak_text).tolist()
+            weak_vector = InterviewService.get_embedding(weak_text)
             
             query = Resource.query
             exclude_ids = list(set(completed_ids) | recommended_ids)

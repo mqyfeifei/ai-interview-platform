@@ -4,6 +4,7 @@ import re
 import json
 import asyncio
 import threading
+import time
 from concurrent.futures import ThreadPoolExecutor
 from difflib import SequenceMatcher
 
@@ -37,33 +38,46 @@ from sentence_transformers import SentenceTransformer
 from datetime import datetime
 
 
+_EMBEDDING_MODEL_NAME = 'BAAI/bge-small-zh-v1.5'
+_local_embedding_model = None
+_embedding_model_lock = threading.Lock()
 
-
-# 推荐在类外部进行全局加载，避免每次调用时重复加载模型进内存
-# 'BAAI/bge-small-zh-v1.5' 首次运行会自动下载
-local_embedding_model = SentenceTransformer('BAAI/bge-small-zh-v1.5', local_files_only=False)
-# ================= 新增：配置 Tokenizer 安全截断 =================
-# 显式限制模型的最大序列长度为 512（bge-small 默认上限）。
-# 这样即使输入的字符串 token 数量超过上限，底层的 tokenizer 也会自动进行安全截断，
-# 而不会报 token index out of range 错误或 warning。
-local_embedding_model.max_seq_length = 512
-# =============================================================
+try:
+    # 将线程池最大并发限制到 2，避免火山引擎 QPS 并发率限制。
+    _TTS_MAX_WORKERS = 1
+except Exception:
+    _TTS_MAX_WORKERS = 1
 
 class InterviewService:
     # === 新增：全局线程池，用于异步 TTS 合成 ===
-    # max_workers=5 表示最多同时处理 5 个 TTS 请求
-    tts_executor = ThreadPoolExecutor(max_workers=5)
+    tts_executor = ThreadPoolExecutor(max_workers=_TTS_MAX_WORKERS)
     _speed_cache_lock = threading.Lock()
 
     _MEANINGLESS_ANSWER_PATTERN = re.compile(
         r'^(好|好的|嗯|嗯嗯|嗯哼|哦|噢|啊|行|可以|是|对|没了|没有了|不知道|ok|okay|yes|no|1|2|3|4|5|6|7|8|9|0|[，。！？、\s]+)$',
         re.IGNORECASE
     )
-    
+    _TTS_SENTENCE_BOUNDARY_PATTERN = re.compile(r'[。！？；!?;!？\n]')
+    _TTS_SOFT_BOUNDARY_PATTERN = re.compile(r'[，,:：]')
+    _TTS_SPEAKABLE_CHAR_PATTERN = re.compile(r'[\u4e00-\u9fffA-Za-z0-9]')
+    _MIN_TTS_SPEAKABLE_CHARS = 2
+    _TTS_SOFT_SPLIT_MIN_SPEAKABLE_CHARS = 8  # ✅ 降低从 12 到 8，提高分割频率，不遗漏短句
+    _TTS_FORCE_SPLIT_MAX_SPEAKABLE_CHARS = 70
+    _TTS_HEAD_BLOCK_TIMEOUT_SECONDS = 30
+    _STREAM_DISPLAY_CHUNK_CHARS = 10
+
+    @staticmethod
+    def _get_tts_voice(prompt_config=None, selected_voice=None):
+        explicit_voice = (selected_voice or '').strip()
+        if explicit_voice:
+            return explicit_voice
+        voice = getattr(prompt_config, 'preferred_voice', None) if prompt_config else None
+        return voice or TTSService.get_default_speaker()
+
     @staticmethod
     def _synthesize_audio_async(text, voice, fmt='mp3'):
         """
-        异步 TTS 合成包装器
+        异步 TTS 合成包装。
         在线程池中执行同步的 synthesize_bytes，避免阻塞主线程
         """
         try:
@@ -86,30 +100,191 @@ class InterviewService:
         if len(t) <= 2:
             return True
         return bool(cls._MEANINGLESS_ANSWER_PATTERN.match(t))
-    # @staticmethod
-    # def get_embedding(text):
-    #     """调用嵌入模型获取文本的 1536 维向量"""
-    #     client = OpenAI(
-    #         api_key=current_app.config['EMBEDDING_API_KEY'],
-    #         base_url=current_app.config.get('EMBEDDING_BASE_URL')  # 若使用第三方兼容API则配置
-    #     )
-    #     response = client.embeddings.create(
-    #         input=text,
-    #         model="text-embedding-3-small"  # 或你的具体模型名称
-    #     )
-    #     return response.data[0].embedding
+
+    @staticmethod
+    def _strip_stream_control_tokens(text):
+        t = (text or '').replace('[INTERVIEW_OVER]', '').strip()
+        # 移除 markdown 中的 *, # 等符号
+        t = re.sub(r'[*_~>#`]+', '', t)
+
+        # 移除不可发音且非标点的特殊字符，如 emoji 等，防止 TTS 引擎报错或降级。
+        # 允许中英文字符、数字，以及常见标点符号、空格
+        allowed_pattern = re.compile(r'[^\u4e00-\u9fffa-zA-Z0-9，。！？；、：“”《》（）\.,!?;\'"()\[\]\-\+\s\n·—－￥]')
+        t = allowed_pattern.sub('', t)
+
+        # 将多个空格替换为一个空格
+        t = re.sub(r'\s+', ' ', t)
+        return t.strip()
+
+    @classmethod
+    def _count_tts_speakable_chars(cls, text):
+        return len(cls._TTS_SPEAKABLE_CHAR_PATTERN.findall(text or ''))
+
+    @classmethod
+    def _is_valid_tts_segment(cls, text, force=False):
+        clean_text = cls._strip_stream_control_tokens(text)
+        if not clean_text:
+            return False
+
+        min_chars = 1 if force else cls._MIN_TTS_SPEAKABLE_CHARS
+        return cls._count_tts_speakable_chars(clean_text) >= min_chars
+
+    @classmethod
+    def _extract_ready_tts_segments(cls, buffer_text):
+        """
+        从累计缓冲中提取已闭合的可播报句子，返回(segments, remaining_text)。
+        优先在句末停顿切分；若句子过长则在逗号等软停顿处切分，降低单段过长带来的延迟。
+        """
+        text = buffer_text or ''
+        segments = []
+        segment_start = 0
+        speakable_count = 0
+        last_soft_boundary = -1
+
+        def append_segment_if_valid(split_pos, force_valid=False):
+            nonlocal segment_start, speakable_count, last_soft_boundary
+            if split_pos <= segment_start:
+                return False
+
+            candidate = text[segment_start:split_pos]
+            if not cls._is_valid_tts_segment(candidate, force=force_valid):
+                return False
+
+            segments.append(cls._strip_stream_control_tokens(candidate))
+            segment_start = split_pos
+            speakable_count = 0
+            last_soft_boundary = -1
+            return True
+
+        for index, ch in enumerate(text):
+            char_pos = index + 1
+            if cls._TTS_SPEAKABLE_CHAR_PATTERN.match(ch):
+                # 英文和常见符号在发音时较快，中文更慢更长，简单按字符数容易把很长的英文算成太短。
+                # 此处将所有能发音的字符等价看待，不区分中英，因为上面已经降低了阈值。
+                speakable_count += 1
+
+            if cls._TTS_SOFT_BOUNDARY_PATTERN.match(ch):
+                last_soft_boundary = char_pos
+                if speakable_count >= cls._TTS_SOFT_SPLIT_MIN_SPEAKABLE_CHARS:
+                    append_segment_if_valid(char_pos, force_valid=False)
+                    continue
+
+            if cls._TTS_SENTENCE_BOUNDARY_PATTERN.match(ch):
+                # 强行断句，不再判断是不是太短。即便是1个字的“好。”也直接送去播报。
+                append_segment_if_valid(char_pos, force_valid=True)
+                continue
+
+            if speakable_count >= cls._TTS_FORCE_SPLIT_MAX_SPEAKABLE_CHARS:
+                split_pos = last_soft_boundary if last_soft_boundary > segment_start else char_pos
+                did_split = append_segment_if_valid(split_pos, force_valid=False)
+                if did_split and split_pos < char_pos:
+                    # 若在当前字符之前切分，重新统计当前段剩余可发音字符。
+                    speakable_count = cls._count_tts_speakable_chars(text[segment_start:char_pos])
+
+
+        return segments, text[segment_start:]
+
+    @classmethod
+    def _extract_tail_tts_segment(cls, buffer_text):
+        """
+        流式结束时提取剩余尾句（允许更短，但仍需可发音）。
+        ✅ 改进点：更严格的有效性检查，确保不会发送空白或纯标点
+        ✅ 优化：降低阈值从 1 个可发音字符到任何非空字符，最大化覆盖率
+        """
+        if not buffer_text:
+            return None
+        
+        candidate = cls._strip_stream_control_tokens(buffer_text)
+        
+        # 如果整个候选文本为空（纯标点/空格），则返回 None
+        if not candidate or not candidate.strip():
+            return None
+        
+        # 尾句只要包含至少 1 个可发音字符，就应该被合成
+        # 这包括中英文、数字等，但排除纯标点符号
+        speakable_count = cls._count_tts_speakable_chars(candidate)
+        if speakable_count >= 1:
+            return candidate
+        
+        # 如果没有可发音字符但有其他字符（如标点），检查是否值得单独发音
+        # 通常纯标点不需要额外合成，但如果整个 buffer 中有意义，保留之
+        if candidate and speakable_count == 0 and len(candidate.strip()) > 0:
+            # 这里是纯标点或其他符号，例如"…"、"！"等
+            # 为避免冗余，直接返回 None
+            # 如果需要保留这些符号的语音，可改为返回 candidate
+            return None
+        
+        return None
+
+    @classmethod
+    def _split_stream_display_chunks(cls, content):
+        """将单次模型大块输出拆成更细粒度文本事件，改善前端逐字体验。""" # type: ignore
+        text = content or ''
+        if not text:
+            return []
+
+        pieces = []
+        current = []
+        speakable_count = 0
+
+        for ch in text:
+            current.append(ch)
+            if cls._TTS_SPEAKABLE_CHAR_PATTERN.match(ch):
+                speakable_count += 1
+
+            if cls._TTS_SENTENCE_BOUNDARY_PATTERN.match(ch):
+                pieces.append(''.join(current))
+                current = []
+                speakable_count = 0
+                continue
+
+            if cls._TTS_SOFT_BOUNDARY_PATTERN.match(ch) and speakable_count >= 4:
+                pieces.append(''.join(current))
+                current = []
+                speakable_count = 0
+                continue
+
+            if speakable_count >= cls._STREAM_DISPLAY_CHUNK_CHARS:
+                pieces.append(''.join(current))
+                current = []
+                speakable_count = 0
+
+        if current:
+            pieces.append(''.join(current))
+
+        return pieces
+
+    @staticmethod
+    def _get_local_embedding_model():
+        global _local_embedding_model
+        if _local_embedding_model is not None:
+            return _local_embedding_model
+
+        with _embedding_model_lock:
+            if _local_embedding_model is not None:
+                return _local_embedding_model
+            try:
+                model = SentenceTransformer(_EMBEDDING_MODEL_NAME, local_files_only=False)
+            except ValueError as e:
+                raise RuntimeError(
+                    "本地向量模型加载失败：当前 sentence-transformers/transformers 与 "
+                    f"{_EMBEDDING_MODEL_NAME} 不兼容。请升级/降级依赖后重试。原始错误: {e}"
+                ) from e
+            model.max_seq_length = 512
+            _local_embedding_model = model
+            return _local_embedding_model
 
     @staticmethod
     def get_embedding(text):
-        """调用本地开源模型获取文本向量"""
-        # bge-small-zh 输出为 512 维向量
-        embeddings = local_embedding_model.encode(text)
+        """调用本地开源模型获取文本向量。"""
+        # bge-small-zh 输出 512 维向量
+        embeddings = InterviewService._get_local_embedding_model().encode(text)
         return embeddings.tolist()
 
     @staticmethod
     def _extract_resume_context(user_id: int, max_chars: int = 800) -> str:
         """
-        拉取并解析用户主简历，进行去敏与核心要点抽取，防止 Token 溢出。
+        拉取并解析用户主简历，进行去敏与核心要点抽取，防止 Token 溢出。 # pyright: ignore[reportUndefinedVariable]
         """
         try:
             # 获取主简历及其 JSON content
@@ -127,7 +302,7 @@ class InterviewService:
             skills_names = [s.get('name', '') for s in skills_list if s.get('name')]
             skills_str = "、".join(skills_names[:10])
 
-            # 3. 工作经历抽取 (最近 2 条)
+            # 3. 工作经历抽取 (最多 2 条)
             # 3. 【修复点】：合并工作、实习、校园经历
             works = content.get('workExperiences', [])
             interns = content.get('internshipExperiences', [])
@@ -148,7 +323,7 @@ class InterviewService:
                 desc = exp['desc'].replace('\n', ' ')[:100] if exp['desc'] else ''
                 work_context += f"- {exp['org']} | {exp['role']} ({exp['period']})\n  核心职责/成就: {desc}...\n"
 
-            # 4. 组装简历摘要模板
+            # 4. 组装简历摘要模块
             resume_text = f"""
             【候选人简历摘要】
             - 姓名: {name}
@@ -157,14 +332,15 @@ class InterviewService:
             {work_context if work_context else '未填写'}
             """
 
-            # 5. 安全硬截断，作为兜底防止恶意的超长输入
+            # 5. 安全硬截断，作为兜底防止恶意的超长输入。
             return resume_text.strip()[:max_chars]
 
         except Exception as e:
-            print(f"简历摘要提取失败: {str(e)}")
+            print(f"简历摘要提取失败 {str(e)}")
             return ""
 
     @staticmethod
+
     def _initialize_user_graph_from_resume(user_id, resume_skills_list, base_score=60):
         """
         根据简历技能对用户知识图谱进行冷启动：
@@ -530,6 +706,7 @@ class InterviewService:
 
     @staticmethod
     def start_interview(user_id, job_id, voice_mode=False, interview_style=None, voice_role=None):
+
         # 0. 【修复点】：提前拉取简历，判断是否为空
         resume_data = ResumeService.get_main_resume(user_id)
         content = resume_data.get('content', {})
@@ -583,20 +760,38 @@ class InterviewService:
             except Exception as e:
                 print(f"个性化开场白生成失败，降级使用默认配置: {str(e)}")
 
-        # 4. 记录开场白至 InterviewChat
+        # 4. 记录开场白到 InterviewChat
         chat = InterviewChat(interview_id=interview.id, role='ai', content=greeting)
         db.session.add(chat)
         db.session.commit()
 
+        # ✅ 改进：开场白 TTS 异步化，设置 3 秒超时，不阻塞响应
         greeting_audio_b64 = None
         if voice_mode:
+            # 异步提交 TTS 任务（不等待完成，立即返回响应）
+            tts_voice = InterviewService._get_tts_voice(prompt_config, voice)
+            speak_text = InterviewService._strip_stream_control_tokens(greeting)
+            
+            # 使用线程池异步执行，不阻塞主流程
+            future = InterviewService.tts_executor.submit(
+                InterviewService._synthesize_audio_async,
+                speak_text,
+                tts_voice,
+                'mp3'
+            )
+            
+            # 设置 3 秒超时尝试获取结果，超时则返回 None（用户体验不受影响）
             try:
-                voice = getattr(prompt_config, 'preferred_voice', 'BV001_streaming') if prompt_config else 'BV001_streaming'
-                audio_bytes = TTSService.synthesize_bytes(greeting, voice=voice, fmt='mp3')
+                audio_bytes = future.result(timeout=3.0)
                 if audio_bytes:
                     greeting_audio_b64 = bytes_to_b64(audio_bytes)
+                    print(f"[开场白 TTS] 3秒内合成成功，音频大小={len(audio_bytes)} bytes")
+                else:
+                    print(f"[开场白 TTS] 合成返回空数据")
+            except TimeoutError:
+                print(f"[开场白 TTS] 3秒超时，返回 None，继续主流程（后续可在客户端重试）")
             except Exception as e:
-                print(f"开场白 TTS 失败: {str(e)}")
+                print(f"[开场白 TTS] 异步合成异常: {str(e)}")
 
         # 5. 【修复点】：下发 warning 字段，供前端弹窗/Toast提示
         return {
@@ -614,17 +809,17 @@ class InterviewService:
         }
 
     @staticmethod
-    def process_chat_round_stream(interview_id, user_answer, voice_mode=False):
+    def process_chat_round_stream(interview_id, user_answer, voice_mode=False, voice=None):
         """处理对话并返回流式生成器"""
         interview = Interview.query.get(interview_id)
         normalized_answer = InterviewService._normalize_answer_text(user_answer)
-    
+
         # ================= 直接从全局缓存中获取语速 =================
         # 如果当前回答的文本刚好在缓存里，说明是刚才语音识别来的，拿到语速并删掉缓存
         with InterviewService._speed_cache_lock:
             actual_speed = global_speed_cache.pop(normalized_answer, None)
         # ============================================================
-    
+
         # 1. 记录用户回答
         user_chat = InterviewChat(interview_id=interview.id, role='user', content=normalized_answer)
         db.session.add(user_chat)
@@ -639,23 +834,27 @@ class InterviewService:
             if voice_mode:
                 try:
                     prompt_config = AiPrompt.query.filter_by(job_id=interview.job_id, is_active=True).first()
-                    voice = getattr(prompt_config, 'preferred_voice', 'BV001_streaming') if prompt_config else 'BV001_streaming'
-                    audio_bytes = TTSService.synthesize_bytes(reminder, voice=voice, fmt='mp3')
+                    tts_voice = InterviewService._get_tts_voice(prompt_config, voice)
+                    audio_bytes = TTSService.synthesize_bytes(reminder, voice=tts_voice, fmt='mp3')
                     if audio_bytes:
                         yield f"data: {json.dumps({'chunk': reminder, 'audio_b64': bytes_to_b64(audio_bytes)}, ensure_ascii=False)}\n\n"
                         return
                 except Exception as e:
-                    print(f'短回答提醒 TTS 失败: {e}')
+                    print(f'短回答提示 TTS 失败: {e}')
 
             yield f"data: {json.dumps({'chunk': reminder}, ensure_ascii=False)}\n\n"
             return
+
     
         # 2. 组装上下文与 RAG 提示词
+
+
         prompt_config = AiPrompt.query.filter_by(job_id=interview.job_id, is_active=True).first()
-        base_prompt = prompt_config.system_prompt if prompt_config else "你是面试官，【核心指令】：当你觉得已经问了足够多的问题（例如超过 5 题），或者你认为已经充分评估了该候选人的能力时，请主动结束面试。结束时，请务必在你的回复文本的最后面加上特殊标记 [INTERVIEW_OVER]。"
-    
-        # ================= 优化点：动态注入"面试大纲" =================
+        base_prompt = prompt_config.system_prompt if prompt_config else "你是面试官，【核心指令】：当你觉得已经问了足够多的问题（例如超过5题），或者你认为已经充分评估了该候选人的能力时，请主动结束面试。结束时，请务必在你的回复文本的最后面加上特殊标记 [INTERVIEW_OVER]。"
+
+        # ================= 优化点：动态注入面试大纲 =================
         # 从数据库拉取真实的知识点，约束 AI 只能在这个范围内提问
+
         questions, job_tag_map = InterviewService._get_job_graph_snapshot(interview.job_id)
         valid_tags_str = "、".join([tag.name for tag in job_tag_map.values()])
 
@@ -690,18 +889,20 @@ class InterviewService:
                 )
         # ========================================================================
     
+
         # ================= 动态拼装情感安抚指令 =================
         emotion_instruction = ""
         if actual_speed is not None:
             emotion_instruction = f"""
                 【语音情感与状态隐式分析】：
                 用户本次回答使用的是语音输入。系统检测到其语速为 {actual_speed} 字/秒。
-                （参考：正常中等语速约 3-5 字/秒。大于 5 字/秒可能偏快/紧张/激动，小于 3 字/秒可能偏慢/犹豫/边想边答）。
-                请你结合语速和文本内容，简单分析候选人当前的情绪状态，并**在本次回复的最开头，用一两句话自然地给予情绪反馈或安抚**（例如：“听得出你有些紧张，没关系...”）。
+                （参考：正常中等语速约 3-5 字/秒。大于 5 字/秒可能偏向紧张/激动，小于 3 字/秒可能偏向犹豫/边想边答）。
+                请你结合语速和文本内容，简单分析候选人当前的情绪状态，并*在本次回复的最开头，用一两句话自然地给予情绪反馈或安抚*（例如：“听得出你有些紧张，没关系..”）。
                     """
         # ========================================================
-    
+
         resume_context = InterviewService._extract_resume_context(interview.user_id)
+
 
         style_prompt_map = {
             'pressure': '压力面：如果候选人回答正确且完整，请立即向下追问其子概念、实现细节和边界条件。',
@@ -711,11 +912,13 @@ class InterviewService:
         style_prompt = style_prompt_map.get(session_style, style_prompt_map['confident'])
         assigned_question_prompt = '\n'.join(assigned_question_lines) if assigned_question_lines else '暂无候选题'
     
+
         enhanced_system_prompt = f"""
                 {base_prompt}
                 {emotion_instruction}
                 {resume_context}
                 【提问策略调整指令】：
+
                 如果你在上述“候选人简历摘要”中看到了相关的项目和技能，请尽量结合 TA 的实际过往经历进行提问（例如：“你在 X 公司的 Y 项目中用到了 Z 技术，能具体说说...”）。如果简历为空，则直接进入常规提问。
 
             【GraphRAG 图谱追问策略】：
@@ -726,9 +929,10 @@ class InterviewService:
             {assigned_question_prompt}
             与候选题相关的相邻图谱节点：{graph_edge_context or '暂无'}。
             所有追问必须严格限定在下方“面试大纲（标准知识点库）”的范围内。
+
                     
                 【面试提问大纲约束】：
-                为了保证面试的标准化，请你**严格**围绕以下“面试大纲”中的知识点向候选人提问。
+                为了保证面试的标准化，请 **严格** 围绕以下“面试大纲”中的知识点向候选人提问。
                 - 每次提问请挑选 1 个具体的知识点进行深入考察。
                 - 请不要提出大纲范围之外（天马行空）的技术问题。
                 - 如果候选人回答不会，请宽慰他，并从大纲中换一个全新的知识点继续提问。
@@ -737,113 +941,210 @@ class InterviewService:
                 [{valid_tags_str}]
                 """
         # ===============================================================
-    
+
         messages = [{"role": "system", "content": enhanced_system_prompt}]
+
     
         related_question = assigned_questions[0]['question'] if assigned_questions else None
+
         if related_question:
             messages.append({"role": "system",
-                     "content": f"参考题目：{related_question.content}。参考答案要点：{related_question.reference_answer}。请围绕此知识点对候选人进行专业追问。"})
-    
+                             "content": f"参考题目：{related_question.content}。参考答案要点：{related_question.reference_answer}。请围绕此知识点对候选人进行专业追问。"})
+
         # 加载历史对话
         history = InterviewChat.query.filter_by(interview_id=interview_id).order_by(InterviewChat.timestamp).all()
         for msg in history:
             messages.append({"role": "user" if msg.role == 'user' else "assistant", "content": msg.content})
-    
-    
+
+
         # 4. 调用大模型流式输出
         llm = DeepSeekClient()
         response_stream = llm.generate_reply(messages, stream=True)
-    
+
+        tts_voice = InterviewService._get_tts_voice(prompt_config, voice) if voice_mode else None
+
         full_reply = ""
         audio_chunks = []
-        # === 新增：标点符号缓冲机制 ===
         sentence_buffer = ""
-        # 匹配中文和英文的句末停顿符号
-        punctuation_pattern = re.compile(r'[。！？；\n\!\?\;]')
-            
+        sent_audio_packets = 0
+        tts_submitted_segments = 0
+        tts_submitted_chars = 0
+
         # === 新增：音频队列，用于缓存异步 TTS 的结果 ===
         import queue
         audio_queue = queue.Queue()
-            
+        pending_tts_futures = []
+        llm_raw_chunk_count = 0
+        llm_raw_char_count = 0
+
+        def submit_tts_segment(segment_text):
+            nonlocal tts_submitted_segments, tts_submitted_chars
+            clean_segment = InterviewService._strip_stream_control_tokens(segment_text)
+            if not clean_segment or not voice_mode:
+                return
+
+            # ✅ 改进：更严格的校验，防止发送过短或不可发音的片段
+            speakable_chars = InterviewService._count_tts_speakable_chars(clean_segment)
+            if speakable_chars < InterviewService._MIN_TTS_SPEAKABLE_CHARS:
+                print(f"[TTS] 跳过过短片段（可发音字符={speakable_chars}）：{repr(clean_segment[:30])}")
+                return
+
+            tts_submitted_segments += 1
+            tts_submitted_chars += len(clean_segment)
+
+            future = InterviewService.tts_executor.submit(
+                InterviewService._synthesize_audio_async,
+                clean_segment,
+                tts_voice,
+                'mp3'
+            )
+            pending_tts_futures.append({
+                'future': future,
+                'text': clean_segment,
+                'submitted_at': time.monotonic(),
+            })
+            print(f"[TTS] 提交合成片段 #{tts_submitted_segments}（可发音字符={speakable_chars}）：{repr(clean_segment[:50])}")
+
+
+        def flush_ready_tts_futures():
+            """
+            仅按提交顺序提取已完成的异步 TTS，避免语音片段乱序。
+            ✅ 改进：增加详细的日志记录，便于调试和监测吞字问题
+            """
+            flushed_count = 0
+            while pending_tts_futures:
+                head = pending_tts_futures[0]
+                done_future = head['future']
+
+                if not done_future.done():
+                    break
+
+                pending_tts_futures.pop(0)
+                try:
+                    audio_bytes = done_future.result()
+                    if audio_bytes:
+                        audio_chunks.append(audio_bytes)
+                        audio_queue.put(bytes_to_b64(audio_bytes))
+                        flushed_count += 1
+                        print(f"[TTS] 完成合成：{repr(head['text'][:50])} ({len(audio_bytes)} bytes)")
+                    else:
+                        print(f"[TTS] 合成返回空音频：{repr(head['text'][:50])}")
+                except Exception as e:
+                    print(f'[TTS] 异步合成失败（文本：{repr(head["text"][:30])}）：{e}')
+
         for chunk in response_stream:
             content = chunk.choices[0].delta.content
             if content:
-                full_reply += content
-                sentence_buffer += content
-    
-                # 初始化准备传给前端的 payload，无论有没有音频，文字都要立刻传过去保证打字机效果
-                payload = {'chunk': content}
-    
-                # === 使用异步 TTS 合成，不阻塞流式响应 ===
-                # 检查缓冲字符串是否以标点符号结尾（或者是包含换行符）
-                if voice_mode and punctuation_pattern.search(content):
-                    try:
-                        voice = getattr(prompt_config, 'preferred_voice', 'BV001_streaming') if prompt_config else 'BV001_streaming'
-                            
-                        # 在线程池中异步执行 TTS 合成，立即返回不阻塞
-                        future = InterviewService.tts_executor.submit(
-                            InterviewService._synthesize_audio_async,
-                            sentence_buffer,
-                            voice,
-                            'mp3'
-                        )
-                            
-                        # 添加回调函数，当 TTS 完成后将音频数据放入队列
-                        def tts_callback(fut):
-                            try:
-                                audio_bytes = fut.result()
-                                if audio_bytes:
-                                    audio_b64 = bytes_to_b64(audio_bytes)
-                                    audio_chunks.append(audio_bytes)
-                                    # 将音频数据放入队列，供后续发送
-                                    audio_queue.put(audio_b64)
-                            except Exception as e:
-                                print(f'TTS 回调失败：{e}')
-                            
-                        future.add_done_callback(tts_callback)
-    
-                        # 清空缓冲区，迎接下一句话
-                        sentence_buffer = ""
-                    except Exception as e:
-                        print('TTS 异步合成失败:', e)
-    
-                # === 检查是否有已完成的 TTS 音频需要发送 ===
-                try:
-                    # 非阻塞获取队列中的音频数据
-                    audio_b64_from_queue = audio_queue.get_nowait()
-                    payload['audio_b64'] = audio_b64_from_queue
-                except queue.Empty:
-                    pass
-    
-                # 立即发送文本 chunk（如果有音频，会一起发送）
-                yield f"data: {json.dumps(payload, ensure_ascii=False)}\n\n"
+                llm_raw_chunk_count += 1
+                llm_raw_char_count += len(content)
 
-        # === 使用异步 TTS 处理最后不带标点的 buffer ===
-        if voice_mode and sentence_buffer.strip() and sentence_buffer != "[INTERVIEW_OVER]":
-            try:
-                voice = getattr(prompt_config, 'preferred_voice', 'BV001_streaming') if prompt_config else 'BV001_streaming'
-                
-                # 同步合成最后的音频（因为流已经结束，可以等待）
-                audio_bytes = TTSService.synthesize_bytes(sentence_buffer, voice=voice, fmt='mp3')
-                if audio_bytes:
-                    audio_b64 = bytes_to_b64(audio_bytes)
-                    audio_chunks.append(audio_bytes)
-                    # 发送最后一个音频包
-                    yield f"data: {json.dumps({'chunk': '', 'audio_b64': audio_b64}, ensure_ascii=False)}\n\n"
-            except Exception as e:
-                print('Final TTS failed:', e)
-        
+                for display_chunk in InterviewService._split_stream_display_chunks(content):
+                    full_reply += display_chunk
+                    sentence_buffer += display_chunk
+
+                    # 初始化准备传给前端的 payload，无论有没有音频，文字都要立刻传过去保证打字机效果
+                    payload = {'chunk': display_chunk}
+
+                    # 提取完整句并异步合成，避免把纯标点超短碎片送入 TTS。
+                    if voice_mode:
+                        ready_segments, sentence_buffer = InterviewService._extract_ready_tts_segments(sentence_buffer)
+                        for segment in ready_segments:
+                            submit_tts_segment(segment)
+
+                    # 将已经完成的异步 TTS 结果转入发送队列
+                    flush_ready_tts_futures()
+
+                    # === 检查是否有已完成的 TTS 音频需要发送 ===
+                    try:
+                        # 非阻塞获取队列中的音频数据
+                        audio_b64_from_queue = audio_queue.get_nowait()
+                        payload['audio_b64'] = audio_b64_from_queue
+                        sent_audio_packets += 1
+                    except queue.Empty:
+                        pass
+
+                    # 立即发送文字 chunk（如果有音频，会一起发送）
+                    yield f"data: {json.dumps(payload, ensure_ascii=False)}\n\n"
+
+                    # 若当前时刻还有已完成音频，立即补发，降低“音频追不上文字”的体感。
+                    while voice_mode and (not audio_queue.empty()):
+                        try:
+                            remaining_audio = audio_queue.get_nowait()
+                            sent_audio_packets += 1
+                            yield f"data: {json.dumps({'chunk': '', 'audio_b64': remaining_audio}, ensure_ascii=False)}\n\n"
+                        except queue.Empty:
+                            break
+
+        if voice_mode:
+            tail_segment = InterviewService._extract_tail_tts_segment(sentence_buffer)
+            if tail_segment:
+                print(f"[TTS] 处理尾句：{repr(tail_segment[:50])}")
+                submit_tts_segment(tail_segment)
+            elif sentence_buffer.strip():
+                # 记录被过滤的尾句，便于调试
+                print(f"[TTS] 尾句被过滤（可能为纯标点或空白）：{repr(sentence_buffer[:30])}")
+
+        # 逐步等待剩余异步 TTS，并边完成边下发，避免“最后一口气才出音频”。
+        settle_deadline = time.monotonic() + 180
+        while pending_tts_futures:
+            flush_ready_tts_futures()
+
+            while voice_mode and (not audio_queue.empty()):
+                try:
+                    remaining_audio = audio_queue.get_nowait()
+                    sent_audio_packets += 1
+                    yield f"data: {json.dumps({'chunk': '', 'audio_b64': remaining_audio}, ensure_ascii=False)}\n\n"
+                except queue.Empty:
+                    break
+
+            if not pending_tts_futures:
+                break
+
+            # === 修复点：释放 GIL，防止长循环抢占 TTS 线程资源 ===
+            time.sleep(0.05)
+
+            if time.monotonic() >= settle_deadline:
+                stale = pending_tts_futures[0]['text'] if pending_tts_futures else ''
+                print(f"TTS 异步收尾超时（总等待180s），剩余片段将跳过，示例={stale[:30]}")
+                break
+
+            time.sleep(0.03)
+
+        pending_tts_futures.clear()
+
         # === 发送队列中剩余的音频数据 ===
         while voice_mode and (not audio_queue.empty()):
             try:
                 remaining_audio = audio_queue.get_nowait()
+                sent_audio_packets += 1
                 yield f"data: {json.dumps({'chunk': '', 'audio_b64': remaining_audio}, ensure_ascii=False)}\n\n"
             except queue.Empty:
                 break
 
         # 5. 清理标识符并存入数据库
         clean_reply = full_reply.replace("[INTERVIEW_OVER]", "").strip()
+
+        if voice_mode:
+            # ✅ 改进的日志记录，便于监测和调试吞字问题
+            coverage = 0.0 if len(clean_reply) == 0 else (tts_submitted_chars / len(clean_reply))
+            total_audio_bytes = sum(len(chunk) for chunk in audio_chunks) if audio_chunks else 0
+            
+            print(
+                f"[TTS Summary] 本轮 TTS 处理完毕：\n"
+                f"  - 提交片段数：{tts_submitted_segments}\n"
+                f"  - 提交字符数：{tts_submitted_chars} / 清洗后回复字符数 {len(clean_reply)}\n"
+                f"  - 字符覆盖率：{coverage:.2%}\n"
+                f"  - 下发音频片段数：{sent_audio_packets}\n"
+                f"  - 音频文件总大小：{total_audio_bytes} bytes\n"
+                f"  - LLM 流块数：{llm_raw_chunk_count}，原始字符数 {llm_raw_char_count}"
+            )
+            
+            # 覆盖率低于 80% 时发出警告
+            if coverage < 0.8 and len(clean_reply) > 0:
+                missing_chars = len(clean_reply) - tts_submitted_chars
+                print(f"⚠️  [TTS] 警告：合成覆盖率低于 80%，未合成 {missing_chars} 个字符")
+
+
         ai_chat = InterviewChat(interview_id=interview.id, role='ai', content=clean_reply)
         db.session.add(ai_chat)
 
@@ -865,8 +1166,8 @@ class InterviewService:
                     prompt_id=prompt_config.id if prompt_config else None,
                     file_path=os.path.relpath(file_path, current_app.root_path),  # 存储相对路径
                     format='mp3',
-                    voice=getattr(prompt_config, 'preferred_voice', 'BV001_streaming') if prompt_config else 'BV001_streaming',
-                    duration=None  # 可选：后续可以用 pydub 或 mutagen 获取时长
+                    voice=InterviewService._get_tts_voice(prompt_config, voice),
+                    duration=None  # 可选：后续可以借 pydub 或 mutagen 获取时长
                 )
                 db.session.add(tts_record)
                 db.session.flush() # 生成 id
@@ -881,7 +1182,7 @@ class InterviewService:
 
         db.session.commit()
 
-# 写报告逻辑
+    # 写报告逻辑
     @staticmethod
     def finish_interview(interview_id):
         """结束面试并生成详尽评价写入数据库"""
@@ -894,7 +1195,7 @@ class InterviewService:
         chats = InterviewChat.query.filter_by(interview_id=interview_id).order_by(InterviewChat.timestamp).all()
         chat_history = "\n".join([f"{c.role}: {c.content}" for c in chats])
 
-        # ================= 优化点 1: 扁平化组装真实标准知识点 =================
+        # ================= 优化点1: 扁平化组装真实标准知识点 =================
         # 获取当前岗位下所有题目的关联标签
         questions = Question.query.filter_by(job_id=interview.job_id).all()
         tag_set = set()
@@ -905,7 +1206,7 @@ class InterviewService:
         # ======================================================================
         # ======================================================================
 
-        # ================= 优化点 2: 引入优秀回答范例，提升 AI 建议的具体性 =================
+        # ================= 优化点2: 引入优秀回答范例，提升 AI 建议的具体性 =================
         # 用面试核心对话内容做向量检索
         combined_text = " ".join([c.content for c in chats if c.role == 'user'])
         example_context = ""
@@ -929,7 +1230,7 @@ class InterviewService:
 
         # 2. 强化系统提示词，强制输出详尽的 JSON 结构
         system_prompt = f"""
-                    请作为资深面试官对以下面试记录进行综合评估。
+                    请作为资深面试官对以下面试记录进行综合评估：
                     必须严格返回 JSON 格式，不要输出任何额外的 markdown 标记或解释说明。结构如下：
                     {{
                         "total_score": 85,
@@ -937,21 +1238,21 @@ class InterviewService:
                             "技术正确性": {{"score": 80, "comment": "评价..."}},
                             "逻辑严谨性": {{"score": 90, "comment": "评价..."}},
                             "岗位匹配度": {{"score": 85, "comment": "评价..."}},
-                            "表达沟通": {{"score": 80, "comment": "评价..."}},
+                            "表达沟通力": {{"score": 80, "comment": "评价..."}},
                             "应变能力": {{"score": 75, "comment": "评价..."}}
                         }},
                         "highlights": "列出面试中表现突出的至少2个亮点",
                         "improvements": "指出回答中的主要不足与知识盲区",
                         "suggestions": "针对不足给出3条具体、可操作的学习改进建议",
                         "knowledge_tags_eval": {{
-                            "这里填标准知识点名称，如'HTML5语义化'等": 20
+                            "这里填标准知识点名称，如'HTML5语义化'": 20
                         }}
                     }}
 
                 【绝对指令】：对于 knowledge_tags_eval 字段，你**只能**从下面的“标准知识点库”中挑选你在对话中考察到的知识点进行 0-100 的打分。
-                如果候选人回答完全错误或不会，给20分以下。
-                **禁止直接照抄模板里的文字，必须填写真实的标签名称。**
-                **禁止自己捏造、改写或发明新的知识点名称！如果对话涉及的知识不在下表中，请忽略它。**
+                如果候选人回答完全错误或不会，打 0分以下。
+                **禁止直接照抄模板里的文字，必须填写真实的标签名称！**
+                **禁止自己捏造、改写或发明新的知识点名称！如果对话涉及的知识不在下表中，请忽略它！**
 
                 标准知识点库：
                 [{valid_tags_str}]
@@ -986,8 +1287,8 @@ class InterviewService:
 
             # 直接抛出异常，触发 v1/interview.py 的 except 捕获机制
             raise ValueError("AI 报告生成异常，请稍后再试（大模型返回格式不合规）")
-            
-            # # 返回明确的错误结构给前端，前端可据此提示用户“报告生成异常，请重试”
+
+            # # 返回明确的错误结构给前端，前端可据此提示用户“报告生成异常，请重试”。
             # # 注意：此时 interview.status 依然是 'evaluating'，为重试留下了余地
             # return {
             #     "error": "AI 报告生成异常，请稍后再试",
@@ -1025,6 +1326,7 @@ class InterviewService:
                     comment=dim_data.get("comment", "")
                 )
                 db.session.add(score_record)
+
 
         def _normalize_score(raw_score):
             try:
@@ -1067,13 +1369,16 @@ class InterviewService:
                     update_node_score(parent_tag, score, weight * 0.3)
 
         # ================= 优化点 3: 严格校验，切断自动生成逻辑 =================
+
         tags_eval = report_data.get("knowledge_tags_eval", {})
         valid_tags_found = 0
         for tag_name, score in tags_eval.items():
             # 跳过大模型照抄的模板废话
+
             if not isinstance(tag_name, str):
                 continue
             if "真实的" in tag_name or "这里填" in tag_name:
+
                 continue
             normalized_score = _normalize_score(score)
             if normalized_score is None:
@@ -1082,6 +1387,7 @@ class InterviewService:
             tag = KnowledgeTag.query.filter_by(name=tag_name).first()
             if tag:
                 valid_tags_found += 1
+
                 update_node_score(tag, normalized_score, 1.0)
                     
         # === 兜底机制：如果大模型没有正确输出任何有效标签，或者该岗位由于数据库空导致大纲为空 ===
@@ -1089,6 +1395,7 @@ class InterviewService:
             # 随便找1-2个岗位标签，赋一个及格分兜底，保证流程非空
             fallback_tags = []
             fallback_tag_ids = set()
+
             for q in questions:
                 for t in q.knowledge_tags:
                     if t.id not in fallback_tag_ids:
@@ -1098,7 +1405,7 @@ class InterviewService:
                             break
                 if len(fallback_tags) >= 2:
                     break
-            
+
             for t in fallback_tags:
                 update_node_score(t, 50, 1.0)  # 默认及格偏下分数
         # ========================================================================
