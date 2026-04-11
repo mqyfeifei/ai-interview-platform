@@ -5,6 +5,7 @@ import json
 import asyncio
 import threading
 from concurrent.futures import ThreadPoolExecutor
+from difflib import SequenceMatcher
 
 # 启用 Hugging Face 在线模式并配置中国镜像站
 os.environ["HF_HUB_OFFLINE"] = "0"
@@ -27,7 +28,7 @@ from app.models.prompt import AiPrompt
 from app.models.learning import KnowledgeTag, UserKnowledgeMastery
 from app.models.example import Example
 from app.models.question import Question
-from app.models.interview import InterviewScore, Dimension, TTSAudio
+from app.models.interview import InterviewScore, Dimension, TTSAudio, InterviewSessionConfig
 from app.utils.llm_client import DeepSeekClient
 
 from openai import OpenAI
@@ -164,7 +165,371 @@ class InterviewService:
             return ""
 
     @staticmethod
-    def start_interview(user_id, job_id, voice_mode=False):
+    def _initialize_user_graph_from_resume(user_id, resume_skills_list, base_score=60):
+        """
+        根据简历技能对用户知识图谱进行冷启动：
+        - 先进行实体对齐，再为命中的标签写入 user_knowledge_mastery 初始分
+        """
+        if not resume_skills_list:
+            return
+
+        aligned_entities = InterviewService._align_resume_entities(resume_skills_list)
+        if not aligned_entities:
+            return
+
+        for entity in aligned_entities:
+            tag = entity['tag']
+            score = max(base_score, entity['mastery_level'])
+            mastery = UserKnowledgeMastery.query.filter_by(user_id=user_id, tag_id=tag.id).first()
+            if not mastery:
+                db.session.add(
+                    UserKnowledgeMastery(
+                        user_id=user_id,
+                        tag_id=tag.id,
+                        mastery_level=score,
+                        last_updated=datetime.utcnow()
+                    )
+                )
+                continue
+            mastery.mastery_level = max(mastery.mastery_level or 0, score)
+            mastery.last_updated = datetime.utcnow()
+
+    @staticmethod
+    def _normalize_tag_name(name):
+        text = (name or '').strip().lower()
+        text = re.sub(r'[\s\-_()（）\[\]【】,.，。/\\]+', '', text)
+        return text
+
+    @staticmethod
+    def _skill_level_to_score(skill_item):
+        if isinstance(skill_item, dict):
+            for key in ('mastery', 'mastery_level', 'score', 'level', 'proficiency'):
+                if skill_item.get(key) is not None:
+                    raw_value = skill_item.get(key)
+                    break
+            else:
+                raw_value = None
+
+            if isinstance(raw_value, (int, float)):
+                return int(raw_value)
+
+            text = str(raw_value or '').strip().lower()
+        else:
+            text = str(skill_item or '').strip().lower()
+
+        mapping = {
+            '精通': 80,
+            '熟悉': 60,
+            '了解': 45,
+            '入门': 30,
+            'beginner': 30,
+            'familiar': 60,
+            'intermediate': 60,
+            'proficient': 80,
+            'expert': 90,
+        }
+        return mapping.get(text, 60)
+
+    @staticmethod
+    def _align_resume_entities(resume_skills_list):
+        if not resume_skills_list:
+            return []
+
+        all_tags = KnowledgeTag.query.all()
+        if not all_tags:
+            return []
+
+        alias_map = {
+            'vue3': 'vue',
+            'vuejs': 'vue',
+            'reactjs': 'react',
+            'nodejs': 'node.js',
+            'springboot': 'springboot',
+            'typescript': 'ts',
+        }
+
+        aligned = []
+        for skill in resume_skills_list:
+            if isinstance(skill, dict):
+                raw_name = (skill.get('name') or skill.get('skill') or skill.get('tag') or '').strip()
+            else:
+                raw_name = str(skill).strip()
+
+            if not raw_name:
+                continue
+
+            normalized = InterviewService._normalize_tag_name(raw_name)
+            alias = alias_map.get(normalized, normalized)
+
+            matched_tag = None
+            best_score = 0.0
+
+            for tag in all_tags:
+                candidate = InterviewService._normalize_tag_name(tag.name)
+                score = 0.0
+                if candidate == alias or candidate == normalized:
+                    score = 1.0
+                elif alias and (alias in candidate or candidate in alias):
+                    score = 0.9
+                else:
+                    score = SequenceMatcher(None, alias, candidate).ratio()
+
+                if score > best_score:
+                    best_score = score
+                    matched_tag = tag
+
+            if not matched_tag or best_score < 0.35:
+                try:
+                    vec = InterviewService.get_embedding(raw_name)
+                    matched_tag = KnowledgeTag.query.order_by(KnowledgeTag.embedding.l2_distance(vec)).first()
+                    best_score = max(best_score, 0.5 if matched_tag else 0.0)
+                except Exception:
+                    matched_tag = None
+
+            if not matched_tag:
+                continue
+
+            aligned.append({
+                'raw_name': raw_name,
+                'tag': matched_tag,
+                'matched_by': 'alias_or_fuzzy' if best_score < 1.0 else 'exact',
+                'mastery_level': InterviewService._skill_level_to_score(skill),
+            })
+
+        return aligned
+
+    @staticmethod
+    def _get_job_graph_snapshot(job_id):
+        questions = Question.query.filter_by(job_id=job_id).all()
+        tag_map = {}
+        for question in questions:
+            for tag in question.knowledge_tags:
+                tag_map[tag.id] = tag
+        return questions, tag_map
+
+    @staticmethod
+    def _estimate_target_depth(mastery_level):
+        if mastery_level >= 75:
+            return 3
+        if mastery_level >= 45:
+            return 2
+        return 1
+
+    @staticmethod
+    def _assign_questions(job_id, user_id, limit=5):
+        questions = Question.query.filter_by(job_id=job_id, status='published').all()
+        if not questions:
+            questions = Question.query.filter_by(job_id=job_id).all()
+
+        if not questions:
+            return []
+
+        _, tag_map = InterviewService._get_job_graph_snapshot(job_id)
+        mastery_rows = UserKnowledgeMastery.query.filter(
+            UserKnowledgeMastery.user_id == user_id,
+            UserKnowledgeMastery.tag_id.in_(list(tag_map.keys()) or [0])
+        ).all() if tag_map else []
+        mastery_map = {row.tag_id: row.mastery_level or 0 for row in mastery_rows}
+
+        ranked = []
+        for question in questions:
+            question_tags = list(question.knowledge_tags or [])
+            tag_ids = [tag.id for tag in question_tags]
+            mastery_values = [mastery_map.get(tag_id, 0) for tag_id in tag_ids]
+            avg_mastery = sum(mastery_values) / len(mastery_values) if mastery_values else 0
+            target_depth = InterviewService._estimate_target_depth(avg_mastery)
+            depth = question.reference_answer_depth or 1
+            depth_gap = abs(depth - target_depth)
+            score = (100 - depth_gap * 25) + avg_mastery * 0.35
+            if depth == target_depth:
+                score += 20
+            ranked.append({
+                'question': question,
+                'tag_ids': tag_ids,
+                'tag_names': [tag.name for tag in question_tags],
+                'avg_mastery': avg_mastery,
+                'target_depth': target_depth,
+                'score': score,
+            })
+
+        ranked.sort(key=lambda item: (-item['score'], -item['avg_mastery'], item['question'].id))
+        return ranked[:limit]
+
+    @staticmethod
+    def _build_adjacent_tag_context(tag_ids, interview_style='confident'):
+        if not tag_ids:
+            return ''
+
+        tags = KnowledgeTag.query.filter(KnowledgeTag.id.in_(list(set(tag_ids)))).all()
+        if not tags:
+            return ''
+
+        related_names = []
+        seen = set()
+
+        def push(tag_name):
+            if tag_name and tag_name not in seen:
+                seen.add(tag_name)
+                related_names.append(tag_name)
+
+        for tag in tags:
+            if interview_style == 'pressure':
+                for child in tag.children or []:
+                    push(child.name)
+            elif interview_style == 'teaching':
+                if tag.parent:
+                    push(tag.parent.name)
+                    for sibling in tag.parent.children or []:
+                        if sibling.id != tag.id:
+                            push(sibling.name)
+            else:
+                if tag.parent:
+                    push(tag.parent.name)
+                for child in tag.children or []:
+                    push(child.name)
+
+        if not related_names:
+            return ''
+
+        return '、'.join(related_names[:12])
+
+    @staticmethod
+    def _compute_graph_coverage(interview):
+        questions, tag_map = InterviewService._get_job_graph_snapshot(interview.job_id)
+        core_tag_ids = list(tag_map.keys())
+        if not core_tag_ids:
+            return {
+                'coverage_rate': 0.0,
+                'depth_rate': 0.0,
+                'meta': {
+                    'core_nodes': [],
+                    'touched_nodes': [],
+                    'max_depth': 0,
+                    'core_count': 0,
+                    'touched_count': 0,
+                }
+            }
+
+        mastery_rows = UserKnowledgeMastery.query.filter(
+            UserKnowledgeMastery.user_id == interview.user_id,
+            UserKnowledgeMastery.tag_id.in_(core_tag_ids)
+        ).all()
+
+        touched_tag_ids = [row.tag_id for row in mastery_rows if (row.mastery_level or 0) > 0]
+        touched_set = set(touched_tag_ids)
+
+        def get_depth(tag):
+            depth = 1
+            visited = set()
+            current = tag
+            while current and current.parent_id and current.parent_id not in visited:
+                visited.add(current.id)
+                current = KnowledgeTag.query.get(current.parent_id)
+                if current:
+                    depth += 1
+            return depth
+
+        max_depth = 0
+        for tag_id in touched_set:
+            tag = tag_map.get(tag_id) or KnowledgeTag.query.get(tag_id)
+            if tag:
+                max_depth = max(max_depth, get_depth(tag))
+
+        core_count = len(core_tag_ids)
+        touched_count = len(touched_set)
+        coverage_rate = round((touched_count / core_count) * 100, 2) if core_count else 0.0
+        depth_rate = round((min(max_depth, 3) / 3) * 100, 2) if max_depth else 0.0
+
+        return {
+            'coverage_rate': coverage_rate,
+            'depth_rate': depth_rate,
+            'meta': {
+                'core_nodes': [tag_map[tag_id].name for tag_id in core_tag_ids if tag_id in tag_map],
+                'touched_nodes': [tag_map[tag_id].name for tag_id in touched_set if tag_id in tag_map],
+                'max_depth': max_depth,
+                'core_count': core_count,
+                'touched_count': touched_count,
+            }
+        }
+
+    @staticmethod
+    def _normalize_interview_style(voice_mode=False, interview_style=None, voice_role=None):
+        # 仅根据“显式样式”决定，不再依赖文字/语音模式
+        style_aliases = {
+            '压力面': 'pressure',
+            'pressure': 'pressure',
+            'strict': 'pressure',
+            '自信面': 'confident',
+            'confident': 'confident',
+            'balanced': 'confident',
+            '教学面': 'teaching',
+            'teaching': 'teaching',
+            'technical': 'teaching',  # 兼容旧值
+            'coach': 'teaching',
+        }
+
+        raw_style = (interview_style or '').strip()
+        if raw_style:
+            normalized = style_aliases.get(raw_style.lower()) or style_aliases.get(raw_style)
+            if normalized:
+                return normalized
+
+        # 兼容旧前端：未传 style 时，仍可从 voice_role 兜底推断
+        normalized_role = (voice_role or '').strip().lower()
+        role_style_map = {
+            'role_strict': 'pressure',
+            'role_warm': 'confident',
+            'role_calm': 'teaching',
+        }
+        if normalized_role in role_style_map:
+            return role_style_map[normalized_role]
+
+        return 'confident'
+
+    @staticmethod
+    def _build_session_config_payload(voice_mode=False, interview_style=None, voice_role=None):
+        style = InterviewService._normalize_interview_style(
+            voice_mode=voice_mode,
+            interview_style=interview_style,
+            voice_role=voice_role,
+        )
+
+        profile_map = {
+            'confident': {
+                'tech_ratio': 60.0,
+                'scenario_ratio': 40.0,
+                'difficulty_level': 2,
+                'tone_descriptor': 'balanced_confident'
+            },
+            'teaching': {
+                'tech_ratio': 80.0,
+                'scenario_ratio': 20.0,
+                'difficulty_level': 2,
+                'tone_descriptor': 'teaching_guided'
+            },
+            'pressure': {
+                'tech_ratio': 70.0,
+                'scenario_ratio': 30.0,
+                'difficulty_level': 3,
+                'tone_descriptor': 'pressure_challenge'
+            }
+        }
+        profile = profile_map.get(style, profile_map['confident'])
+
+        return {
+            'interview_style': style,
+            'tech_ratio': profile['tech_ratio'],
+            'scenario_ratio': profile['scenario_ratio'],
+            'is_dynamic_adjust': True,
+            'voice_id': voice_role or None,
+            'speech_speed': 1.0,
+            'tone_descriptor': profile['tone_descriptor'],
+            'enabled_dimensions': ['knowledge', 'logic', 'communication'],
+            'difficulty_level': profile['difficulty_level'],
+        }
+
+    @staticmethod
+    def start_interview(user_id, job_id, voice_mode=False, interview_style=None, voice_role=None):
         # 0. 【修复点】：提前拉取简历，判断是否为空
         resume_data = ResumeService.get_main_resume(user_id)
         content = resume_data.get('content', {})
@@ -172,6 +537,13 @@ class InterviewService:
         has_skills = bool(content.get('skills'))
         # 如果既没有经历也没有技能，判定为空简历
         is_resume_empty = not (has_experience or has_skills)
+
+        # 简历技能冷启动：在面试开始前初始化用户图谱掌握度锚点
+        if has_skills:
+            InterviewService._initialize_user_graph_from_resume(
+                user_id=user_id,
+                resume_skills_list=content.get('skills', [])
+            )
 
         # 1. 创建面试记录
         interview = Interview(
@@ -183,7 +555,14 @@ class InterviewService:
         )
         db.session.add(interview)
         db.session.flush() # 使用 flush 获取 interview.id 供后续绑定
-        # db.session.commit()
+
+        # 创建并绑定会话配置，避免所有记录都走数据库默认 confident
+        session_payload = InterviewService._build_session_config_payload(
+            voice_mode=voice_mode,
+            interview_style=interview_style,
+            voice_role=voice_role,
+        )
+        db.session.add(InterviewSessionConfig(interview_id=interview.id, **session_payload))
 
         # 2. 动态获取角色设定与提示词
         prompt_config = AiPrompt.query.filter_by(job_id=job_id, is_active=True).first()
@@ -224,6 +603,13 @@ class InterviewService:
             "interview_id": interview.id,
             "question": greeting,
             "audio_b64": greeting_audio_b64,
+            "session_config": {
+                "interview_style": session_payload['interview_style'],
+                "tech_ratio": session_payload['tech_ratio'],
+                "scenario_ratio": session_payload['scenario_ratio'],
+                "difficulty_level": session_payload['difficulty_level'],
+                "voice_id": session_payload['voice_id'],
+            },
             "warning": "系统检测到您的简历未完善，本次面试将进入「标准盲面」模式，无法为您进行个性化项目追问。" if is_resume_empty else None
         }
 
@@ -264,25 +650,45 @@ class InterviewService:
             yield f"data: {json.dumps({'chunk': reminder}, ensure_ascii=False)}\n\n"
             return
     
-        # 2. 向量检索：匹配相关的考察知识点或参考答案
-        user_vector = InterviewService.get_embedding(normalized_answer)
-        # 依据 L2 距离查询最相关的知识库条目
-        related_question = Question.query.filter_by(job_id=interview.job_id, status='published') \
-            .order_by(Question.embedding.l2_distance(user_vector)).limit(1).first()
-    
-        # 3. 组装上下文与 RAG 提示词
+        # 2. 组装上下文与 RAG 提示词
         prompt_config = AiPrompt.query.filter_by(job_id=interview.job_id, is_active=True).first()
         base_prompt = prompt_config.system_prompt if prompt_config else "你是面试官，【核心指令】：当你觉得已经问了足够多的问题（例如超过 5 题），或者你认为已经充分评估了该候选人的能力时，请主动结束面试。结束时，请务必在你的回复文本的最后面加上特殊标记 [INTERVIEW_OVER]。"
     
         # ================= 优化点：动态注入"面试大纲" =================
         # 从数据库拉取真实的知识点，约束 AI 只能在这个范围内提问
-        # 获取当前岗位下所有题目的关联标签
-        questions = Question.query.filter_by(job_id=interview.job_id).all()
-        tag_set = set()
-        for q in questions:
-            for tag in q.knowledge_tags:
-                tag_set.add(tag.name)
-        valid_tags_str = "、".join(list(tag_set))
+        questions, job_tag_map = InterviewService._get_job_graph_snapshot(interview.job_id)
+        valid_tags_str = "、".join([tag.name for tag in job_tag_map.values()])
+
+        session_style = getattr(getattr(interview, 'session_config', None), 'interview_style', 'confident')
+        assigned_questions = InterviewService._assign_questions(interview.job_id, interview.user_id, limit=3)
+        assigned_question_lines = []
+        assigned_tag_ids = []
+        for item in assigned_questions:
+            assigned_tag_ids.extend(item['tag_ids'])
+            assigned_question_lines.append(
+                f"- 深度{item['target_depth']}候选题：{item['question'].content[:80]}（标签：{'、'.join(item['tag_names'])}）"
+            )
+        graph_edge_context = InterviewService._build_adjacent_tag_context(assigned_tag_ids, session_style)
+
+        # ================= GraphRAG 注入：岗位子图内的用户掌握度画像 =================
+        mastery_profile_str = "暂无相关掌握度记录"
+        if job_tag_map:
+            mastery_rows = db.session.query(
+                UserKnowledgeMastery.mastery_level,
+                KnowledgeTag.name
+            ).join(
+                KnowledgeTag,
+                KnowledgeTag.id == UserKnowledgeMastery.tag_id
+            ).filter(
+                UserKnowledgeMastery.user_id == interview.user_id,
+                UserKnowledgeMastery.tag_id.in_(list(job_tag_map.keys()))
+            ).all()
+
+            if mastery_rows:
+                mastery_profile_str = "，".join(
+                    [f"{row.name}({row.mastery_level}分)" for row in mastery_rows]
+                )
+        # ========================================================================
     
         # ================= 动态拼装情感安抚指令 =================
         emotion_instruction = ""
@@ -296,6 +702,14 @@ class InterviewService:
         # ========================================================
     
         resume_context = InterviewService._extract_resume_context(interview.user_id)
+
+        style_prompt_map = {
+            'pressure': '压力面：如果候选人回答正确且完整，请立即向下追问其子概念、实现细节和边界条件。',
+            'teaching': '教学面：如果候选人卡壳或回答偏浅，请优先回到父节点概念，并用同级兄弟概念做横向启发。',
+            'confident': '自信面：保持鼓励式追问，兼顾基础与应用，适度深挖但避免持续施压。',
+        }
+        style_prompt = style_prompt_map.get(session_style, style_prompt_map['confident'])
+        assigned_question_prompt = '\n'.join(assigned_question_lines) if assigned_question_lines else '暂无候选题'
     
         enhanced_system_prompt = f"""
                 {base_prompt}
@@ -303,6 +717,15 @@ class InterviewService:
                 {resume_context}
                 【提问策略调整指令】：
                 如果你在上述“候选人简历摘要”中看到了相关的项目和技能，请尽量结合 TA 的实际过往经历进行提问（例如：“你在 X 公司的 Y 项目中用到了 Z 技术，能具体说说...”）。如果简历为空，则直接进入常规提问。
+
+            【GraphRAG 图谱追问策略】：
+            以下是候选人的知识点掌握度画像：{mastery_profile_str}。
+            当前面试类型：{session_style}。
+            {style_prompt}
+            本轮优先候选题如下：
+            {assigned_question_prompt}
+            与候选题相关的相邻图谱节点：{graph_edge_context or '暂无'}。
+            所有追问必须严格限定在下方“面试大纲（标准知识点库）”的范围内。
                     
                 【面试提问大纲约束】：
                 为了保证面试的标准化，请你**严格**围绕以下“面试大纲”中的知识点向候选人提问。
@@ -317,6 +740,7 @@ class InterviewService:
     
         messages = [{"role": "system", "content": enhanced_system_prompt}]
     
+        related_question = assigned_questions[0]['question'] if assigned_questions else None
         if related_question:
             messages.append({"role": "system",
                      "content": f"参考题目：{related_question.content}。参考答案要点：{related_question.reference_answer}。请围绕此知识点对候选人进行专业追问。"})
@@ -585,6 +1009,11 @@ class InterviewService:
             interview.used_time = int(time_diff.total_seconds())
         # ================================================================
 
+        graph_coverage = InterviewService._compute_graph_coverage(interview)
+        interview.graph_coverage_rate = graph_coverage['coverage_rate']
+        interview.graph_depth_rate = graph_coverage['depth_rate']
+        interview.graph_coverage_meta = graph_coverage['meta']
+
         # 4. 写入维度评分表
         for dim_name, dim_data in report_data.get("dimensions", {}).items():
             dimension = Dimension.query.filter_by(name=dim_name).first()
@@ -596,48 +1025,82 @@ class InterviewService:
                     comment=dim_data.get("comment", "")
                 )
                 db.session.add(score_record)
+
+        def _normalize_score(raw_score):
+            try:
+                score_value = int(float(raw_score))
+            except (TypeError, ValueError):
+                return None
+            return max(0, min(100, score_value))
+
+        def update_node_score(target_tag, score, weight):
+            """
+            图谱级联更新：
+            1) 先更新当前节点
+            2) 再按衰减权重向父节点递归传播
+            """
+            if not target_tag or weight <= 0:
+                return
+
+            weighted_score = int(max(0, min(100, round(score * weight))))
+            mastery = UserKnowledgeMastery.query.filter_by(
+                user_id=interview.user_id,
+                tag_id=target_tag.id
+            ).first()
+
+            if not mastery:
+                mastery = UserKnowledgeMastery(
+                    user_id=interview.user_id,
+                    tag_id=target_tag.id,
+                    mastery_level=weighted_score,
+                    last_updated=datetime.utcnow()
+                )
+                db.session.add(mastery)
+            else:
+                # 指数平滑：新分数 = int((老分数 * 0.6) + (本次得分 * 0.4))
+                mastery.mastery_level = int((mastery.mastery_level * 0.6) + (weighted_score * 0.4))
+                mastery.last_updated = datetime.utcnow()
+
+            if target_tag.parent_id:
+                parent_tag = KnowledgeTag.query.get(target_tag.parent_id)
+                if parent_tag:
+                    update_node_score(parent_tag, score, weight * 0.3)
+
         # ================= 优化点 3: 严格校验，切断自动生成逻辑 =================
         tags_eval = report_data.get("knowledge_tags_eval", {})
         valid_tags_found = 0
         for tag_name, score in tags_eval.items():
             # 跳过大模型照抄的模板废话
+            if not isinstance(tag_name, str):
+                continue
             if "真实的" in tag_name or "这里填" in tag_name:
+                continue
+            normalized_score = _normalize_score(score)
+            if normalized_score is None:
                 continue
             # 严格去数据库匹配已有的标签，找不到就直接丢弃（防大模型幻觉）
             tag = KnowledgeTag.query.filter_by(name=tag_name).first()
             if tag:
                 valid_tags_found += 1
-                mastery = UserKnowledgeMastery.query.filter_by(user_id=interview.user_id, tag_id=tag.id).first()
-                if not mastery:
-                    # 用户第一次接触这个标签，直接存入分数
-                    mastery = UserKnowledgeMastery(user_id=interview.user_id, tag_id=tag.id,
-                                                   mastery_level=score)
-                    db.session.add(mastery)
-                else:
-                    # 已有记录，将历史分数与本次分数取平均（模拟平滑的成长或遗忘）
-                    mastery.mastery_level = int((mastery.mastery_level + score) / 2)
+                update_node_score(tag, normalized_score, 1.0)
                     
         # === 兜底机制：如果大模型没有正确输出任何有效标签，或者该岗位由于数据库空导致大纲为空 ===
         if valid_tags_found == 0 and len(questions) > 0:
             # 随便找1-2个岗位标签，赋一个及格分兜底，保证流程非空
-            fallback_tags = set()
+            fallback_tags = []
+            fallback_tag_ids = set()
             for q in questions:
                 for t in q.knowledge_tags:
-                    if t.name not in fallback_tags:
-                        fallback_tags.add(t)
+                    if t.id not in fallback_tag_ids:
+                        fallback_tags.append(t)
+                        fallback_tag_ids.add(t.id)
                         if len(fallback_tags) >= 2:
                             break
                 if len(fallback_tags) >= 2:
                     break
             
             for t in fallback_tags:
-                mastery = UserKnowledgeMastery.query.filter_by(user_id=interview.user_id, tag_id=t.id).first()
-                score = 50 # 默认及格偏下分数
-                if not mastery:
-                    mastery = UserKnowledgeMastery(user_id=interview.user_id, tag_id=t.id, mastery_level=score)
-                    db.session.add(mastery)
-                else:
-                    mastery.mastery_level = int((mastery.mastery_level + score) / 2)
+                update_node_score(t, 50, 1.0)  # 默认及格偏下分数
         # ========================================================================
 
         db.session.commit()

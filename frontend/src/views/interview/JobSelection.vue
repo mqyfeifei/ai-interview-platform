@@ -763,18 +763,31 @@ export default {
     // },
 
     // ─── 面试启动 ───
+    resolveInterviewStyle() {
+      if (!this.voiceMode) {
+        return 'technical'
+      }
+      if (this.selectedVoiceRole === 'role_strict') {
+        return 'pressure'
+      }
+      return 'confident'
+    },
+
     async handleStart() {
       if (!this.currentSelected) return
       try {
         const jobDbId = this.currentSelected.id
+        const interviewStyle = this.resolveInterviewStyle()
         await this.$store.dispatch('interview/resetInterview')
         this.$store.commit('interview/SET_JOB_DB_ID', jobDbId)
         this.$store.commit('interview/SET_VOICE_MODE', this.voiceMode)
+        this.$store.commit('interview/SET_INTERVIEW_STYLE', interviewStyle)
+        this.$store.commit('interview/SET_VOICE_ROLE', this.selectedVoiceRole)
         await this.$store.dispatch('interview/selectJob', this.currentSelected)
         // 根据面试模式跳转到不同页面
         if (this.voiceMode) {
-          this.$router.push('/interview/session')
-          // this.$router.push('/interview/voice-session')
+          // this.$router.push('/interview/session')
+          this.$router.push('/interview/voice-session')
         } else {
           this.$router.push('/interview/session')
         }

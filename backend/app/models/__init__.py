@@ -2,7 +2,7 @@
 from .job import Job
 from .user import User
 from .question import Question
-from .interview import Interview, InterviewChat, Dimension, InterviewScore, UserGrowth
+from .interview import Interview, InterviewChat, Dimension, InterviewScore, UserGrowth, InterviewSessionConfig
 from .learning import Resource, KnowledgeTag, UserLearning, UserKnowledgeMastery
 from .prompt import AiPrompt
 from .resume import Resume

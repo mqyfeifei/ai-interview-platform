@@ -1,6 +1,8 @@
 from flask import Blueprint, jsonify, request, current_app
 from datetime import date, datetime, timedelta
 from pathlib import Path
+from difflib import SequenceMatcher
+import hashlib
 import os
 import uuid
 
@@ -28,6 +30,7 @@ from app.models.resume import Resume
 admin_bp = Blueprint('admin', __name__)
 
 _JOB_MAPPING_CACHE = None
+_KNOWLEDGE_POINT_CATALOG_CACHE = None
 
 # 适配 Question 新增字段 source, status 及多对多关联 knowledge_tags
 def _serialize_question(question):
@@ -87,6 +90,135 @@ def _serialize_resource(resource):
     }
 
 
+def _get_default_text_embedding(text):
+    normalized = (text or '').strip()
+    if not normalized:
+        normalized = 'knowledge_tag'
+
+    try:
+        from app.services.interview_service import InterviewService
+        return InterviewService.get_embedding(normalized)
+    except Exception:
+        digest = hashlib.sha256(normalized.encode('utf-8')).digest()
+        return [(digest[i % len(digest)] / 255.0) for i in range(512)]
+
+
+def _load_knowledge_point_catalog():
+    global _KNOWLEDGE_POINT_CATALOG_CACHE
+    if _KNOWLEDGE_POINT_CATALOG_CACHE is not None:
+        return _KNOWLEDGE_POINT_CATALOG_CACHE
+
+    backend_root = Path(__file__).resolve().parents[3]
+    knowledge_dir = backend_root / 'FuChuangTiKu' / 'data' / 'knowledge_points'
+    catalog = {}
+
+    if knowledge_dir.exists():
+        for yaml_path in sorted(knowledge_dir.glob('*.yaml')):
+            try:
+                with open(yaml_path, 'r', encoding='utf-8') as fp:
+                    payload = yaml.safe_load(fp) or {}
+            except Exception:
+                continue
+
+            for module in payload.get('modules', []) or []:
+                category = (module.get('name') or '').strip()
+                for point in module.get('points', []) or []:
+                    if isinstance(point, str):
+                        point_name = point.strip()
+                        complexity = 'Medium'
+                        estimated_hours = 1
+                    else:
+                        point_name = (point.get('point') or '').strip()
+                        complexity = point.get('complexity', 'Medium')
+                        estimated_hours = point.get('estimated_hours', 1)
+
+                    if not point_name:
+                        continue
+
+                    catalog[point_name.lower()] = {
+                        'name': point_name,
+                        'category': category or None,
+                        'complexity': complexity or 'Medium',
+                        'estimated_hours': int(estimated_hours or 1)
+                    }
+
+    _KNOWLEDGE_POINT_CATALOG_CACHE = catalog
+    return _KNOWLEDGE_POINT_CATALOG_CACHE
+
+
+def _find_best_existing_parent(name):
+    target = (name or '').strip()
+    if not target:
+        return None
+
+    root_tags = KnowledgeTag.query.filter(
+        KnowledgeTag.category.isnot(None),
+        KnowledgeTag.category != ''
+    ).all()
+    if not root_tags:
+        return None
+
+    target_lower = target.lower()
+    best_tag = None
+    best_score = 0.0
+
+    for tag in root_tags:
+        candidate = (tag.name or '').strip()
+        if not candidate:
+            continue
+        candidate_lower = candidate.lower()
+        score = SequenceMatcher(None, target_lower, candidate_lower).ratio()
+        if target_lower in candidate_lower or candidate_lower in target_lower:
+            score += 0.2
+        if score > best_score:
+            best_score = score
+            best_tag = tag
+
+    return best_tag
+
+
+def _apply_knowledge_tag_defaults(tag, raw_name=None):
+    name = (raw_name or tag.name or '').strip()
+    if not name:
+        return tag
+
+    catalog = _load_knowledge_point_catalog()
+    catalog_item = catalog.get(name.lower())
+
+    if catalog_item:
+        tag.category = tag.category or catalog_item.get('category')
+        tag.complexity = tag.complexity or catalog_item.get('complexity') or 'Medium'
+        tag.estimated_hours = tag.estimated_hours or catalog_item.get('estimated_hours') or 1
+        if not tag.embedding:
+            tag.embedding = _get_default_text_embedding(f"模块: {tag.category or ''} 知识点: {name}")
+        return tag
+
+    parent = _find_best_existing_parent(name)
+    if parent:
+        if not tag.parent_id:
+            tag.parent_id = parent.id
+        if not tag.category:
+            tag.category = parent.category or parent.name
+        if not tag.complexity:
+            tag.complexity = parent.complexity or 'Medium'
+        if not tag.estimated_hours:
+            base_hours = parent.estimated_hours or 1
+            tag.estimated_hours = max(1, int(round(float(base_hours) * 0.5)))
+        if not tag.embedding:
+            tag.embedding = _get_default_text_embedding(f"{name} {tag.category or ''} {parent.name or ''}")
+        return tag
+
+    if not tag.category:
+        tag.category = '未分类'
+    if not tag.complexity:
+        tag.complexity = 'Medium'
+    if not tag.estimated_hours:
+        tag.estimated_hours = 1
+    if not tag.embedding:
+        tag.embedding = _get_default_text_embedding(f"{name} {tag.category}")
+    return tag
+
+
 def _resolve_knowledge_tags(tags):
     if tags is None:
         return None
@@ -113,8 +245,17 @@ def _resolve_knowledge_tags(tags):
         kt = KnowledgeTag.query.filter(func.lower(KnowledgeTag.name) == name.lower()).first()
         if not kt:
             kt = KnowledgeTag(name=name)
+            _apply_knowledge_tag_defaults(kt, name)
             db.session.add(kt)
             db.session.flush()
+        else:
+            updated = False
+            before = (kt.category, kt.complexity, kt.estimated_hours, bool(kt.embedding), kt.parent_id)
+            _apply_knowledge_tag_defaults(kt, name)
+            after = (kt.category, kt.complexity, kt.estimated_hours, bool(kt.embedding), kt.parent_id)
+            updated = before != after
+            if updated:
+                db.session.flush()
 
         normalized.append(kt)
 

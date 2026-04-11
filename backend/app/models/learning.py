@@ -18,11 +18,18 @@ class KnowledgeTag(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Text, unique=True, nullable=False)
     category = db.Column(db.String(50))
+    parent_id = db.Column(db.Integer, db.ForeignKey('knowledge_tags.id', ondelete='SET NULL'), index=True)
     # --- 新增字段 ---
     complexity = db.Column(db.String(20))     # 预估难度
     estimated_hours = db.Column(db.Integer)   # 预估学习耗时
     # --- 新增字段：加入向量字段，用于和 Question 做语义匹配 ---
     embedding = db.Column(Vector(512))
+
+    children = db.relationship(
+        'KnowledgeTag',
+        backref=db.backref('parent', remote_side=[id]),
+        lazy='select'
+    )
 
 class Resource(db.Model):
     __tablename__ = 'resources'
@@ -30,6 +37,7 @@ class Resource(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200), nullable=False)
     type = db.Column(db.String(20), nullable=False)  # article, video, course, example
+    tag_id = db.Column(db.Integer, db.ForeignKey('knowledge_tags.id', ondelete='SET NULL'), index=True)
     url = db.Column(db.Text)
     content = db.Column(db.Text)
     source = db.Column(db.String(100))
@@ -40,6 +48,7 @@ class Resource(db.Model):
 
     # 关系
     knowledge_tags = db.relationship('KnowledgeTag', secondary=resource_tags, backref='resources')
+    tag = db.relationship('KnowledgeTag', foreign_keys=[tag_id], backref='primary_resources')
 
 
 class UserLearning(db.Model):

@@ -29,7 +29,9 @@ const state = () => ({
   isLoading: false,        // AI 正在"思考"中
   elapsedSeconds: 0,        // 已用时（秒）
   jobDbId: null,  // 后端数据库真实岗位id
-  voiceMode: false
+  voiceMode: false,
+  interviewStyle: 'confident',
+  voiceRole: 'role_calm'
 })
 
 const mutations = {
@@ -43,6 +45,8 @@ const mutations = {
   SET_MESSAGES(state, msgs) { state.messages = msgs },
   SET_QUESTION_INDEX(state, idx) { state.questionIndex = idx },
   SET_VOICE_MODE(state, v) { state.voiceMode = v },
+  SET_INTERVIEW_STYLE(state, v) { state.interviewStyle = v || 'confident' },
+  SET_VOICE_ROLE(state, v) { state.voiceRole = v || 'role_calm' },
   SET_FINISHED(state, reportId) {
     state.isFinished = true
     state.isEnding = false
@@ -77,6 +81,8 @@ const mutations = {
     state.isLoading = false
     state.elapsedSeconds = 0
     state.voiceMode = false
+    state.interviewStyle = 'confident'
+    state.voiceRole = 'role_calm'
   }
 }
 
@@ -98,7 +104,9 @@ const actions = {
       const res = await startInterview({
         userId,                    // 传给后端的 user_id
         jobDbId: state.jobDbId,     // 传给后端的 job_id（数字）
-        voiceMode: state.voiceMode
+        voiceMode: state.voiceMode,
+        interviewStyle: state.interviewStyle,
+        voiceRole: state.voiceRole
       })
       commit('SET_SESSION', { sessionId: res.sessionId, totalQuestions: 10 })
       commit('ADD_MESSAGE', {

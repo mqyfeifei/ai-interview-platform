@@ -24,6 +24,11 @@ class Question(db.Model):
     # 将类型从 Text 修改为 JSONB，以存储 YAML 中的数组
     reference_answer = db.Column(JSONB)
 
+    # 图谱增强字段：参考答案深度、结构化追问模板、前置技能要求
+    reference_answer_depth = db.Column(db.Integer, default=1)
+    follow_up_templates = db.Column(JSONB)
+    required_skills_meta = db.Column(JSONB)
+
     # --- 新增字段 ---
     source = db.Column(db.String(100))                 # 题目来源
     status = db.Column(db.String(20), default='draft') # 状态：draft/published
@@ -42,5 +47,8 @@ class Question(db.Model):
             'type': self.type,
             'difficulty': self.difficulty,
             'source': self.source,
-            'status': self.status
+            'status': self.status,
+            'reference_answer_depth': self.reference_answer_depth,
+            'follow_up_templates': self.follow_up_templates,
+            'required_skills_meta': self.required_skills_meta
         }
