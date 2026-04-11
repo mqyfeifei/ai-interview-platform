@@ -116,7 +116,7 @@
 
         <!-- AI 思考中动画 -->
         <transition name="fade">
-          <div v-if="isLoading && !hasStreamingMessage" class="message-item message-item--ai thinking-row">
+          <div v-if="isLoading && !hasStreamingMessage && !isEnding" class="message-item message-item--ai thinking-row">
             <div class="message-avatar message-avatar--ai">
               <span>🤖</span>
             </div>
@@ -125,6 +125,13 @@
               <span class="thinking-dot" />
               <span class="thinking-dot" />
             </div>
+          </div>
+        </transition>
+
+        <transition name="fade">
+          <div v-if="isEnding && !isFinished" class="session-end-progress">
+            <div class="session-end-spinner" />
+            <p class="session-end-progress-text">面试报告生成中，请耐心等待</p>
           </div>
         </transition>
 
@@ -144,7 +151,7 @@
       </div>
 
       <!-- 底部输入区 -->
-      <div class="input-area" :class="{ disabled: isFinished || isLoading }">
+      <div class="input-area" :class="{ disabled: isFinished || isLoading || isEnding }">
         <!-- 语音状态提示条 -->
         <transition name="slide-up">
           <div v-if="isRecording" class="recording-bar">
@@ -165,7 +172,7 @@
           <button
             :class="['voice-btn', { active: isRecording }]"
             @click="toggleRecording"
-            :disabled="isFinished || isLoading || !voiceMode"
+            :disabled="isFinished || isLoading || isEnding || !voiceMode"
             :title="!voiceMode ? '文字面试模式下不支持语音输入' : isRecording ? '停止录音' : '语音输入'"
             >
             <svg v-if="!isRecording" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -199,7 +206,7 @@
           <!-- 发送按钮 -->
           <button
             :class="['send-btn', { ready: inputText.trim() && !isLoading && !isFinished }]"
-            :disabled="!inputText.trim() || isLoading || isFinished"
+            :disabled="!inputText.trim() || isLoading || isFinished || isEnding"
             @click="handleSend"
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -211,33 +218,6 @@
       </div>
 
     <!-- </div> -->
-
-        <!-- ↓ 新增：面试结束/报告生成中 遮罩 -->
-    <transition name="ending-fade">
-      <div v-if="showEndingOverlay" class="ending-overlay">
-        <div class="ending-card" :class="{ 'report-ready': reportReady }">
-          <div class="ending-icon-wrap">
-            <svg class="ending-spin-ring" viewBox="0 0 60 60">
-              <circle cx="30" cy="30" r="26" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="5"/>
-              <circle cx="30" cy="30" r="26" fill="none" stroke="white" stroke-width="5"
-                stroke-linecap="round" :stroke-dasharray="reportReady ? '163' : '50 114'" transform="rotate(-90 30 30)"/>
-            </svg>
-            <span class="ending-emoji">🎯</span>
-          </div>
-          <h2 class="ending-title">面试已结束</h2>
-          <p class="ending-sub">AI 正在为你生成专属评估报告...</p>
-          <div class="ending-progress-track">
-            <div class="ending-progress-fill" :style="progressBarStyle"/>
-          </div>
-          <p class="ending-hint">通常需要 10 ~ 30 秒，请勿关闭页面</p>
-          <transition name="fade">
-            <button v-if="reportReady" class="view-report-btn" @click="goToReport">
-              查看面试报告 →
-            </button>
-          </transition>
-        </div>
-      </div>
-    </transition>
 
     <!-- 结束确认弹窗 -->
 
@@ -316,9 +296,6 @@ export default {
       // ✅ 新增：语音转写状态（用于显示加载中）
       isTranscribing: false,
       showBackConfirm: false,
-      showEndingOverlay: false,
-      reportReady: false,        // 报告已生成完毕
-      progressWidth: 0,  
       isSending: false,
       autoRecordTimer: null
     }
@@ -332,15 +309,6 @@ export default {
     ]),
     questionTimeLimit() {
       return this.voiceMode ? 180 : 300  // 语音3分钟，文字5分钟
-    },
-    progressBarStyle() {
-      return {
-        width: this.progressWidth + '%',
-        // 跑到100%时加个短暂过渡，视觉上有个"冲刺"感
-        transition: this.progressWidth === 100
-          ? 'width 0.4s ease-in-out'
-          : 'none'
-      }
     },
     userAvatarLetter() {
       return (this.userName || '我').charAt(0)
@@ -398,34 +366,8 @@ export default {
     isEnding(val) {
       if (val) {
         this.clearTimers()
-        this.showEndingOverlay = true  
-        this.startProgressBar() 
       }
     },
-
-isFinished(val) {
-  if (val) {
-    // showEndingOverlay 已由 isEnding 设好，这里只处理按钮逻辑
-    const tryShowButton = (reportId) => {
-      if (!reportId) return
-      // 停掉爬行 timer，冲到 100%，0.4s 后显示按钮
-      if (this._progressTimer) {
-        clearInterval(this._progressTimer)
-        this._progressTimer = null
-      }
-      this.progressWidth = 100
-      setTimeout(() => { this.reportReady = true }, 400)
-    }
-
-    if (this.reportId) {
-      tryShowButton(this.reportId)
-    } else {
-      const unwatch = this.$watch('reportId', (id) => {
-        if (id) { unwatch(); tryShowButton(id) }
-      })
-    }
-  }
-},
     // 消息更新自动滚底
     messages() {
       this.$nextTick(this.scrollToBottom)
@@ -456,26 +398,6 @@ isFinished(val) {
       return !/^(好|好的|嗯|嗯嗯|嗯哼|哦|噢|啊|行|可以|是|对|没了|没有了|不知道|ok|okay|yes|no|[，。！？、\s]+)$/i.test(t)
     },
 
-    // methods 中新增
-    startProgressBar() {
-      const DURATION = 20000   // 20s 跑到 95%
-      const TARGET = 95
-      const INTERVAL = 100     // 每 100ms 更新一次
-      const step = TARGET / (DURATION / INTERVAL)
-
-      this.progressWidth = 0
-      if (this._progressTimer) clearInterval(this._progressTimer)
-
-      this._progressTimer = setInterval(() => {
-        if (this.progressWidth < TARGET) {
-          this.progressWidth = Math.min(this.progressWidth + step, TARGET)
-        } else {
-          // 到 95% 后停住，等 reportReady
-          clearInterval(this._progressTimer)
-          this._progressTimer = null
-        }
-      }, INTERVAL)
-    },
         // ---- 发送回答 ----
     async handleSend() {
       const text = this.inputText.trim()
@@ -487,7 +409,6 @@ isFinished(val) {
       await this.submitAnswer(text)
     },
     goToReport() {
-      this.showEndingOverlay = false
       this.$router.push(`/interview/report/${this.reportId}`)
     },
     // ---- 结束面试 ----
@@ -937,7 +858,34 @@ renderMarkdown(text) {
   &__sub { font-size: $font-size-sm; color: $text-muted; }
 }
 
-@keyframes spin { to { transform: rotate(360deg); } }
+.session-end-progress {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 10px;
+  margin-top: $spacing-sm;
+  padding: 0;
+}
+
+.session-end-spinner {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 4px solid rgba(124, 111, 247, 0.18);
+  border-top-color: #7C6FF7;
+  border-right-color: transparent;
+  border-bottom-color: transparent;
+  border-left-color: transparent;
+  animation: session-end-spin 0.9s linear infinite;
+}
+
+.session-end-progress-text {
+  font-size: $font-size-sm;
+  color: $text-primary;
+  text-align: center;
+}
+
+@keyframes session-end-spin { to { transform: rotate(360deg); } }
+
+@keyframes progress-spin { to { transform: rotate(360deg); } }
 
 // ---- 输入区域 ----
 .input-area {
@@ -1201,95 +1149,6 @@ renderMarkdown(text) {
 
 
 
-/* ---- 面试结束遮罩 ---- */
-.ending-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.75);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 200;
-}
-.ending-card {
-  background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
-  border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 24px;
-  padding: 40px 32px;
-  width: 300px;
-  text-align: center;
-  box-shadow: 0 24px 60px rgba(0,0,0,0.4);
-  
-  &.report-ready {
-    .ending-spin-ring {
-      animation: none;
-      stroke-dasharray: 163; /* 2 * π * 26 */
-      stroke-dashoffset: 0;
-    }
-  }
-}
-.ending-icon-wrap {
-  position: relative;
-  width: 64px;
-  height: 64px;
-  margin: 0 auto 20px;
-}
-.ending-spin-ring {
-  position: absolute;
-  inset: 0;
-  animation: spin 2s linear infinite;
-  
-  /* 当进度条到达100%时停止旋转并填满 */
-  .report-ready & {
-    animation: none;
-    stroke-dasharray: 163; /* 2 * π * 26 */
-    stroke-dashoffset: 0;
-  }
-}
-.ending-emoji {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 28px;
-}
-.ending-title {
-  font-size: 20px;
-  font-weight: 700;
-  color: #fff;
-  margin: 0 0 8px;
-}
-.ending-sub {
-  font-size: 13px;
-  color: rgba(255,255,255,0.7);
-  margin: 0 0 20px;
-}
-.ending-progress-track {
-  height: 4px;
-  background: rgba(255,255,255,0.15);
-  border-radius: 2px;
-  overflow: hidden;
-  margin-bottom: 12px;
-}
-.ending-progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #818cf8, #c4b5fd);
-  border-radius: 2px;
-  width: 0; 
-}
-.ending-hint {
-  font-size: 11px;
-  color: rgba(255,255,255,0.4);
-  margin: 0;
-}
-
-/* 遮罩出现动画 */
-.ending-fade-enter-active { transition: opacity 0.4s ease; }
-.ending-fade-leave-active { transition: opacity 0.3s ease; }
-.ending-fade-enter-from, .ending-fade-leave-to { opacity: 0; }
 
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes progress-slide { from { width: 0 } to { width: 95% } }
