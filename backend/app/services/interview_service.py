@@ -26,6 +26,7 @@ from app.services.asr_service import global_speed_cache
 from app.services.tts_service import TTSService, bytes_to_b64
 from app.services.resume_service import ResumeService
 from app.models.interview import Interview, InterviewChat
+from app.models.job import Job
 from app.models.prompt import AiPrompt
 from app.models.learning import KnowledgeTag, UserKnowledgeMastery
 from app.models.example import Example
@@ -523,8 +524,30 @@ class InterviewService:
 
     @staticmethod
     def _get_job_graph_snapshot(job_id):
-        questions = Question.query.filter_by(job_id=job_id).all()
+        job = db.session.get(Job, int(job_id)) if job_id is not None else None
+        if not job:
+            return [], {}
+
+        questions_rel = job.questions
+        if hasattr(questions_rel, 'filter_by'):
+            questions = questions_rel.filter_by(status='published').all()
+            if not questions:
+                questions = questions_rel.all()
+        else:
+            questions = list(questions_rel or [])
+            published_questions = [q for q in questions if getattr(q, 'status', None) == 'published']
+            if published_questions:
+                questions = published_questions
+
+        tags_rel = job.knowledge_tags
+        if hasattr(tags_rel, 'all'):
+            job_tags = tags_rel.all()
+        else:
+            job_tags = list(tags_rel or [])
+
         tag_map = {}
+        for tag in job_tags:
+            tag_map[tag.id] = tag
         for question in questions:
             for tag in question.knowledge_tags:
                 tag_map[tag.id] = tag
@@ -540,16 +563,13 @@ class InterviewService:
 
     @staticmethod
     def _assign_questions(job_id, user_id, limit=5, recent_tag_ids=None):
-        questions = Question.query.filter_by(job_id=job_id, status='published').all()
-        if not questions:
-            questions = Question.query.filter_by(job_id=job_id).all()
+        questions, tag_map = InterviewService._get_job_graph_snapshot(job_id)
 
         if not questions:
             return []
 
         recent_tag_ids = set(recent_tag_ids or [])
 
-        _, tag_map = InterviewService._get_job_graph_snapshot(job_id)
         mastery_rows = UserKnowledgeMastery.query.filter(
             UserKnowledgeMastery.user_id == user_id,
             UserKnowledgeMastery.tag_id.in_(list(tag_map.keys()) or [0])
@@ -1316,7 +1336,7 @@ class InterviewService:
 
         # ================= 优化点1: 扁平化组装真实标准知识点 =================
         # 获取当前岗位下所有题目的关联标签
-        questions = Question.query.filter_by(job_id=interview.job_id).all()
+        questions, _ = InterviewService._get_job_graph_snapshot(interview.job_id)
         tag_set = set()
         for q in questions:
             for tag in q.knowledge_tags:
