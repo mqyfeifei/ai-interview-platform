@@ -29,6 +29,9 @@ function base64ToUint8Array(base64) {
   return bytes
 }
 
+let currentPlayback = null
+let playbackCancelled = false
+
 function getSharedAudioContext() {
   if (typeof window === 'undefined') return null
   const AudioCtx = window.AudioContext || window.webkitAudioContext
@@ -66,6 +69,36 @@ function base64ToDataUriAudio(base64, mimeType = 'audio/mp3') {
     objectUrl: null,
     audio: new Audio(`data:${mimeType};base64,${base64 || ''}`)
   }
+}
+
+function cleanupCurrentPlayback() {
+  if (!currentPlayback) return
+
+  try {
+    if (currentPlayback.type === 'html') {
+      const { audio, objectUrl } = currentPlayback
+      audio.onended = null
+      audio.onerror = null
+      audio.pause()
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl)
+      }
+    }
+    if (currentPlayback.type === 'web') {
+      currentPlayback.source?.stop?.()
+      currentPlayback.source = null
+    }
+  } catch (err) {
+    console.warn('[TTS] cleanupCurrentPlayback failed', err)
+  }
+
+  currentPlayback.resolve?.()
+  currentPlayback = null
+}
+
+function stopCurrentPlayback() {
+  playbackCancelled = true
+  cleanupCurrentPlayback()
 }
 
 function bindAudioUnlockOnce(callback) {
@@ -126,6 +159,14 @@ async function playWithWebAudio(base64) {
     source.buffer = decodedBuffer
     source.connect(audioContext.destination)
     source.onended = () => resolve()
+
+    currentPlayback = {
+      type: 'web',
+      source,
+      resolve,
+      reject: null
+    }
+
     source.start(0)
   })
 }
@@ -164,6 +205,14 @@ function playWithHtmlAudio(base64, mode = 'blob') {
     audio.onended = () => finishResolve()
     audio.onerror = (err) => finishReject(err || new Error('HTMLAudio onerror'))
 
+    currentPlayback = {
+      type: 'html',
+      audio,
+      objectUrl,
+      resolve: finishResolve,
+      reject: finishReject
+    }
+
     const playPromise = audio.play()
     if (playPromise && typeof playPromise.catch === 'function') {
       playPromise.catch((err) => finishReject(err))
@@ -173,8 +222,10 @@ function playWithHtmlAudio(base64, mode = 'blob') {
 
 async function playBase64AudioReliable(base64, tag = 'stream', waitTimeoutMs = 12000) {
   if (!base64) return
+  if (playbackCancelled) return
 
   const tryWebAudio = async () => {
+    if (playbackCancelled) return
     await playWithWebAudio(base64)
     return 'webaudio'
   }
@@ -302,7 +353,7 @@ const actions = {
       if (ctx && ctx.state === 'suspended') {
         ctx.resume().catch(e => console.warn('唤醒由于没有活跃手势被拒绝', e));
       }
-      
+
       // 从 user 模块拿数字 id
       const userInfo = rootGetters['user/userInfo']
       const userId = userInfo?.id  // 数字，如 1
@@ -363,7 +414,7 @@ const actions = {
     }
 
     const { sendAnswerStream } = await import('@/api/interview')
-    
+
     // ✅ 创建音频播放器（仅当流结束且音频播放完毕，才进入下一轮）
     let streamDone = false
     let shouldFinishInterview = false
@@ -385,11 +436,15 @@ const actions = {
     }
 
     const playBase64Audio = (base64Str) => {
+      if (playbackCancelled) return
       pendingAudioCount += 1
       commit('SET_AI_SPEAKING', true)
 
       playbackChain = playbackChain
-        .then(() => playBase64AudioReliable(base64Str, 'stream', 12000))
+        .then(() => {
+          if (playbackCancelled) return
+          return playBase64AudioReliable(base64Str, 'stream', 12000)
+        })
         .catch(async (err) => {
           console.error('[TTS][stream] 音频播放失败，尝试 data-uri 兜底：', err)
           try {
@@ -406,7 +461,7 @@ const actions = {
           }
         })
     }
-    
+
     sendAnswerStream(state.currentSession.sessionId, answerText, {
       voiceMode: state.voiceMode,
       voice: state.ttsVoice,
@@ -416,7 +471,9 @@ const actions = {
 
       // ✅ 新增：处理音频数据
       onAudio(base64Audio) {
-        playBase64Audio(base64Audio)
+        if (!playbackCancelled) {
+          playBase64Audio(base64Audio)
+        }
       },
 
       onStreamEnd() {
@@ -442,6 +499,8 @@ const actions = {
     if (!state.currentSession) return
     if (state.isEnding || state.isFinished) return
     commit('SET_ENDING', true) // 立即标记：面试结束流程开始，计时器将停止
+    stopCurrentPlayback()
+    commit('SET_AI_SPEAKING', false)
     commit('SET_LOADING', true)
     try {
       const res = await finishInterview(state.currentSession.sessionId)
@@ -463,6 +522,8 @@ const actions = {
 
   // 重置（回到岗位选择重新开始时调用）
   resetInterview({ commit }) {
+    playbackCancelled = false
+    cleanupCurrentPlayback()
     commit('RESET_INTERVIEW')
   },
 
