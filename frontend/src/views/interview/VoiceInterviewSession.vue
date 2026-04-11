@@ -118,7 +118,7 @@
 
           <!-- AI 思考中动画 -->
           <transition name="fade">
-            <div v-if="isLoading && !hasStreamingMessage" class="message-item message-item--ai thinking-row">
+            <div v-if="isLoading && !hasStreamingMessage && !isEnding" class="message-item message-item--ai thinking-row">
               <div class="message-avatar message-avatar--ai">
                 <span>🤖</span>
               </div>
@@ -127,6 +127,13 @@
                 <span class="thinking-dot" />
                 <span class="thinking-dot" />
               </div>
+            </div>
+          </transition>
+
+          <transition name="fade">
+            <div v-if="isEnding && !isFinished" class="session-end-progress">
+              <div class="session-end-spinner" />
+              <p class="session-end-progress-text">面试报告生成中，请耐心等待</p>
             </div>
           </transition>
 
@@ -202,7 +209,7 @@
             <button
               :class="['voice-control-btn', { active: isRecording }]"
               @click="toggleRecording"
-              :disabled="isFinished || isLoading"
+              :disabled="isFinished || isLoading || isEnding"
               >
               <svg v-if="!isRecording" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
@@ -219,7 +226,7 @@
         </div>
 
         <!-- 输入区 -->
-        <div class="input-area" :class="{ disabled: isFinished || isLoading }">
+        <div class="input-area" :class="{ disabled: isFinished || isLoading || isEnding }">
           <!-- 语音状态提示条 -->
           <transition name="slide-up">
             <div v-if="isRecording" class="recording-bar">
@@ -259,7 +266,7 @@
                 ref="inputRef"
                 v-model="inputText"
                 :placeholder="isLoading ? 'AI 正在思考中...' : '在此输入你的回答，支持换行...'"
-                :disabled="isFinished || isLoading"
+                :disabled="isFinished || isLoading || isEnding"
                 class="input-textarea"
                 rows="1"
                 @keydown.enter.exact.prevent="handleSend"
@@ -271,7 +278,7 @@
             <!-- 发送按钮 -->
             <button
               :class="['send-btn', { ready: inputText.trim() && !isLoading && !isFinished }]"
-              :disabled="!inputText.trim() || isLoading || isFinished"
+              :disabled="!inputText.trim() || isLoading || isFinished || isEnding"
               @click="handleSend"
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -283,33 +290,6 @@
         </div>
       </div>
     </div>
-
-    <!-- 面试结束/报告生成中 遮罩 -->
-    <transition name="ending-fade">
-      <div v-if="showEndingOverlay" class="ending-overlay">
-        <div class="ending-card">
-          <div class="ending-icon-wrap">
-            <svg class="ending-spin-ring" viewBox="0 0 60 60">
-              <circle cx="30" cy="30" r="26" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="5"/>
-              <circle cx="30" cy="30" r="26" fill="none" stroke="white" stroke-width="5"
-                stroke-linecap="round" stroke-dasharray="50 114" transform="rotate(-90 30 30)"/>
-            </svg>
-            <span class="ending-emoji">🎯</span>
-          </div>
-          <h2 class="ending-title">面试已结束</h2>
-          <p class="ending-sub">AI 正在为你生成专属评估报告...</p>
-          <div class="ending-progress-track">
-            <div class="ending-progress-fill" :style="progressBarStyle"/>
-          </div>
-          <p class="ending-hint">通常需要 10 ~ 30 秒，请勿关闭页面</p>
-          <transition name="fade">
-            <button v-if="reportReady" class="view-report-btn" @click="goToReport">
-              查看面试报告 →
-            </button>
-          </transition>
-        </div>
-      </div>
-    </transition>
 
     <!-- 结束确认弹窗 -->
     <transition name="modal">
@@ -384,9 +364,6 @@ export default {
       // 语音转写状态
       isTranscribing: false,
       showBackConfirm: false,
-      showEndingOverlay: false,
-      reportReady: false,        // 报告已生成完毕
-      progressWidth: 0,
       isSending: false,
       autoRecordTimer: null
     }
@@ -400,14 +377,6 @@ export default {
     ]),
     questionTimeLimit() {
       return 180 // 语音3分钟
-    },
-    progressBarStyle() {
-      return {
-        width: this.progressWidth + '%',
-        transition: this.progressWidth === 100
-          ? 'width 0.4s ease-in-out'
-          : 'none'
-      }
     },
     userAvatarLetter() {
       return (this.userName || '我').charAt(0)
@@ -467,30 +436,6 @@ export default {
     isEnding(val) {
       if (val) {
         this.clearTimers()
-        this.showEndingOverlay = true
-        this.startProgressBar()
-      }
-    },
-
-    isFinished(val) {
-      if (val) {
-        const tryShowButton = (reportId) => {
-          if (!reportId) return
-          if (this._progressTimer) {
-            clearInterval(this._progressTimer)
-            this._progressTimer = null
-          }
-          this.progressWidth = 100
-          setTimeout(() => { this.reportReady = true }, 400)
-        }
-
-        if (this.reportId) {
-          tryShowButton(this.reportId)
-        } else {
-          const unwatch = this.$watch('reportId', (id) => {
-            if (id) { unwatch(); tryShowButton(id) }
-          })
-        }
       }
     },
     // 消息更新自动滚底
@@ -515,24 +460,6 @@ export default {
       return !/^(好|好的|嗯|嗯嗯|嗯哼|哦|噢|啊|行|可以|是|对|没了|没有了|不知道|ok|okay|yes|no|[，。！？、\s]+)$/i.test(t)
     },
 
-    startProgressBar() {
-      const DURATION = 20000   // 20s 跑到 95%
-      const TARGET = 95
-      const INTERVAL = 100     // 每 100ms 更新一次
-      const step = TARGET / (DURATION / INTERVAL)
-
-      this.progressWidth = 0
-      if (this._progressTimer) clearInterval(this._progressTimer)
-
-      this._progressTimer = setInterval(() => {
-        if (this.progressWidth < TARGET) {
-          this.progressWidth = Math.min(this.progressWidth + step, TARGET)
-        } else {
-          clearInterval(this._progressTimer)
-          this._progressTimer = null
-        }
-      }, INTERVAL)
-    },
     async handleSend() {
       const text = this.inputText.trim()
       if (!text || this.isLoading || this.isFinished || this.isTranscribing) return
@@ -543,7 +470,6 @@ export default {
       await this.submitAnswer(text)
     },
     goToReport() {
-      this.showEndingOverlay = false
       this.$router.push(`/interview/report/${this.reportId}`)
     },
     async handleEnd() {
@@ -983,6 +909,35 @@ export default {
   &__title { font-size: $font-size-lg; font-weight: $font-weight-bold; color: $text-primary; }
   &__sub { font-size: $font-size-sm; color: $text-muted; }
 }
+
+.session-end-progress {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 10px;
+  margin-top: $spacing-sm;
+  padding: 0;
+}
+
+.session-end-spinner {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 4px solid rgba(124, 111, 247, 0.18);
+  border-top-color: #7C6FF7;
+  border-right-color: transparent;
+  border-bottom-color: transparent;
+  border-left-color: transparent;
+  animation: session-end-spin 0.9s linear infinite;
+}
+
+.session-end-progress-text {
+  font-size: $font-size-sm;
+  color: $text-primary;
+  text-align: center;
+}
+
+@keyframes session-end-spin { to { transform: rotate(360deg); } }
+
+@keyframes progress-spin { to { transform: rotate(360deg); } }
 
 // 右边面板：语音聊天动画
 .right-panel {
@@ -1424,80 +1379,6 @@ export default {
   &--danger { border-color: rgba($danger, 0.3); border-top-color: $danger; }
 }
 
-/* ---- 面试结束遮罩 ---- */
-.ending-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.75);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 200;
-}
-.ending-card {
-  background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
-  border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 24px;
-  padding: 40px 32px;
-  width: 300px;
-  text-align: center;
-  box-shadow: 0 24px 60px rgba(0,0,0,0.4);
-}
-.ending-icon-wrap {
-  position: relative;
-  width: 64px;
-  height: 64px;
-  margin: 0 auto 20px;
-}
-.ending-spin-ring {
-  position: absolute;
-  inset: 0;
-  animation: spin 2s linear infinite;
-}
-.ending-emoji {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 28px;
-}
-.ending-title {
-  font-size: 20px;
-  font-weight: 700;
-  color: #fff;
-  margin: 0 0 8px;
-}
-.ending-sub {
-  font-size: 13px;
-  color: rgba(255,255,255,0.7);
-  margin: 0 0 20px;
-}
-.ending-progress-track {
-  height: 4px;
-  background: rgba(255,255,255,0.15);
-  border-radius: 2px;
-  overflow: hidden;
-  margin-bottom: 12px;
-}
-.ending-progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #818cf8, #c4b5fd);
-  border-radius: 2px;
-  width: 0; 
-}
-.ending-hint {
-  font-size: 11px;
-  color: rgba(255,255,255,0.4);
-  margin: 0;
-}
-
-/* 遮罩出现动画 */
-.ending-fade-enter-active { transition: opacity 0.4s ease; }
-.ending-fade-leave-active { transition: opacity 0.3s ease; }
-.ending-fade-enter-from, .ending-fade-leave-to { opacity: 0; }
 
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes recordPulse {
