@@ -347,9 +347,8 @@ def import_knowledge_base():
                     text_to_encode = f"问题: {title} 答案要点: {', '.join(key_points)}"
                     embedding = model.encode(text_to_encode).tolist()
 
-                    # 写入 Question 表
+                    # 写入 Question 表（注意：Question 通过多对多关系关联 Job，不直接使用 job_id）
                     q = Question(
-                        job_id=job_id,
                         content=title,
                         type=ki_type,
                         difficulty=difficulty,
@@ -359,6 +358,11 @@ def import_knowledge_base():
                         status=status,               # 映射新增字段
                         embedding=embedding
                     )
+                    
+                    # 通过多对多关系关联岗位
+                    job = db.session.get(Job, job_id)
+                    if job:
+                        q.jobs.append(job)
 
                     # --- 自动语义匹配并绑定知识点 ---
                     # 利用 pgvector 的 cosine_distance 寻找最接近的 1 个或 2 个知识点
