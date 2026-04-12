@@ -77,6 +77,13 @@ def start_interview():
         return jsonify({"code": 400, "msg": f"无效的岗位: {job_id_input}，请确认岗位已在数据库中创建"}), 400
 
     try:
+        # 后端最终校验：确保选中岗位与简历满足面试要求（若不满足则拒绝启动面试）
+        try:
+            resume_data = ResumeService.get_main_resume(user_id)
+            content = resume_data.get('content', {})
+            ResumeService._validate_resume_content(content, job_id, user_id=user_id)
+        except ValueError as ve:
+            return jsonify({"code": 400, "msg": str(ve)}), 400
 
         result = InterviewService.start_interview(
             user_id,

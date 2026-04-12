@@ -155,8 +155,8 @@ def get_resume(resume_id: int):
 @bp.route('/<int:resume_id>', methods=['PUT'])
 def update_resume(resume_id: int):
     """
-    更新简历标题和/或内容。
-    Body: { title?, content? }
+    更新简历标题、内容和/或关联岗位。
+    Body: { title?, content?, job_id? }
     """
     try:
         user_id = get_current_user_id()
@@ -167,6 +167,7 @@ def update_resume(resume_id: int):
             user_id=user_id,
             title=body.get('title'),
             content=body.get('content'),
+            job_id=body.get('job_id'),
         )
         return success_response(data, '保存成功')
     except ValueError as exc:

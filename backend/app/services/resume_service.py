@@ -274,8 +274,8 @@ class ResumeService:
         title = (title or '新简历').strip()
         content = content or {}
 
-        # 漏洞修复 1：移除 `if content:` 判断，强制触发全量校验
-        ResumeService._validate_resume_content(content, job_id, user_id=user_id)
+        # 创建时不强制做全量校验，允许前端保存不完整简历（面试启动时再由后端做最终校验）
+        # NOTE: 保留此注释用于审计历史变更
 
         if is_main:
             existing = Resume.query.filter_by(user_id=user_id, is_main=True).first()
@@ -300,9 +300,9 @@ class ResumeService:
 
     @staticmethod
     def update_resume(resume_id: int, user_id: int,
-                      title: str = None, content: dict = None) -> dict:
+                      title: str = None, content: dict = None, job_id=None) -> dict:
         """
-        更新简历标题和/或内容（全量替换 content）。
+        更新简历标题、内容和/或关联岗位。
         若简历不存在或不属于该用户则抛出 ValueError。
         """
         resume = Resume.query.filter_by(id=resume_id, user_id=user_id).first()
@@ -315,9 +315,11 @@ class ResumeService:
                 resume.title = title
 
         if content is not None:
-            # 漏洞修复 3：传入 user_id，使得主简历可以通过用户 default_job_id 进行岗位差异化校验
-            ResumeService._validate_resume_content(content, resume.job_id, user_id=user_id)
+            # 更新简历时不强制全量校验，允许前端保存不完整简历；最终校验将在面试启动阶段执行
             resume.set_content(content)
+
+        if job_id is not None:
+            resume.job_id = job_id
 
         resume.updated_at = datetime.utcnow()
         db.session.commit()
@@ -363,10 +365,8 @@ class ResumeService:
         if not main:
             raise ValueError('主简历不存在，请先完善主简历')
 
-        # 漏洞修复 2：在覆写前，将主简历的内容结合目标简历的 job_id 强制校验一次
+        # 复制主简历到目标简历（允许覆盖，即便主简历不完善）
         main_content = main.get_content()
-        ResumeService._validate_resume_content(main_content, target.job_id, user_id=user_id)
-
         target.set_content(main.get_content())
         target.updated_at = datetime.utcnow()
         db.session.commit()

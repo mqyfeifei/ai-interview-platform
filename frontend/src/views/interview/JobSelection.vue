@@ -469,10 +469,21 @@ const REQUIRED_FIELDS = [
   { key: 'gender',  label: '性别',   path: r => r?.personal?.gender },
   { key: 'phone',   label: '手机号码', path: r => r?.personal?.phone },
   { key: 'email',   label: '电子邮箱', path: r => r?.personal?.email },
+  // 教育 - 前端需要校验学校、专业、学历
   { key: 'school',  label: '就读院校', path: r => {
     const edu = r?.education
     if (Array.isArray(edu) && edu.length > 0) return edu[0].school
     return r?.personal?.school
+  }},
+  { key: 'major',  label: '专业', path: r => {
+    const edu = r?.education
+    if (Array.isArray(edu) && edu.length > 0) return edu[0].major
+    return null
+  }},
+  { key: 'degree', label: '学历', path: r => {
+    const edu = r?.education
+    if (Array.isArray(edu) && edu.length > 0) return edu[0].degree
+    return null
   }}
 ]
 
@@ -774,12 +785,58 @@ export default {
     },
 
     validateResume(content) {
-      const missing = REQUIRED_FIELDS.filter(f => {
+      const missing = []
+
+      // 基本必填项（保留原有）
+      REQUIRED_FIELDS.forEach(f => {
         const val = f.path(content)
-        return !val || (typeof val === 'string' && val.trim() === '')
+        if (!val || (typeof val === 'string' && val.trim() === '')) {
+          missing.push({ key: f.key, label: f.label, section: null })
+        }
       })
+
+      // 目标岗位：前端强校验（必填且需与所选岗位对应）
+      const resumeJobId = this.selectedResume && this.selectedResume.jobId
+      if (!resumeJobId) {
+        missing.push({ key: 'target_job_missing', label: '目标岗位：未设置（必填）' })
+      } else if (this.currentSelected && String(resumeJobId) !== String(this.currentSelected.id)) {
+        missing.push({ key: 'target_job_mismatch', label: '目标岗位与所选岗位不符' })
+      }
+
+      // 核心技术栈：至少 5 项
+      const skills = Array.isArray(content.skills) ? content.skills.filter(s => s && s.name && s.name.trim()) : []
+      if (skills.length < 5) {
+        missing.push({ key: 'core_stack', label: '核心技术栈不足 5 项（需 ≥5）' })
+      }
+
+      // 项目经验：视为 校园经历 或 实习经历 中任意一条，且该条目必须包含 start,end,title,description,achievements
+      const campus = Array.isArray(content.campusExperiences) ? content.campusExperiences : []
+      const interns = Array.isArray(content.internshipExperiences) ? content.internshipExperiences : []
+      const qualifying = (arr) => arr.some(item => item && (item.start || item.end) && item.title && item.title.toString().trim() && item.description && item.description.toString().trim() && item.achievements && item.achievements.toString().trim())
+      if (!(qualifying(campus) || qualifying(interns))) {
+        missing.push({ key: 'project_req', label: '至少 1 条校园/实习经历，且需填写起止时间、经历名称、详细描述与业绩' })
+      }
+
+      // 教育：学校、专业、学历阶段必填（以第一条教育记录为准）
+      const edu = Array.isArray(content.education) && content.education.length ? content.education[0] : null
+      if (!edu || !edu.school || !edu.school.trim()) missing.push({ key: 'edu_school', label: '教育：学校 未填写' })
+      if (!edu || !edu.major || !edu.major.trim()) missing.push({ key: 'edu_major', label: '教育：专业 未填写' })
+      if (!edu || !edu.degree || !edu.degree.trim()) missing.push({ key: 'edu_degree', label: '教育：学历 未填写' })
+
       this.missingFields = missing
       this.resumeValidationFailed = missing.length > 0
+    },
+
+    goToResumeField(item) {
+      // Navigate to resume builder and focus the requested section/field via query params
+      const resumeId = this.selectedResume && this.selectedResume.id
+      const query = {}
+      if (item && item.section) query.focusSection = item.section
+      if (item && item.field) query.focusField = item.field
+      if (resumeId) query.resumeId = resumeId
+      this.resumeDropdownOpen = false
+      // Open resume builder page with focus instructions
+      this.$router.push({ path: '/resume', query })
     },
 
     // ─── 语音角色选择（预留，后续替换为接口数据）───
@@ -1012,7 +1069,7 @@ export default {
 // ──────────────────────────────────────────────
 //  左栏：岗位列表
 // ──────────────────────────────────────────────
-.left-pane {}
+//.left-pane {}
 
 .pane-header {
   display: flex;
