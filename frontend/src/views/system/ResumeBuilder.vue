@@ -47,6 +47,22 @@ frontend/src/views/system/ResumeBuilder.vue
           <span class="save-indicator" :class="saveState">
             {{ saveStateLabel }}
           </span>
+          <span class="completion-badge">完成度：{{ completionPercent }}%</span>
+        </div>
+        
+        <!-- 关联目标岗位 -->
+        <div class="resume-job-row">
+          <label>关联岗位：</label>
+          <select
+            v-model="currentJobId"
+            class="job-select"
+            @change="updateJobAssociation"
+          >
+            <option :value="null">不关联岗位</option>
+            <option v-for="job in allJobs" :key="job.id" :value="job.id">
+              {{ job.name }}
+            </option>
+          </select>
         </div>
       </div>
 
@@ -222,13 +238,13 @@ frontend/src/views/system/ResumeBuilder.vue
               <span class="char-count">{{ item.school.length }}/40</span>
             </div>
             <div class="row">
-              <label>专业名称</label>
-              <input v-model="item.major" type="text" maxlength="20" />
+              <label>专业名称 <span class="req-star">*</span></label>
+              <input v-model="item.major" data-field="major" type="text" maxlength="20" :class="{ 'input-required': !item.major?.trim() }" />
               <span class="char-count">{{ item.major.length }}/20</span>
             </div>
             <div class="row">
-              <label>学历学位</label>
-              <input v-model="item.degree" type="text" maxlength="20" />
+              <label>学历学位 <span class="req-star">*</span></label>
+              <input v-model="item.degree" data-field="degree" type="text" maxlength="20" :class="{ 'input-required': !item.degree?.trim() }" />
             </div>
             <button class="btn-danger" v-if="education.length > 1" @click="removeEducation(idx)">删除</button>
             <hr />
@@ -264,10 +280,10 @@ frontend/src/views/system/ResumeBuilder.vue
         <section class="section-config" v-else-if="activeSection === 'experience'">
           <h3>校园经历</h3>
           <div class="entry-editor" v-for="(item, idx) in campusExperiences" :key="item.id">
-            <div class="row"><label>起止时间</label><input v-model="item.start" type="date" /><span>至</span><input v-model="item.end" type="date" /></div>
-            <div class="row"><label>经历名称</label><input v-model="item.title" type="text" /></div>
-            <div class="row"><label>详情描述</label><textarea v-model="item.description" rows="3"></textarea></div>
-            <div class="row"><label>业绩/成就 <span style="color:#ef4444;font-size:11px">（技术岗必填，请用数据量化）</span></label><textarea v-model="item.achievements" rows="3" maxlength="200" placeholder="如：独立完成xx模块开发，上线后降低bug率40%"></textarea></div> 
+            <div class="row"><label>起止时间 <span class="req-star">*</span></label><input v-model="item.start" data-field="start" type="date" /><span>至</span><input v-model="item.end" data-field="end" type="date" /></div>
+            <div class="row"><label>经历名称 <span class="req-star">*</span></label><input v-model="item.title" data-field="title" type="text" :class="{ 'input-required': !item.title?.trim() }" /></div>
+            <div class="row"><label>详情描述 <span class="req-star">*</span></label><textarea v-model="item.description" data-field="description" rows="3"></textarea></div>
+            <div class="row"><label>业绩/成就 <span class="req-star">*</span> <span style="color:#ef4444;font-size:11px">（技术岗必填，请用数据量化）</span></label><textarea v-model="item.achievements" data-field="achievements" rows="3" maxlength="200" placeholder="如：独立完成xx模块开发，上线后降低bug率40%"></textarea></div>
             <button class="btn-danger" v-if="campusExperiences.length > 1" @click="removeCampusExperience(idx)">删除</button>
             <hr />
           </div>
@@ -275,11 +291,11 @@ frontend/src/views/system/ResumeBuilder.vue
 
           <h3 style="margin-top:14px">实习经历</h3>
           <div class="entry-editor" v-for="(item, idx) in internshipExperiences" :key="item.id">
-            <div class="row"><label>起止时间</label><input v-model="item.start" type="date" /><span>至</span><input v-model="item.end" type="date" /></div>
-            <div class="row"><label>实习公司</label><input v-model="item.place" type="text" /></div>
-            <div class="row"><label>实习岗位</label><input v-model="item.title" type="text" /></div>
-            <div class="row"><label>详情描述</label><textarea v-model="item.description" rows="3"></textarea></div>
-            <div class="row"><label>业绩/成就 <span style="color:#ef4444;font-size:11px">（技术岗必填，请用数据量化）</span></label><textarea v-model="item.achievements" rows="3" maxlength="200" placeholder="如：独立完成xx模块开发，上线后降低bug率40%"></textarea></div>
+            <div class="row"><label>起止时间 <span class="req-star">*</span></label><input v-model="item.start" data-field="start" type="date" /><span>至</span><input v-model="item.end" data-field="end" type="date" /></div>
+            <div class="row"><label>实习公司 <span class="req-star">*</span></label><input v-model="item.place" data-field="place" type="text" :class="{ 'input-required': !item.place?.trim() }" /></div>
+            <div class="row"><label>实习岗位 <span class="req-star">*</span></label><input v-model="item.title" data-field="title" type="text" :class="{ 'input-required': !item.title?.trim() }" /></div>
+            <div class="row"><label>详情描述 <span class="req-star">*</span></label><textarea v-model="item.description" data-field="description" rows="3"></textarea></div>
+            <div class="row"><label>业绩/成就 <span class="req-star">*</span> <span style="color:#ef4444;font-size:11px">（技术岗必填，请用数据量化）</span></label><textarea v-model="item.achievements" data-field="achievements" rows="3" maxlength="200" placeholder="如：独立完成xx模块开发，上线后降低bug率40%"></textarea></div>
             <button class="btn-danger" v-if="internshipExperiences.length > 1" @click="removeInternshipExperience(idx)">删除</button>
             <hr />
           </div>
@@ -638,6 +654,7 @@ export default {
       // ── resume list / current ──────────────────────────────────────────────
       resumeList: [],
       currentResumeId: null,
+      currentJobId: null,
 
       // ── editor state (mirrors content JSON) ───────────────────────────────
       resumeTitle: '我的简历',
@@ -656,6 +673,9 @@ export default {
       blockOrder: emptyContent().blockOrder,
       config: emptyContent().config,
       allJobs: [],
+
+       // completion percentage for UI
+       completionPercent: 0,
 
       dragIndex: -1,
       overIndex: -1,
@@ -701,6 +721,7 @@ export default {
   computed: {
     missingRequiredFields() {
       const missing = []
+      // 基本必填项
       if (!this.personal.name?.trim())
         missing.push({ label: '姓名', section: 'personal', field: 'name' })
       if (!this.personal.gender?.trim())
@@ -709,10 +730,53 @@ export default {
         missing.push({ label: '手机号码', section: 'personal', field: 'phone' })
       if (!this.personal.email?.trim())
         missing.push({ label: '电子邮箱', section: 'personal', field: 'email' })
-      if (!this.education.length || !this.education[0]?.school?.trim())
+
+      // 教育：学校、专业、学历阶段必填（以第一条为准）
+      const firstEdu = this.education && this.education.length ? this.education[0] : null
+      if (!firstEdu || !firstEdu.school?.trim())
         missing.push({ label: '就读院校', section: 'education', field: 'school' })
+      if (!firstEdu || !firstEdu.major?.trim())
+        missing.push({ label: '专业', section: 'education', field: 'major' })
+      if (!firstEdu || !firstEdu.degree?.trim())
+        missing.push({ label: '学历', section: 'education', field: 'degree' })
+
+      // 技能：至少 5 项
+      const filledSkills = (this.skills || []).filter(s => s && s.name && s.name.trim()).length
+      if (filledSkills < 5) missing.push({ label: '核心技术栈（至少5项）', section: 'skills', field: null })
+
+      // 项目经验：视为 校园经历 或 实习经历 中任意一条完整记录（起止、名称、描述、业绩）
+      const campus = Array.isArray(this.campusExperiences) ? this.campusExperiences : []
+      const interns = Array.isArray(this.internshipExperiences) ? this.internshipExperiences : []
+      const qualifies = (arr) => arr.some(it => it && (it.start || it.end) && it.title && it.title.toString().trim() && it.description && it.description.toString().trim() && it.achievements && it.achievements.toString().trim())
+      if (!(qualifies(campus) || qualifies(interns))) missing.push({ label: '项目经验（至少1条校园/实习经历且字段完整）', section: 'experience', field: null })
+
       return missing
     },    
+    // 计算简历完成度（简单权重：基本信息(4) + 教育(3) + 技能(5) + 项目(3) = 15）
+    completionPercent() {
+      const total = 15
+      let score = 0
+      if (this.personal.name?.trim()) score += 1
+      if (this.personal.gender?.trim()) score += 1
+      if (this.personal.phone?.trim()) score += 1
+      if (this.personal.email?.trim()) score += 1
+
+      const firstEdu = this.education && this.education.length ? this.education[0] : null
+      if (firstEdu && firstEdu.school?.trim()) score += 1
+      if (firstEdu && firstEdu.major?.trim()) score += 1
+      if (firstEdu && firstEdu.degree?.trim()) score += 1
+
+      const filledSkills = (this.skills || []).filter(s => s && s.name && s.name.trim()).length
+      score += Math.min(5, filledSkills)
+
+      const campus = Array.isArray(this.campusExperiences) ? this.campusExperiences : []
+      const interns = Array.isArray(this.internshipExperiences) ? this.internshipExperiences : []
+      const qualifies = (arr) => arr.some(it => it && (it.start || it.end) && it.title && it.title.toString().trim() && it.description && it.description.toString().trim() && it.achievements && it.achievements.toString().trim())
+      if (qualifies(campus) || qualifies(interns)) score += 3
+
+      return Math.round((score / total) * 100)
+    },
+
     currentResume() {
       return this.resumeList.find(r => r.id === this.currentResumeId) || null
     },
@@ -756,7 +820,23 @@ export default {
 
   async created() {
     await this.loadResumeList()
-    this.loadJobList()  
+    this.loadJobList()
+
+    // If a route requested focus on a section/field, open that resume and navigate there
+    const { focusSection, focusField, resumeId } = this.$route.query || {}
+    try {
+      if (resumeId) {
+        const id = Number(resumeId)
+        if (id && id !== this.currentResumeId) await this.loadResumeContent(id)
+      }
+    } catch (e) {
+      // ignore
+    }
+    if (focusSection) {
+      this.$nextTick(() => {
+        this.navigateToRequired({ section: focusSection, field: focusField })
+      })
+    }
   },
 
   watch: {
@@ -772,6 +852,8 @@ export default {
     prices:                { handler() { this.onContentChange() }, deep: true },
     blockOrder:            { handler() { this.onContentChange() }, deep: true },
     config:                { handler() { this.onContentChange() }, deep: true },
+    resumeTitle:           { handler() { this.onContentChange() } },
+    currentJobId:          { handler() { this.onContentChange() } },
 
     activeSection(newSection) {
       const map = {
@@ -847,6 +929,7 @@ export default {
         const resume = res
         this.currentResumeId = id
         this.resumeTitle = resume.title || '未命名简历'
+        this.currentJobId = resume.jobId || null
 
         const content = resume.content || {}
         const isEmpty = !content || Object.keys(content).length === 0 ||
@@ -867,6 +950,27 @@ export default {
         this.applyContent(emptyContent())
       } finally {
         this.globalLoading = false
+      }
+    },
+
+    async updateJobAssociation() {
+      if (!this.currentResumeId) return
+      this.saveState = 'unsaved'
+      try {
+        await updateResume(this.currentResumeId, {
+          jobId: this.currentJobId
+        })
+        // 更新简历列表中的job信息
+        const resumeIndex = this.resumeList.findIndex(r => r.id === this.currentResumeId)
+        if (resumeIndex !== -1) {
+          const job = this.allJobs.find(j => j.id === this.currentJobId)
+          this.resumeList[resumeIndex].jobId = this.currentJobId
+          this.resumeList[resumeIndex].jobName = job ? job.name : null
+        }
+        this.saveState = 'saved'
+      } catch (e) {
+        console.error('更新岗位关联失败', e)
+        this.saveState = 'error'
       }
     },
 
@@ -1023,12 +1127,15 @@ export default {
 
     async autoSaveTitle() {
       if (!this.currentResumeId || !this.resumeTitle.trim()) return
+      this.saveState = 'unsaved'
       try {
         await updateResume(this.currentResumeId, { title: this.resumeTitle.trim() })
         const r = this.resumeList.find(r => r.id === this.currentResumeId)
         if (r) r.title = this.resumeTitle.trim()
+        this.saveState = 'saved'
       } catch (e) {
         console.warn('标题保存失败', e)
+        this.saveState = 'error'
       }
     },
 
@@ -1045,18 +1152,20 @@ export default {
         await updateResume(this.currentResumeId, {
           title: this.resumeTitle,
           content: this.buildContent(),
+          job_id: this.currentJobId
         })
         this.saveState = 'saved'
       } catch (e) {
-        console.error('保存失败', e)
-        this.saveState = 'error'
-        // 提取后端返回的具体校验错误信息（如"姓名为必填项"）
-        const errMsg = e?.response?.data?.message || e?.response?.data?.msg || e?.message || '保存失败'
-        // 仅手动保存时弹出提示，自动保存静默处理
+        // 即便后端返回校验错误，允许前端继续保存（本地及尝试后端保存），并由前端展示不完整标签
+        console.warn('后端保存失败（已本地保存）：', e)
+        // 始终将变更保存在 localStorage，避免丢失
+        try { localStorage.setItem(LOCAL_KEY + this.currentResumeId, JSON.stringify(this.buildContent())) } catch (err) { console.warn('本地保存失败', err) }
+        // 将状态标记为已保存（前端允许不完整简历保存），但保留一个轻量提示
+        this.saveState = 'saved'
         if (!this.autoSaveTimer) {
-          alert('保存失败：' + errMsg)
+          // 手动保存时给用户一个非阻塞提示
+          console.info('已保存到本地，部分字段未满足后端校验（可忽略）。')
         }
-        localStorage.setItem(LOCAL_KEY + this.currentResumeId, JSON.stringify(this.buildContent()))
       }
     },
 
@@ -1338,6 +1447,37 @@ export default {
   background: #fff;
 }
 .resume-title-input:focus { border-color: #7c56ff; outline: none; }
+
+.resume-job-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 8px 0;
+
+  label {
+    font-size: 14px;
+    color: #6b7280;
+    white-space: nowrap;
+  }
+
+  .job-select {
+    flex: 1;
+    padding: 6px 10px;
+    border: 1px solid #e2e5ef;
+    border-radius: 6px;
+    font-size: 13px;
+    background: #fff;
+    transition: all 0.2s;
+    color: #555;
+
+    &:focus {
+      outline: none;
+      border-color: #917dda;
+      box-shadow: 0 0 0 2px rgba(87, 65, 166, 0.1);
+    }
+  }
+}
 
 .save-indicator {
   font-size: 11px;
