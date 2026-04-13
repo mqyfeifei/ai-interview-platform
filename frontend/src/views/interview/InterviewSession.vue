@@ -297,7 +297,22 @@ export default {
       isTranscribing: false,
       showBackConfirm: false,
       isSending: false,
-      autoRecordTimer: null
+      autoRecordTimer: null,
+      
+      // ==================== WebSocket 实时 ASR ====================
+      socket: null,
+      voiceId: null,
+      sendSeq: 0,
+      audioContext: null,
+      processor: null,
+      inputNode: null,
+      globalStream: null,
+      lastSendTs: 0,
+      MIN_SEND_INTERVAL_MS: 80,  // 两次发送最小间隔
+      ENABLE_VAD: true,           // 启用语音活动检测
+      VAD_THRESHOLD: 0.01,        // VAD 阈值
+      sampleRate: 16000           // 目标采样率
+      // ============================================================
     }
   },
   computed: {
@@ -350,10 +365,19 @@ export default {
       await this.startSession()
     }
     this.startQuestionTimer()
+    
+    // ==================== 初始化 WebSocket 连接 ====================
+    this.initWebSocket()
+    // ==============================================================
   },
   beforeUnmount() {
     this.clearTimers()
     if (this._progressTimer) clearInterval(this._progressTimer)
+    
+    // ==================== 清理 WebSocket 和音频资源 ====================
+    this.disconnectWebSocket()
+    this.cleanupAudioResources()
+    // ==================================================================
   },
   watch: {
     // 切换到新问题时重置计时器
@@ -528,52 +552,71 @@ renderMarkdown(text) {
         alert('正在发送上一段语音，请稍等...')
         return
       }
+      
+      // ==================== 使用 WebSocket 实时流式传输 ====================
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-        this.audioChunks = []
-        this.mediaRecorder = new MediaRecorder(stream)
-        this.mediaRecorder.ondataavailable = e => this.audioChunks.push(e.data)
-
-        this.mediaRecorder.onstop = async () => {
-          stream.getTracks().forEach(t => t.stop())
-          const audioBlob = new Blob(this.audioChunks, { type: 'audio/wav' })
-
-          this.isSending = true
-          try {
-            const { uploadAudio } = await import('@/api/interview')
-            const result = await uploadAudio(audioBlob)
-            const text = result && result.text ? result.text.trim() : ''
-            console.log('[语音] 后端返回文字：', text)
-
-            if (this.isMeaningfulVoiceText(text)) {
-              await this.submitAnswer(text)
-            } else {
-              console.warn('[语音] 返回文字无效或过短，跳过提交')
-              alert('识别到的回答过短（如“好/嗯嗯”），请补充更完整的回答后再提交。')
-            }
-          } catch (err) {
-            console.error('[语音] 发送失败：', err)
-          } finally {
-            this.isSending = false
-          }
+        
+        // 生成唯一的 voiceId
+        this.voiceId = String(Date.now())
+        this.sendSeq = 0
+        
+        // 创建 AudioContext
+        this.audioContext = new (window.AudioContext || window.webkitAudioContext)()
+        this.globalStream = stream
+        this.inputNode = this.audioContext.createMediaStreamSource(stream)
+        
+        // 创建 ScriptProcessor（用于实时捕获音频数据）
+        const bufferSize = 2048  // 缓冲区大小（越小延迟越低，但 CPU 占用越高）
+        this.processor = this.audioContext.createScriptProcessor(bufferSize, 1, 1)
+        
+        this.processor.onaudioprocess = (e) => {
+          if (!this.isRecording) return
+          
+          const floatData = e.inputBuffer.getChannelData(0)
+          // 立即发送音频分片（内部有节流控制）
+          this.sendChunkImmediate(new Float32Array(floatData))
         }
-
-        this.mediaRecorder.start()
+        
+        // 连接音频节点
+        this.inputNode.connect(this.processor)
+        this.processor.connect(this.audioContext.destination)
+        
+        // 更新状态
         this.isRecording = true
         this.recordingTime = 0
-        this.recordingInterval = setInterval(() => { this.recordingTime++ }, 1000)
+        this.recordingInterval = setInterval(() => {
+          this.recordingTime++
+        }, 1000)
+        
+        console.log('[ASR] 开始实时录音，voiceId:', this.voiceId)
+        
       } catch (err) {
-        console.warn('麦克风权限被拒绝', err)
+        console.error('[ASR] 麦克风权限被拒绝:', err)
         alert('无法访问麦克风，请检查浏览器权限设置。')
       }
+      // ===================================================================
     },
 
     stopRecording() {
-      if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
-        this.mediaRecorder.stop()
+      // ==================== 发送最终标记触发后端识别 ====================
+      if (this.isRecording) {
+        // 发送结束标记
+        this.sendFinalMarker()
+        
+        // 停止录音
+        this.isRecording = false
+        if (this.recordingInterval) {
+          clearInterval(this.recordingInterval)
+          this.recordingInterval = null
+        }
+        
+        // 清理音频资源
+        this.cleanupAudioResources()
+        
+        console.log('[ASR] 停止录音，等待识别结果...')
       }
-      this.isRecording = false
-      if (this.recordingInterval) { clearInterval(this.recordingInterval); this.recordingInterval = null }
+      // ==================================================================
     },
 
     // ✅ 移除原有空的 handleRecordingStop 方法（已整合到 onstop 中）
@@ -602,7 +645,258 @@ renderMarkdown(text) {
     resetTextarea() {
       const el = this.$refs.inputRef
       if (el) { el.style.height = 'auto' }
-    }
+    },
+    
+    // ==================== WebSocket 实时 ASR 方法 ====================
+    
+    /**
+     * 初始化 WebSocket 连接
+     */
+    initWebSocket() {
+      if (window.io) {
+        this.connectSocket()
+      } else {
+        // 动态加载 Socket.IO 客户端
+        this.loadSocketIO()
+      }
+    },
+    
+    /**
+     * 动态加载 Socket.IO CDN
+     */
+    loadSocketIO() {
+      const script = document.createElement('script')
+      script.src = 'https://cdn.socket.io/4.7.2/socket.io.min.js'
+      script.onload = () => {
+        console.log('[ASR] Socket.IO 客户端加载成功')
+        this.connectSocket()
+      }
+      script.onerror = () => {
+        console.error('[ASR] Socket.IO 客户端加载失败')
+      }
+      document.head.appendChild(script)
+    },
+    
+    /**
+     * 连接 Socket.IO 服务器
+     */
+    connectSocket() {
+      const SERVER_URL = process.env.NODE_ENV === 'development' 
+        ? 'http://localhost:5000' 
+        : window.location.origin
+      
+      this.socket = window.io(SERVER_URL, { 
+        transports: ['websocket'],
+        reconnection: true,
+        reconnectionAttempts: 5,
+        reconnectionDelay: 1000
+      })
+      
+      this.socket.on('connect', () => {
+        console.log('[ASR] WebSocket 连接成功')
+      })
+      
+      this.socket.on('disconnect', () => {
+        console.log('[ASR] WebSocket 断开')
+      })
+      
+      // ✅ 关键：接收实时 partial 结果并更新输入框
+      this.socket.on('asr_partial', (data) => {
+        console.log('[ASR] Partial:', data.text)
+        // 实时更新输入框（不覆盖用户手动输入的内容）
+        if (this.isRecording && data.text) {
+          this.inputText = data.text
+          // 自动调整文本框高度
+          this.$nextTick(() => this.autoResize())
+        }
+      })
+      
+      // ✅ 关键：接收 final 结果
+      this.socket.on('asr_final', (data) => {
+        console.log('[ASR] Final:', data.text)
+        if (data.text) {
+          this.inputText = data.text
+          this.$nextTick(() => this.autoResize())
+          
+          // ✅ 修复：无论内容长短，都自动提交（使用 WebSocket 识别的结果）
+          // 延迟一小段时间，让用户看到识别结果
+          setTimeout(() => {
+            // 再次检查，防止用户已经手动修改或提交
+            if (this.inputText.trim() && !this.isLoading && !this.isFinished && !this.isSending) {
+              console.log('[ASR] 自动提交识别结果:', this.inputText.substring(0, 50))
+              this.handleSend()
+            }
+          }, 500)
+        }
+      })
+      
+      this.socket.on('asr_error', (data) => {
+        console.error('[ASR] Error:', data)
+        alert('语音识别出错：' + (data.error || '未知错误'))
+      })
+    },
+    
+    /**
+     * 断开 WebSocket 连接
+     */
+    disconnectWebSocket() {
+      try {
+        if (this.socket) {
+          this.socket.disconnect()
+          this.socket = null
+        }
+      } catch (e) {
+        console.error('[ASR] 断开 WebSocket 失败:', e)
+      }
+    },
+    
+    /**
+     * 清理音频资源
+     */
+    cleanupAudioResources() {
+      try {
+        if (this.processor) {
+          this.processor.disconnect()
+          this.processor = null
+        }
+        if (this.inputNode) {
+          this.inputNode.disconnect()
+          this.inputNode = null
+        }
+        if (this.globalStream) {
+          this.globalStream.getTracks().forEach(track => track.stop())
+          this.globalStream = null
+        }
+        if (this.audioContext && this.audioContext.state !== 'closed') {
+          this.audioContext.close()
+          this.audioContext = null
+        }
+      } catch (e) {
+        console.error('[ASR] 清理音频资源失败:', e)
+      }
+    },
+    
+    /**
+     * 下采样音频（降低采样率到 16kHz）
+     */
+    downsampleBuffer(buffer, inputSampleRate, outSampleRate) {
+      if (outSampleRate === inputSampleRate) {
+        return buffer
+      }
+      const sampleRateRatio = inputSampleRate / outSampleRate
+      const newLength = Math.round(buffer.length / sampleRateRatio)
+      const result = new Float32Array(newLength)
+      let offsetResult = 0
+      let offsetBuffer = 0
+      
+      while (offsetResult < result.length) {
+        const nextOffsetBuffer = Math.round((offsetResult + 1) * sampleRateRatio)
+        let accum = 0
+        let count = 0
+        
+        for (let i = offsetBuffer; i < nextOffsetBuffer && i < buffer.length; i++) {
+          accum += buffer[i]
+          count++
+        }
+        
+        result[offsetResult] = accum / count
+        offsetResult++
+        offsetBuffer = nextOffsetBuffer
+      }
+      
+      return result
+    },
+    
+    /**
+     * Float32 转 Int16 PCM
+     */
+    floatTo16BitPCM(input) {
+      const output = new DataView(new ArrayBuffer(input.length * 2))
+      for (let i = 0; i < input.length; i++) {
+        const s = Math.max(-1, Math.min(1, input[i]))
+        output.setInt16(i * 2, s < 0 ? s * 0x8000 : s * 0x7FFF, true)
+      }
+      return output.buffer
+    },
+    
+    /**
+     * ArrayBuffer 转 Base64
+     */
+    arrayBufferToBase64(buffer) {
+      let binary = ''
+      const bytes = new Uint8Array(buffer)
+      const chunkSize = 0x8000
+      for (let i = 0; i < bytes.length; i += chunkSize) {
+        const chunk = bytes.subarray(i, i + chunkSize)
+        binary += String.fromCharCode.apply(null, chunk)
+      }
+      return btoa(binary)
+    },
+    
+    /**
+     * 发送音频分片到后端
+     */
+    sendChunkImmediate(float32Chunk) {
+      const now = Date.now()
+      if (now - this.lastSendTs < this.MIN_SEND_INTERVAL_MS) return
+      
+      this.lastSendTs = now
+      
+      // VAD 检测（静音不发送）
+      if (this.ENABLE_VAD) {
+        let sum = 0
+        for (let i = 0; i < float32Chunk.length; i++) {
+          sum += float32Chunk[i] * float32Chunk[i]
+        }
+        const rms = Math.sqrt(sum / float32Chunk.length)
+        if (rms < this.VAD_THRESHOLD) return
+      }
+      
+      // 下采样
+      const inputSampleRate = this.audioContext.sampleRate
+      const downsampled = this.downsampleBuffer(float32Chunk, inputSampleRate, this.sampleRate)
+      
+      // 转换为 PCM16
+      const pcm16Buffer = this.floatTo16BitPCM(downsampled)
+      
+      // 转 Base64
+      const b64 = this.arrayBufferToBase64(pcm16Buffer)
+      
+      // 发送到后端
+      const payload = {
+        voice_id: this.voiceId,
+        seq: this.sendSeq++,
+        chunk_b64: b64,
+        is_end: 0
+      }
+      
+      try {
+        this.socket && this.socket.emit('audio_chunk', payload)
+      } catch (e) {
+        console.error('[ASR] 发送音频分片失败:', e)
+      }
+    },
+    
+    /**
+     * 结束录音并发送最终标记
+     */
+    sendFinalMarker() {
+      const payload = {
+        voice_id: this.voiceId,
+        seq: this.sendSeq++,
+        chunk_b64: '',
+        is_end: 1
+      }
+      
+      try {
+        this.socket && this.socket.emit('audio_chunk', payload)
+        console.log('[ASR] 已发送结束标记')
+      } catch (e) {
+        console.error('[ASR] 发送结束标记失败:', e)
+      }
+    },
+    
+    // ================================================================
   }
 }
 </script>

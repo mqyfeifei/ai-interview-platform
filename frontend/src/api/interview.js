@@ -48,6 +48,130 @@ export const sendAnswer = async (sessionId, answer) => {
   return request.post(`/interviews/${sessionId}/answer`, { answer })
 }
 
+/**
+ * 语音面试专用接口（SSE流式）
+ * @param {string} sessionId - 面试ID
+ * @param {string} answer - ASR识别后的文本
+ * @param {Object} callbacks - 回调函数
+ * @param {Function} callbacks.onChunk - 文本分片回调
+ * @param {Function} callbacks.onFinish - 面试结束回调
+ * @param {Function} callbacks.onStreamEnd - 流结束回调
+ * @param {Function} callbacks.onError - 错误回调
+ * @param {Function} callbacks.onAudio - TTS音频回调
+ * @param {string} callbacks.voice - 音色名称
+ */
+export const sendVoiceAnswerStream = (sessionId, answer, { onChunk, onFinish, onStreamEnd, onError, onAudio, voice = null }) => {
+  const API_BASE = process.env.VUE_APP_API_BASE_URL || '/api/v1'
+  const token = localStorage.getItem('ai_interview_token')
+
+  const readErrorMessage = async (response) => {
+    const contentType = response.headers.get('content-type') || ''
+    try {
+      if (contentType.includes('application/json')) {
+        const data = await response.clone().json()
+        return data?.message || data?.msg || data?.error || `请求失败（${response.status}）`
+      }
+
+      const text = await response.clone().text()
+      return text?.trim() || `请求失败（${response.status}）`
+    } catch (err) {
+      return `请求失败（${response.status}）`
+    }
+  }
+
+  // ✅ 使用专用的语音面试接口
+  fetch(`${API_BASE}/interviews/${sessionId}/voice-chat/stream`, {
+    method: 'POST',
+    headers: {
+      'Accept': 'text/event-stream',
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {})
+    },
+    cache: 'no-store',
+    body: JSON.stringify({ answer, voice: voice || null })
+  }).then(async (response) => {
+    if (!response.ok) {
+      throw new Error(await readErrorMessage(response))
+    }
+
+    if (!response.body) {
+      throw new Error('服务器未返回可读取的流响应')
+    }
+
+    const reader = response.body.getReader()
+    const decoder = new TextDecoder()
+    let buffer = ''
+    let fullText = ''
+    let isOver = false
+
+    const handleSseEvent = (rawEvent) => {
+      if (!rawEvent) return
+
+      const dataLines = rawEvent
+        .split('\n')
+        .filter(line => line.startsWith('data:'))
+        .map(line => line.slice(5).trimStart())
+
+      if (!dataLines.length) return
+
+      try {
+        const json = JSON.parse(dataLines.join('\n'))
+        const chunk = json.chunk || ''
+        fullText += chunk
+
+        // ✅ 处理TTS音频
+        if (json.audio_b64 && onAudio) {
+          onAudio(json.audio_b64)
+        }
+
+        // ✅ 检测面试结束标记
+        if (!isOver && fullText.includes('[INTERVIEW_OVER]')) {
+          isOver = true
+          const cleanChunk = chunk.replace('[INTERVIEW_OVER]', '')
+          if (cleanChunk && onChunk) onChunk(cleanChunk)
+          return
+        }
+
+        if (!isOver && chunk && onChunk) {
+          onChunk(chunk)
+        }
+      } catch {
+        // 忽略无法解析的事件，保证主流不中断
+      }
+    }
+
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+
+      buffer += decoder.decode(value, { stream: true }).replace(/\r\n/g, '\n')
+
+      let delimiterIndex = buffer.indexOf('\n\n')
+      while (delimiterIndex !== -1) {
+        const rawEvent = buffer.slice(0, delimiterIndex)
+        buffer = buffer.slice(delimiterIndex + 2)
+        handleSseEvent(rawEvent)
+        delimiterIndex = buffer.indexOf('\n\n')
+      }
+    }
+
+    const tail = decoder.decode()
+    if (tail) {
+      buffer += tail.replace(/\r\n/g, '\n')
+    }
+
+    if (buffer.trim()) {
+      handleSseEvent(buffer)
+    }
+
+    if (isOver) {
+      onFinish && onFinish()
+    } else {
+      onStreamEnd && onStreamEnd()
+    }
+  }).catch(onError)
+}
+
 
 // ---- 新增：SSE 流式聊天（替换原 sendAnswer）----
 // 原 sendAnswer 返回 { reply, nextQuestion, isFinished }

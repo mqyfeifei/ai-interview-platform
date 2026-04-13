@@ -9,7 +9,7 @@ config_name = os.environ.get('FLASK_ENV', 'development')
 app = create_app(config_name)
 
 if __name__ == '__main__':
-    # 3. 启动应用
-    # debug=True 让代码修改后自动重启，方便开发
-    # host='0.0.0.0' 允许局域网访问（如果不加只能本机访问）
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    # 使用 SocketIO 启动（支持 WebSocket）
+    from app.extensions import socketio
+    # debug=True 让代码修改后自动重启，use eventlet for async
+    socketio.run(app, host='0.0.0.0', port=5000, debug=True)

@@ -201,43 +201,44 @@ class InterviewQAHandler:
                     [f"{row.name}({row.mastery_level}分)" for row in mastery_rows]
                 )
         
-        # 动态拼装情感安抚指令（结合语速 + 腾讯云情感标签）
+        # 动态拼装情感安抚指令（结合语速 + 多模态情感分析）
         emotion_instruction = ""
-                
-        # 1. 检查是否有腾讯云ASR返回的情感标签
-        emotion_prompt_from_tags = ""
+        
+        # 使用新的多模态情感分析服务
         try:
-            from app.services.emotion_tag_parser import EmotionTagParser
-            if '[' in normalized_answer and ']' in normalized_answer:
-                # 文本中包含情感标签
-                emotion_analysis = EmotionTagParser.analyze_emotion_from_tags(normalized_answer)
-                if emotion_analysis['emotion_tags']:
-                    emotion_prompt_from_tags = EmotionTagParser.format_for_llm(normalized_answer)
-                    print(f"[情感分析] 检测到情绪标签: {emotion_analysis['emotion_tags']}")
-        except Exception as e:
-            print(f"[情感分析] 解析失败: {str(e)}")
-                
-        # 2. 构建综合情感提示词
-        if actual_speed is not None or emotion_prompt_from_tags:
-            emotion_parts = ["【语音情感与状态分析】："]
-                    
-            if emotion_prompt_from_tags:
-                emotion_parts.append(emotion_prompt_from_tags)
-                    
-            if actual_speed is not None:
-                emotion_parts.append(
-                    f"系统检测到语速为 {actual_speed} 字/秒。"
-                    f"（参考：正常中等语速约 3-5 字/秒。大于 5 字/秒可能偏向紧张/激动，"
-                    f"小于 3 字/秒可能偏向犹豫/边想边答）。"
+            from app.services.multimodal_emotion_service import get_multimodal_emotion_prompt
+            
+            # 提取音频标签（如果有）
+            audio_tags = normalized_answer if '[' in normalized_answer else ""
+            
+            # 执行多模态情感分析（语音模式才用）
+            if voice_mode and (audio_tags or actual_speed is not None):
+                emotion_prompt = get_multimodal_emotion_prompt(
+                    audio_tags=audio_tags,
+                    asr_text=normalized_answer,
+                    job_id=interview.job_id,
+                    user_id=interview.user_id,
+                    use_coem=False  # 简化，不使用COEM
                 )
-                    
-            emotion_parts.append(
-                "请你结合上述情感特征和文本内容，简单分析候选人当前的情绪状态，"
-                "并*在本次回复的最开头，用一两句话自然地给予情绪反馈或安抚*"
-                "（例如：“听得出你有些紧张，没关系..”或“感受到你的自信，很好！”）。"
-            )
-                    
-            emotion_instruction = "\n".join(emotion_parts)
+                
+                if emotion_prompt:
+                    emotion_instruction = f"""
+
+【候选人情绪状态分析】：
+{emotion_prompt}
+
+请根据上述情绪分析结果，在回复的最开头用一两句话自然地给予情绪反馈或安抚：
+- 如果检测到紧张/焦虑：例如“听得出你有些紧张，没关系，我们慢慢来...”
+- 如果检测到自信/轻松：例如“感受到你的自信，很好！让我们继续深入...”
+- 如果检测到犹豫/思考：例如“这个问题确实需要思考，不用着急...”
+- 保持自然、温和的语气，让候选人感到被理解和支持
+"""
+                    print(f"[多模态情感分析] {emotion_prompt}")
+            
+        except Exception as e:
+            print(f"[多模态情感分析] 异常: {e}")
+            # 降级到原有逻辑
+            emotion_instruction = ""
         
         resume_context = InterviewGraphHelper.extract_resume_context(interview.user_id)
         

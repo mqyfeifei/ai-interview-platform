@@ -344,6 +344,7 @@
 <script>
 import { mapGetters, mapActions } from 'vuex'
 import { marked } from 'marked'
+import { sendVoiceAnswerStream } from '@/api/interview'  // ✅ 导入语音面试专用接口
 
 export default {
   name: 'VoiceInterviewSession',
@@ -365,7 +366,30 @@ export default {
       isTranscribing: false,
       showBackConfirm: false,
       isSending: false,
-      autoRecordTimer: null
+      autoRecordTimer: null,
+      
+      // ==================== WebSocket 实时 ASR ====================
+      socket: null,
+      voiceId: null,
+      sendSeq: 0,
+      audioContext: null,
+      processor: null,
+      inputNode: null,
+      globalStream: null,
+      lastSendTs: 0,
+      MIN_SEND_INTERVAL_MS: 80,  // 两次发送最小间隔
+      ENABLE_VAD: true,           // 启用语音活动检测
+      VAD_THRESHOLD: 0.01,        // VAD 阈值
+      sampleRate: 16000,          // 目标采样率
+      cleanupTimer: null,         // 清理资源定时器
+      asrPollingTimer: null,       // ASR轮询定时器
+      
+      // ==================== TTS 音频队列管理 ====================
+      ttsAudioQueue: [],           // 音频播放队列
+      isPlayingTTS: false,         // 是否正在播放TTS
+      currentAudio: null           // 当前播放的 Audio 对象
+      // ==========================================================
+      // ============================================================
     }
   },
   computed: {
@@ -420,10 +444,20 @@ export default {
       await this.startSession()
     }
     this.startQuestionTimer()
+    
+    // ==================== 初始化 WebSocket 连接 ====================
+    this.initWebSocket()
+    // ==============================================================
   },
   beforeUnmount() {
     this.clearTimers()
     if (this._progressTimer) clearInterval(this._progressTimer)
+    
+    // ==================== 清理 WebSocket 和音频资源 ====================
+    this.disconnectWebSocket()
+    this.cleanupAudioResources()
+    this.clearTTSQueue()  // ✅ 清空TTS队列
+    // ==================================================================
   },
   watch: {
     // 切换到新问题时重置计时器
@@ -453,6 +487,91 @@ export default {
   methods: {
     ...mapActions('interview', ['startSession', 'submitAnswer', 'endInterview']),
 
+    /**
+     * 将TTS音频加入播放队列
+     */
+    enqueueTTSAudio(audioB64) {
+      this.ttsAudioQueue.push(audioB64)
+      console.log('[TTS] 音频入队, 队列长度:', this.ttsAudioQueue.length)
+      
+      // 如果当前没有播放，开始播放队列
+      if (!this.isPlayingTTS) {
+        this.playNextTTSAudio()
+      }
+    },
+    
+    /**
+     * 播放队列中的下一个音频
+     */
+    playNextTTSAudio() {
+      if (this.ttsAudioQueue.length === 0) {
+        this.isPlayingTTS = false
+        this.$store.commit('interview/SET_AI_SPEAKING', false)
+        console.log('[TTS] 队列播放完毕')
+        
+        // ✅ 关键：TTS 播放完毕后，延迟800ms自动开始下一轮录音
+        setTimeout(() => {
+          console.log('[TTS] 准备自动开始下一轮录音')
+          this.tryScheduleAutoRecording()
+        }, 800)
+        
+        return
+      }
+      
+      this.isPlayingTTS = true
+      const audioB64 = this.ttsAudioQueue.shift()
+      
+      // 停止之前的音频
+      if (this.currentAudio) {
+        this.currentAudio.pause()
+        this.currentAudio = null
+      }
+      
+      // 创建新的 Audio 对象
+      const audioSrc = `data:audio/mp3;base64,${audioB64}`
+      const audio = new Audio(audioSrc)
+      this.currentAudio = audio
+      
+      audio.play()
+        .then(() => {
+          console.log('[TTS] 开始播放音频片段')
+        })
+        .catch((err) => {
+          console.error('[TTS] 播放失败:', err)
+          // 即使失败也继续播放下一个
+          this.playNextTTSAudio()
+        })
+      
+      // 监听播放结束
+      audio.onended = () => {
+        console.log('[TTS] 音频片段播放完成')
+        this.currentAudio = null
+        // 播放下一个
+        this.playNextTTSAudio()
+      }
+      
+      // 监听错误
+      audio.onerror = (err) => {
+        console.error('[TTS] 音频错误:', err)
+        this.currentAudio = null
+        this.playNextTTSAudio()
+      }
+    },
+    
+    /**
+     * 清空TTS音频队列并停止播放
+     */
+    clearTTSQueue() {
+      this.ttsAudioQueue = []
+      this.isPlayingTTS = false
+      if (this.currentAudio) {
+        this.currentAudio.pause()
+        this.currentAudio = null
+      }
+      this.$store.commit('interview/SET_AI_SPEAKING', false)
+      console.log('[TTS] 队列已清空')
+    },
+
     isMeaningfulVoiceText(text) {
       const t = (text || '').trim()
       if (!t) return false
@@ -462,21 +581,109 @@ export default {
 
     async handleSend() {
       const text = this.inputText.trim()
-      if (!text || this.isLoading || this.isFinished || this.isTranscribing) return
+      // ✅ 修复：移除 isTranscribing 检查，语音模式下不需要
+      if (!text || this.isLoading || this.isFinished) {
+        console.log('[语音面试] handleSend 被跳过:', { hasText: !!text, isLoading: this.isLoading, isFinished: this.isFinished })
+        return
+      }
+      
+      console.log('[语音面试] ✅ 开始提交答案:', text.substring(0, 50))
+      
+      // ✅ 使用专用的语音面试接口
+      this.isSending = true
       this.inputText = ''
       this.resetTextarea()
-      // 重置题目计时
       this.questionTimer = this.questionTimeLimit
-      await this.submitAnswer(text)
+      
+      const sessionId = this.$store.getters['interview/currentSession']?.sessionId
+      if (!sessionId) {
+        console.error('[语音面试] 未找到会话ID')
+        this.isSending = false
+        return
+      }
+      
+      // 添加用户消息到聊天记录
+      this.$store.commit('interview/ADD_MESSAGE', {
+        role: 'user',
+        content: text,
+        timestamp: new Date().toISOString()
+      })
+      
+      // ✅ 添加AI流式消息占位符（关键！）
+      this.$store.commit('interview/ADD_MESSAGE', {
+        role: 'ai',
+        content: '',
+        timestamp: new Date().toISOString(),
+        streaming: true  // 标记为流式消息
+      })
+      
+      // 调用语音专用接口
+      sendVoiceAnswerStream(sessionId, text, {
+        onChunk: (chunk) => {
+          this.$store.commit('interview/APPEND_AI_CHUNK', chunk)
+        },
+        onAudio: (audioB64) => {
+          // ✅ 将TTS音频加入播放队列
+          console.log('[语音面试] 收到TTS音频片段, 长度:', audioB64.length)
+          this.enqueueTTSAudio(audioB64)
+        },
+        onFinish: () => {
+          console.log('[语音面试] AI主动结束面试，开始生成报告')
+          this.isSending = false
+          // ✅ 标记流式消息完成
+          this.$store.commit('interview/MARK_STREAM_DONE')
+          this.$store.commit('interview/SET_LOADING', false)
+          
+          // ✅ 清空TTS队列
+          this.clearTTSQueue()
+          
+          // ✅ 关键：直接调用 endInterview 生成报告（它会设置 isFinished）
+          this.endInterview().then(() => {
+            console.log('[语音面试] 报告生成成功, reportId:', this.reportId)
+          }).catch((err) => {
+            console.error('[语音面试] 报告生成失败:', err)
+          })
+        },
+        onStreamEnd: () => {
+          console.log('[语音面试] 流式响应结束')
+          this.isSending = false
+          // ✅ 标记流式消息完成
+          this.$store.commit('interview/MARK_STREAM_DONE')
+          this.$store.commit('interview/SET_LOADING', false)
+          
+          // ✅ 关键：不立即开始录音，等待 TTS 音频播放完毕
+          // playNextTTSAudio() 会在队列清空时自动触发 tryScheduleAutoRecording()
+          console.log('[语音面试] 等待 TTS 音频播放完毕...')
+        },
+        onError: (error) => {
+          console.error('[语音面试] 错误:', error)
+          alert('发送失败：' + error.message)
+          this.isSending = false
+        },
+        voice: null  // 使用默认音色
+      })
     },
     goToReport() {
       this.$router.push(`/interview/report/${this.reportId}`)
     },
     async handleEnd() {
+      console.log('[语音面试] 用户主动结束面试')
       this.endingInterview = true
       this.showEndConfirm = false
+      
+      // ✅ 关键：不立即清空TTS队列，等待当前音频播放完毕
+      // isSending 设为 false，允许 endInterview 调用
+      this.isSending = false
+      
       try {
         await this.endInterview()
+        console.log('[语音面试] 报告生成成功, reportId:', this.reportId)
+        
+        // ✅ 报告生成成功后，清空TTS队列（让剩余音频继续播放）
+        // 注意：不清空队列，让 playNextTTSAudio 自然播放完
+      } catch (err) {
+        console.error('[语音面试] 报告生成失败:', err)
+        alert('报告生成失败：' + err.message)
       } finally {
         this.endingInterview = false
       }
@@ -579,52 +786,83 @@ export default {
         alert('正在发送上一段语音，请稍等...')
         return
       }
+      
+      // ==================== 使用 WebSocket 实时流式传输 ====================
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-        this.audioChunks = []
-        this.mediaRecorder = new MediaRecorder(stream)
-        this.mediaRecorder.ondataavailable = e => this.audioChunks.push(e.data)
-
-        this.mediaRecorder.onstop = async () => {
-          stream.getTracks().forEach(t => t.stop())
-          const audioBlob = new Blob(this.audioChunks, { type: 'audio/wav' })
-
-          this.isSending = true
-          try {
-            const { uploadAudio } = await import('@/api/interview')
-            const result = await uploadAudio(audioBlob)
-            const text = result && result.text ? result.text.trim() : ''
-            console.log('[语音] 后端返回文字：', text)
-
-            if (this.isMeaningfulVoiceText(text)) {
-              await this.submitAnswer(text)
-            } else {
-              console.warn('[语音] 返回文字无效或过短，跳过提交')
-              alert('识别到的回答过短（如“好/嗯嗯”），请补充更完整的回答后再提交。')
-            }
-          } catch (err) {
-            console.error('[语音] 发送失败：', err)
-          } finally {
-            this.isSending = false
-          }
+        
+        // 生成唯一的 voiceId
+        this.voiceId = String(Date.now())
+        this.sendSeq = 0
+        
+        // 创建 AudioContext
+        this.audioContext = new (window.AudioContext || window.webkitAudioContext)()
+        this.globalStream = stream
+        this.inputNode = this.audioContext.createMediaStreamSource(stream)
+        
+        // 创建 ScriptProcessor（用于实时捕获音频数据）
+        const bufferSize = 2048  // 缓冲区大小（越小延迟越低，但 CPU 占用越高）
+        this.processor = this.audioContext.createScriptProcessor(bufferSize, 1, 1)
+        
+        this.processor.onaudioprocess = (e) => {
+          if (!this.isRecording) return
+          
+          const floatData = e.inputBuffer.getChannelData(0)
+          // 立即发送音频分片（内部有节流控制）
+          this.sendChunkImmediate(new Float32Array(floatData))
         }
-
-        this.mediaRecorder.start()
+        
+        // 连接音频节点
+        this.inputNode.connect(this.processor)
+        this.processor.connect(this.audioContext.destination)
+        
+        // 更新状态
         this.isRecording = true
         this.recordingTime = 0
-        this.recordingInterval = setInterval(() => { this.recordingTime++ }, 1000)
+        this.recordingInterval = setInterval(() => {
+          this.recordingTime++
+        }, 1000)
+        
+        console.log('[ASR] 开始实时录音，voiceId:', this.voiceId)
+        
       } catch (err) {
-        console.warn('麦克风权限被拒绝', err)
+        console.error('[ASR] 麦克风权限被拒绝:', err)
         alert('无法访问麦克风，请检查浏览器权限设置。')
       }
+      // ===================================================================
     },
 
     stopRecording() {
-      if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
-        this.mediaRecorder.stop()
+      // ==================== 发送最终标记触发后端识别 ====================
+      if (this.isRecording) {
+        // 发送结束标记
+        this.sendFinalMarker()
+        
+        // 停止录音
+        this.isRecording = false
+        if (this.recordingInterval) {
+          clearInterval(this.recordingInterval)
+          this.recordingInterval = null
+        }
+        
+        // ✅ 关键修复：不清理音频资源，保持 WebSocket 连接
+        // this.cleanupAudioResources()  ← 注释掉，避免触发连接断开
+        
+        console.log('[ASR] 停止录音，等待识别结果...')
+        
+        // ✅ 启动轮询，每500ms检查一次ASR结果
+        this.asrPollingTimer = setInterval(() => {
+          this.pollAsrResult()
+        }, 500)
+        
+        // ✅ 设置超时，如果10秒内没收到结果，再清理资源
+        setTimeout(() => {
+          console.log('[ASR] 超时清理音频资源')
+          this.cleanupAudioResources()
+          this.stopAsrPolling()
+        }, 10000)
       }
-      this.isRecording = false
-      if (this.recordingInterval) { clearInterval(this.recordingInterval); this.recordingInterval = null }
+      // ==================================================================
     },
 
     scrollToBottom() {
@@ -650,7 +888,355 @@ export default {
     resetTextarea() {
       const el = this.$refs.inputRef
       if (el) { el.style.height = 'auto' }
-    }
+    },
+    
+    // ==================== WebSocket 实时 ASR 方法 ====================
+    
+    /**
+     * 初始化 WebSocket 连接
+     */
+    initWebSocket() {
+      if (window.io) {
+        this.connectSocket()
+      } else {
+        // 动态加载 Socket.IO 客户端
+        this.loadSocketIO()
+      }
+    },
+    
+    /**
+     * 动态加载 Socket.IO CDN
+     */
+    loadSocketIO() {
+      const script = document.createElement('script')
+      script.src = 'https://cdn.socket.io/4.7.2/socket.io.min.js'
+      script.onload = () => {
+        console.log('[ASR] Socket.IO 客户端加载成功')
+        this.connectSocket()
+      }
+      script.onerror = () => {
+        console.error('[ASR] Socket.IO 客户端加载失败')
+      }
+      document.head.appendChild(script)
+    },
+    
+    /**
+     * 连接 Socket.IO 服务器
+     */
+    connectSocket() {
+      // 防止多次初始化
+      if (this.socket) {
+        console.log('[ASR] 断开旧连接')
+        this.socket.disconnect();
+        this.socket = null;
+      }
+      
+      const SERVER_URL = 'http://localhost:5000'; // 必须和后端一致
+      console.log('[ASR] 正在连接 Socket.IO:', SERVER_URL)
+      
+      this.socket = window.io(SERVER_URL, { 
+        transports: ['websocket', 'polling'],  // ✅ 允许降级到 polling
+        reconnection: true,
+        reconnectionAttempts: 10,
+        reconnectionDelay: 1000,
+        timeout: 20000,
+        forceNew: true  // ✅ 强制创建新连接
+      });
+
+      // 全局监听所有事件，便于调试
+      this.socket.onAny((event, ...args) => {
+        console.log('[SOCKET.IO] 事件:', event, JSON.stringify(args).substring(0, 200))
+      });
+
+      this.socket.on('connect', () => {
+        console.log('[ASR] ✅ WebSocket 连接成功, ID:', this.socket.id);
+      });
+
+      this.socket.on('disconnect', (reason) => {
+        console.log('[ASR] ❌ WebSocket 断开, 原因:', reason);
+      });
+      
+      this.socket.on('connect_error', (error) => {
+        console.error('[ASR] ❌ 连接错误:', error);
+      });
+      
+      this.socket.on('reconnect', (attemptNumber) => {
+        console.log('[ASR] 🔄 重连成功, 尝试次数:', attemptNumber);
+      });
+      
+      this.socket.on('reconnect_failed', () => {
+        console.error('[ASR] ❌ 重连失败');
+      });
+
+      // ✅ 关键：接收实时 partial 结果并更新输入框
+      this.socket.on('asr_partial', (data) => {
+        console.log('[ASR] Partial:', data);
+        if (data.text) {
+          this.inputText = data.text;
+          this.$nextTick(() => this.autoResize());
+        }
+      });
+
+      // ✅ 关键：接收 final 结果
+      this.socket.on('asr_final', (data) => {
+        console.log('[ASR] Final:', data);
+        
+        // ✅ 清理保活定时器
+        if (this.asrKeepAliveTimer) {
+          clearInterval(this.asrKeepAliveTimer)
+          this.asrKeepAliveTimer = null
+          console.log('[ASR] 已清理保活定时器')
+        }
+        
+        if (this.cleanupTimer) {
+          clearTimeout(this.cleanupTimer);
+          this.cleanupTimer = null;
+        }
+        this.cleanupAudioResources();
+        if (data.text) {
+          this.inputText = data.text;
+          this.$nextTick(() => this.autoResize());
+          setTimeout(() => {
+            if (this.inputText.trim() && !this.isLoading && !this.isFinished && !this.isSending) {
+              this.handleSend();
+            }
+          }, 500);
+        }
+      });
+
+      this.socket.on('asr_error', (data) => {
+        console.error('[ASR] Error:', data);
+        alert('语音识别出错：' + (data.error || '未知错误'));
+      });
+
+      // 调试：服务器确认收到 end 包
+      this.socket.on('asr_server_ack', (data) => {
+        console.log('[ASR] server ack:', data);
+      });
+
+      // 回退广播（如果定向emit未到达）
+      this.socket.on('asr_final_broadcast', (data) => {
+        console.log('[ASR] final_broadcast received:', data);
+        if (data && data.text) {
+          this.inputText = data.text;
+          this.$nextTick(() => this.autoResize());
+          // 不自动提交广播结果，等待定向final或用户确认
+        }
+      });
+    },
+    
+    /**
+     * 断开 WebSocket 连接
+     */
+    disconnectWebSocket() {
+      try {
+        if (this.socket) {
+          this.socket.disconnect()
+          this.socket = null
+        }
+      } catch (e) {
+        console.error('[ASR] 断开 WebSocket 失败:', e)
+      }
+    },
+    
+    /**
+     * 清理音频资源
+     */
+    cleanupAudioResources() {
+      try {
+        if (this.processor) {
+          this.processor.disconnect()
+          this.processor = null
+        }
+        if (this.inputNode) {
+          this.inputNode.disconnect()
+          this.inputNode = null
+        }
+        if (this.globalStream) {
+          this.globalStream.getTracks().forEach(track => track.stop())
+          this.globalStream = null
+        }
+        if (this.audioContext && this.audioContext.state !== 'closed') {
+          this.audioContext.close()
+          this.audioContext = null
+        }
+      } catch (e) {
+        console.error('[ASR] 清理音频资源失败:', e)
+      }
+    },
+    
+    /**
+     * 下采样音频（降低采样率到 16kHz）
+     */
+    downsampleBuffer(buffer, inputSampleRate, outSampleRate) {
+      if (outSampleRate === inputSampleRate) {
+        return buffer
+      }
+      const sampleRateRatio = inputSampleRate / outSampleRate
+      const newLength = Math.round(buffer.length / sampleRateRatio)
+      const result = new Float32Array(newLength)
+      let offsetResult = 0
+      let offsetBuffer = 0
+      
+      while (offsetResult < result.length) {
+        const nextOffsetBuffer = Math.round((offsetResult + 1) * sampleRateRatio)
+        let accum = 0
+        let count = 0
+        
+        for (let i = offsetBuffer; i < nextOffsetBuffer && i < buffer.length; i++) {
+          accum += buffer[i]
+          count++
+        }
+        
+        result[offsetResult] = accum / count
+        offsetResult++
+        offsetBuffer = nextOffsetBuffer
+      }
+      
+      return result
+    },
+    
+    /**
+     * Float32 转 Int16 PCM
+     */
+    floatTo16BitPCM(input) {
+      const output = new DataView(new ArrayBuffer(input.length * 2))
+      for (let i = 0; i < input.length; i++) {
+        const s = Math.max(-1, Math.min(1, input[i]))
+        output.setInt16(i * 2, s < 0 ? s * 0x8000 : s * 0x7FFF, true)
+      }
+      return output.buffer
+    },
+    
+    /**
+     * 发送音频分片（带VAD和节流）
+     */
+    sendChunkImmediate(float32Chunk) {
+      const now = Date.now()
+      if (now - this.lastSendTs < this.MIN_SEND_INTERVAL_MS) return
+      this.lastSendTs = now
+      // 简单VAD
+      if (this.ENABLE_VAD) {
+        let sum = 0
+        for (let i = 0; i < float32Chunk.length; i++) sum += float32Chunk[i] * float32Chunk[i]
+        const rms = Math.sqrt(sum / float32Chunk.length)
+        if (rms < this.VAD_THRESHOLD) return
+      }
+      const inputSampleRate = this.audioContext.sampleRate
+      const out = this.downsampleBuffer(float32Chunk, inputSampleRate, this.sampleRate)
+      const pcm16Buffer = this.floatTo16BitPCM(out)
+      const b64 = this.arrayBufferToBase64(pcm16Buffer)
+      const payload = { voice_id: this.voiceId, seq: this.sendSeq++, chunk_b64: b64, is_end: 0 }
+      try {
+        this.socket && this.socket.emit('audio_chunk', payload)
+        // console.log('[ASR] sent seq', this.sendSeq - 1)
+      } catch (e) {
+        console.error('[ASR] socket emit error', e)
+      }
+    },
+    /**
+     * 发送最终结束包
+     */
+    sendFinalMarker() {
+      if (!this.socket || !this.voiceId) return
+      
+      // ✅ 检查连接状态
+      console.log('[ASR] 发送结束标记前, 连接状态:', this.socket.connected, 'SID:', this.socket.id)
+      
+      const payload = { voice_id: this.voiceId, seq: this.sendSeq++, chunk_b64: '', is_end: 1 }
+      try {
+        this.socket.emit('audio_chunk', payload)
+        console.log('[ASR] sent final marker')
+        
+        // ✅ 发送后立即检查连接
+        setTimeout(() => {
+          console.log('[ASR] 发送结束标记后 100ms, 连接状态:', this.socket?.connected, 'SID:', this.socket?.id)
+        }, 100)
+      } catch (e) {
+        console.error('[ASR] final emit error', e)
+      }
+    },
+    /**
+     * PCM转base64
+     */
+    arrayBufferToBase64(buffer) {
+      let binary = ''
+      const bytes = new Uint8Array(buffer)
+      const chunkSize = 0x8000
+      for (let i = 0; i < bytes.length; i += chunkSize) {
+        const chunk = bytes.subarray(i, i + chunkSize)
+        binary += String.fromCharCode.apply(null, chunk)
+      }
+      return btoa(binary)
+    },
+    
+    /**
+     * 轮询ASR结果
+     */
+    async pollAsrResult() {
+      if (!this.voiceId) return
+      
+      try {
+        const API_BASE = process.env.VUE_APP_API_BASE_URL || '/api/v1'
+        const response = await fetch(`${API_BASE}/interviews/asr-result/${this.voiceId}`)
+        
+        if (response.ok) {
+          const result = await response.json()
+          console.log('[ASR] 轮询结果:', result.data)
+          
+          if (result.data && result.data.text) {
+            // ✅ 收到结果，停止轮询
+            this.stopAsrPolling()
+            
+            // 更新输入框
+            this.inputText = result.data.text
+            this.$nextTick(() => this.autoResize())
+            
+            // 清理资源
+            if (this.cleanupTimer) {
+              clearTimeout(this.cleanupTimer)
+              this.cleanupTimer = null
+            }
+            this.cleanupAudioResources()
+            
+            // 500ms后自动提交
+            setTimeout(() => {
+              console.log('[ASR] 准备调用 handleSend, 状态:', {
+                hasText: !!this.inputText.trim(),
+                isLoading: this.isLoading,
+                isFinished: this.isFinished,
+                isSending: this.isSending,
+                isTranscribing: this.isTranscribing,
+                inputText: this.inputText
+              })
+              
+              if (this.inputText.trim() && !this.isLoading && !this.isFinished && !this.isSending) {
+                console.log('[ASR] ✅ 条件满足，调用 handleSend')
+                this.handleSend()
+              } else {
+                console.log('[ASR] ❌ 条件不满足，跳过')
+              }
+            }, 500)
+          }
+        }
+      } catch (error) {
+        // 忽略错误，继续轮询
+        console.log('[ASR] 轮询中...')
+      }
+    },
+    
+    /**
+     * 停止轮询
+     */
+    stopAsrPolling() {
+      if (this.asrPollingTimer) {
+        clearInterval(this.asrPollingTimer)
+        this.asrPollingTimer = null
+        console.log('[ASR] 已停止轮询')
+      }
+    },
+
+    // ================================================================
   }
 }
 </script>

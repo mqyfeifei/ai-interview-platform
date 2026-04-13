@@ -38,6 +38,9 @@ def create_app(config_name=None):
     # 初始化插件
     db.init_app(app)
     migrate.init_app(app, db, render_item=render_item)
+    # 初始化 SocketIO
+    from app.extensions import socketio
+    socketio.init_app(app)
     # 注册蓝图
     from app.api.v1.auth import auth_bp
     from app.api.v1.interview import interview_bp
@@ -78,5 +81,12 @@ def create_app(config_name=None):
 
     import threading
     threading.Thread(target=_prewarm_asr, daemon=True).start()
+
+    # 注册 WebSocket 路由（ASR）
+    try:
+        from app.ws.asr_socketio import register_asr_handlers
+        register_asr_handlers(socketio)
+    except Exception as e:
+        print(f"[WS] 注册 ASR WebSocket 处理器失败: {e}")
 
     return app

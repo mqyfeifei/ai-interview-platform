@@ -209,6 +209,85 @@ def upload_audio():
         return jsonify({"code": 500, "msg": str(e)}), 500
 
 
+@interview_bp.route('/asr-result/<voice_id>', methods=['GET'])
+def get_asr_result(voice_id):
+    """
+    获取ASR识别结果（轮询接口）
+    
+    Args:
+        voice_id: 语音ID
+        
+    Returns:
+        {
+            "code": 200,
+            "data": {
+                "text": "识别结果",
+                "is_final": true/false,
+                "timestamp": 1234567890
+            }
+        }
+    """
+    from app.ws.asr_socketio import asr_results_cache, asr_results_lock
+    
+    with asr_results_lock:
+        result = asr_results_cache.get(voice_id)
+    
+    if result:
+        return jsonify({"code": 200, "data": result, "msg": "success"}), 200
+    else:
+        return jsonify({"code": 404, "msg": "未找到识别结果"}), 404
+
+
+@interview_bp.route('/<int:interview_id>/voice-chat/stream', methods=['POST'])
+def voice_chat_stream(interview_id):
+    """
+    语音面试专用接口（与文字面试隔离）
+    
+    流程：
+    1. 接收ASR识别后的文本
+    2. 启用多模态情感分析（voice_mode=True）
+    3. 流式返回AI回复 + TTS音频
+    """
+    data = request.get_json() or {}
+    user_answer = data.get('answer')
+    voice = (data.get('voice') or '').strip() or None
+    
+    if not user_answer or not user_answer.strip():
+        return jsonify({"code": 400, "msg": "回答内容不能为空"}), 400
+
+    def _event_stream():
+        # 首包心跳
+        yield ': connected\n\n'
+        try:
+            for item in InterviewService.process_chat_round_stream(
+                interview_id,
+                user_answer,
+                voice_mode=True,  # ✅ 强制启用语音模式
+                voice=voice,
+            ):
+                yield item
+        except Exception as e:
+            print(f"[SSE] voice_chat_stream 异常: {type(e).__name__}: {e}")
+            payload = {
+                "chunk": "抱歉，网络波动导致本轮追问生成失败，请重试一次。",
+                "error": str(e),
+                "done": True
+            }
+            yield f"data: {json.dumps(payload, ensure_ascii=False)}\n\n"
+        finally:
+            yield ': done\n\n'
+
+    response = Response(
+        stream_with_context(_event_stream()),
+        mimetype='text/event-stream; charset=utf-8'
+    )
+    response.headers['Cache-Control'] = 'no-cache, no-transform'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['X-Accel-Buffering'] = 'no'
+    response.headers['Connection'] = 'keep-alive'
+    return response
+
+
 @interview_bp.route('/<int:interview_id>/finish', methods=['POST'])
 def finish_interview(interview_id):
     try:

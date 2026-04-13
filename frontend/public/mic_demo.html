@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <title>实时语音转文字 Demo</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; margin: 24px; }
+    button { margin: 6px; padding: 8px 14px; }
+    #status { margin-left: 8px; color: #666 }
+    textarea { width: 100%; height: 160px; font-size: 16px; }
+    #log { font-size: 13px; color: #555; margin-top: 8px; white-space: pre-wrap }
+  </style>
+</head>
+<body>
+  <h2>实时语音转文字 Demo（Socket.IO）</h2>
+  <div>
+    <button id="btnStart">开始</button>
+    <button id="btnStop" disabled>结束</button>
+    <span id="status">未连接</span>
+  </div>
+
+  <p>识别结果（实时 partial 会更新，final 会覆盖）：</p>
+  <textarea id="result" placeholder="识别文本将显示在这里..."></textarea>
+  <div id="log"></div>
+
+  <!-- socket.io client CDN -->
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <script>
+    // 配置
+    const SERVER_URL = location.hostname === 'localhost' ? 'http://localhost:5000' : (location.origin || 'http://localhost:5000');
+    const MIN_SEND_INTERVAL_MS = 80; // 两次实际发送之间的最小间隔，防抖用
+
+    // UI
+    const btnStart = document.getElementById('btnStart');
+    const btnStop = document.getElementById('btnStop');
+    const statusEl = document.getElementById('status');
+    const resultEl = document.getElementById('result');
+    const logEl = document.getElementById('log');
+
+    function log(msg){ console.log(msg); logEl.textContent = (new Date()).toLocaleTimeString() + ' ' + msg + '\n' + logEl.textContent; }
+
+    // socketio
+    const socket = io(SERVER_URL, { transports: ['websocket'] });
+    socket.on('connect', () => { statusEl.textContent = '已连接'; log('[socket] connected'); });
+    socket.on('disconnect', () => { statusEl.textContent = '断开连接'; log('[socket] disconnected'); });
+    socket.on('connect_error', (err) => { statusEl.textContent = '连接错误'; log('[socket] connect_error ' + err); });
+
+    socket.on('asr_partial', (data) => {
+      log('[server] partial: ' + JSON.stringify(data));
+      // 显示草稿（不覆盖 final）
+      resultEl.value = data.text;
+    });
+
+    socket.on('asr_final', (data) => {
+      log('[server] final: ' + JSON.stringify(data));
+      resultEl.value = data.text; // 用最终结果覆盖
+    });
+
+    socket.on('asr_error', (data) => { log('[server] error: ' + JSON.stringify(data)); });
+
+    // audio capture & processing
+    let audioContext, processor, input, globalStream;
+    let sampleRate = 16000; // 目标采样率
+    let recording = false;
+    let sendSeq = 0;
+    let voiceId = null;
+    let lastSendTs = 0;
+
+    // 简单能量阈值 VAD（可调）
+    const ENABLE_VAD = true;
+    const VAD_THRESHOLD = 0.0015; // 阈值越小越灵敏
+
+    // downsample Float32Array to target sampleRate
+    function downsampleBuffer(buffer, inputSampleRate, outSampleRate) {
+      if (outSampleRate === inputSampleRate) {
+        return buffer;
+      }
+      const sampleRateRatio = inputSampleRate / outSampleRate;
+      const newLength = Math.round(buffer.length / sampleRateRatio);
+      const result = new Float32Array(newLength);
+      let offsetResult = 0;
+      let offsetBuffer = 0;
+      while (offsetResult < result.length) {
+        const nextOffsetBuffer = Math.round((offsetResult + 1) * sampleRateRatio);
+        let accum = 0, count = 0;
+        for (let i = offsetBuffer; i < nextOffsetBuffer && i < buffer.length; i++) {
+          accum += buffer[i];
+          count++;
+        }
+        result[offsetResult] = count ? accum / count : 0;
+        offsetResult++;
+        offsetBuffer = nextOffsetBuffer;
+      }
+      return result;
+    }
+
+    function floatTo16BitPCM(float32Array){
+      const l = float32Array.length;
+      const buf = new ArrayBuffer(l * 2);
+      const view = new DataView(buf);
+      let offset = 0;
+      for (let i = 0; i < l; i++, offset += 2) {
+        let s = Math.max(-1, Math.min(1, float32Array[i]));
+        view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+      }
+      return buf;
+    }
+
+    // convert ArrayBuffer to base64
+    function arrayBufferToBase64(buffer) {
+      let binary = '';
+      const bytes = new Uint8Array(buffer);
+      const chunkSize = 0x8000;
+      for (let i = 0; i < bytes.length; i += chunkSize) {
+        const chunk = bytes.subarray(i, i + chunkSize);
+        binary += String.fromCharCode.apply(null, chunk);
+      }
+      return btoa(binary);
+    }
+
+    // immediate send function (throttled)
+    function sendChunkImmediate(float32Chunk){
+      const now = Date.now();
+      if (now - lastSendTs < MIN_SEND_INTERVAL_MS) return; // throttle
+      lastSendTs = now;
+      // optional VAD: compute rms
+      if (ENABLE_VAD){
+        let sum = 0; for (let i=0;i<float32Chunk.length;i++){ sum += float32Chunk[i]*float32Chunk[i]; }
+        const rms = Math.sqrt(sum/float32Chunk.length);
+        if (rms < VAD_THRESHOLD){
+          // silence -> don't send
+          return;
+        }
+      }
+      // downsample
+      const inputSampleRate = audioContext.sampleRate;
+      const out = downsampleBuffer(float32Chunk, inputSampleRate, sampleRate);
+      const pcm16Buffer = floatTo16BitPCM(out);
+      const b64 = arrayBufferToBase64(pcm16Buffer);
+      const payload = { voice_id: voiceId, seq: sendSeq++, chunk_b64: b64, is_end: 0 };
+      socket.emit('audio_chunk', payload);
+      log('[client] send seq=' + (sendSeq-1) + ' bytes=' + pcm16Buffer.byteLength);
+    }
+
+    async function startRecording(){
+      if (recording) return;
+      try{
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        globalStream = stream;
+        input = audioContext.createMediaStreamSource(stream);
+        // buffer size: 2048 for lower latency
+        const bufferSize = 2048;
+        processor = audioContext.createScriptProcessor(bufferSize, 1, 1);
+        processor.onaudioprocess = (e) => {
+          const floatData = e.inputBuffer.getChannelData(0);
+          // send immediately (throttled) for real-time
+          sendChunkImmediate(new Float32Array(floatData));
+        };
+        input.connect(processor);
+        processor.connect(audioContext.destination);
+
+        voiceId = 'v_' + Date.now();
+        sendSeq = 0;
+        lastSendTs = 0;
+        recording = true;
+        btnStart.disabled = true; btnStop.disabled = false;
+        statusEl.textContent = '录音中...';
+        log('[client] recording started. voiceId=' + voiceId);
+      }catch(err){
+        log('[client] startRecording error: ' + err);
+      }
+    }
+
+    function stopRecording(){
+      if (!recording) return;
+      // stop audio nodes
+      if (processor){ processor.disconnect(); processor.onaudioprocess = null; processor = null; }
+      if (input){ input.disconnect(); input = null; }
+      if (audioContext){ audioContext.close(); audioContext = null; }
+      try{ globalStream && globalStream.getTracks().forEach(t=>t.stop()); }catch(e){}
+      recording = false;
+      btnStart.disabled = false; btnStop.disabled = true;
+      statusEl.textContent = '已停止，等待最终识别';
+      // send final empty packet to signal end
+      const payload = { voice_id: voiceId, seq: sendSeq++, chunk_b64: '', is_end: 1 };
+      socket.emit('audio_chunk', payload);
+      log('[client] recording stopped. sent final packet.');
+    }
+
+    btnStart.addEventListener('click', startRecording);
+    btnStop.addEventListener('click', stopRecording);
+
+  </script>
+</body>
+</html>

@@ -9,16 +9,17 @@ import os
 import tempfile
 import requests
 import base64
-import hmac
-import hashlib
 import time
-import json
-from datetime import datetime
+
+# avoid linter warnings for unused crypto libs (they're not needed here)
+# removed unused: hmac, hashlib, json
 
 # 尝试导入 pydub 用于音频格式转换
+AudioSegment = None
 try:
-    from pydub import AudioSegment
-    
+    from pydub import AudioSegment as _AudioSegment
+    AudioSegment = _AudioSegment
+
     # 设置 ffmpeg 和 ffprobe 的路径
     FFMPEG_PATH = r"C:\Users\32307\AppData\Local\Microsoft\WinGet\Packages\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\ffmpeg-8.1-full_build\bin"
     
@@ -35,7 +36,8 @@ except ImportError:
 
 # ==================== 配置区域 ====================
 # 当前使用的ASR服务商: 'local'(本地Whisper), 'aliyun', 'tencent'
-ASR_PROVIDER = os.getenv('ASR_PROVIDER', 'local')
+# 默认改为 tencent 实时流式识别，若需改回本地或阿里云请设置环境变量 ASR_PROVIDER
+ASR_PROVIDER = os.getenv('ASR_PROVIDER', 'tencent')
 
 # 阿里云配置
 ALIYUN_ACCESS_KEY_ID = os.getenv('ALIYUN_ACCESS_KEY_ID', '')
@@ -144,16 +146,11 @@ class ASRService:
         Returns:
             str: 识别出的文本
         """
-        provider = ASR_PROVIDER.lower()
-        
-        if provider == 'aliyun':
-            return ASRService._transcribe_with_aliyun(audio_file)
-        elif provider == 'tencent':
-            return ASRService._transcribe_with_tencent(audio_file)
-        else:
-            # 默认使用本地Whisper
-            return ASRService._transcribe_with_whisper(audio_file)
-    
+        # Force Tencent real-time streaming for all ASR calls to avoid long-batch recordings.
+        # If you need to revert to other providers, set ASR_PROVIDER explicitly and change here.
+        print("[ASR] 强制使用腾讯云实时流式识别（SimultaneousInterpreting）")
+        return ASRService._transcribe_with_tencent(audio_file)
+
     @staticmethod
     def _transcribe_with_whisper(audio_file):
         """
@@ -312,112 +309,105 @@ class ASRService:
             # 读取音频文件并Base64编码
             with open(converted_path, 'rb') as f:
                 audio_data = f.read()
-            
+
             audio_base64 = base64.b64encode(audio_data).decode('utf-8')
-            
+
             # 尝试使用腾讯云官方SDK
+            # define placeholders to satisfy static analyzer
+            credential = None
+            ClientProfile = None
+            HttpProfile = None
+            aai_client = None
+            models = None
             try:
                 from tencentcloud.common import credential
                 from tencentcloud.common.profile.client_profile import ClientProfile
                 from tencentcloud.common.profile.http_profile import HttpProfile
                 from tencentcloud.aai.v20180522 import aai_client, models
-                
-                print("[ASR] 使用腾讯云官方SDK - 录音文件识别")
-                
+
+                print("[ASR] 使用腾讯云官方SDK - 录音文件识别模式")
+
                 # 实例化认证对象
                 cred = credential.Credential(
                     TENCENT_SECRET_ID,
                     TENCENT_SECRET_KEY
                 )
-                
+
                 # 实例化HTTP选项
                 httpProfile = HttpProfile()
                 httpProfile.endpoint = "aai.tencentcloudapi.com"
-                
+
                 # 实例化Client选项
                 clientProfile = ClientProfile()
                 clientProfile.httpProfile = httpProfile
-                
+
                 # 实例化客户端
                 client = aai_client.AaiClient(cred, "ap-guangzhou", clientProfile)
-                
-                # ==================== 创建识别任务 ====================
+
+                # 使用 CreateRecTask 录音文件识别（支持情感标签）
                 create_req = models.CreateRecTaskRequest()
                 create_params = {
-                    "EngineModelType": "16k_zh",  # 中文16k
-                    "ChannelNum": 1,  # 单声道
-                    "ResTextFormat": 0,  # 普通结果
-                    "SourceType": 1,  # Base64
+                    "EngineModelType": "16k_zh",
+                    "ChannelNum": 1,
+                    "ResTextFormat": 0,
+                    "SourceType": 1,
                     "Data": audio_base64,
-                    # ==================== 开启情感分析 ====================
-                    "EmoticonRecognition": 2,  # 2表示开启情绪识别
-                    # ===================================================
+                    "EmoticonRecognition": 2,  # 开启情感识别
                 }
                 create_req.from_json_string(json.dumps(create_params))
                 
-                # 发起创建任务请求
                 create_resp = client.CreateRecTask(create_req)
                 task_id = create_resp.Data.TaskId
                 print(f"[ASR] 创建识别任务成功，TaskId: {task_id}")
-                # =======================================================
                 
-                # ==================== 轮询查询任务状态 ====================
-                max_retries = 60  # 最多等待60次（约2分钟）
+                # 轮询查询任务状态
+                max_retries = 60  # 最多等待120秒
                 retry_count = 0
                 
                 while retry_count < max_retries:
-                    time.sleep(2)  # 每2秒查询一次
+                    time.sleep(2)
                     retry_count += 1
                     
-                    # 查询任务状态
                     status_req = models.DescribeTaskStatusRequest()
                     status_req.TaskId = task_id
                     status_resp = client.DescribeTaskStatus(status_req)
                     
                     status = status_resp.Data.StatusStr
-                    print(f"[ASR] 任务状态: {status} (第{retry_count}次查询)")
                     
                     if status == "success":
-                        # 识别成功
                         text = status_resp.Data.Result.strip()
-                        
                         if text:
-                            # 计算语速
-                            duration = len(audio_data) / (16000 * 2)  # 假设16bit采样
-                            char_count = len(text)
-                            if text and duration > 0:
-                                speech_speed = round(char_count / duration, 2)
-                                global_speed_cache[text] = speech_speed
+                            # 计算并缓存语速
+                            try:
+                                duration = len(audio_data) / (16000 * 2)  # 假设16k采样率
+                                char_count = len(text)
+                                if char_count and duration > 0:
+                                    global_speed_cache[text] = round(char_count / duration, 2)
+                            except Exception:
+                                pass
                             
-                            print(f"[ASR] 腾讯云识别成功（含情感标签）: {text[:80]}...")
+                            print(f"[ASR] 录音文件识别完成: {text[:120]}...")
                             return text
                         else:
-                            raise Exception("腾讯云ASR返回空结果")
-                    
+                            raise Exception("识别结果为空")
+                            
                     elif status == "failed":
-                        error_msg = status_resp.Data.ErrorMsg or "未知错误"
-                        raise Exception(f"腾讯云ASR识别失败: {error_msg}")
-                    
-                    elif status in ["running", "waiting"]:
-                        # 继续等待
-                        continue
-                    
+                        raise Exception(f"腾讯云ASR识别失败: {status_resp.Data.ErrorMsg}")
                     else:
-                        raise Exception(f"腾讯云ASR未知状态: {status}")
+                        print(f"[ASR] 识别进行中... ({retry_count}/{max_retries})")
+                        continue
                 
-                # 超时
-                raise Exception(f"腾讯云ASR识别超时（已等待{max_retries * 2}秒）")
-                # =========================================================
-            
+                raise Exception("识别超时")
+
             except ImportError:
                 print("[ASR] 未安装腾讯云SDK，使用HTTP API方式")
                 raise Exception("请安装腾讯云SDK: pip install tencentcloud-sdk-python")
-        
+
         except Exception as e:
             print(f"[ASR] 腾讯云识别异常: {str(e)}，降级使用本地Whisper")
             # 降级到本地Whisper
             return ASRService._transcribe_with_whisper(audio_file)
-        
+
         finally:
             # 清理临时文件
             if os.path.exists(temp_path):
@@ -425,3 +415,117 @@ class ASRService:
             # 清理转换后的文件
             if converted_path and converted_path != temp_path and os.path.exists(converted_path):
                 os.remove(converted_path)
+
+    @staticmethod
+    def _transcribe_bytes_with_whisper(audio_bytes):
+        """Helper: write bytes to temp wav and transcribe with local Whisper model."""
+        try:
+            model = get_whisper_model()
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as f:
+                f.write(audio_bytes)
+                tmp = f.name
+            try:
+                segments, info = model.transcribe(tmp, language="zh", initial_prompt="以下是一段简体中文的对话。")
+                text = "".join([seg.text for seg in segments]).strip()
+                return text
+            finally:
+                if os.path.exists(tmp):
+                    os.remove(tmp)
+        except Exception as e:
+            print(f"[ASR] 本地Whisper转写失败: {e}")
+            return ""
+
+    @staticmethod
+    def _recognize_with_fallback(audio_bytes):
+        """
+        Try Tencent SentenceRecognition on the full audio bytes. If the Tencent SimultaneousInterpreting
+        API is unavailable (or SentenceRecognition fails), fall back to local Whisper.
+        Returns the recognized text (string).
+        """
+        # Try Tencent first (synchronous short-audio API)
+        try:
+            client, models = _init_tencent_client()
+            req = models.SentenceRecognitionRequest()
+            req.ProjectId = 0
+            req.SubServiceType = 2  # 一句话识别
+            # For some SDKs the EngSerViceType naming varies; use '16k' or '16k_zh' depending on SDK
+            try:
+                req.EngSerViceType = '16k'
+            except Exception:
+                try:
+                    req.EngSerViceType = '16k_zh'
+                except Exception:
+                    pass
+            req.SourceType = 1
+            # VoiceFormat may expect 'wav' or integer; set what previous code used
+            try:
+                req.VoiceFormat = 'wav'
+            except Exception:
+                try:
+                    req.VoiceFormat = 1
+                except Exception:
+                    pass
+            req.UsrAudioKey = str(int(time.time() * 1000))
+            req.Data = base64.b64encode(audio_bytes).decode('utf-8')
+            req.DataLen = len(audio_bytes)
+
+            resp = client.SentenceRecognition(req)
+            text = getattr(resp, 'Result', '') or ''
+            text = text.strip()
+            if text:
+                return text
+            else:
+                raise Exception('SentenceRecognition 返回空')
+        except Exception as e:
+            # If Tencent fails (including ActionOffline), fallback to Whisper
+            print(f"[ASR] SentenceRecognition/腾讯同步识别失败或不可用: {e}，降级使用本地Whisper")
+            return ASRService._transcribe_bytes_with_whisper(audio_bytes)
+
+def _init_tencent_client():
+    """延迟创建并缓存腾讯 AAI 客户端"""
+    # keep client cached on module to avoid repeated auth
+    global _tencent_client, _tencent_models
+    try:
+        if '_tencent_client' in globals() and _tencent_client is not None:
+            return _tencent_client, _tencent_models
+        from tencentcloud.common import credential
+        from tencentcloud.common.profile.client_profile import ClientProfile
+        from tencentcloud.common.profile.http_profile import HttpProfile
+        from tencentcloud.aai.v20180522 import aai_client, models
+
+        cred = credential.Credential(TENCENT_SECRET_ID, TENCENT_SECRET_KEY)
+        httpProfile = HttpProfile()
+        httpProfile.endpoint = "aai.tencentcloudapi.com"
+        clientProfile = ClientProfile()
+        clientProfile.httpProfile = httpProfile
+        client = aai_client.AaiClient(cred, "ap-guangzhou", clientProfile)
+        _tencent_client = client
+        _tencent_models = models
+        return _tencent_client, _tencent_models
+    except Exception as e:
+        print(f"[ASR] 初始化腾讯客户端失败: {e}")
+        raise
+
+
+def _call_tencent_simultaneous_on_chunk(voice_id, seq, chunk_b64, is_end):
+    """
+    在 WebSocket 场景下，按分片调用腾讯 SimultaneousInterpreting 接口并返回 partial AsrText（如果有）
+    """
+    client, models = _init_tencent_client()
+    try:
+        req = models.SimultaneousInterpretingRequest()
+        req.ProjectId = 0
+        req.SubServiceType = 1
+        req.RecEngineModelType = '16k_zh'
+        req.Data = chunk_b64
+        req.DataLen = len(base64.b64decode(chunk_b64)) if chunk_b64 else 0
+        req.VoiceId = voice_id
+        req.IsEnd = 1 if is_end else 0
+        req.VoiceFormat = 1
+        req.Seq = seq
+        resp = client.SimultaneousInterpreting(req)
+        text = getattr(resp, 'AsrText', '') or ''
+        return text.strip()
+    except Exception as e:
+        print(f"[ASR] 分片识别异常: {e}")
+        return ''

@@ -53,6 +53,11 @@ class Config:
     # CoEM-Core 生成温度
     COEM_CORE_TEMPERATURE = float(os.environ.get('COEM_CORE_TEMPERATURE', 0.0))
 
+    # --- 腾讯云语音识别配置 ---
+    TENCENT_SECRET_ID = os.environ.get('TENCENT_SECRET_ID')
+    TENCENT_SECRET_KEY = os.environ.get('TENCENT_SECRET_KEY')
+    TENCENT_ASR_APP_ID = os.environ.get('TENCENT_ASR_APP_ID')
+
 
 class DevelopmentConfig(Config):
     """开发环境配置"""
