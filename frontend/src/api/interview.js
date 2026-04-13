@@ -19,6 +19,7 @@ export const startInterview = async (data) => {
   const res = await request.post('/interviews/start', {
     user_id: data.userId,   // 暂时从 data 传入，待JWT完善后从拦截器注入
     job_id: data.jobDbId,
+    resume_id: data.resumeId,
     voice_mode: !!data.voiceMode,
     interview_style: data.interviewStyle,
     voice_role: data.voiceRole,
