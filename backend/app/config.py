@@ -40,6 +40,19 @@ class Config:
     DASHSCOPE_BASE_URL = os.environ.get('DASHSCOPE_BASE_URL', 'https://dashscope.aliyuncs.com/compatible-mode/v1')
     DASHSCOPE_MODEL_NAME = os.environ.get('DASHSCOPE_MODEL_NAME', 'qwen3-max')
 
+    # === CoEM pipeline config (opt-in) ===
+    # 是否在纯文本面试路径启用 CoEM 多阶段增强管线（默认关闭）
+    USE_COEM_FOR_TEXT = os.environ.get('USE_COEM_FOR_TEXT', '0') == '1'
+    # 最大候选 chunk 数（初始排序后选择的 Top-K）
+    COEM_MAX_CHUNKS = int(os.environ.get('COEM_MAX_CHUNKS', 4))
+    # chunk 切分相关（以字符近似 token）
+    COEM_CHUNK_MAX_CHARS = int(os.environ.get('COEM_CHUNK_MAX_CHARS', 800))
+    COEM_CHUNK_OVERLAP = int(os.environ.get('COEM_CHUNK_OVERLAP', 100))
+    # Sage 阶段每个 chunk 的超时时间（秒）
+    COEM_SAGE_TIMEOUT = float(os.environ.get('COEM_SAGE_TIMEOUT', 5.0))
+    # CoEM-Core 生成温度
+    COEM_CORE_TEMPERATURE = float(os.environ.get('COEM_CORE_TEMPERATURE', 0.0))
+
 
 class DevelopmentConfig(Config):
     """开发环境配置"""
@@ -68,4 +81,3 @@ config = {
     'production': ProductionConfig,
     'default': DevelopmentConfig   # 默认使用开发环境
 }
-
