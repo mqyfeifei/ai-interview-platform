@@ -4,6 +4,7 @@
 负责音频合成、流式分割、音频队列管理等
 """
 
+import os
 import re
 import threading
 from concurrent.futures import ThreadPoolExecutor
@@ -15,7 +16,7 @@ class InterviewTTSHelper:
     """TTS 辅助工具类"""
     
     # === 线程池配置 ===
-    _TTS_MAX_WORKERS = 1  # 限制并发避免QPS超限
+    _TTS_MAX_WORKERS = max(1, min(4, int(os.environ.get('TTS_MAX_WORKERS', '2'))))
     tts_executor = ThreadPoolExecutor(max_workers=_TTS_MAX_WORKERS)
     
     # === TTS 文本处理正则表达式 ===
@@ -28,9 +29,16 @@ class InterviewTTSHelper:
     
     # === TTS 分段阈值配置 ===
     _MIN_TTS_SPEAKABLE_CHARS = 2  # 最小可发音字符数
-    _TTS_SOFT_SPLIT_MIN_SPEAKABLE_CHARS = 8  # 软分割最小字符数(降低以提高分割频率)
-    _TTS_FORCE_SPLIT_MAX_SPEAKABLE_CHARS = 70  # 强制分割最大字符数
+    _TTS_SOFT_SPLIT_MIN_SPEAKABLE_CHARS = int(
+        os.environ.get('TTS_SOFT_SPLIT_MIN_SPEAKABLE_CHARS', '16')
+    )  # 提高阈值，减少过碎分段
+    _TTS_FORCE_SPLIT_MAX_SPEAKABLE_CHARS = int(
+        os.environ.get('TTS_FORCE_SPLIT_MAX_SPEAKABLE_CHARS', '120')
+    )  # 放宽强制切分，减少请求次数
     _STREAM_DISPLAY_CHUNK_CHARS = 10  # 前端流式显示块大小
+    _TTS_HEAD_BLOCK_TIMEOUT_SECONDS = float(
+        os.environ.get('TTS_HEAD_BLOCK_TIMEOUT_SECONDS', '20.0')
+    )  # 结束阶段按顺序等待每个片段完成，避免只播出首段
     
     @staticmethod
     def get_tts_voice(prompt_config=None, selected_voice=None):

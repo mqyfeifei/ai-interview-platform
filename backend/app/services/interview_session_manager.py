@@ -5,7 +5,9 @@
 """
 
 import random
+import os
 from datetime import datetime
+from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeoutError
 
 from app.extensions import db
 from app.models.interview import Interview, InterviewChat, InterviewSessionConfig
@@ -16,6 +18,9 @@ from app.services.tts_service import bytes_to_b64
 
 class InterviewSessionManager:
     """面试会话管理器"""
+    _OPENING_TTS_WAIT_TIMEOUT_SECONDS = float(
+        os.environ.get('OPENING_TTS_WAIT_TIMEOUT_SECONDS', '20.0')
+    )
     
     # === 多样化开场白池 ===
     _DIVERSE_GREETING_FALLBACKS = [
@@ -297,28 +302,34 @@ class InterviewSessionManager:
         # 6. 异步TTS合成开场白音频
         speak_text = InterviewTTSHelper.strip_stream_control_tokens(greeting)
         if speak_text:
-            from concurrent.futures import ThreadPoolExecutor
-            import threading
-            
             def async_tts_task():
                 return InterviewTTSHelper.synthesize_audio_async(
                     speak_text,
                     tts_voice,
                     'mp3'
                 )
-            
-            future = InterviewTTSHelper.tts_executor.submit(async_tts_task)
-            
-            # 设置3秒超时尝试获取结果
+
+            timeout_seconds = max(0.5, InterviewSessionManager._OPENING_TTS_WAIT_TIMEOUT_SECONDS)
             try:
-                audio_bytes = future.result(timeout=3.0)
+                # 开场白与流式回答共用全局队列会互相阻塞，这里使用独立执行器避免排队导致“先超时后成功”。
+                with ThreadPoolExecutor(max_workers=1) as opening_tts_executor:
+                    future = opening_tts_executor.submit(async_tts_task)
+                    audio_bytes = future.result(timeout=timeout_seconds)
                 if audio_bytes:
                     greeting_audio_b64 = bytes_to_b64(audio_bytes)
-                    print(f"[开场白 TTS] 3秒内合成成功，音频大小={len(audio_bytes)} bytes")
+                    print(
+                        f"[开场白 TTS] {timeout_seconds:.1f}秒内合成成功，"
+                        f"音频大小={len(audio_bytes)} bytes"
+                    )
                 else:
                     print(f"[开场白 TTS] 合成返回空数据")
+            except FutureTimeoutError:
+                print(
+                    f"[开场白 TTS] 等待超时（{timeout_seconds:.1f}s），"
+                    "本次响应不携带开场白音频。"
+                )
             except Exception as e:
-                print(f"[开场白 TTS] 异步合成异常: {str(e)}")
+                print(f"[开场白 TTS] 异步合成异常: {type(e).__name__}: {e}")
         
         # 7. 保存开场白到聊天记录
         ai_chat = InterviewChat(

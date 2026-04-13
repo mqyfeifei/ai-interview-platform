@@ -1,3 +1,4 @@
+import json
 from flask import Blueprint, request, Response, stream_with_context, jsonify
 from app.services.interview_service import InterviewService
 from app.services.asr_service import ASRService
@@ -159,14 +160,24 @@ def chat_stream(interview_id):
     def _event_stream():
         # 首包心跳：帮助代理和浏览器尽早建立流式渲染通道。
         yield ': connected\n\n'
-        for item in InterviewService.process_chat_round_stream(
-            interview_id,
-            user_answer,
-            voice_mode=voice_mode,
-            voice=voice,
-        ):
-            yield item
-        yield ': done\n\n'
+        try:
+            for item in InterviewService.process_chat_round_stream(
+                interview_id,
+                user_answer,
+                voice_mode=voice_mode,
+                voice=voice,
+            ):
+                yield item
+        except Exception as e:
+            print(f"[SSE] chat_stream 异常: {type(e).__name__}: {e}")
+            payload = {
+                "chunk": "抱歉，网络波动导致本轮追问生成失败，请重试一次。",
+                "error": str(e),
+                "done": True
+            }
+            yield f"data: {json.dumps(payload, ensure_ascii=False)}\n\n"
+        finally:
+            yield ': done\n\n'
 
     response = Response(
         stream_with_context(_event_stream()),
