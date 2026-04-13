@@ -187,3 +187,27 @@ export function uploadJobIcon(file) {
     headers: { 'Content-Type': 'multipart/form-data' }
   })
 }
+
+// ─────────────────────────────────────────────
+// 面试预设管理
+// ─────────────────────────────────────────────
+
+export function listInterviewProfiles(params = {}) {
+  return request.get('/interview-profiles', { params, admin: true })
+}
+
+export function getInterviewProfile(id) {
+  return request.get(`/interview-profiles/${id}`, { admin: true })
+}
+
+export function createInterviewProfile(data) {
+  return request.post('/interview-profiles', data, { admin: true })
+}
+
+export function updateInterviewProfile(id, data) {
+  return request.put(`/interview-profiles/${id}`, data, { admin: true })
+}
+
+export function deleteInterviewProfile(id) {
+  return request.delete(`/interview-profiles/${id}`, { admin: true })
+}

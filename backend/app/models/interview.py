@@ -1,7 +1,7 @@
 # backend/app/models/interview.py
 from app.extensions import db
 from datetime import datetime
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import JSONB, ARRAY
 
 
 class Interview(db.Model):
@@ -91,10 +91,16 @@ class InterviewSessionConfig(db.Model):
 
     id = db.Column(db.BigInteger, primary_key=True)
     interview_id = db.Column(db.Integer, db.ForeignKey('interviews.id', ondelete='CASCADE'), unique=True, nullable=False)
+    profile_id = db.Column(db.BigInteger, db.ForeignKey('interview_profiles.id', ondelete='SET NULL'), nullable=True)
 
     interview_style = db.Column(db.String(20), nullable=False, default='confident')
     tech_ratio = db.Column(db.Float, nullable=False, default=60.0)
     scenario_ratio = db.Column(db.Float, nullable=False, default=40.0)
+    project_deep_dive_percentage = db.Column(db.Float, nullable=False, default=15.0)
+    behavioral_percentage = db.Column(db.Float, nullable=False, default=15.0)
+    difficulty_low_percentage = db.Column(db.Float, nullable=False, default=30.0)
+    difficulty_medium_percentage = db.Column(db.Float, nullable=False, default=50.0)
+    difficulty_high_percentage = db.Column(db.Float, nullable=False, default=20.0)
 
     is_dynamic_adjust = db.Column(db.Boolean, nullable=False, default=True)
     voice_id = db.Column(db.String(100))
@@ -105,6 +111,40 @@ class InterviewSessionConfig(db.Model):
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    profile = db.relationship('InterviewProfile', backref='session_configs')
+
+
+class InterviewProfile(db.Model):
+    __tablename__ = 'interview_profiles'
+
+    id = db.Column(db.BigInteger, primary_key=True)
+    job_id = db.Column(db.Integer, db.ForeignKey('jobs.id'), nullable=False)
+    round = db.Column(db.Integer)
+
+    technique_percentage = db.Column(db.Float, nullable=False, default=60.0)
+    scenario_percentage = db.Column(db.Float, nullable=False, default=40.0)
+    project_deep_dive_percentage = db.Column(db.Float, nullable=False, default=15.0)
+    behavioral_percentage = db.Column(db.Float, nullable=False, default=15.0)
+    difficulty_low_percentage = db.Column(db.Float, nullable=False, default=30.0)
+    difficulty_medium_percentage = db.Column(db.Float, nullable=False, default=50.0)
+    difficulty_high_percentage = db.Column(db.Float, nullable=False, default=20.0)
+    is_dynamic_adjust = db.Column(db.Boolean, nullable=False, default=True)
+
+    interviewer_style = db.Column(db.String(20), nullable=False)
+    custom_personality_json = db.Column(JSONB)
+
+    voice_id = db.Column(db.String(100))
+    speech_speed = db.Column(db.Float, default=1.0)
+    tone_descriptor = db.Column(db.Text)
+
+    enabled_dimensions = db.Column(ARRAY(db.String()))
+    difficulty_level = db.Column(db.Integer, default=2)
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    job = db.relationship('Job', backref='interview_profiles')
 
 
 # 确保 UserGrowth 也在这个文件中（之前补充的）

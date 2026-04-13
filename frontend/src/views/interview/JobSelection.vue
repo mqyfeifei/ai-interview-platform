@@ -78,63 +78,142 @@
           <div
             v-for="(job, idx) in filteredJobs"
             :key="job.id"
-            class="job-row"
-            :class="{
-              selected: currentSelected && currentSelected.id === job.id,
-              'job-row--default': normalizedDefaultJobId &&
-                (normalizedDefaultJobId === String(job.id) || normalizedDefaultJobId === String(job.dbId))
-            }"
+            class="job-row-wrapper"
             :style="{ animationDelay: idx * 0.04 + 's' }"
-            @click="toggleSelect(job)"
           >
-            <!-- 选中勾 -->
-            <div v-if="currentSelected && currentSelected.id === job.id" class="job-row__check">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
-                stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="20 6 9 17 4 12"/>
-              </svg>
-            </div>
-
-            <!-- TOP 徽章 -->
-            <div v-if="activeFilter === 'popular' && job.popularRank && job.popularRank <= 3"
-                 :class="['job-row__rank', 'top-badge', 'top-badge-' + job.popularRank]">
-              TOP{{ job.popularRank }}
-            </div>
-
-            <!-- 左侧图标 -->
-            <div class="job-row__icon">
-              <img
-                v-if="isImageUrl(job.iconUrl || job.icon)"
-                :src="job.iconUrl || job.icon"
-                alt="岗位图标"
-                class="job-row__icon-img"
-              />
-              <span v-else>{{ job.icon }}</span>
-            </div>
-
-            <!-- 中间信息区 -->
-            <div class="job-row__body">
-              <div class="job-row__title-line">
-                <span class="job-row__name">{{ job.name }}</span>
-                <span v-if="typeof job.avg_score === 'number' && job.avg_score > 0" class="job-row__score">
-                  均分 {{ job.avg_score }}
-                </span>
+            <div
+              class="job-row"
+              :class="{
+                selected: currentSelected && currentSelected.id === job.id,
+                'job-row--default': normalizedDefaultJobId &&
+                  (normalizedDefaultJobId === String(job.id) || normalizedDefaultJobId === String(job.dbId))
+              }"
+              @click="toggleSelect(job)"
+            >
+              <!-- 选中勾 -->
+              <div v-if="currentSelected && currentSelected.id === job.id" class="job-row__check">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
               </div>
-              <p v-if="job.description" class="job-row__desc">{{ job.description }}</p>
-              <div v-if="Array.isArray(job.techStack) && job.techStack.length" class="job-row__stack">
-                <span v-for="tech in job.techStack.slice(0, 4)" :key="tech" class="stack-tag">{{ tech }}</span>
+
+              <!-- TOP 徽章 -->
+              <div v-if="activeFilter === 'popular' && job.popularRank && job.popularRank <= 3"
+                   :class="['job-row__rank', 'top-badge', 'top-badge-' + job.popularRank]">
+                TOP{{ job.popularRank }}
+              </div>
+
+              <!-- 左侧图标 -->
+              <div class="job-row__icon">
+                <img
+                  v-if="isImageUrl(job.iconUrl || job.icon)"
+                  :src="job.iconUrl || job.icon"
+                  alt="岗位图标"
+                  class="job-row__icon-img"
+                />
+                <span v-else>{{ job.icon }}</span>
+              </div>
+
+              <!-- 中间信息区 -->
+              <div class="job-row__body">
+                <div class="job-row__title-line">
+                  <span class="job-row__name">{{ job.name }}</span>
+                  <span v-if="typeof job.avg_score === 'number' && job.avg_score > 0" class="job-row__score">
+                    均分 {{ job.avg_score }}
+                  </span>
+                </div>
+                <p v-if="job.description" class="job-row__desc">{{ job.description }}</p>
+                <div v-if="Array.isArray(job.techStack) && job.techStack.length" class="job-row__stack">
+                  <span v-for="tech in job.techStack.slice(0, 4)" :key="tech" class="stack-tag">{{ tech }}</span>
+                </div>
+              </div>
+
+              <!-- 右侧操作区 -->
+              <div class="job-row__actions" @click.stop>
+                <button
+                  v-if="normalizedDefaultJobId !== String(job.id) && normalizedDefaultJobId !== String(job.dbId)"
+                  class="btn-set-default"
+                  @click.stop="setDefault(job)"
+                >设为默认</button>
+                <span v-else class="default-badge">默认</span>
               </div>
             </div>
 
-            <!-- 右侧操作区 -->
-            <div class="job-row__actions" @click.stop>
-              <button
-                v-if="normalizedDefaultJobId !== String(job.id) && normalizedDefaultJobId !== String(job.dbId)"
-                class="btn-set-default"
-                @click.stop="setDefault(job)"
-              >设为默认</button>
-              <span v-else class="default-badge">默认</span>
-            </div>
+            <transition name="fade-slide-down">
+              <div v-if="currentSelected && currentSelected.id === job.id" class="job-row__details" @click.stop>
+                <div v-if="availableProfiles.length > 0" class="job-row__detail-row">
+                  <div class="job-row__detail-block">
+                    <div class="job-row__detail-label">轮次</div>
+                    <div class="resume-selector" :class="{ open: roundDropdownOpen }">
+                      <button class="resume-selector__trigger" @click.stop="toggleRoundDropdown">
+                        <span class="resume-selector__value">{{ currentRoundLabel }}</span>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                          class="resume-selector__arrow">
+                          <polyline points="6 9 12 15 18 9"/>
+                        </svg>
+                      </button>
+                      <transition name="dropdown">
+                        <div v-if="roundDropdownOpen" class="resume-selector__dropdown">
+                          <div
+                            v-for="option in roundOptions"
+                            :key="option.value"
+                            class="resume-dropdown-item"
+                            :class="{ active: selectedRound === option.value }"
+                            @click.stop="selectRound(option.value)"
+                          >
+                            <div class="resume-dropdown-item__name">{{ option.label }}</div>
+                            <div class="resume-dropdown-item__date">{{ option.summary }}</div>
+                          </div>
+                        </div>
+                      </transition>
+                    </div>
+                  </div>
+
+                  <div class="job-row__detail-block">
+                    <div class="job-row__detail-label">风格</div>
+                    <div class="resume-selector" :class="{ open: styleDropdownOpen }">
+                      <button class="resume-selector__trigger" @click.stop="toggleStyleDropdown">
+                        <span class="resume-selector__value">{{ currentStyleLabel }}</span>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                          class="resume-selector__arrow">
+                          <polyline points="6 9 12 15 18 9"/>
+                        </svg>
+                      </button>
+                      <transition name="dropdown">
+                        <div v-if="styleDropdownOpen" class="resume-selector__dropdown">
+                          <div
+                            v-for="option in styleOptions"
+                            :key="option.value"
+                            class="resume-dropdown-item"
+                            :class="{ active: selectedInterviewStyle === option.value }"
+                            @click.stop="selectInterviewStyle(option.value)"
+                          >
+                            <div class="resume-dropdown-item__name">{{ option.label }}</div>
+                            <div class="resume-dropdown-item__date">{{ option.summary }} · {{ option.tone }}</div>
+                          </div>
+                        </div>
+                      </transition>
+                    </div>
+                  </div>
+
+                  <div class="job-row__detail-footer">
+                    <button class="profile-detail-btn" @click.stop="openProfileDetailModal(job)">
+                      查看详情
+                    </button>
+                  </div>
+                </div>
+
+                <div v-if="availableProfiles.length > 0" class="job-row__preview">
+                  <div class="job-row__preview-content">
+                    <div class="job-row__preview-title">预览策略</div>
+                    <div class="job-row__preview-line">题型分布：Technical {{ currentStrategy.technique }}% / Project {{ currentStrategy.project }}% / Scenario {{ currentStrategy.scenario }}% / Behavioral {{ currentStrategy.behavioral }}%</div>
+                    <div class="job-row__preview-line">难度倾向：Easy {{ currentStrategy.easy }}% / Medium {{ currentStrategy.medium }}% / Hard {{ currentStrategy.hard }}%</div>
+                  </div>
+                </div>
+
+              </div>
+            </transition>
           </div>
         </div>
 
@@ -427,6 +506,97 @@
       </div>
     </transition>
 
+    <!-- ===== 面试配置详情弹窗 ===== -->
+    <transition name="modal">
+      <div v-if="showProfileDetailModal" class="modal-overlay" @click.self="closeProfileDetailModal()">
+        <div class="modal-sheet" style="width: 90%; max-width: 760px; max-height: 85vh; display: flex; flex-direction: column;">
+          <div class="modal-header-bar" style="background: #fff; border-bottom: 1px solid #e5e7eb; flex-shrink: 0;">
+            <h2 class="modal-header-title" style="color: #1f2937;">面试配置详情</h2>
+            <p class="modal-header-sub" style="color: #6b7280;">{{ currentSelected && currentSelected.name }}</p>
+          </div>
+
+          <div class="modal-body" style="flex: 1; overflow-y: auto; padding: 20px;">
+            <div class="profile-detail-section">
+              <h3>轮次详情</h3>
+              <div class="profile-detail-row">
+                <div class="profile-detail-field">
+                  <label>题型分布：Technical</label>
+                  <input type="number" v-model.number="profileDetailForm.technique_percentage" @input="handleProfileDetailChange" />
+                </div>
+                <div class="profile-detail-field">
+                  <label>Scenario</label>
+                  <input type="number" v-model.number="profileDetailForm.scenario_percentage" @input="handleProfileDetailChange" />
+                </div>
+                <div class="profile-detail-field">
+                  <label>Project Deep Dive</label>
+                  <input type="number" v-model.number="profileDetailForm.project_deep_dive_percentage" @input="handleProfileDetailChange" />
+                </div>
+                <div class="profile-detail-field">
+                  <label>Behavioral</label>
+                  <input type="number" v-model.number="profileDetailForm.behavioral_percentage" @input="handleProfileDetailChange" />
+                </div>
+              </div>
+              <div class="profile-detail-row">
+                <div class="profile-detail-field">
+                  <label>难度低</label>
+                  <input type="number" v-model.number="profileDetailForm.difficulty_low_percentage" @input="handleProfileDetailChange" />
+                </div>
+                <div class="profile-detail-field">
+                  <label>难度中</label>
+                  <input type="number" v-model.number="profileDetailForm.difficulty_medium_percentage" @input="handleProfileDetailChange" />
+                </div>
+                <div class="profile-detail-field">
+                  <label>难度高</label>
+                  <input type="number" v-model.number="profileDetailForm.difficulty_high_percentage" @input="handleProfileDetailChange" />
+                </div>
+              </div>
+            </div>
+
+            <div class="profile-detail-section">
+              <h3>风格详情</h3>
+              <div class="profile-detail-row">
+                <div class="profile-detail-field">
+                  <label>语速</label>
+                  <input type="number" step="0.1" v-model.number="profileDetailForm.speech_speed" @input="handleProfileDetailChange" />
+                </div>
+                <div class="profile-detail-field">
+                  <label>语音 ID</label>
+                  <input v-model="profileDetailForm.voice_id" @input="handleProfileDetailChange" />
+                </div>
+              </div>
+              <div class="profile-detail-row">
+                <div class="profile-detail-field profile-detail-field--full">
+                  <label>风格说明</label>
+                  <textarea rows="3" v-model="profileDetailForm.tone_descriptor" @input="handleProfileDetailChange"></textarea>
+                </div>
+              </div>
+              <div class="profile-detail-row">
+                <div class="profile-detail-field">
+                  <label>启用维度</label>
+                  <input v-model="profileDetailForm.enabled_dimensions" @input="handleProfileDetailChange" placeholder="用逗号分隔" />
+                </div>
+                <div class="profile-detail-field">
+                  <label>难度级别</label>
+                  <input type="number" min="1" max="5" v-model.number="profileDetailForm.difficulty_level" @input="handleProfileDetailChange" />
+                </div>
+                <div class="profile-detail-field profile-detail-checkbox">
+                  <label>动态调整</label>
+                  <input type="checkbox" v-model="profileDetailForm.is_dynamic_adjust" @change="handleProfileDetailChange" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer-bar" style="background: #f9fafb; border-top: 1px solid #e5e7eb; padding: 16px; flex-shrink: 0; display: flex; gap: 12px; justify-content: flex-end; align-items: center;">
+            <button class="btn-cancel" @click="closeProfileDetailModal">取消</button>
+            <button class="btn-confirm" :class="{ disabled: !profileDetailDirty }" :disabled="!profileDetailDirty" @click="saveProfileDetails">
+              保存
+            </button>
+          </div>
+        </div>
+      </div>
+    </transition>
+
     <!-- ===== 简历详情查看弹窗 ===== -->
     <transition name="modal">
       <div v-if="showResumeDetailModal" class="modal-overlay" @click.self="showResumeDetailModal = false">
@@ -495,6 +665,18 @@ const VOICE_ROLES_PLACEHOLDER = [
   { id: 'zh_male_m191_uranus_bigtts', name: '云舟 2.0', style: '沉稳男声' }
 ]
 
+const INTERVIEW_ROUNDS = [
+  { value: 1, label: '一面', summary: '基础能力 + 表达清晰度' },
+  { value: 2, label: '二面', summary: '项目深度 + 系统设计' },
+  { value: 3, label: '三面', summary: '复杂问题拆解 + 高压判断' }
+]
+
+const INTERVIEW_STYLES = [
+  { value: 'pressure', label: '压力面', summary: '更具挑战的追问风格', tone: '强势/严厉，追问深挖' },
+  { value: 'confident', label: '自信面', summary: '鼓励型交流与清晰反馈', tone: '自然/自信，强调表达' },
+  { value: 'teaching', label: '教学面', summary: '引导式提问与知识串联', tone: '温和/耐心，注重解释' }
+]
+
 export default {
   name: 'JobSelection',
 
@@ -532,6 +714,22 @@ export default {
 
       // ── 面试模式 ──
       voiceMode: false,
+
+      // ── 套餐选择（新增） ──
+      availableProfiles: [],
+      selectedProfile: null,
+      profileLoading: false,
+      showProfileDetailModal: false,
+      profileDetailForm: null,
+      profileDetailDirty: false,
+
+      // ── 轮次与风格选择 ──
+      selectedRound: 1,
+      selectedInterviewStyle: 'confident',
+      roundOptions: INTERVIEW_ROUNDS,
+      styleOptions: INTERVIEW_STYLES,
+      roundDropdownOpen: false,
+      styleDropdownOpen: false,
 
       // ── 语音角色（预留） ──
       voiceRoles: VOICE_ROLES_PLACEHOLDER,
@@ -571,6 +769,58 @@ export default {
       return this.missingFields.map(f => f.label).join('、')
     },
 
+    currentRoundLabel() {
+      const item = this.roundOptions.find(opt => opt.value === this.selectedRound)
+      return item ? item.label : '一面'
+    },
+
+    currentStyleLabel() {
+      const item = this.styleOptions.find(opt => opt.value === this.selectedInterviewStyle)
+      return item ? item.label : '自信面'
+    },
+
+    selectedStyleSummary() {
+      const item = this.styleOptions.find(opt => opt.value === this.selectedInterviewStyle)
+      return item ? item.summary : ''
+    },
+
+    selectedStyleTone() {
+      const item = this.styleOptions.find(opt => opt.value === this.selectedInterviewStyle)
+      return item ? item.tone : ''
+    },
+
+    formattedPersonality() {
+      if (!this.selectedProfile || !this.selectedProfile.custom_personality_json) return ''
+      try {
+        return typeof this.selectedProfile.custom_personality_json === 'string'
+          ? JSON.stringify(JSON.parse(this.selectedProfile.custom_personality_json), null, 2)
+          : JSON.stringify(this.selectedProfile.custom_personality_json, null, 2)
+      } catch (e) {
+        return String(this.selectedProfile.custom_personality_json)
+      }
+    },
+
+    currentStrategy() {
+      const defaults = {
+        confident: { technique: 60, project: 10, scenario: 10, behavioral: 20, easy: 35, medium: 55, hard: 10 },
+        teaching: { technique: 50, project: 15, scenario: 15, behavioral: 20, easy: 30, medium: 50, hard: 20 },
+        pressure: { technique: 70, project: 10, scenario: 10, behavioral: 10, easy: 20, medium: 50, hard: 30 }
+      }
+      const base = defaults[this.selectedInterviewStyle] || defaults.confident
+      if (!this.selectedProfile) {
+        return base
+      }
+      return {
+        technique: this.selectedProfile.technique_percentage != null ? this.selectedProfile.technique_percentage : base.technique,
+        project: this.selectedProfile.project_deep_dive_percentage != null ? this.selectedProfile.project_deep_dive_percentage : base.project,
+        scenario: this.selectedProfile.scenario_percentage != null ? this.selectedProfile.scenario_percentage : base.scenario,
+        behavioral: this.selectedProfile.behavioral_percentage != null ? this.selectedProfile.behavioral_percentage : base.behavioral,
+        easy: this.selectedProfile.difficulty_low_percentage != null ? this.selectedProfile.difficulty_low_percentage : base.easy,
+        medium: this.selectedProfile.difficulty_medium_percentage != null ? this.selectedProfile.difficulty_medium_percentage : base.medium,
+        hard: this.selectedProfile.difficulty_high_percentage != null ? this.selectedProfile.difficulty_high_percentage : base.hard
+      }
+    },
+
     // 仅当岗位、简历均已选且简历必填字段完整时，按钮解禁
     canStart() {
       return !!(this.currentSelected && this.selectedResume && !this.resumeValidationFailed)
@@ -591,6 +841,9 @@ export default {
     // 加载岗位列表
     await this.loadJobs()
     this.applyDefaultJob()
+    if (this.currentSelected) {
+      await this.loadProfileOptions(this.currentSelected.id)
+    }
 
     // 检测旧的简历状态（顶部横幅警告）
     try {
@@ -707,8 +960,16 @@ export default {
       return typeof value === 'string' && value.trim() !== '' && /^(\/|https?:\/\/)/.test(value)
     },
 
-    toggleSelect(job) {
+    async toggleSelect(job) {
       this.currentSelected = this.currentSelected?.id === job.id ? null : job
+      this.showProfileDetail = false
+      if (this.currentSelected) {
+        await this.loadProfileOptions(this.currentSelected.id)
+      } else {
+        this.availableProfiles = []
+        this.selectedProfile = null
+        this.$store.dispatch('interview/selectInterviewProfile', null)
+      }
     },
 
     async setDefault(job) {
@@ -752,14 +1013,165 @@ export default {
       }
     },
 
+    async loadProfileOptions(jobId) {
+      this.profileLoading = true
+      this.availableProfiles = []
+      this.selectedProfile = null
+      this.showProfileDetail = false
+      try {
+        const { fetchInterviewProfiles } = await import('@/api/interview')
+        const profiles = await fetchInterviewProfiles(jobId)
+        this.availableProfiles = profiles || []
+        if (this.availableProfiles.length > 0) {
+          const match = this.availableProfiles.find(p => Number(p.round) === Number(this.selectedRound) && (p.interviewer_style || 'confident') === this.selectedInterviewStyle)
+          this.selectedProfile = match || this.availableProfiles[0]
+          this.selectedRound = this.selectedProfile.round || this.selectedRound
+          this.selectedInterviewStyle = this.selectedProfile.interviewer_style || this.selectedInterviewStyle
+          this.$store.dispatch('interview/selectInterviewProfile', this.selectedProfile.id)
+        }
+      } catch (e) {
+        console.warn('加载面试套餐失败', e)
+        this.availableProfiles = []
+      } finally {
+        this.profileLoading = false
+      }
+    },
+
+    selectInterviewProfile(profile) {
+      this.selectedProfile = profile
+      if (profile) {
+        this.selectedRound = profile.round || this.selectedRound
+        this.selectedInterviewStyle = profile.interviewer_style || this.selectedInterviewStyle
+      }
+      this.$store.dispatch('interview/selectInterviewProfile', profile ? profile.id : null)
+    },
+
+    selectRound(roundValue) {
+      this.selectedRound = roundValue
+      this.roundDropdownOpen = false
+      this.syncProfileSelection()
+    },
+
+    selectInterviewStyle(styleValue) {
+      this.selectedInterviewStyle = styleValue
+      this.styleDropdownOpen = false
+      this.$store.commit('interview/SET_INTERVIEW_STYLE', styleValue)
+      this.syncProfileSelection()
+    },
+
+    openProfileDetailModal(job) {
+      if (!this.selectedProfile) return
+      this.profileDetailForm = {
+        round: this.selectedProfile.round,
+        interviewer_style: this.selectedProfile.interviewer_style,
+        technique_percentage: this.selectedProfile.technique_percentage,
+        scenario_percentage: this.selectedProfile.scenario_percentage,
+        project_deep_dive_percentage: this.selectedProfile.project_deep_dive_percentage,
+        behavioral_percentage: this.selectedProfile.behavioral_percentage,
+        difficulty_low_percentage: this.selectedProfile.difficulty_low_percentage,
+        difficulty_medium_percentage: this.selectedProfile.difficulty_medium_percentage,
+        difficulty_high_percentage: this.selectedProfile.difficulty_high_percentage,
+        speech_speed: this.selectedProfile.speech_speed,
+        tone_descriptor: this.selectedProfile.tone_descriptor,
+        voice_id: this.selectedProfile.voice_id,
+        enabled_dimensions: Array.isArray(this.selectedProfile.enabled_dimensions)
+          ? this.selectedProfile.enabled_dimensions.join(', ')
+          : '',
+        difficulty_level: this.selectedProfile.difficulty_level,
+        is_dynamic_adjust: this.selectedProfile.is_dynamic_adjust,
+      }
+      this.profileDetailDirty = false
+      this.showProfileDetailModal = true
+    },
+
+    closeProfileDetailModal() {
+      this.showProfileDetailModal = false
+    },
+
+    handleProfileDetailChange() {
+      if (!this.selectedProfile || !this.profileDetailForm) return
+      const current = {
+        round: this.selectedProfile.round,
+        interviewer_style: this.selectedProfile.interviewer_style,
+        technique_percentage: this.selectedProfile.technique_percentage,
+        scenario_percentage: this.selectedProfile.scenario_percentage,
+        project_deep_dive_percentage: this.selectedProfile.project_deep_dive_percentage,
+        behavioral_percentage: this.selectedProfile.behavioral_percentage,
+        difficulty_low_percentage: this.selectedProfile.difficulty_low_percentage,
+        difficulty_medium_percentage: this.selectedProfile.difficulty_medium_percentage,
+        difficulty_high_percentage: this.selectedProfile.difficulty_high_percentage,
+        speech_speed: this.selectedProfile.speech_speed,
+        tone_descriptor: this.selectedProfile.tone_descriptor,
+        voice_id: this.selectedProfile.voice_id,
+        enabled_dimensions: Array.isArray(this.selectedProfile.enabled_dimensions)
+          ? this.selectedProfile.enabled_dimensions.join(', ')
+          : '',
+        difficulty_level: this.selectedProfile.difficulty_level,
+        is_dynamic_adjust: this.selectedProfile.is_dynamic_adjust,
+      }
+      this.profileDetailDirty = JSON.stringify(current) !== JSON.stringify(this.profileDetailForm)
+    },
+
+    saveProfileDetails() {
+      if (!this.selectedProfile || !this.profileDetailForm || !this.profileDetailDirty) return
+      this.selectedProfile.round = Number(this.profileDetailForm.round)
+      this.selectedProfile.interviewer_style = this.profileDetailForm.interviewer_style
+      this.selectedProfile.technique_percentage = Number(this.profileDetailForm.technique_percentage)
+      this.selectedProfile.scenario_percentage = Number(this.profileDetailForm.scenario_percentage)
+      this.selectedProfile.project_deep_dive_percentage = Number(this.profileDetailForm.project_deep_dive_percentage)
+      this.selectedProfile.behavioral_percentage = Number(this.profileDetailForm.behavioral_percentage)
+      this.selectedProfile.difficulty_low_percentage = Number(this.profileDetailForm.difficulty_low_percentage)
+      this.selectedProfile.difficulty_medium_percentage = Number(this.profileDetailForm.difficulty_medium_percentage)
+      this.selectedProfile.difficulty_high_percentage = Number(this.profileDetailForm.difficulty_high_percentage)
+      this.selectedProfile.speech_speed = Number(this.profileDetailForm.speech_speed)
+      this.selectedProfile.tone_descriptor = this.profileDetailForm.tone_descriptor
+      this.selectedProfile.voice_id = this.profileDetailForm.voice_id
+      this.selectedProfile.enabled_dimensions = this.profileDetailForm.enabled_dimensions
+        .split(',')
+        .map(item => item.trim())
+        .filter(Boolean)
+      this.selectedProfile.difficulty_level = Number(this.profileDetailForm.difficulty_level)
+      this.selectedProfile.is_dynamic_adjust = Boolean(this.profileDetailForm.is_dynamic_adjust)
+      this.profileDetailDirty = false
+      this.showProfileDetailModal = false
+      this.selectedRound = this.selectedProfile.round || this.selectedRound
+      this.selectedInterviewStyle = this.selectedProfile.interviewer_style || this.selectedInterviewStyle
+    },
+
+    syncProfileSelection() {
+      if (!this.availableProfiles.length) return
+      const match = this.availableProfiles.find(p => Number(p.round) === Number(this.selectedRound) && (p.interviewer_style || 'confident') === this.selectedInterviewStyle)
+      if (match) {
+        this.selectInterviewProfile(match)
+      }
+    },
+
+    toggleRoundDropdown() {
+      this.roundDropdownOpen = !this.roundDropdownOpen
+      if (this.roundDropdownOpen) {
+        this.styleDropdownOpen = false
+      }
+    },
+
+    toggleStyleDropdown() {
+      this.styleDropdownOpen = !this.styleDropdownOpen
+      if (this.styleDropdownOpen) {
+        this.roundDropdownOpen = false
+      }
+    },
+
     toggleResumeDropdown() {
       this.resumeDropdownOpen = !this.resumeDropdownOpen
     },
 
     handleOutsideClick(e) {
-      const selector = this.$el && this.$el.querySelector('.resume-selector')
-      if (selector && !selector.contains(e.target)) {
+      const selectors = this.$el && this.$el.querySelectorAll('.resume-selector')
+      if (!selectors || selectors.length === 0) return
+      const clickedInside = Array.from(selectors).some(selector => selector.contains(e.target))
+      if (!clickedInside) {
         this.resumeDropdownOpen = false
+        this.roundDropdownOpen = false
+        this.styleDropdownOpen = false
       }
     },
 
@@ -845,6 +1257,11 @@ export default {
       this.$store.commit('interview/SET_TTS_VOICE', roleId)
     },
 
+    openCustomInterviewConfig(job) {
+      console.log('打开自定义面试配置：', job)
+      // TODO: 跳转到自定义面试配置页或展开配置弹窗
+    },
+
     // TODO: 后端接口就绪后取消注释并调用
     // async fetchVoiceRoles() {
     //   try {
@@ -857,6 +1274,9 @@ export default {
 
     // ─── 面试启动 ───
     resolveInterviewStyle() {
+      if (this.selectedInterviewStyle) {
+        return this.selectedInterviewStyle
+      }
       if (!this.voiceMode) {
         return 'technical'
       }
@@ -871,7 +1291,7 @@ export default {
       try {
         await this.primeAudioPlayback()
         const jobDbId = this.currentSelected.id
-        const interviewStyle = this.resolveInterviewStyle()
+        const interviewStyle = this.selectedInterviewStyle || this.resolveInterviewStyle()
         await this.$store.dispatch('interview/resetInterview')
         this.$store.commit('interview/SET_JOB_DB_ID', jobDbId)
         this.$store.commit('interview/SET_VOICE_MODE', this.voiceMode)
@@ -880,6 +1300,32 @@ export default {
         if (this.voiceMode) {
           this.$store.commit('interview/SET_TTS_VOICE', this.selectedVoiceRole)
         }
+
+        // 存储选中的面试套餐和会话配置
+        if (this.selectedProfile) {
+          this.$store.commit('interview/SET_SELECTED_PROFILE_ID', this.selectedProfile.id)
+          this.$store.commit('interview/SET_SELECTED_PROFILE_CONFIG', {
+            profile_id: this.selectedProfile.id,
+            interviewer_style: this.selectedProfile.interviewer_style,
+            tech_ratio: this.selectedProfile.technique_percentage,
+            scenario_ratio: this.selectedProfile.scenario_percentage,
+            project_deep_dive_percentage: this.selectedProfile.project_deep_dive_percentage,
+            behavioral_percentage: this.selectedProfile.behavioral_percentage,
+            difficulty_low_percentage: this.selectedProfile.difficulty_low_percentage,
+            difficulty_medium_percentage: this.selectedProfile.difficulty_medium_percentage,
+            difficulty_high_percentage: this.selectedProfile.difficulty_high_percentage,
+            is_dynamic_adjust: this.selectedProfile.is_dynamic_adjust,
+            voice_id: this.selectedProfile.voice_id,
+            speech_speed: this.selectedProfile.speech_speed,
+            tone_descriptor: this.selectedProfile.tone_descriptor,
+            enabled_dimensions: this.selectedProfile.enabled_dimensions,
+            difficulty_level: this.selectedProfile.difficulty_level,
+          })
+        } else {
+          this.$store.commit('interview/SET_SELECTED_PROFILE_ID', null)
+          this.$store.commit('interview/SET_SELECTED_PROFILE_CONFIG', null)
+        }
+
         // 存储选中的简历ID
         this.$store.commit('interview/SET_RESUME_ID', this.selectedResume?.id)
         await this.$store.dispatch('interview/selectJob', this.currentSelected)
@@ -1258,6 +1704,23 @@ export default {
   to   { opacity: 1; transform: translateY(0); }
 }
 
+.fade-slide-down-enter-active,
+.fade-slide-down-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.fade-slide-down-enter-from,
+.fade-slide-down-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+
+.fade-slide-down-enter-to,
+.fade-slide-down-leave-from {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 // ──────────────────────────────────────────────
 //  右栏：面试配置
 // ──────────────────────────────────────────────
@@ -1423,6 +1886,244 @@ export default {
   &__date { font-size: 11px; color: #9ca3af; margin-top: 2px; }
 }
 
+.job-row__details {
+  margin-top: 8px;
+  padding: 18px 18px 16px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
+}
+
+.job-row__detail-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) auto;
+  gap: 14px;
+  align-items: end;
+  margin-bottom: 16px;
+}
+
+.job-row__detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.job-row__detail-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) auto;
+  gap: 14px;
+  align-items: end;
+  margin-bottom: 16px;
+}
+
+.job-row__detail-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  align-items: flex-end;
+}
+
+.job-row__detail-footer--single {
+  margin-top: 4px;
+}
+
+.profile-detail-btn,
+.custom-config-btn {
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  color: #111827;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.profile-detail-btn:hover,
+.custom-config-btn:hover {
+  border-color: rgba(67,56,202,0.45);
+  box-shadow: 0 8px 24px rgba(67,56,202,0.08);
+}
+
+.profile-detail-section {
+  margin-bottom: 24px;
+}
+
+.profile-detail-section h3 {
+  margin-bottom: 14px;
+  color: #111827;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.profile-detail-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.profile-detail-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.profile-detail-field--full {
+  grid-column: span 3;
+}
+
+.profile-detail-field label {
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.profile-detail-field input,
+.profile-detail-field select,
+.profile-detail-field textarea {
+  width: 100%;
+  min-height: 40px;
+  padding: 10px 12px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fff;
+  font-size: 13px;
+  color: #111827;
+  transition: border-color 0.2s ease;
+}
+
+.profile-detail-field textarea {
+  min-height: 92px;
+  resize: vertical;
+}
+
+.profile-detail-field input:focus,
+.profile-detail-field select:focus,
+.profile-detail-field textarea:focus {
+  outline: none;
+  border-color: rgba(67,56,202,0.4);
+}
+
+.profile-detail-checkbox {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  margin-top: 24px;
+}
+
+.profile-detail-checkbox label {
+  margin: 0;
+  font-size: 13px;
+}
+
+.btn-confirm.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.job-row__detail-expand {
+  margin-top: 18px;
+  padding: 16px 14px;
+  background: #f9fafb;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+}
+
+.job-row__detail-expand-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 12px;
+}
+
+.job-row__detail-expand-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.job-row__detail-expand-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.job-row__detail-expand-label {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.job-row__detail-expand-value {
+  font-size: 13px;
+  color: #111827;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.custom-config-btn {
+  padding: 10px 18px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  color: #111827;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.custom-config-btn:hover {
+  border-color: rgba(67,56,202,0.45);
+  box-shadow: 0 6px 16px rgba(67,56,202,0.08);
+}
+
+.job-row__detail-block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.job-row__detail-label {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.job-row__preview {
+  padding: 14px 0 0;
+  border-top: 1px solid #eef0f6;
+}
+
+.job-row__no-profile {
+  font-size: 13px;
+  color: #6b7280;
+  background: #f8fafc;
+  border: 1px dashed #d1d5db;
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+
+.job-row__preview-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.job-row__preview-title {
+  font-size: 14px;
+  color: #111827;
+  font-weight: 600;
+}
+
+.job-row__preview-line {
+  font-size: 13px;
+  color: #4b5563;
+  line-height: 1.6;
+}
+
 .resume-main-badge {
   font-size: 10px; font-weight: 700; color: $primary;
   background: #e0e7ff; padding: 1px 6px; border-radius: 4px;
@@ -1531,6 +2232,89 @@ export default {
   &__title {
     font-size: 13px; font-weight: 600; color: #111827;
     display: flex; align-items: center; gap: 5px;
+  }
+}
+
+.selection-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.selection-card {
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1.5px solid #e5e7eb;
+  background: #fff;
+  cursor: pointer;
+  transition: all 0.18s;
+  min-height: 96px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  &:hover {
+    border-color: rgba(67,56,202,0.35);
+    background: #f8f9ff;
+  }
+
+  &.active {
+    border-color: $primary;
+    background: #eef2ff;
+  }
+
+  &__title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #111827;
+  }
+
+  &__summary {
+    font-size: 12px;
+    color: #6b7280;
+    line-height: 1.5;
+  }
+
+  &__tone {
+    font-size: 12px;
+    color: #2563eb;
+  }
+}
+
+.strategy-summary-card {
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 22px;
+
+  &__label {
+    font-size: 15px;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 10px;
+  }
+
+  &__body {
+    display: grid;
+    gap: 8px;
+  }
+
+  &__item {
+    font-size: 13px;
+    color: #374151;
+    font-weight: 600;
+  }
+
+  &__hint {
+    font-size: 12px;
+    color: #6b7280;
+  }
+
+  &__detail {
+    font-size: 13px;
+    color: #4b5563;
   }
 }
 

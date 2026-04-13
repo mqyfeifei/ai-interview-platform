@@ -28,6 +28,18 @@ class Config:
     EMBEDDING_BASE_URL = os.environ.get('EMBEDDING_BASE_URL')
     UPLOAD_ROOT = os.environ.get('UPLOAD_ROOT')
 
+    # 邮件发送配置（可选）
+    MAIL_HOST = os.environ.get('MAIL_HOST')
+    MAIL_PORT = int(os.environ.get('MAIL_PORT', 587))
+    MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
+    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
+    MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS', '1') == '1'
+    MAIL_USE_SSL = os.environ.get('MAIL_USE_SSL', '0') == '1'
+    MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER', os.environ.get('MAIL_FROM_ADDRESS', MAIL_USERNAME))
+
+    # 实时热点 RSS 地址
+    TRENDING_NEWS_RSS_URL = os.environ.get('TRENDING_NEWS_RSS_URL', 'https://news.baidu.com/n?cmd=1&class=top&tn=rss')
+
     # --- 火山引擎 TTS 配置 ---
     VOLC_APP_ID = os.environ.get('VOLC_APP_ID')
     VOLC_ACCESS_TOKEN = os.environ.get('VOLC_ACCESS_TOKEN')
