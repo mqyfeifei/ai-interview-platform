@@ -287,13 +287,15 @@ class ASRService:
         API文档: https://cloud.tencent.com/document/product/1093/35799
         情感识别参数: EmoticonRecognition=2 开启情绪识别
         
+        使用录音文件识别模式（支持最长5小时）
+        
         Args:
             audio_file: Flask FileStorage对象
             
         Returns:
             str: 识别文本（可能包含情绪标签如[pause]、[laughter]等）
         """
-        print("[ASR] 使用腾讯云语音识别（含情感分析）")
+        print("[ASR] 使用腾讯云语音识别（含情感分析）- 录音文件识别模式")
         
         # 保存临时文件
         with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as temp_audio:
@@ -320,7 +322,7 @@ class ASRService:
                 from tencentcloud.common.profile.http_profile import HttpProfile
                 from tencentcloud.aai.v20180522 import aai_client, models
                 
-                print("[ASR] 使用腾讯云官方SDK")
+                print("[ASR] 使用腾讯云官方SDK - 录音文件识别")
                 
                 # 实例化认证对象
                 cred = credential.Credential(
@@ -339,46 +341,76 @@ class ASRService:
                 # 实例化客户端
                 client = aai_client.AaiClient(cred, "ap-guangzhou", clientProfile)
                 
-                # 实例化请求对象
-                req = models.SentenceRecognitionRequest()
-                params = {
-                    "ProjectId": 0,
-                    "SubServiceType": 2,  # 一句话识别
-                    "EngSerViceType": "16k_zh",  # 中文16k
+                # ==================== 创建识别任务 ====================
+                create_req = models.CreateRecTaskRequest()
+                create_params = {
+                    "EngineModelType": "16k_zh",  # 中文16k
+                    "ChannelNum": 1,  # 单声道
+                    "ResTextFormat": 0,  # 普通结果
                     "SourceType": 1,  # Base64
-                    "VoiceFormat": "wav",
-                    "UsrAudioKey": "interview_asr_" + str(int(time.time())),
                     "Data": audio_base64,
-                    "DataLen": len(audio_data),
                     # ==================== 开启情感分析 ====================
-                    "EmoticonRecognition": 2,  # 2表示开启情绪识别并在文本中插入情绪标签
+                    "EmoticonRecognition": 2,  # 2表示开启情绪识别
                     # ===================================================
                 }
-                req.from_json_string(json.dumps(params))
+                create_req.from_json_string(json.dumps(create_params))
                 
-                # 发起请求
-                resp = client.SentenceRecognition(req)
+                # 发起创建任务请求
+                create_resp = client.CreateRecTask(create_req)
+                task_id = create_resp.Data.TaskId
+                print(f"[ASR] 创建识别任务成功，TaskId: {task_id}")
+                # =======================================================
                 
-                # 解析响应
-                result = json.loads(resp.to_json_string())
-                text = result.get('Result', '').strip()
+                # ==================== 轮询查询任务状态 ====================
+                max_retries = 60  # 最多等待60次（约2分钟）
+                retry_count = 0
                 
-                if text:
-                    # 计算语速
-                    duration = len(audio_data) / (16000 * 2)  # 假设16bit采样
-                    char_count = len(text)
-                    if text and duration > 0:
-                        speech_speed = round(char_count / duration, 2)
-                        global_speed_cache[text] = speech_speed
+                while retry_count < max_retries:
+                    time.sleep(2)  # 每2秒查询一次
+                    retry_count += 1
                     
-                    print(f"[ASR] 腾讯云识别成功（含情感标签）: {text[:80]}...")
-                    return text
-                else:
-                    raise Exception("腾讯云ASR返回空结果")
+                    # 查询任务状态
+                    status_req = models.DescribeTaskStatusRequest()
+                    status_req.TaskId = task_id
+                    status_resp = client.DescribeTaskStatus(status_req)
+                    
+                    status = status_resp.Data.StatusStr
+                    print(f"[ASR] 任务状态: {status} (第{retry_count}次查询)")
+                    
+                    if status == "success":
+                        # 识别成功
+                        text = status_resp.Data.Result.strip()
+                        
+                        if text:
+                            # 计算语速
+                            duration = len(audio_data) / (16000 * 2)  # 假设16bit采样
+                            char_count = len(text)
+                            if text and duration > 0:
+                                speech_speed = round(char_count / duration, 2)
+                                global_speed_cache[text] = speech_speed
+                            
+                            print(f"[ASR] 腾讯云识别成功（含情感标签）: {text[:80]}...")
+                            return text
+                        else:
+                            raise Exception("腾讯云ASR返回空结果")
+                    
+                    elif status == "failed":
+                        error_msg = status_resp.Data.ErrorMsg or "未知错误"
+                        raise Exception(f"腾讯云ASR识别失败: {error_msg}")
+                    
+                    elif status in ["running", "waiting"]:
+                        # 继续等待
+                        continue
+                    
+                    else:
+                        raise Exception(f"腾讯云ASR未知状态: {status}")
+                
+                # 超时
+                raise Exception(f"腾讯云ASR识别超时（已等待{max_retries * 2}秒）")
+                # =========================================================
             
             except ImportError:
                 print("[ASR] 未安装腾讯云SDK，使用HTTP API方式")
-                # 降级到HTTP API方式（需要签名，这里简化处理）
                 raise Exception("请安装腾讯云SDK: pip install tencentcloud-sdk-python")
         
         except Exception as e:

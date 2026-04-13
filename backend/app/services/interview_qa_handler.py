@@ -10,12 +10,15 @@ import queue
 import threading
 from datetime import datetime
 
+from flask import current_app
+
 from app.extensions import db
 from app.models.interview import Interview, InterviewChat
 from app.models.prompt import AiPrompt
 from app.models.learning import KnowledgeTag
 from app.services.tts_service import TTSService, bytes_to_b64
 from app.utils.llm_client import DeepSeekClient
+from app.services import coem
 
 
 class InterviewQAHandler:
@@ -346,6 +349,51 @@ class InterviewQAHandler:
                 "content": msg.content
             })
         
+        # If CoEM is enabled for text-only mode, attempt CoEM pipeline (opt-in)
+        try:
+            if (not voice_mode) and current_app.config.get('USE_COEM_FOR_TEXT', False):
+                try:
+                    # Prepare conversation history and query
+                    conversation_messages = []
+                    for msg in history:
+                        conversation_messages.append({'role': 'user' if msg.role == 'user' else 'assistant', 'content': msg.content})
+
+                    query = normalized_answer
+
+                    # Candidate source: use recent assigned question's reference answer + resume context as a simple document
+                    candidate_docs = []
+                    if related_question and related_question.reference_answer:
+                        candidate_docs.append(related_question.reference_answer)
+                    if resume_context:
+                        candidate_docs.append(resume_context)
+
+                    # Merge candidate docs into a single text and chunk
+                    merged_text = '\n\n'.join(candidate_docs) if candidate_docs else normalized_answer
+                    chunks = coem.chunk_text(merged_text, max_chars=current_app.config.get('COEM_CHUNK_MAX_CHARS', 800), overlap=current_app.config.get('COEM_CHUNK_OVERLAP', 100))
+
+                    # Initial rank
+                    from app.services.interview_service import InterviewService
+                    scored = coem.initial_rank(chunks, query, InterviewService, top_k=current_app.config.get('COEM_MAX_CHUNKS', 4), job_id=interview.job_id)
+
+                    # Sage enrich
+                    sage_client = DeepSeekClient()
+                    enhanced = coem.coem_sage_enrich(scored, query, sage_client, timeout=current_app.config.get('COEM_SAGE_TIMEOUT', 5.0))
+
+                    # Rerank
+                    reranked = coem.rerank_enhanced_chunks(enhanced, query, InterviewService, top_k=current_app.config.get('COEM_MAX_CHUNKS', 4))
+
+                    # Generate final answer via CoEM-Core will be done in streaming mode later.
+                    top_enhanced = reranked
+                    # mark that we have CoEM candidates ready for streaming
+                    _coem_ready = True
+                except Exception as ce:
+                    current_app.logger.exception('CoEM pipeline failed, falling back to default LLM flow: %s', ce)
+                    _coem_ready = False
+                    # fall through to default behavior
+        except Exception:
+            # If current_app is not available or config access fails, ignore and use default path
+            _coem_ready = False
+
         # 5. 调用大模型流式输出
         llm = DeepSeekClient()
         stream_temp = InterviewSessionManager.resolve_generation_temperature(
@@ -353,8 +401,8 @@ class InterviewQAHandler:
             default_temp=0.88,
             seed=(interview.id * 1000 + interview.question_count),
         )
-        response_stream = llm.generate_reply(messages, stream=True, temperature=stream_temp)
-        
+        # NOTE: do not call llm.generate_reply() yet — decide later whether to use CoEM streaming or LLM streaming
+
         tts_voice = InterviewTTSHelper.get_tts_voice(prompt_config, voice) if voice_mode else None
         
         full_reply = ""
@@ -418,7 +466,19 @@ class InterviewQAHandler:
                         print(f"[TTS] 合成返回空音频：{repr(head['text'][:50])}")
                 except Exception as e:
                     print(f'[TTS] 异步合成失败（文本：{repr(head["text"][:30])}）：{e}')
-        
+
+        # Decide response_stream: use CoEM streaming if available and enabled, otherwise use LLM streaming
+        if (not voice_mode) and current_app.config.get('USE_COEM_FOR_TEXT', False) and _coem_ready:
+            try:
+                core_client = DeepSeekClient()
+                # coem.coem_core_generate returns a generator when streaming=True
+                response_stream = coem.coem_core_generate(top_enhanced, query, conversation_messages, core_client, streaming=True)
+            except Exception as e:
+                current_app.logger.exception('CoEM core streaming failed, falling back to LLM stream: %s', e)
+                response_stream = llm.generate_reply(messages, stream=True, temperature=stream_temp)
+        else:
+            response_stream = llm.generate_reply(messages, stream=True, temperature=stream_temp)
+
         # 6. 流式处理模型输出
         for chunk in response_stream:
             content = chunk.choices[0].delta.content
@@ -466,7 +526,60 @@ class InterviewQAHandler:
                             sent_audio_packets += 1
                         except queue.Empty:
                             break
-        
+
+            # 支持多种 response_stream 格式：
+            # 1) LLM stream object with chunk.choices[0].delta.content
+            # 2) plain string chunks (CoEM streaming generator yields strings)
+            # 3) dict-like with choices -> delta -> content
+            content = None
+            try:
+                # 尝试经典对象属性访问（DeepSeek/OpenAI 风格）
+                content = getattr(chunk, 'choices', None) and chunk.choices[0].delta.content
+            except Exception:
+                content = None
+            if not content:
+                # 支持 dict 风格
+                try:
+                    if isinstance(chunk, dict):
+                        content = (chunk.get('choices') or [{}])[0].get('delta', {}).get('content')
+                except Exception:
+                    content = None
+            if not content:
+                # 支持直接返回字符串的 generator（CoEM streaming）
+                if isinstance(chunk, str):
+                    content = chunk
+            if not content:
+                # 仍然没有可用内容则跳过
+                continue
+
+            # content 现为一段文本（可能是片段），交给原来的拆分与 TTS 流程
+            for display_chunk in InterviewTTSHelper.split_stream_display_chunks(content):
+                full_reply += display_chunk
+                sentence_buffer += display_chunk
+
+                # 初始化准备传给前端的payload
+                payload = {'chunk': display_chunk}
+
+                # 提取完整句并异步合成
+                if voice_mode:
+                    ready_segments, sentence_buffer = InterviewTTSHelper.extract_ready_tts_segments(sentence_buffer)
+                    for segment in ready_segments:
+                        submit_tts_segment(segment)
+
+                # 将已经完成的异步TTS结果转入发送队列
+                flush_ready_tts_futures()
+
+                # 检查是否有已完成的TTS音频需要发送
+                try:
+                    audio_b64_from_queue = audio_queue.get_nowait()
+                    payload['audio_b64'] = audio_b64_from_queue
+                    sent_audio_packets += 1
+                except queue.Empty:
+                    pass
+
+                # 立即发送文字chunk（如果有音频，会一起发送）
+                yield f"data: {json.dumps(payload, ensure_ascii=False)}\n\n"
+
         # 7. 处理剩余的尾句
         if voice_mode and sentence_buffer:
             tail_segment = InterviewTTSHelper.extract_tail_tts_segment(sentence_buffer)
