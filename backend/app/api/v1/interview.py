@@ -58,6 +58,7 @@ def start_interview():
     # 优先从 Token 获取 user_id，其次从请求体获取
     user_id = get_current_user_id() or data.get('user_id')
     job_id_input = data.get('job_id')
+    resume_id = data.get('resume_id')
     voice_mode = bool(data.get('voice_mode', False))
 
     interview_style = data.get('interview_style')
@@ -79,7 +80,12 @@ def start_interview():
     try:
         # 后端最终校验：确保选中岗位与简历满足面试要求（若不满足则拒绝启动面试）
         try:
-            resume_data = ResumeService.get_main_resume(user_id)
+            if resume_id:
+                # 验证用户选择的简历
+                resume_data = ResumeService.get_resume(resume_id, user_id)
+            else:
+                # 验证主简历
+                resume_data = ResumeService.get_main_resume(user_id)
             content = resume_data.get('content', {})
             ResumeService._validate_resume_content(content, job_id, user_id=user_id)
         except ValueError as ve:

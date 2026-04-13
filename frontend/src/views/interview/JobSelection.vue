@@ -880,6 +880,8 @@ export default {
         if (this.voiceMode) {
           this.$store.commit('interview/SET_TTS_VOICE', this.selectedVoiceRole)
         }
+        // 存储选中的简历ID
+        this.$store.commit('interview/SET_RESUME_ID', this.selectedResume?.id)
         await this.$store.dispatch('interview/selectJob', this.currentSelected)
         // 根据面试模式跳转到不同页面
         if (this.voiceMode) {
@@ -889,7 +891,9 @@ export default {
         }
       } catch (err) {
         console.error('启动面试失败：', err)
-        alert('启动面试失败，请重试！')
+        // 提取后端错误信息
+        const errorMessage = err?.response?.data?.message || err?.message || '启动面试失败，请重试！'
+        alert('启动面试失败：' + errorMessage)
       }
     },
 

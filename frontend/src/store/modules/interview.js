@@ -276,6 +276,7 @@ const state = () => ({
   isAISpeaking: false,     // AI 音频仍在播放中
   elapsedSeconds: 0,        // 已用时（秒）
   jobDbId: null,  // 后端数据库真实岗位id
+  resumeId: null,  // 选中的简历ID
   voiceMode: false,
   interviewStyle: 'confident',
   voiceRole: 'role_calm',
@@ -284,6 +285,7 @@ const state = () => ({
 
 const mutations = {
   SET_JOB_DB_ID(state, id) { state.jobDbId = id },
+  SET_RESUME_ID(state, id) { state.resumeId = id },
   SET_SESSION(state, session) { state.currentSession = session },
   SET_SELECTED_JOB(state, job) { state.selectedJob = job },
   ADD_MESSAGE(state, msg) {
@@ -335,6 +337,7 @@ const mutations = {
     state.interviewStyle = 'confident'
     state.voiceRole = 'role_calm'
     state.ttsVoice = DEFAULT_TTS_VOICE
+    state.resumeId = null
   }
 }
 
@@ -362,6 +365,7 @@ const actions = {
       const res = await startInterview({
         userId,                    // 传给后端的 user_id
         jobDbId: state.jobDbId,     // 传给后端的 job_id（数字）
+        resumeId: state.resumeId,   // 传给后端的 resume_id
         voiceMode: state.voiceMode,
         interviewStyle: state.interviewStyle,
         voiceRole: state.voiceRole,

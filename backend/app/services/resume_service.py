@@ -258,6 +258,14 @@ class ResumeService:
         """返回主简历（含 content），不存在则先创建。"""
         main = ResumeService.ensure_main_resume(user_id)
         return main.to_dict(include_content=True)
+    
+    @staticmethod
+    def get_resume(resume_id: int, user_id: int) -> dict:
+        """根据resume_id获取指定的简历（含 content）。"""
+        resume = Resume.query.filter_by(id=resume_id, user_id=user_id).first()
+        if not resume:
+            raise ValueError('简历不存在或不属于该用户')
+        return resume.to_dict(include_content=True)
 
     # ------------------------------------------------------------------ #
     # 创建                                                                 #
