@@ -57,7 +57,7 @@ class InterviewQAHandler:
         return bool(cls._MEANINGLESS_ANSWER_PATTERN.match(t))
     
     @staticmethod
-    def process_chat_round_stream(interview_id, user_answer, voice_mode=False, voice=None):
+    def process_chat_round_stream(interview_id, user_answer, voice_mode=False, voice=None, interview_round=None):
         """
         处理对话轮次并返回流式生成器
         
@@ -152,6 +152,15 @@ class InterviewQAHandler:
         session_style = getattr(
             getattr(interview, 'session_config', None), 'interview_style', 'confident'
         )
+        # 轮次优先级: API传参 > 会话配置 > 当前已记录的 question_count
+        round_index = int(interview_round) if interview_round else None
+        if round_index is None:
+            try:
+                round_index = int(getattr(getattr(interview, 'session_config', None), 'interview_round', None) or 0)
+            except Exception:
+                round_index = 0
+        if not round_index:
+            round_index = max(1, int(getattr(interview, 'question_count', 0) or 0) + 1)
         recent_tag_ids = InterviewGraphHelper.get_recent_asked_tag_ids(interview.id, limit=3)
         assigned_questions = InterviewGraphHelper.assign_questions(
             interview.job_id,
@@ -248,6 +257,27 @@ class InterviewQAHandler:
             'confident': '自信面：保持鼓励式追问，兼顾基础与应用，适度深挖但避免持续施压。',
         }
         style_prompt = style_prompt_map.get(session_style, style_prompt_map['confident'])
+        # 风格 + 轮次的复合行为约束
+        deep_dive_instruction = ''
+        if session_style == 'pressure':
+            deep_dive_instruction = (
+                '\n压力模式强制化追问：从候选人回答中识别1-2个关键技术点或逻辑薄弱点，' \
+                '对每个点至少执行连续3层追问（示例路径：为什么→底层实现→边界/高并发场景），' \
+                '不要在第一层进行解释或安抚，优先曝光漏洞并持续深挖直至候选人给出明确细节或无法回答。'
+            )
+        elif session_style == 'confident':
+            deep_dive_instruction = (
+                '\n自信面追问策略：以鼓励为主，优先让候选人陈述自己的思路并给予积极反馈。' \
+                '当回答较好时，可提出1-2个延展问题让候选人展示应用与权衡；' \
+                '如果候选人卡壳，可提示可能的卡壳点或给出轻度引导（例如提示查看的方向或需要补充的层面），' \
+                '但不要在本轮全面解释正确答案或替代候选人完成作答。'
+            )
+        elif session_style == 'teaching':
+            deep_dive_instruction = (
+                '\n教学面追问策略：以引导与教学为主，遇到错误或回答偏浅时先给出简短解释，' \
+                '然后通过分步问题、类比或示例帮助候选人理解，并提供改进建议。' \
+                '在必要时可分解问题并逐步示范核心概念，但仍应鼓励候选人尝试补充答案以巩固学习。'
+            )
         assigned_question_prompt = '\n'.join(assigned_question_lines) if assigned_question_lines else '暂无候选题'
         
         enhanced_system_prompt = f"""
@@ -264,6 +294,7 @@ class InterviewQAHandler:
             以下是候选人的知识点掌握度画像：{mastery_profile_str}。
             当前面试类型：{session_style}。
             {style_prompt}
+            {deep_dive_instruction}
             本轮优先候选题如下：
             {assigned_question_prompt}
             与候选题相关的相邻图谱节点：{graph_edge_context or '暂无'}。
@@ -451,6 +482,52 @@ class InterviewQAHandler:
 
         # 6. 流式处理模型输出
         for chunk in response_stream:
+            content = chunk.choices[0].delta.content
+            if content:
+                for display_chunk in InterviewTTSHelper.split_stream_display_chunks(content):
+                    full_reply += display_chunk
+                    sentence_buffer += display_chunk
+                    
+                    # 初始化准备传给前端的payload
+                    payload = {'chunk': display_chunk}
+                    # 附带元信息，方便前端展示当前轮次与题型
+                    try:
+                        payload['meta'] = {
+                            'round': int(round_index),
+                            'question_type': getattr(related_question, 'type', None) if related_question else None
+                        }
+                    except Exception:
+                        payload['meta'] = {'round': round_index, 'question_type': None}
+                    
+                    # 提取完整句并异步合成
+                    if voice_mode:
+                        ready_segments, sentence_buffer = InterviewTTSHelper.extract_ready_tts_segments(sentence_buffer)
+                        for segment in ready_segments:
+                            submit_tts_segment(segment)
+                    
+                    # 将已经完成的异步TTS结果转入发送队列
+                    flush_ready_tts_futures()
+                    
+                    # 检查是否有已完成的TTS音频需要发送
+                    try:
+                        audio_b64_from_queue = audio_queue.get_nowait()
+                        payload['audio_b64'] = audio_b64_from_queue
+                        sent_audio_packets += 1
+                    except queue.Empty:
+                        pass
+                    
+                    # 立即发送文字chunk（如果有音频，会一起发送）
+                    yield f"data: {json.dumps(payload, ensure_ascii=False)}\n\n"
+                    
+                    # 继续非阻塞清空队列，避免已完成音频在队列中堆积到流末尾才发送
+                    while True:
+                        try:
+                            extra_audio_b64 = audio_queue.get_nowait()
+                            yield f"data: {json.dumps({'chunk': '', 'audio_b64': extra_audio_b64}, ensure_ascii=False)}\n\n"
+                            sent_audio_packets += 1
+                        except queue.Empty:
+                            break
+
             # 支持多种 response_stream 格式：
             # 1) LLM stream object with chunk.choices[0].delta.content
             # 2) plain string chunks (CoEM streaming generator yields strings)

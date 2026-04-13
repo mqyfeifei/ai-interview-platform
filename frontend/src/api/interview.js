@@ -22,6 +22,8 @@ export const startInterview = async (data) => {
     resume_id: data.resumeId,
     voice_mode: !!data.voiceMode,
     interview_style: data.interviewStyle,
+    profile_id: data.profileId || null,
+    session_config: data.sessionConfig || null,
     voice_role: data.voiceRole,
     voice: data.voice || null
   }, {
@@ -35,6 +37,13 @@ export const startInterview = async (data) => {
     firstQuestionAudio: res.audio_b64 || null,
     isFinished: false
   }
+}
+
+export const fetchInterviewProfiles = async (jobId) => {
+  const res = await request.get('/interviews/profiles', {
+    params: { job_id: jobId }
+  })
+  return res?.list || []
 }
 
 
@@ -294,12 +303,12 @@ export const sendAnswerStream = (sessionId, answer, { onChunk, onFinish, onStrea
 export const finishInterview = async (sessionId) => {
 
   // const res = await request.post(`/interviews/${sessionId}/finish`)
-    const res = await request.post(`/interviews/${sessionId}/finish`, {}, {
+  const res = await request.post(`/interviews/${sessionId}/finish`, {}, {
     timeout: 120000  // ← 单独给这个接口设置 120 秒，覆盖全局的 15 秒
   })
   // 把后端报告存到 sessionStorage，供报告页读取（后端暂无 GET /report/:id 接口）
   sessionStorage.setItem(`report_${sessionId}`, JSON.stringify(res.data))
-  
+
   return { reportId: res.reportId || sessionId }
 }
 /**

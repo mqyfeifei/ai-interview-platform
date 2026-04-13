@@ -103,6 +103,12 @@ const routes = [
     meta: { requiresAuth: true, requiresAdmin: true, showAdminNav: true, title: '面试记录' }
   },
   {
+    path: '/admin/interview-profiles',
+    name: 'AdminInterviewProfiles',
+    component: () => import('@/views/admin/AdminInterviewProfiles.vue'),
+    meta: { requiresAuth: true, requiresAdmin: true, showAdminNav: true, title: '面试配置预设' }
+  },
+  {
     path: '/admin/prompts',
     name: 'AdminPrompts',
     component: () => import('@/views/admin/PromptManager.vue'),
