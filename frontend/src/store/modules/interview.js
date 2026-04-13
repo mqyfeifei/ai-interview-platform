@@ -277,6 +277,8 @@ const state = () => ({
   elapsedSeconds: 0,        // 已用时（秒）
   jobDbId: null,  // 后端数据库真实岗位id
   resumeId: null,  // 选中的简历ID
+  selectedProfileId: null,
+  selectedProfileConfig: null,
   voiceMode: false,
   interviewStyle: 'confident',
   voiceRole: 'role_calm',
@@ -288,6 +290,8 @@ const mutations = {
   SET_RESUME_ID(state, id) { state.resumeId = id },
   SET_SESSION(state, session) { state.currentSession = session },
   SET_SELECTED_JOB(state, job) { state.selectedJob = job },
+  SET_SELECTED_PROFILE_ID(state, id) { state.selectedProfileId = id },
+  SET_SELECTED_PROFILE_CONFIG(state, config) { state.selectedProfileConfig = config },
   ADD_MESSAGE(state, msg) {
     const m = { ...msg, content: cleanContent(msg.content) }
     state.messages.push(m)
@@ -333,6 +337,8 @@ const mutations = {
     state.isLoading = false
     state.isAISpeaking = false
     state.elapsedSeconds = 0
+    state.selectedProfileId = null
+    state.selectedProfileConfig = null
     state.voiceMode = false
     state.interviewStyle = 'confident'
     state.voiceRole = 'role_calm'
@@ -345,6 +351,10 @@ const actions = {
   // 选择岗位（从岗位选择页调用）
   selectJob({ commit }, job) {
     commit('SET_SELECTED_JOB', job)
+  },
+
+  selectInterviewProfile({ commit }, profileId) {
+    commit('SET_SELECTED_PROFILE_ID', profileId)
   },
 
   // 开始面试（从面试主界面初始化时调用）
@@ -366,6 +376,8 @@ const actions = {
         userId,                    // 传给后端的 user_id
         jobDbId: state.jobDbId,     // 传给后端的 job_id（数字）
         resumeId: state.resumeId,   // 传给后端的 resume_id
+        profileId: state.selectedProfileId,
+        sessionConfig: state.selectedProfileConfig,
         voiceMode: state.voiceMode,
         interviewStyle: state.interviewStyle,
         voiceRole: state.voiceRole,

@@ -10,7 +10,7 @@ from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeoutError
 
 from app.extensions import db
-from app.models.interview import Interview, InterviewChat, InterviewSessionConfig
+from app.models.interview import Interview, InterviewChat, InterviewSessionConfig, InterviewProfile
 from app.models.job import Job
 from app.models.prompt import AiPrompt
 from app.services.tts_service import bytes_to_b64
@@ -75,7 +75,7 @@ class InterviewSessionManager:
         return 'confident'
     
     @staticmethod
-    def build_session_config_payload(voice_mode=False, interview_style=None, voice_role=None):
+    def build_session_config_payload(voice_mode=False, interview_style=None, voice_role=None, profile_id=None, voice=None, session_config=None):
         """
         构建会话配置载荷
         
@@ -83,6 +83,9 @@ class InterviewSessionManager:
             voice_mode: 是否语音模式
             interview_style: 面试风格
             voice_role: 语音角色
+            profile_id: InterviewProfile ID
+            voice: 语音音色名称
+            session_config: 前端传入的会话配置覆盖字段
             
         Returns:
             dict: 会话配置字典
@@ -92,40 +95,126 @@ class InterviewSessionManager:
             interview_style=interview_style,
             voice_role=voice_role,
         )
-        
-        profile_map = {
-            'confident': {
-                'tech_ratio': 60.0,
-                'scenario_ratio': 40.0,
-                'difficulty_level': 2,
-                'tone_descriptor': 'balanced_confident'
-            },
-            'teaching': {
-                'tech_ratio': 80.0,
-                'scenario_ratio': 20.0,
-                'difficulty_level': 2,
-                'tone_descriptor': 'teaching_guided'
-            },
-            'pressure': {
-                'tech_ratio': 70.0,
-                'scenario_ratio': 30.0,
-                'difficulty_level': 3,
-                'tone_descriptor': 'pressure_challenge'
+
+        session_config = session_config or {}
+        if not isinstance(session_config, dict):
+            try:
+                session_config = json.loads(session_config)
+            except Exception:
+                session_config = {}
+
+        if session_config.get('interviewer_style') and not session_config.get('interview_style'):
+            session_config['interview_style'] = session_config['interviewer_style']
+
+        if session_config.get('profile_id'):
+            profile_id = session_config.get('profile_id')
+
+        if profile_id:
+            profile = InterviewProfile.query.get(profile_id)
+            if profile:
+                tech_ratio = float(profile.technique_percentage or 60.0)
+                scenario_ratio = float(profile.scenario_percentage or 40.0)
+                project_deep_dive_percentage = float(profile.project_deep_dive_percentage if profile.project_deep_dive_percentage is not None else 15.0)
+                behavioral_percentage = float(profile.behavioral_percentage if profile.behavioral_percentage is not None else 15.0)
+                difficulty_low_percentage = float(profile.difficulty_low_percentage if profile.difficulty_low_percentage is not None else 30.0)
+                difficulty_medium_percentage = float(profile.difficulty_medium_percentage if profile.difficulty_medium_percentage is not None else 50.0)
+                difficulty_high_percentage = float(profile.difficulty_high_percentage if profile.difficulty_high_percentage is not None else 20.0)
+                payload = {
+                    'profile_id': profile.id,
+                    'interview_style': profile.interviewer_style or style,
+                    'tech_ratio': tech_ratio,
+                    'scenario_ratio': scenario_ratio,
+                    'project_deep_dive_percentage': project_deep_dive_percentage,
+                    'behavioral_percentage': behavioral_percentage,
+                    'difficulty_low_percentage': difficulty_low_percentage,
+                    'difficulty_medium_percentage': difficulty_medium_percentage,
+                    'difficulty_high_percentage': difficulty_high_percentage,
+                    'is_dynamic_adjust': bool(profile.is_dynamic_adjust),
+                    'voice_id': voice or profile.voice_id or voice_role or None,
+                    'speech_speed': float(profile.speech_speed or 1.0),
+                    'tone_descriptor': profile.tone_descriptor or '',
+                    'enabled_dimensions': profile.enabled_dimensions or ['technical', 'project_deep_dive', 'scenario_design', 'behavioral'],
+                    'difficulty_level': int(profile.difficulty_level or 2),
+                }
+            else:
+                payload = {}
+        else:
+            profile_map = {
+                'confident': {
+                    'tech_ratio': 60.0,
+                    'scenario_ratio': 40.0,
+                    'project_deep_dive_percentage': 15.0,
+                    'behavioral_percentage': 15.0,
+                    'difficulty_low_percentage': 30.0,
+                    'difficulty_medium_percentage': 50.0,
+                    'difficulty_high_percentage': 20.0,
+                    'difficulty_level': 2,
+                    'tone_descriptor': 'balanced_confident'
+                },
+                'teaching': {
+                    'tech_ratio': 80.0,
+                    'scenario_ratio': 20.0,
+                    'project_deep_dive_percentage': 15.0,
+                    'behavioral_percentage': 15.0,
+                    'difficulty_low_percentage': 35.0,
+                    'difficulty_medium_percentage': 45.0,
+                    'difficulty_high_percentage': 20.0,
+                    'difficulty_level': 2,
+                    'tone_descriptor': 'teaching_guided'
+                },
+                'pressure': {
+                    'tech_ratio': 70.0,
+                    'scenario_ratio': 30.0,
+                    'project_deep_dive_percentage': 15.0,
+                    'behavioral_percentage': 15.0,
+                    'difficulty_low_percentage': 20.0,
+                    'difficulty_medium_percentage': 50.0,
+                    'difficulty_high_percentage': 30.0,
+                    'difficulty_level': 3,
+                    'tone_descriptor': 'pressure_challenge'
+                }
             }
-        }
-        profile = profile_map.get(style, profile_map['confident'])
-        
-        return {
-            'interview_style': style,
-            'tech_ratio': profile['tech_ratio'],
-            'scenario_ratio': profile['scenario_ratio'],
-            'is_dynamic_adjust': True,
-            'voice_id': voice_role or None,
-            'speech_speed': 1.0,
-            'tone_descriptor': profile['tone_descriptor'],
-            'enabled_dimensions': ['knowledge', 'logic', 'communication'],
-            'difficulty_level': profile['difficulty_level'],
-        }
+            profile = profile_map.get(style, profile_map['confident'])
+            payload = {
+                'interview_style': style,
+                'tech_ratio': profile['tech_ratio'],
+                'scenario_ratio': profile['scenario_ratio'],
+                'project_deep_dive_percentage': profile.get('project_deep_dive_percentage', 15.0),
+                'behavioral_percentage': profile.get('behavioral_percentage', 15.0),
+                'difficulty_low_percentage': profile['difficulty_low_percentage'],
+                'difficulty_medium_percentage': profile['difficulty_medium_percentage'],
+                'difficulty_high_percentage': profile['difficulty_high_percentage'],
+                'is_dynamic_adjust': True,
+                'voice_id': voice or voice_role or None,
+                'speech_speed': 1.0,
+                'tone_descriptor': profile['tone_descriptor'],
+                'enabled_dimensions': ['technical', 'project_deep_dive', 'scenario_design', 'behavioral'],
+                'difficulty_level': profile['difficulty_level'],
+            }
+
+        override_keys = [
+            'interview_style', 'tech_ratio', 'scenario_ratio', 'project_deep_dive_percentage',
+            'behavioral_percentage', 'difficulty_low_percentage', 'difficulty_medium_percentage',
+            'difficulty_high_percentage', 'is_dynamic_adjust', 'voice_id', 'speech_speed',
+            'tone_descriptor', 'enabled_dimensions', 'difficulty_level'
+        ]
+        for key in override_keys:
+            if key in session_config and session_config[key] is not None:
+                payload[key] = session_config[key]
+
+        if session_config.get('voice_id'):
+            payload['voice_id'] = session_config.get('voice_id')
+        if session_config.get('speech_speed') is not None:
+            payload['speech_speed'] = float(session_config.get('speech_speed'))
+        if session_config.get('enabled_dimensions') is not None and not isinstance(session_config.get('enabled_dimensions'), list):
+            payload['enabled_dimensions'] = [item.strip() for item in str(session_config.get('enabled_dimensions')).split(',') if item.strip()]
+
+        if voice:
+            payload['voice_id'] = voice
+        elif voice_role and not payload.get('voice_id'):
+            payload['voice_id'] = voice_role
+
+        return payload
     
     @staticmethod
     def build_fallback_greeting(base_greeting, interview_id):
@@ -201,7 +290,7 @@ class InterviewSessionManager:
     
     @staticmethod
     def start_interview(user_id, job_id, voice_mode=False, interview_style=None, 
-                       voice_role=None, voice=None):
+                       voice_role=None, voice=None, profile_id=None, session_config=None):
         """
         启动一场新的面试会话
         
@@ -220,6 +309,7 @@ class InterviewSessionManager:
             interview_style: 面试风格
             voice_role: 语音角色
             voice: 音色名称
+            profile_id: 面试套餐ID
             
         Returns:
             dict: 包含interview_id、开场白、音频等的初始化数据
@@ -258,6 +348,9 @@ class InterviewSessionManager:
             voice_mode=voice_mode,
             interview_style=interview_style,
             voice_role=voice_role,
+            profile_id=profile_id,
+            voice=voice,
+            session_config=session_config,
         )
         db.session.add(InterviewSessionConfig(interview_id=interview.id, **session_payload))
         
@@ -350,6 +443,11 @@ class InterviewSessionManager:
                 "interview_style": session_payload['interview_style'],
                 "tech_ratio": session_payload['tech_ratio'],
                 "scenario_ratio": session_payload['scenario_ratio'],
+                "project_deep_dive_percentage": session_payload.get('project_deep_dive_percentage'),
+                "behavioral_percentage": session_payload.get('behavioral_percentage'),
+                "difficulty_low_percentage": session_payload.get('difficulty_low_percentage'),
+                "difficulty_medium_percentage": session_payload.get('difficulty_medium_percentage'),
+                "difficulty_high_percentage": session_payload.get('difficulty_high_percentage'),
                 "difficulty_level": session_payload['difficulty_level'],
             },
             "warning": "请先完善简历以获得更个性化的面试体验" if is_resume_empty else None,
