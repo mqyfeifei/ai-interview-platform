@@ -56,6 +56,9 @@ VOLC_TTS_LEGACY_SPEAKER = os.environ.get('VOLC_TTS_LEGACY_SPEAKER', 'BV001_strea
 USE_VOLC           = os.environ.get('USE_VOLC', '0') == '1'
 VOLC_STRICT_MODE   = os.environ.get('VOLC_STRICT_MODE', '0') == '1'
 VOLC_RETRY_COOLDOWN_SECONDS = int(os.environ.get('VOLC_RETRY_COOLDOWN_SECONDS', '300'))
+VOLC_CONNECT_TIMEOUT_SECONDS = int(os.environ.get('VOLC_CONNECT_TIMEOUT_SECONDS', '15'))
+VOLC_CONNECT_MAX_RETRIES = int(os.environ.get('VOLC_CONNECT_MAX_RETRIES', '3'))
+VOLC_CONNECT_RETRY_BACKOFF_SECONDS = float(os.environ.get('VOLC_CONNECT_RETRY_BACKOFF_SECONDS', '1.0'))
 
 # 文档中的常见资源 ID：
 # - seed-tts-2.0: 豆包语音合成模型 2.0
@@ -462,6 +465,29 @@ class TTSService:
         message = str(exc).lower()
         return 'requested resource not granted' in message or 'resource not granted' in message
 
+    @classmethod
+    def _is_volc_transient_network_error(cls, exc: Exception) -> bool:
+        message = str(exc).lower()
+        if isinstance(exc, TimeoutError):
+            return True
+
+        ws_timeout_exception = getattr(websocket, 'WebSocketTimeoutException', None) if websocket else None
+        if ws_timeout_exception and isinstance(exc, ws_timeout_exception):
+            return True
+
+        transient_keywords = (
+            'timed out',
+            'timeout',
+            'handshake operation timed out',
+            'ssl handshake',
+            'connection reset',
+            'connection aborted',
+            'connection refused',
+            'temporary failure',
+            'eof occurred in violation of protocol',
+        )
+        return any(keyword in message for keyword in transient_keywords)
+
     @staticmethod
     def _count_speakable_chars(text: str) -> int:
         return len(_SPEAKABLE_TEXT_PATTERN.findall(text or ''))
@@ -474,6 +500,42 @@ class TTSService:
     def _should_stop_retry_on_empty_audio(cls, text: str) -> bool:
         # 过短文本（如“。\n”“嗯”）在服务端常返回 0 音频帧，继续轮询候选只会放大延迟。
         return cls._count_speakable_chars(text) <= 2
+
+    @classmethod
+    def _create_volc_connection(cls, request_id: str, target_resource_id: str, connect_id: str, session_id: str, target_voice: str):
+        if websocket is None:
+            raise RuntimeError("websocket-client 未安装，请执行: pip install websocket-client")
+
+        max_retries = max(1, VOLC_CONNECT_MAX_RETRIES)
+        for attempt in range(1, max_retries + 1):
+            try:
+                ws = websocket.create_connection(
+                    VOLC_TTS_WS_URL,
+                    timeout=max(3, VOLC_CONNECT_TIMEOUT_SECONDS),
+                    header=[
+                        f"X-Api-App-Key: {VOLC_APP_ID}",
+                        f"X-Api-Access-Key: {VOLC_ACCESS_TOKEN}",
+                        f"X-Api-Resource-Id: {target_resource_id}",
+                        f"X-Api-Connect-Id: {connect_id}",
+                        "X-Control-Require-Usage-Tokens-Return: text_words",
+                    ],
+                )
+                print(
+                    f"[TTSService][req={request_id}] WebSocket 已连接，"
+                    f"connect_id={connect_id}，session_id={session_id}，"
+                    f"resource_id={target_resource_id}，speaker={target_voice}"
+                )
+                return ws
+            except Exception as e:
+                is_transient = cls._is_volc_transient_network_error(e)
+                can_retry = is_transient and attempt < max_retries
+                print(
+                    f"[TTSService][req={request_id}] WebSocket 连接失败（{attempt}/{max_retries}）："
+                    f"{type(e).__name__}: {e}"
+                )
+                if not can_retry:
+                    raise
+                time.sleep(max(0.1, VOLC_CONNECT_RETRY_BACKOFF_SECONDS) * attempt)
 
     @classmethod
     def _ensure_engine(cls):
@@ -519,6 +581,7 @@ class TTSService:
 
             attempt_plan = cls._get_volc_attempt_plan(voice)
             last_config_error = None
+            last_runtime_error = None
             denied_resource_ids = set()
 
             for index, (resource_id, speaker) in enumerate(attempt_plan, start=1):
@@ -562,6 +625,14 @@ class TTSService:
                         print(f"[TTSService] 火山 TTS 音色/资源不匹配，尝试下一个候选：{e}")
                         continue
 
+                    if cls._is_volc_transient_network_error(e):
+                        last_runtime_error = e
+                        print(
+                            f"[TTSService] Volc TTS 网络瞬时异常，继续尝试下一个候选："
+                            f"{type(e).__name__}: {e}"
+                        )
+                        continue
+
                     if VOLC_STRICT_MODE:
                         print(
                             f"[TTSService] Volc TTS 失败（code={getattr(e, 'code', 'N/A')}），"
@@ -584,6 +655,14 @@ class TTSService:
                     raise last_config_error
 
                 print("[TTSService] 已自动降级到本地 TTS，等待冷却期后再重试火山。")
+                return cls._synthesize_local(text, voice, 'wav')
+
+            if last_runtime_error is not None:
+                if VOLC_STRICT_MODE:
+                    raise last_runtime_error
+                print(
+                    f"[TTSService] Volc TTS 网络异常，降级至本地 pyttsx3: {last_runtime_error}"
+                )
                 return cls._synthesize_local(text, voice, 'wav')
 
             if VOLC_STRICT_MODE:
@@ -654,21 +733,12 @@ class TTSService:
         audio_parts = []
         try:
             # ── 1. 建立 WebSocket 连接（鉴权在 HTTP Upgrade 阶段）──
-            ws = websocket.create_connection(
-                VOLC_TTS_WS_URL,
-                timeout=45,  # 增加 WebSocket 连接超时到 45 秒（Volc 服务可能较慢）
-                header=[
-                    f"X-Api-App-Key: {VOLC_APP_ID}",
-                    f"X-Api-Access-Key: {VOLC_ACCESS_TOKEN}",
-                    f"X-Api-Resource-Id: {target_resource_id}",
-                    f"X-Api-Connect-Id: {connect_id}",
-                    "X-Control-Require-Usage-Tokens-Return: text_words",
-                ],
-            )
-            print(
-                f"[TTSService][req={request_id}] WebSocket 已连接，"
-                f"connect_id={connect_id}，session_id={session_id}，"
-                f"resource_id={target_resource_id}，speaker={target_voice}"
+            ws = cls._create_volc_connection(
+                request_id=request_id,
+                target_resource_id=target_resource_id,
+                connect_id=connect_id,
+                session_id=session_id,
+                target_voice=target_voice,
             )
 
             # ── 2. StartConnection (Event 1) ──
