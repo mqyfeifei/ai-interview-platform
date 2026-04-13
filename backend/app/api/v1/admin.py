@@ -16,7 +16,7 @@ from werkzeug.utils import secure_filename
 from app.api.v1.auth_utils import admin_required
 from app.extensions import db
 from app.models.user import User
-from app.models.interview import Interview, InterviewChat, InterviewScore, Dimension
+from app.models.interview import Interview, InterviewChat, InterviewScore, Dimension, InterviewProfile
 from app.models.job import Job
 from app.models.question import Question
 # from app.models.knowledge import KnowledgeItem
@@ -87,6 +87,66 @@ def _serialize_resource(resource):
         'difficulty': resource.difficulty,
         'tags': knowledge_tag_names,
         'knowledge_tags': knowledge_tag_names
+    }
+
+
+def _serialize_interview_profile(profile):
+    return {
+        'id': profile.id,
+        'job_id': profile.job_id,
+        'job_name': profile.job.name if profile.job else None,
+        'round': profile.round,
+        'technique_percentage': profile.technique_percentage,
+        'scenario_percentage': profile.scenario_percentage,
+        'project_deep_dive_percentage': profile.project_deep_dive_percentage,
+        'behavioral_percentage': profile.behavioral_percentage,
+        'difficulty_low_percentage': profile.difficulty_low_percentage,
+        'difficulty_medium_percentage': profile.difficulty_medium_percentage,
+        'difficulty_high_percentage': profile.difficulty_high_percentage,
+        'is_dynamic_adjust': profile.is_dynamic_adjust,
+        'interviewer_style': profile.interviewer_style,
+        'custom_personality_json': profile.custom_personality_json,
+        'voice_id': profile.voice_id,
+        'speech_speed': profile.speech_speed,
+        'tone_descriptor': profile.tone_descriptor,
+        'enabled_dimensions': profile.enabled_dimensions,
+        'difficulty_level': profile.difficulty_level,
+        'created_at': profile.created_at.isoformat() if profile.created_at else None,
+        'updated_at': profile.updated_at.isoformat() if profile.updated_at else None,
+    }
+
+
+def _parse_json_field(value):
+    if value is None:
+        return None
+    if isinstance(value, dict):
+        return value
+    try:
+        import json
+        return json.loads(value)
+    except Exception:
+        return None
+
+
+def _get_profile_payload(data):
+    return {
+        'job_id': data.get('job_id'),
+        'round': data.get('round'),
+        'technique_percentage': data.get('technique_percentage'),
+        'scenario_percentage': data.get('scenario_percentage'),
+        'project_deep_dive_percentage': data.get('project_deep_dive_percentage'),
+        'behavioral_percentage': data.get('behavioral_percentage'),
+        'difficulty_low_percentage': data.get('difficulty_low_percentage'),
+        'difficulty_medium_percentage': data.get('difficulty_medium_percentage'),
+        'difficulty_high_percentage': data.get('difficulty_high_percentage'),
+        'is_dynamic_adjust': data.get('is_dynamic_adjust', True),
+        'interviewer_style': data.get('interviewer_style'),
+        'custom_personality_json': _parse_json_field(data.get('custom_personality_json')),
+        'voice_id': data.get('voice_id'),
+        'speech_speed': data.get('speech_speed'),
+        'tone_descriptor': data.get('tone_descriptor'),
+        'enabled_dimensions': data.get('enabled_dimensions'),
+        'difficulty_level': data.get('difficulty_level'),
     }
 
 
@@ -915,6 +975,106 @@ def delete_job(job_id):
         db.session.delete(job)
         db.session.commit()
         return success_response({'deleted_id': job_id}, '岗位删除成功')
+    except Exception as exc:
+        db.session.rollback()
+        return error_response(str(exc), 500)
+
+
+@admin_bp.route('/interview-profiles', methods=['GET'])
+@admin_required
+def list_interview_profiles():
+    try:
+        query = InterviewProfile.query.order_by(InterviewProfile.id.asc())
+        job_id = request.args.get('job_id', type=int)
+        round_num = request.args.get('round', type=int)
+        style = request.args.get('interviewer_style', '').strip()
+        if job_id:
+            query = query.filter(InterviewProfile.job_id == job_id)
+        if round_num:
+            query = query.filter(InterviewProfile.round == round_num)
+        if style:
+            query = query.filter(InterviewProfile.interviewer_style == style)
+        profiles = query.all()
+        return success_response({'list': [_serialize_interview_profile(p) for p in profiles], 'total': len(profiles)}, '获取面试预设配置成功')
+    except Exception as exc:
+        return error_response(str(exc), 500)
+
+
+@admin_bp.route('/interview-profiles/<int:profile_id>', methods=['GET'])
+@admin_required
+def get_interview_profile(profile_id):
+    try:
+        profile = InterviewProfile.query.get(profile_id)
+        if not profile:
+            return error_response('面试预设配置不存在', 404)
+        return success_response(_serialize_interview_profile(profile), '获取面试预设配置成功')
+    except Exception as exc:
+        return error_response(str(exc), 500)
+
+
+@admin_bp.route('/interview-profiles', methods=['POST'])
+@admin_required
+def create_interview_profile():
+    try:
+        data = request.get_json(silent=True) or {}
+        payload = _get_profile_payload(data)
+
+        if not payload.get('job_id'):
+            return error_response('job_id 不能为空', 400)
+        job = Job.query.get(payload['job_id'])
+        if not job:
+            return error_response('关联岗位不存在', 404)
+
+        if not payload.get('interviewer_style'):
+            return error_response('interviewer_style 不能为空', 400)
+
+        profile = InterviewProfile(**payload)
+        db.session.add(profile)
+        db.session.commit()
+        return success_response(_serialize_interview_profile(profile), '面试预设创建成功')
+    except Exception as exc:
+        db.session.rollback()
+        return error_response(str(exc), 500)
+
+
+@admin_bp.route('/interview-profiles/<int:profile_id>', methods=['PUT'])
+@admin_required
+def update_interview_profile(profile_id):
+    try:
+        profile = InterviewProfile.query.get(profile_id)
+        if not profile:
+            return error_response('面试预设配置不存在', 404)
+
+        data = request.get_json(silent=True) or {}
+        payload = _get_profile_payload(data)
+
+        if 'job_id' in data and payload.get('job_id'):
+            job = Job.query.get(payload['job_id'])
+            if not job:
+                return error_response('关联岗位不存在', 404)
+            profile.job_id = payload['job_id']
+
+        for key, value in payload.items():
+            if value is not None and hasattr(profile, key):
+                setattr(profile, key, value)
+
+        db.session.commit()
+        return success_response(_serialize_interview_profile(profile), '面试预设更新成功')
+    except Exception as exc:
+        db.session.rollback()
+        return error_response(str(exc), 500)
+
+
+@admin_bp.route('/interview-profiles/<int:profile_id>', methods=['DELETE'])
+@admin_required
+def delete_interview_profile(profile_id):
+    try:
+        profile = InterviewProfile.query.get(profile_id)
+        if not profile:
+            return error_response('面试预设配置不存在', 404)
+        db.session.delete(profile)
+        db.session.commit()
+        return success_response({'deleted_id': profile_id}, '面试预设删除成功')
     except Exception as exc:
         db.session.rollback()
         return error_response(str(exc), 500)

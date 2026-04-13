@@ -4,6 +4,7 @@ from app.services.interview_service import InterviewService
 from app.services.asr_service import ASRService
 from app.services.auth_service import AuthService
 from app.models.job import Job, DEFAULT_JOBS
+from app.models.interview import InterviewProfile
 from app.services.resume_service import ResumeService
 
 interview_bp = Blueprint('interview', __name__)
@@ -79,6 +80,20 @@ def start_interview():
         return jsonify({"code": 400, "msg": f"无效的岗位: {job_id_input}，请确认岗位已在数据库中创建"}), 400
 
     try:
+        profile_id = data.get('profile_id')
+        if profile_id is not None and profile_id != '':
+            try:
+                profile_id = int(profile_id)
+            except (TypeError, ValueError):
+                profile_id = None
+
+        if profile_id is not None:
+            profile = InterviewProfile.query.get(profile_id)
+            if not profile:
+                return jsonify({"code": 400, "msg": "无效的面试套餐 profile_id"}), 400
+            if profile.job_id != job_id:
+                return jsonify({"code": 400, "msg": "所选面试套餐与岗位不匹配"}), 400
+
         # 后端最终校验：确保选中岗位与简历满足面试要求（若不满足则拒绝启动面试）
         try:
             if resume_id:
@@ -92,6 +107,7 @@ def start_interview():
         except ValueError as ve:
             return jsonify({"code": 400, "msg": str(ve)}), 400
 
+        session_config = data.get('session_config')
         result = InterviewService.start_interview(
             user_id,
             job_id,
@@ -99,11 +115,57 @@ def start_interview():
             interview_style=interview_style,
             voice_role=voice_role,
             voice=voice,
+            profile_id=profile_id,
+            session_config=session_config,
         )
 
         return jsonify({"code": 200, "data": result, "msg": "success"}), 200
     except Exception as e:
         return jsonify({"code": 500, "msg": str(e)}), 500
+
+
+@interview_bp.route('/profiles', methods=['GET'])
+def list_interview_profiles():
+    try:
+        query = InterviewProfile.query.order_by(InterviewProfile.id.asc())
+        job_id = request.args.get('job_id', type=int)
+        if job_id:
+            query = query.filter(InterviewProfile.job_id == job_id)
+        profiles = query.all()
+
+        def serialize_profile(profile):
+            return {
+                'id': profile.id,
+                'job_id': profile.job_id,
+                'job_name': profile.job.name if profile.job else None,
+                'round': profile.round,
+                'technique_percentage': profile.technique_percentage,
+                'scenario_percentage': profile.scenario_percentage,
+                'project_deep_dive_percentage': profile.project_deep_dive_percentage,
+                'behavioral_percentage': profile.behavioral_percentage,
+                'difficulty_low_percentage': profile.difficulty_low_percentage,
+                'difficulty_medium_percentage': profile.difficulty_medium_percentage,
+                'difficulty_high_percentage': profile.difficulty_high_percentage,
+                'is_dynamic_adjust': profile.is_dynamic_adjust,
+                'interviewer_style': profile.interviewer_style,
+                'custom_personality_json': profile.custom_personality_json,
+                'voice_id': profile.voice_id,
+                'speech_speed': profile.speech_speed,
+                'tone_descriptor': profile.tone_descriptor,
+                'enabled_dimensions': profile.enabled_dimensions,
+                'difficulty_level': profile.difficulty_level,
+            }
+
+        return jsonify({
+            'code': 200,
+            'data': {
+                'list': [serialize_profile(p) for p in profiles],
+                'total': len(profiles)
+            },
+            'msg': 'success'
+        }), 200
+    except Exception as e:
+        return jsonify({'code': 500, 'msg': str(e)}), 500
 
 
 # @interview_bp.route('/<int:interview_id>/chat', methods=['POST'])
