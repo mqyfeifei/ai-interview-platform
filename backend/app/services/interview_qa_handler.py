@@ -418,6 +418,15 @@ class InterviewQAHandler:
                     
                     # 立即发送文字chunk（如果有音频，会一起发送）
                     yield f"data: {json.dumps(payload, ensure_ascii=False)}\n\n"
+                    
+                    # 继续非阻塞清空队列，避免已完成音频在队列中堆积到流末尾才发送
+                    while True:
+                        try:
+                            extra_audio_b64 = audio_queue.get_nowait()
+                            yield f"data: {json.dumps({'chunk': '', 'audio_b64': extra_audio_b64}, ensure_ascii=False)}\n\n"
+                            sent_audio_packets += 1
+                        except queue.Empty:
+                            break
         
         # 7. 处理剩余的尾句
         if voice_mode and sentence_buffer:
@@ -431,7 +440,8 @@ class InterviewQAHandler:
                 audio_bytes = head['future'].result(timeout=InterviewTTSHelper._TTS_HEAD_BLOCK_TIMEOUT_SECONDS)
                 if audio_bytes:
                     audio_chunks.append(audio_bytes)
-                    audio_queue.put(bytes_to_b64(audio_bytes))
+                    yield f"data: {json.dumps({'chunk': '', 'audio_b64': bytes_to_b64(audio_bytes)}, ensure_ascii=False)}\n\n"
+                    sent_audio_packets += 1
                     print(f"[TTS] 最终完成合成：{repr(head['text'][:50])} ({len(audio_bytes)} bytes)")
             except Exception as e:
                 print(f'[TTS] 最终等待超时或失败：{e}')
