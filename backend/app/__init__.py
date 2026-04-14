@@ -66,12 +66,6 @@ def create_app(config_name=None):
     def serve_uploads(filename):
         return send_from_directory(upload_root, filename)
 
-    @app.route('/resourcesKu/<path:filename>')
-    def serve_resourcesku(filename):
-        # Serve static resources from backend/resourcesKu (e.g., job_icon)
-        resources_root = os.path.normpath(os.path.join(app.root_path, '..', 'resourcesKu'))
-        return send_from_directory(resources_root, filename)
-
     @app.route('/health')
     def health_check():
         return "OK", 200

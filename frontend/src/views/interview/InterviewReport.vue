@@ -190,7 +190,7 @@
                     Q{{ idx + 1 }}
                     <span v-if="q.isFollowUp" class="followup-tag">追问</span>
                   </div>
-                  <p class="q-text" v-html="renderMarkdown(q.question)" />
+                  <p class="q-text" v-html="renderMarkdown((q.question || '').replace('[INTERVIEW_OVER]', ''))" />
                 </div>
                 <div class="question-item__right">
                   <svg class="q-chevron" :class="{ rotated: expandedItems.includes(q.id) }"

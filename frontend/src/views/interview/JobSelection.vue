@@ -111,6 +111,7 @@
                   :src="job.iconUrl || job.icon"
                   alt="岗位图标"
                   class="job-row__icon-img"
+                  :title="job.iconUrl" 
                 />
                 <span v-else>{{ job.icon }}</span>
               </div>
@@ -928,18 +929,6 @@ export default {
         jobs = (jobs || []).map(j => ({
           ...j,
           techStack: j.tech_stack || [],
-          // iconUrl: (function(src) {
-          //   if (!src) return '/resourcesKu/job_icon/backend.png'
-          //   // 已经是绝对 URL 或以 '/' 开头，直接使用
-          //   if (/^(\/|https?:\/\/)/.test(src)) return src
-          //   // 规范化斜杠
-          //   const norm = src.replace(/\\\\/g, '/').replace(/\\/g, '/')
-          //   // 路径中含 resourcesKu，截取 resourcesKu/ 开始的部分
-          //   const mRes = norm.match(/resourcesKu\/(.+)$/)
-          //   if (mRes) return '/resourcesKu/' + mRes[1]
-          //   // 其他相对路径（如数据库存的 "job_icon/frontend.png"），直接拼到 /resourcesKu/ 下
-          //   return '/resourcesKu/' + norm.replace(/^\.?\//, '')
-          // })(j.icon_url),
           iconUrl: j.icon_url || null,
           icon: j.icon || '💼',
           level: j.level || '',

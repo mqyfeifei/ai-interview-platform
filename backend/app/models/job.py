@@ -11,31 +11,31 @@ DEFAULT_JOBS = {
         'name': 'Java后端开发', 
         'desc': 'Java基础、并发、JVM、框架及中间件等',
         'tech_stack': ['Java', 'Spring Boot', 'Spring MVC', 'Spring Security', 'Spring Data', 'JVM', 'MySQL', 'Redis', 'Spring Cloud', 'Kafka', 'RabbitMQ', 'Docker', '分布式事务', '微服务', '并发编程', '消息队列', '工程化', '可观测性'],
-        'icon_url': 'job_icon/backend.png'
+        'icon_url': '/static/job_icon/backend.png'
     },
     'frontend': {
         'name': 'Web前端开发', 
         'desc': 'JS核心、Vue/React架构、工程化等',
         'tech_stack': ['JavaScript', 'HTML5', 'CSS3', 'Vue.js', 'React', 'Webpack', 'Vite', 'ES6+', 'Promise', 'async/await', 'BFC', 'Flexbox', 'Grid', '响应式设计', '浏览器渲染原理', 'CORS', '前端安全'],
-        'icon_url': 'job_icon/frontend.png'
+        'icon_url': '/static/job_icon/frontend.png'
     },
     'cv': {
         'name': '计算机视觉', 
         'desc': '经典机器学习、CNN/Transformer架构、工程部署优化等',
         'tech_stack': ['Python', 'PyTorch', 'TensorFlow', 'OpenCV', 'CNN', 'Transformer', 'ResNet', 'ViT', 'YOLO', 'Mask R-CNN', 'SAM', 'ONNX', 'TensorRT', '图像处理', '特征提取', '多模态', '生成式AI'],
-        'icon_url': 'job_icon/cv.png'
+        'icon_url': '/static/job_icon/cv.png'
     },
     'network': {
         'name': '网络工程', 
         'desc': 'TCP/IP协议栈、OSPF/BGP路由控制、SD-WAN等',
         'tech_stack': ['TCP/IP', 'HTTP/HTTPS', 'OSPF', 'BGP', 'VLAN', 'STP', 'LACP', 'Spine-Leaf', 'VXLAN', 'EVPN', 'SDN', 'SD-WAN', 'WLAN', 'Wi-Fi 6', '网络自动化', 'Ansible', 'Netconf'],
-        'icon_url': 'job_icon/network.png'
+        'icon_url': '/static/job_icon/network.png'
     },
     'qa': {
         'name': '测试开发', 
         'desc': '白盒/黑盒理论、UI/接口自动化、性能调优等',
         'tech_stack': ['Python', 'Selenium', 'Playwright', 'Appium', 'Postman', 'JMeter', 'JUnit', 'Jenkins', 'GitLab CI', 'Docker', 'Linux', 'Shell', 'MySQL', 'Redis', '安全测试', '性能测试', '持续集成'],
-        'icon_url': 'job_icon/qa.png'
+        'icon_url': '/static/job_icon/qa.png'
     }
 }
 # ==============================================================

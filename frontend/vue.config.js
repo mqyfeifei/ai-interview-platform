@@ -29,12 +29,6 @@ module.exports = defineConfig({
         target: 'http://127.0.0.1:5000',
         changeOrigin: true
       }
-      ,
-      // 后端静态资源目录（resourcesKu），用于直接访问 job_icon 等图片
-      '/resourcesKu': {
-        target: 'http://127.0.0.1:5000',
-        changeOrigin: true
-      }
     }
 
   },
