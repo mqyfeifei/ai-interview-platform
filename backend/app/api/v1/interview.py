@@ -56,6 +56,14 @@ def resolve_job_id(job_id_input):
 @interview_bp.route('/start', methods=['POST'])
 def start_interview():
     data = request.get_json() or {}
+    print('[InterviewDebug][api] incoming start payload =', {
+        'user_id': data.get('user_id'),
+        'job_id': data.get('job_id'),
+        'interview_style': data.get('interview_style'),
+        'interview_round': data.get('interview_round'),
+        'profile_id': data.get('profile_id'),
+        'session_config': data.get('session_config'),
+    })
     
     # 优先从 Token 获取 user_id，其次从请求体获取
     user_id = get_current_user_id() or data.get('user_id')

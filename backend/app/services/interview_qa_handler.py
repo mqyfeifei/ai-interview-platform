@@ -15,7 +15,7 @@ from flask import current_app
 from app.extensions import db
 from app.models.interview import Interview, InterviewChat
 from app.models.prompt import AiPrompt
-from app.models.learning import KnowledgeTag
+from app.models.learning import KnowledgeTag, UserKnowledgeMastery
 from app.services.tts_service import TTSService, bytes_to_b64
 from app.utils.llm_client import DeepSeekClient
 from app.services import coem
@@ -149,25 +149,45 @@ class InterviewQAHandler:
         questions, job_tag_map = InterviewGraphHelper.get_job_graph_snapshot(interview.job_id)
         valid_tags_str = "、".join([tag.name for tag in job_tag_map.values()])
         
-        session_style = getattr(
-            getattr(interview, 'session_config', None), 'interview_style', 'confident'
+        session_config = getattr(interview, 'session_config', None)
+        session_style = getattr(session_config, 'interview_style', 'confident')
+        from app.services.interview_session_manager import InterviewSessionManager, ROUND_ALIASES
+
+        raw_round = interview_round if interview_round is not None else getattr(session_config, 'interview_round', None)
+        session_round = ROUND_ALIASES.get(
+            str(raw_round).strip().lower() if raw_round is not None else '',
+            'first_round',
         )
         # 轮次优先级: API传参 > 会话配置 > 当前已记录的 question_count
-        round_index = int(interview_round) if interview_round else None
+        round_index = None
+        if interview_round is not None:
+            try:
+                round_index = int(interview_round)
+            except Exception:
+                round_index = {
+                    'first_round': 1,
+                    'second_round': 2,
+                    'third_round': 3,
+                }.get(session_round)
         if round_index is None:
             try:
                 round_index = int(getattr(getattr(interview, 'session_config', None), 'interview_round', None) or 0)
             except Exception:
-                round_index = 0
+                round_index = {
+                    'first_round': 1,
+                    'second_round': 2,
+                    'third_round': 3,
+                }.get(session_round, 0)
         if not round_index:
             round_index = max(1, int(getattr(interview, 'question_count', 0) or 0) + 1)
         recent_tag_ids = InterviewGraphHelper.get_recent_asked_tag_ids(interview.id, limit=3)
-        assigned_questions = InterviewGraphHelper.assign_questions(
+        assigned_result = InterviewGraphHelper.assign_questions(
             interview.job_id,
             interview.user_id,
             limit=6,
             recent_tag_ids=recent_tag_ids,
             interview_round=session_round,
+            interview_style=session_style,
         )
 
         # 兼容旧格式(list)和阶段二新格式(dict)
@@ -190,9 +210,21 @@ class InterviewQAHandler:
                 interview.job_id,
                 json.dumps(fallback_detail, ensure_ascii=False),
             )
+        question_mix = assigned_result.get('question_mix', {}) if isinstance(assigned_result, dict) else {}
+        difficulty_mix = assigned_result.get('difficulty_mix', {}) if isinstance(assigned_result, dict) else {}
+        strategy_adjustments = assigned_result.get('strategy_adjustments', []) if isinstance(assigned_result, dict) else []
+        if question_mix or difficulty_mix:
+            current_app.logger.info(
+                '[InterviewStrategy] interview_id=%s round=%s style=%s mix=%s difficulty=%s adjustments=%s',
+                interview.id,
+                session_round,
+                session_style,
+                json.dumps(question_mix, ensure_ascii=False),
+                json.dumps(difficulty_mix, ensure_ascii=False),
+                json.dumps(strategy_adjustments, ensure_ascii=False),
+            )
         
         # 选择多样化候选题
-        from app.services.interview_session_manager import InterviewSessionManager
         diverse_refs = InterviewSessionManager.pick_diverse_questions(
             assigned_questions,
             interview_id=interview.id,
@@ -502,6 +534,26 @@ class InterviewQAHandler:
                 except Exception as e:
                     print(f'[TTS] 异步合成失败（文本：{repr(head["text"][:30])}）：{e}')
 
+        def extract_stream_content(chunk):
+            """兼容不同流式返回格式，统一提取文本内容。"""
+            if isinstance(chunk, str):
+                return chunk
+
+            if isinstance(chunk, dict):
+                try:
+                    return (chunk.get('choices') or [{}])[0].get('delta', {}).get('content')
+                except Exception:
+                    return None
+
+            try:
+                choices = getattr(chunk, 'choices', None)
+                if choices:
+                    return choices[0].delta.content
+            except Exception:
+                return None
+
+            return None
+
         # Decide response_stream: use CoEM streaming if available and enabled, otherwise use LLM streaming
         if (not voice_mode) and current_app.config.get('USE_COEM_FOR_TEXT', False) and _coem_ready:
             try:
@@ -516,78 +568,10 @@ class InterviewQAHandler:
 
         # 6. 流式处理模型输出
         for chunk in response_stream:
-            content = chunk.choices[0].delta.content
-            if content:
-                for display_chunk in InterviewTTSHelper.split_stream_display_chunks(content):
-                    full_reply += display_chunk
-                    sentence_buffer += display_chunk
-                    
-                    # 初始化准备传给前端的payload
-                    payload = {'chunk': display_chunk}
-                    # 附带元信息，方便前端展示当前轮次与题型
-                    try:
-                        payload['meta'] = {
-                            'round': int(round_index),
-                            'question_type': getattr(related_question, 'type', None) if related_question else None
-                        }
-                    except Exception:
-                        payload['meta'] = {'round': round_index, 'question_type': None}
-                    
-                    # 提取完整句并异步合成
-                    if voice_mode:
-                        ready_segments, sentence_buffer = InterviewTTSHelper.extract_ready_tts_segments(sentence_buffer)
-                        for segment in ready_segments:
-                            submit_tts_segment(segment)
-                    
-                    # 将已经完成的异步TTS结果转入发送队列
-                    flush_ready_tts_futures()
-                    
-                    # 检查是否有已完成的TTS音频需要发送
-                    try:
-                        audio_b64_from_queue = audio_queue.get_nowait()
-                        payload['audio_b64'] = audio_b64_from_queue
-                        sent_audio_packets += 1
-                    except queue.Empty:
-                        pass
-                    
-                    # 立即发送文字chunk（如果有音频，会一起发送）
-                    yield f"data: {json.dumps(payload, ensure_ascii=False)}\n\n"
-                    
-                    # 继续非阻塞清空队列，避免已完成音频在队列中堆积到流末尾才发送
-                    while True:
-                        try:
-                            extra_audio_b64 = audio_queue.get_nowait()
-                            yield f"data: {json.dumps({'chunk': '', 'audio_b64': extra_audio_b64}, ensure_ascii=False)}\n\n"
-                            sent_audio_packets += 1
-                        except queue.Empty:
-                            break
-
-            # 支持多种 response_stream 格式：
-            # 1) LLM stream object with chunk.choices[0].delta.content
-            # 2) plain string chunks (CoEM streaming generator yields strings)
-            # 3) dict-like with choices -> delta -> content
-            content = None
-            try:
-                # 尝试经典对象属性访问（DeepSeek/OpenAI 风格）
-                content = getattr(chunk, 'choices', None) and chunk.choices[0].delta.content
-            except Exception:
-                content = None
+            content = extract_stream_content(chunk)
             if not content:
-                # 支持 dict 风格
-                try:
-                    if isinstance(chunk, dict):
-                        content = (chunk.get('choices') or [{}])[0].get('delta', {}).get('content')
-                except Exception:
-                    content = None
-            if not content:
-                # 支持直接返回字符串的 generator（CoEM streaming）
-                if isinstance(chunk, str):
-                    content = chunk
-            if not content:
-                # 仍然没有可用内容则跳过
                 continue
 
-            # content 现为一段文本（可能是片段），交给原来的拆分与 TTS 流程
             for display_chunk in InterviewTTSHelper.split_stream_display_chunks(content):
                 full_reply += display_chunk
                 sentence_buffer += display_chunk

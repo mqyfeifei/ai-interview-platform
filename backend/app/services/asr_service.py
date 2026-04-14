@@ -407,7 +407,6 @@ class ASRService:
             print(f"[ASR] 腾讯云识别异常: {str(e)}，降级使用本地Whisper")
             # 降级到本地Whisper
             return ASRService._transcribe_with_whisper(audio_file)
-
         finally:
             # 清理临时文件
             if os.path.exists(temp_path):

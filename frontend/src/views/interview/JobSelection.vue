@@ -726,6 +726,7 @@ export default {
       // ── 轮次与风格选择 ──
       selectedRound: 1,
       selectedInterviewStyle: 'confident',
+      styleManuallySelected: false,
       roundOptions: INTERVIEW_ROUNDS,
       styleOptions: INTERVIEW_STYLES,
       roundDropdownOpen: false,
@@ -1026,7 +1027,9 @@ export default {
           const match = this.availableProfiles.find(p => Number(p.round) === Number(this.selectedRound) && (p.interviewer_style || 'confident') === this.selectedInterviewStyle)
           this.selectedProfile = match || this.availableProfiles[0]
           this.selectedRound = this.selectedProfile.round || this.selectedRound
-          this.selectedInterviewStyle = this.selectedProfile.interviewer_style || this.selectedInterviewStyle
+          if (!this.styleManuallySelected) {
+            this.selectedInterviewStyle = this.selectedProfile.interviewer_style || this.selectedInterviewStyle
+          }
           this.$store.dispatch('interview/selectInterviewProfile', this.selectedProfile.id)
         }
       } catch (e) {
@@ -1041,7 +1044,9 @@ export default {
       this.selectedProfile = profile
       if (profile) {
         this.selectedRound = profile.round || this.selectedRound
-        this.selectedInterviewStyle = profile.interviewer_style || this.selectedInterviewStyle
+        if (!this.styleManuallySelected) {
+          this.selectedInterviewStyle = profile.interviewer_style || this.selectedInterviewStyle
+        }
       }
       this.$store.dispatch('interview/selectInterviewProfile', profile ? profile.id : null)
     },
@@ -1054,6 +1059,7 @@ export default {
 
     selectInterviewStyle(styleValue) {
       this.selectedInterviewStyle = styleValue
+      this.styleManuallySelected = true
       this.styleDropdownOpen = false
       this.$store.commit('interview/SET_INTERVIEW_STYLE', styleValue)
       this.syncProfileSelection()
@@ -1135,7 +1141,9 @@ export default {
       this.profileDetailDirty = false
       this.showProfileDetailModal = false
       this.selectedRound = this.selectedProfile.round || this.selectedRound
-      this.selectedInterviewStyle = this.selectedProfile.interviewer_style || this.selectedInterviewStyle
+      if (!this.styleManuallySelected) {
+        this.selectedInterviewStyle = this.selectedProfile.interviewer_style || this.selectedInterviewStyle
+      }
     },
 
     syncProfileSelection() {

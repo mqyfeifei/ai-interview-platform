@@ -372,6 +372,12 @@ const actions = {
       const userId = userInfo?.id  // 数字，如 1
       console.log('当前用户ID:', userId)
       console.log('当前岗位ID:', state.jobDbId)
+      console.log('[InterviewDebug][store] startSession payload =', {
+        selectedProfileId: state.selectedProfileId,
+        selectedRound: state.selectedProfileConfig?.interview_round,
+        selectedInterviewStyle: state.interviewStyle,
+        selectedProfileConfig: state.selectedProfileConfig,
+      })
       const res = await startInterview({
         userId,                    // 传给后端的 user_id
         jobDbId: state.jobDbId,     // 传给后端的 job_id（数字）

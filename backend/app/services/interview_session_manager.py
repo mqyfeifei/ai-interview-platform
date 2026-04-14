@@ -245,6 +245,18 @@ class InterviewSessionManager:
         '先做快速开题，然后进入场景化追问。',
     ]
 
+    _ROUND_LABELS = {
+        'first_round': '一面',
+        'second_round': '二面',
+        'third_round': '三面',
+    }
+
+    _ROUND_GREETING_ALIASES = {
+        'first_round': ['一面', '第一轮', '第1轮', 'round 1', 'round1', '1面', 'first_round'],
+        'second_round': ['二面', '第二轮', '第2轮', 'round 2', 'round2', '2面', 'second_round'],
+        'third_round': ['三面', '第三轮', '第3轮', 'round 3', 'round3', '3面', 'third_round'],
+    }
+
     @staticmethod
     def get_round_strategy(job_id, round_name):
         """
@@ -268,6 +280,30 @@ class InterviewSessionManager:
         strategy = strategy_group.get(normalized_round) or ROUND_STRATEGY_CONFIG['default'][normalized_round]
 
         return deepcopy(strategy)
+
+    @staticmethod
+    def align_round_greeting(base_greeting, interview_round):
+        """将开场白中的轮次文案对齐到当前轮次，避免模板沿用上一轮称呼。"""
+        text = str(base_greeting or '').strip()
+        if not text:
+            return text
+
+        normalized_round = ROUND_ALIASES.get(
+            str(interview_round).strip().lower() if interview_round is not None else '',
+            'first_round',
+        )
+        target_label = InterviewSessionManager._ROUND_LABELS.get(normalized_round, '一面')
+
+        if normalized_round == 'first_round':
+            return text
+
+        for round_key, aliases in InterviewSessionManager._ROUND_GREETING_ALIASES.items():
+            if round_key == normalized_round:
+                continue
+            for alias in sorted(aliases, key=len, reverse=True):
+                text = text.replace(alias, target_label)
+
+        return text
     
     @staticmethod
     def normalize_interview_style(voice_mode=False, interview_style=None, voice_role=None):
@@ -331,6 +367,10 @@ class InterviewSessionManager:
         Returns:
             dict: 会话配置字典
         """
+        # 如果前端把风格放在 session_config 里，也一并兼容读取
+        if isinstance(session_config, dict):
+            interview_style = interview_style or session_config.get('interview_style') or session_config.get('interviewer_style')
+
         # 标准化面试风格
         style = InterviewSessionManager.normalize_interview_style(
             voice_mode=voice_mode,
@@ -360,7 +400,8 @@ class InterviewSessionManager:
                 
                 payload = {
                     'profile_id': profile.id,
-                    'interview_style': profile.interviewer_style or style,
+                    # 用户显式选择的风格优先，其次才使用套餐默认风格
+                    'interview_style': style,
                     'interview_round': normalized_round,
                     'tech_ratio': tech_ratio,
                     'scenario_ratio': scenario_ratio,
@@ -575,6 +616,7 @@ class InterviewSessionManager:
     @staticmethod
     def build_fallback_greeting(base_greeting, interview_id, interview_round='first_round', interview_style='confident', round_focus='', user_id=None, job_id=None):
         """无简历场景下给开场白加入多样化，避免每次完全一致。"""
+        base_greeting = InterviewSessionManager.align_round_greeting(base_greeting, interview_round)
         candidates = InterviewSessionManager._build_opening_candidates(
             base_greeting=base_greeting,
             interview_round=interview_round,
@@ -720,10 +762,11 @@ class InterviewSessionManager:
             voice=voice,
             session_config=session_config,
         )
+        print('[InterviewDebug][session] session_payload =', session_payload)
         
         # 过滤掉不属于 InterviewSessionConfig 模型的字段
         valid_fields = {
-            'profile_id', 'interview_round', 'tech_ratio', 'scenario_ratio',
+            'profile_id', 'interview_round', 'interview_style', 'tech_ratio', 'scenario_ratio',
             'project_deep_dive_percentage', 'behavioral_percentage',
             'difficulty_low_percentage', 'difficulty_medium_percentage',
             'difficulty_high_percentage', 'is_dynamic_adjust', 'voice_id',
@@ -731,12 +774,17 @@ class InterviewSessionManager:
         }
         config_data = {k: v for k, v in session_payload.items() if k in valid_fields}
         config_data['interview_id'] = interview.id
+        print('[InterviewDebug][session] config_data_before_commit =', config_data)
         
         db.session.add(InterviewSessionConfig(**config_data))
 
         # 4. 动态获取角色设定与提示词
         prompt_config = AiPrompt.query.filter_by(job_id=job_id, is_active=True).first()
         base_greeting = prompt_config.greeting_message if prompt_config else "你好，我们开始面试吧。"
+        base_greeting = InterviewSessionManager.align_round_greeting(
+            base_greeting,
+            session_payload.get('interview_round', 'first_round'),
+        )
         round_strategy = InterviewSessionManager.get_round_strategy(
             job_id,
             session_payload.get('interview_round', 'first_round'),
@@ -758,7 +806,6 @@ class InterviewSessionManager:
             interview_round=session_payload.get('interview_round', 'first_round'),
             limit=8,
         )
-        greeting = InterviewSessionManager.build_fallback_greeting(base_greeting, interview.id)
         
         # 5. 结合简历生成个性化开场白
         tts_voice = InterviewTTSHelper.get_tts_voice(prompt_config, voice)
@@ -806,8 +853,10 @@ class InterviewSessionManager:
                             job_id=job_id,
                         )
                     else:
-                        greeting = personalized_greeting
-                    greeting = personalized_greeting
+                        greeting = InterviewSessionManager.align_round_greeting(
+                            personalized_greeting,
+                            session_payload.get('interview_round', 'first_round'),
+                        )
             except Exception as e:
                 print(f"个性化开场白生成失败，使用默认开场白: {str(e)}")
         

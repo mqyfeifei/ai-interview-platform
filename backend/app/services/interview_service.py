@@ -221,9 +221,17 @@ class InterviewService:
         return InterviewGraphHelper.estimate_target_depth(mastery_level)
     
     @staticmethod
-    def _assign_questions(job_id, user_id, limit=5, recent_tag_ids=None):
+    def _assign_questions(job_id, user_id, limit=5, recent_tag_ids=None, interview_round='first_round', interview_style='confident', resume_profile=None):
         """分配问题(代理方法)"""
-        return InterviewGraphHelper.assign_questions(job_id, user_id, limit, recent_tag_ids)
+        return InterviewGraphHelper.assign_questions(
+            job_id,
+            user_id,
+            limit=limit,
+            recent_tag_ids=recent_tag_ids,
+            interview_round=interview_round,
+            interview_style=interview_style,
+            resume_profile=resume_profile,
+        )
     
     @staticmethod
     def _get_recent_asked_tag_ids(interview_id, limit=3):

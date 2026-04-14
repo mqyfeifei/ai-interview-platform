@@ -19,6 +19,9 @@ from app.services.resume_service import ResumeService
 
 class InterviewGraphHelper:
     """知识图谱辅助工具类"""
+
+    _QUESTION_TYPES = ['technical', 'project_deep_dive', 'scenario_design', 'behavioral']
+    _DIFFICULTY_LEVELS = ['easy', 'medium', 'hard']
     
     # === 技能别名映射表 ===
     _SKILL_ALIAS_MAP = {
@@ -49,6 +52,21 @@ class InterviewGraphHelper:
         'project_deep_dive': ['scenario_design', 'technical', 'behavioral'],
         'scenario_design': ['technical', 'project_deep_dive', 'behavioral'],
         'behavioral': ['project_deep_dive', 'scenario_design', 'technical'],
+    }
+
+    _DIFFICULTY_ALIASES = {
+        'easy': 'easy',
+        'e': 'easy',
+        'low': 'easy',
+        'junior': 'easy',
+        'medium': 'medium',
+        'mid': 'medium',
+        'm': 'medium',
+        'normal': 'medium',
+        'hard': 'hard',
+        'high': 'hard',
+        'h': 'hard',
+        'senior': 'hard',
     }
 
     @staticmethod
@@ -95,6 +113,86 @@ class InterviewGraphHelper:
         except Exception:
             # 读取简历失败时不做激进判定，避免误伤
             return False
+
+    @staticmethod
+    def _is_skill_profile_sparse(user_id, resume_profile=None, resume_context_text=''):
+        """判断技能字段是否稀疏，用于基础题优先策略。"""
+        try:
+            if isinstance(resume_profile, dict):
+                skills = resume_profile.get('skills') or []
+                if isinstance(skills, list):
+                    return len([s for s in skills if str(s).strip()]) <= 2
+
+            resume_data = ResumeService.get_main_resume(user_id)
+            content = resume_data.get('content', {}) or {}
+            skills = content.get('skills', []) or []
+            if isinstance(skills, list):
+                meaningful = []
+                for item in skills:
+                    if isinstance(item, dict):
+                        name = str(item.get('name', '')).strip()
+                    else:
+                        name = str(item).strip()
+                    if name:
+                        meaningful.append(name)
+                return len(meaningful) <= 2
+
+            text = (resume_context_text or '').strip()
+            if not text:
+                return True
+            return '核心技能: 未填写' in text
+        except Exception:
+            return False
+
+    @staticmethod
+    def _normalize_difficulty(raw_value):
+        """标准化题目难度到 easy/medium/hard。"""
+        if raw_value is None:
+            return 'medium'
+        key = str(raw_value).strip().lower()
+        return InterviewGraphHelper._DIFFICULTY_ALIASES.get(key, 'medium')
+
+    @staticmethod
+    def _compute_target_counts(limit, ratio_map, ordered_keys):
+        """按比例计算目标数量，保证总和严格等于 limit。"""
+        safe_limit = max(0, int(limit or 0))
+        if safe_limit <= 0:
+            return {k: 0 for k in ordered_keys}
+
+        raw_targets = {k: float(ratio_map.get(k, 0.0) or 0.0) * safe_limit for k in ordered_keys}
+        counts = {k: int(math.floor(raw_targets[k])) for k in ordered_keys}
+        remained = safe_limit - sum(counts.values())
+        if remained > 0:
+            residues = sorted(
+                ordered_keys,
+                key=lambda key: (raw_targets[key] - counts[key], raw_targets[key]),
+                reverse=True,
+            )
+            for idx in range(remained):
+                counts[residues[idx % len(residues)]] += 1
+        return counts
+
+    @staticmethod
+    def _resolve_job_role_key(job):
+        """将岗位名称映射到策略岗位类型键，便于可观测输出。"""
+        if not job:
+            return 'default'
+
+        name = str(getattr(job, 'name', '') or '').strip().lower()
+        if not name:
+            return 'default'
+
+        if any(k in name for k in ('后端', 'backend', 'java', 'golang', 'python')):
+            return 'backend'
+        if any(k in name for k in ('前端', 'frontend', 'web', 'vue', 'react')):
+            return 'frontend'
+        if any(k in name for k in ('算法', 'algorithm', '机器学习', '视觉', 'cv')):
+            return 'algorithm'
+        if any(k in name for k in ('测试', 'qa', 'quality')):
+            return 'qa'
+        if any(k in name for k in ('网络', 'network', '运维', 'devops', 'sre')):
+            return 'network'
+        return 'default'
     
     @staticmethod
     def normalize_tag_name(name):
@@ -401,7 +499,7 @@ class InterviewGraphHelper:
         return 1
     
     @staticmethod
-    def assign_questions(job_id, user_id, limit=5, recent_tag_ids=None, interview_round='first_round'):
+    def assign_questions(job_id, user_id, limit=5, recent_tag_ids=None, interview_round='first_round', interview_style='confident', resume_profile=None):
         """
         为用户智能分配面试题目（轮次策略驱动）
         
@@ -420,34 +518,60 @@ class InterviewGraphHelper:
             
         Returns:
             dict: {
+                interview_round: str,
+                interview_style: str,
+                job_role: str,
                 selected_questions: list,
+                selected_questions_meta: list,
                 fallback_applied: bool,
                 fallback_detail: list,
                 round_focus: str,
             }
         """
-        from app.services.interview_session_manager import InterviewSessionManager
+        from app.services.interview_session_manager import InterviewSessionManager, ROUND_ALIASES
 
+        job = db.session.get(Job, int(job_id)) if job_id is not None else None
+        job_role = InterviewGraphHelper._resolve_job_role_key(job)
         questions, tag_map = InterviewGraphHelper.get_job_graph_snapshot(job_id)
 
         strategy = InterviewSessionManager.get_round_strategy(job_id, interview_round)
+        normalized_round = ROUND_ALIASES.get(
+            str(interview_round).strip().lower() if interview_round is not None else '',
+            'first_round',
+        )
         target_mix = dict(strategy.get('target_mix') or {})
+        target_difficulty = dict(strategy.get('difficulty') or {})
         round_focus = strategy.get('focus', '')
+        style = str(interview_style or 'confident').strip().lower() or 'confident'
+
+        for level in InterviewGraphHelper._DIFFICULTY_LEVELS:
+            target_difficulty.setdefault(level, 0.0)
+
+        strategy_adjustments = []
 
         if not questions or limit <= 0:
             return {
+                'interview_round': normalized_round,
+                'interview_style': style,
+                'job_role': job_role,
                 'selected_questions': [],
+                'selected_questions_meta': [],
                 'question_mix': {
+                    'target': {},
+                    'actual': {},
+                },
+                'difficulty_mix': {
                     'target': {},
                     'actual': {},
                 },
                 'fallback_applied': False,
                 'fallback_detail': [],
+                'strategy_adjustments': strategy_adjustments,
                 'round_focus': round_focus,
             }
 
         # 保障四类题型键存在
-        type_order = ['technical', 'project_deep_dive', 'scenario_design', 'behavioral']
+        type_order = list(InterviewGraphHelper._QUESTION_TYPES)
         for q_type in type_order:
             target_mix.setdefault(q_type, 0.0)
 
@@ -459,12 +583,29 @@ class InterviewGraphHelper:
             target_mix['project_deep_dive'] = 0.0
             target_mix['scenario_design'] = float(target_mix.get('scenario_design', 0.0)) + project_ratio * 0.6
             target_mix['technical'] = float(target_mix.get('technical', 0.0)) + project_ratio * 0.4
+            strategy_adjustments.append({
+                'rule': 'project_experience_sparse',
+                'from': 'project_deep_dive',
+                'to': {'scenario_design': round(project_ratio * 0.6, 4), 'technical': round(project_ratio * 0.4, 4)},
+                'reason': '项目经历缺失/稀疏，按规则转移配比',
+            })
 
             # 归一化，避免浮点叠加后总和偏离1
             total = sum(float(target_mix.get(k, 0.0) or 0.0) for k in type_order)
             if total > 0:
                 for k in type_order:
                     target_mix[k] = float(target_mix.get(k, 0.0) or 0.0) / total
+
+        skill_sparse = InterviewGraphHelper._is_skill_profile_sparse(
+            user_id=user_id,
+            resume_profile=resume_profile,
+            resume_context_text=resume_context,
+        )
+        if skill_sparse:
+            strategy_adjustments.append({
+                'rule': 'skills_sparse',
+                'reason': '技能字段稀疏，优先技术基础题（easy/medium）',
+            })
         
         recent_tag_ids = set(recent_tag_ids or [])
         recent_question_ids = set(
@@ -494,6 +635,7 @@ class InterviewGraphHelper:
             tag_ids = [tag.id for tag in question_tags]
             mastery_values = [mastery_map.get(tag_id, 0) for tag_id in tag_ids]
             avg_mastery = sum(mastery_values) / len(mastery_values) if mastery_values else 0
+            difficulty_key = InterviewGraphHelper._normalize_difficulty(question.difficulty)
             
             target_depth = InterviewGraphHelper.estimate_target_depth(avg_mastery)
             depth = question.reference_answer_depth or 1
@@ -515,6 +657,10 @@ class InterviewGraphHelper:
             # 跨场次去重惩罚：同用户同岗位近期问过的题目大幅降权
             if question.id in recent_question_ids:
                 score -= 55
+
+            # 技能稀疏时优先技术基础题
+            if skill_sparse and (question.type or '').strip() == 'technical' and difficulty_key in ('easy', 'medium'):
+                score += 18
             
             item = {
                 'question': question,
@@ -522,6 +668,7 @@ class InterviewGraphHelper:
                 'tag_names': [tag.name for tag in question_tags],
                 'avg_mastery': avg_mastery,
                 'target_depth': target_depth,
+                'difficulty_key': difficulty_key,
                 'score': score,
             }
 
@@ -536,36 +683,50 @@ class InterviewGraphHelper:
             by_type[q_type].sort(key=lambda item: (-item['score'], -item['avg_mastery'], item['question'].id))
 
         # 按 target_mix 计算每个题型目标数量（总和严格等于 limit）
-        raw_targets = {q_type: float(target_mix.get(q_type, 0.0)) * int(limit) for q_type in type_order}
-        desired_counts = {q_type: int(math.floor(raw_targets[q_type])) for q_type in type_order}
-        remained = int(limit) - sum(desired_counts.values())
-        if remained > 0:
-            # 将余数分配给小数部分最大的题型
-            residues = sorted(
-                type_order,
-                key=lambda t: (raw_targets[t] - desired_counts[t], raw_targets[t]),
-                reverse=True,
-            )
-            for idx in range(remained):
-                desired_counts[residues[idx % len(residues)]] += 1
+        desired_counts = InterviewGraphHelper._compute_target_counts(limit, target_mix, type_order)
+        desired_difficulty_counts = InterviewGraphHelper._compute_target_counts(
+            limit,
+            target_difficulty,
+            InterviewGraphHelper._DIFFICULTY_LEVELS,
+        )
 
         selected = []
         selected_question_ids = set()
         fallback_detail = []
+        remaining_difficulty = dict(desired_difficulty_counts)
 
         def _pick_from_type(q_type, need_count):
             picked = []
             if need_count <= 0:
                 return picked
 
+            # 先满足当前仍缺口的难度
             for candidate in by_type.get(q_type, []):
                 qid = candidate['question'].id
                 if qid in selected_question_ids:
                     continue
+                diff = candidate.get('difficulty_key', 'medium')
+                if remaining_difficulty.get(diff, 0) <= 0:
+                    continue
                 picked.append(candidate)
                 selected_question_ids.add(qid)
+                remaining_difficulty[diff] = max(0, int(remaining_difficulty.get(diff, 0)) - 1)
                 if len(picked) >= need_count:
                     break
+
+            # 再放宽难度约束补齐
+            if len(picked) < need_count:
+                for candidate in by_type.get(q_type, []):
+                    qid = candidate['question'].id
+                    if qid in selected_question_ids:
+                        continue
+                    picked.append(candidate)
+                    selected_question_ids.add(qid)
+                    diff = candidate.get('difficulty_key', 'medium')
+                    if remaining_difficulty.get(diff, 0) > 0:
+                        remaining_difficulty[diff] -= 1
+                    if len(picked) >= need_count:
+                        break
             return picked
 
         # 第一轮：按当前轮次目标数量优先级选题（避免固定 technical 先出）
@@ -607,14 +768,26 @@ class InterviewGraphHelper:
 
         # 第三轮：若总数仍不足，直接从全局高分池补齐（避免中断）
         if len(selected) < limit:
+            filled_by_global_pool = 0
             for candidate in ranked:
                 qid = candidate['question'].id
                 if qid in selected_question_ids:
                     continue
                 selected.append(candidate)
                 selected_question_ids.add(qid)
+                filled_by_global_pool += 1
+                diff = candidate.get('difficulty_key', 'medium')
+                if remaining_difficulty.get(diff, 0) > 0:
+                    remaining_difficulty[diff] -= 1
                 if len(selected) >= limit:
                     break
+            if filled_by_global_pool > 0:
+                fallback_detail.append({
+                    'from': 'global_gap',
+                    'to': 'global_high_score_pool',
+                    'reason': '类型池不足，按全局高分补齐',
+                    'count': filled_by_global_pool,
+                })
 
         fallback_applied = len(fallback_detail) > 0
 
@@ -629,16 +802,48 @@ class InterviewGraphHelper:
             q_type: round((actual_counts[q_type] / len(selected_final)), 4) if selected_final else 0.0
             for q_type in type_order
         }
+        actual_difficulty_counts = {k: 0 for k in InterviewGraphHelper._DIFFICULTY_LEVELS}
+        for item in selected_final:
+            diff_key = item.get('difficulty_key', 'medium')
+            if diff_key in actual_difficulty_counts:
+                actual_difficulty_counts[diff_key] += 1
+        actual_difficulty_mix = {
+            k: round((actual_difficulty_counts[k] / len(selected_final)), 4) if selected_final else 0.0
+            for k in InterviewGraphHelper._DIFFICULTY_LEVELS
+        }
         target_mix_norm = {q_type: round(float(target_mix.get(q_type, 0.0) or 0.0), 4) for q_type in type_order}
+        target_difficulty_norm = {
+            k: round(float(target_difficulty.get(k, 0.0) or 0.0), 4)
+            for k in InterviewGraphHelper._DIFFICULTY_LEVELS
+        }
+
+        selected_questions_meta = []
+        for item in selected_final:
+            q = item['question']
+            selected_questions_meta.append({
+                'question_id': q.id,
+                'question_type': (q.type or '').strip(),
+                'difficulty': item.get('difficulty_key', 'medium'),
+                'source': q.source or '',
+            })
 
         return {
+            'interview_round': normalized_round,
+            'interview_style': style,
+            'job_role': job_role,
             'selected_questions': selected_final,
+            'selected_questions_meta': selected_questions_meta,
             'question_mix': {
                 'target': target_mix_norm,
                 'actual': actual_mix,
             },
+            'difficulty_mix': {
+                'target': target_difficulty_norm,
+                'actual': actual_difficulty_mix,
+            },
             'fallback_applied': fallback_applied,
             'fallback_detail': fallback_detail,
+            'strategy_adjustments': strategy_adjustments,
             'round_focus': round_focus,
         }
     
