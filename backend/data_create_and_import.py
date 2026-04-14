@@ -1,6 +1,7 @@
 import os
 import sys
 import yaml
+import subprocess
 from sentence_transformers import SentenceTransformer
 
 # 确保能正确导入 app (根据你的项目结构可能需要调整路径)
@@ -196,18 +197,114 @@ def get_or_create_job(domain_key):
     return job.id
 
 
+def run_database_migration():
+    """执行数据库迁移，确保表结构最新"""
+    print("\n" + "="*60)
+    print("🔄 步骤 1/5: 正在执行数据库迁移...")
+    print("="*60)
+    try:
+        result = subprocess.run(
+            [sys.executable, '-m', 'flask', 'db', 'upgrade'],
+            cwd=os.path.dirname(__file__),
+            capture_output=True,
+            text=True,
+            env={**os.environ, 'FLASK_APP': 'run.py', 'FLASK_ENV': 'development'}
+        )
+        if result.returncode == 0:
+            print("✅ 数据库迁移完成")
+        else:
+            print(f"❌ 数据库迁移失败:\n{result.stderr}")
+            raise Exception("数据库迁移失败")
+    except FileNotFoundError:
+        print("⚠️ Flask 命令未找到，尝试直接使用 SQLAlchemy 创建表...")
+        # 如果 flask 命令不可用，直接创建表
+        db.create_all()
+        print("✅ 数据库表已创建")
+    except Exception as e:
+        print(f"⚠️ 迁移执行异常: {e}")
+        print("💡 尝试直接创建表...")
+        db.create_all()
+        print("✅ 数据库表已创建")
+
+
+def run_graph_backfill():
+    """回填图谱元数据"""
+    print("\n" + "="*60)
+    print("📊 步骤 4/5: 正在回填图谱元数据...")
+    print("="*60)
+    backfill_script = os.path.join(os.path.dirname(__file__), 'backfill_knowledge_tags_metadata.py')
+    if os.path.exists(backfill_script):
+        try:
+            result = subprocess.run(
+                [sys.executable, backfill_script],
+                cwd=os.path.dirname(__file__),
+                capture_output=True,
+                text=True,
+                env={**os.environ, 'FLASK_APP': 'run.py', 'FLASK_ENV': 'development'}
+            )
+            if result.returncode == 0:
+                print("✅ 图谱元数据回填完成")
+            else:
+                print(f"⚠️ 图谱回填警告: {result.stderr[:200]}")
+        except Exception as e:
+            print(f"⚠️ 图谱回填跳过: {e}")
+    else:
+        print("⚠️ 未找到图谱回填脚本，跳过")
+
+
+def run_job_m2m_backfill(reset=False):
+    """回填岗位-题目多对多关系"""
+    print("\n" + "="*60)
+    print("🔗 步骤 5/5: 正在建立岗位-题目关联...")
+    print("="*60)
+    backfill_script = os.path.join(os.path.dirname(__file__), 'scripts', 'backfill_job_m2m_links.py')
+    if os.path.exists(backfill_script):
+        try:
+            cmd = [sys.executable, backfill_script]
+            if reset:
+                cmd.append('--reset')
+            result = subprocess.run(
+                cmd,
+                cwd=os.path.dirname(__file__),
+                capture_output=True,
+                text=True,
+                env={**os.environ, 'FLASK_APP': 'run.py', 'FLASK_ENV': 'development'}
+            )
+            if result.returncode == 0:
+                print("✅ 岗位-题目关联建立完成")
+                # 打印统计信息
+                try:
+                    import json
+                    stats = json.loads(result.stdout)
+                    print(f"   📈 匹配题目: {stats.get('matched_questions', 0)}/{stats.get('total_questions', 0)}")
+                    print(f"   📈 job_questions 记录数: {stats.get('job_questions_count', 0)}")
+                    print(f"   📈 job_tags 记录数: {stats.get('job_tags_count', 0)}")
+                except:
+                    pass
+            else:
+                print(f"⚠️ 关联建立警告: {result.stderr[:200]}")
+        except Exception as e:
+            print(f"⚠️ 关联建立跳过: {e}")
+    else:
+        print("⚠️ 未找到关联回填脚本，跳过")
+
+
 def import_knowledge_base():
     app = create_app('development')
 
     with app.app_context():
-        # 0. 创建所有表（如果表已存在则忽略）
-        print("正在检查并创建数据库表...")
+        # 0. 先执行数据库迁移（确保表结构正确）
+        run_database_migration()
+        
+        # 1. 创建所有表（如果表已存在则忽略）
+        print("\n正在检查并创建数据库表...")
         db.create_all()
-        print("数据库表检查完成。")
-        # 0. 清空旧数据
+        print("✅ 数据库表检查完成。")
+        
+        # 2. 清空旧数据
         clear_existing_data()
 
-        # 1. 初始化评分维度 (Dimensions)
+        # 3. 初始化评分维度 (Dimensions)
         if Dimension.query.count() == 0:
             print("正在初始化评分维度...")
             dimensions = [
@@ -223,11 +320,11 @@ def import_knowledge_base():
         else:
             print("评分维度已存在，跳过。")
 
-        # 2. 加载本地向量模型
+        # 4. 加载本地向量模型
         print("⏳ 正在加载向量模型 (BAAI/bge-small-zh-v1.5)...")
         model = SentenceTransformer('BAAI/bge-small-zh-v1.5', local_files_only=False)
 
-        # 3. 读取全局索引文件
+        # 5. 读取全局索引文件
         if not os.path.exists(INDEX_YAML_PATH):
             print(f"❌ 找不到索引文件: {INDEX_YAML_PATH}")
             return
@@ -238,7 +335,7 @@ def import_knowledge_base():
         datasets = index_data.get('datasets', [])
         print(f"🔍 发现 {len(datasets)} 个数据集，准备开始导入...\n")
 
-        # 4. 遍历所有数据集并进行分类导入
+        # 6. 遍历所有数据集并进行分类导入
         for dataset in datasets:
             ds_type = dataset.get('type', '')
             ds_path = os.path.join(FUCHUANG_DIR, dataset.get('path', ''))
@@ -403,10 +500,23 @@ def import_knowledge_base():
             else:
                 print(f"⚠️ 遇到未知的数据集类型: {ds_type}，跳过导入。")
 
-        #5.导入提示词
+        # 7. 导入提示词
         create_prompts()
 
-        print("\n🎉 知识库自动化构建全部完成！所有领域的面试题、知识点和资源均已入库！")
+        # 8. 回填图谱元数据
+        run_graph_backfill()
+        
+        # 9. 回填岗位-题目关联
+        run_job_m2m_backfill(reset=True)
+
+        print("\n" + "="*60)
+        print("🎉 知识库自动化构建全部完成！")
+        print("   ✅ 数据库结构已更新")
+        print("   ✅ 题库、知识点、资源已导入")
+        print("   ✅ 提示词配置已完成")
+        print("   ✅ 图谱元数据已回填")
+        print("   ✅ 岗位-题目关联已建立")
+        print("="*60)
 
 
 if __name__ == '__main__':

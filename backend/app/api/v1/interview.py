@@ -356,4 +356,8 @@ def finish_interview(interview_id):
         result = InterviewService.finish_interview(interview_id)
         return jsonify({"code": 200, "data": result, "msg": "success"}), 200
     except Exception as e:
-        return jsonify({"code": 500, "msg": "报告生成失败，请稍后重试"}), 500
+        import traceback
+        error_detail = traceback.format_exc()
+        print(f"[ERROR] 面试报告生成失败 (interview_id={interview_id}):")
+        print(error_detail)
+        return jsonify({"code": 500, "msg": f"报告生成失败: {str(e)}"}), 500
