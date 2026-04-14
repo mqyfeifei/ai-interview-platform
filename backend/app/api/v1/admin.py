@@ -1870,6 +1870,7 @@ def get_user_performance(user_id):
             '技术正确性': 'knowledge',
             '逻辑严谨性': 'logic',
             '表达沟通': 'expression',
+            '表达沟通力': 'expression',
             '岗位匹配度': 'problemSolving',
             '应变能力': 'coding',
             '学习能力': 'learning',

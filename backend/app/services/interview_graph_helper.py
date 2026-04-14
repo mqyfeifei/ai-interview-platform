@@ -6,6 +6,7 @@
 
 import re
 import math
+import threading
 from datetime import datetime
 from difflib import SequenceMatcher
 
@@ -19,6 +20,9 @@ from app.services.resume_service import ResumeService
 
 class InterviewGraphHelper:
     """知识图谱辅助工具类"""
+
+    _RESUME_CONTEXT_CACHE = {}
+    _RESUME_CONTEXT_CACHE_LOCK = threading.Lock()
 
     _QUESTION_TYPES = ['technical', 'project_deep_dive', 'scenario_design', 'behavioral']
     _DIFFICULTY_LEVELS = ['easy', 'medium', 'hard']
@@ -162,6 +166,271 @@ class InterviewGraphHelper:
         return InterviewGraphHelper._DIFFICULTY_ALIASES.get(key, 'medium')
 
     @staticmethod
+    def _flatten_text_fragments(raw_value):
+        """把字符串、列表、字典等值拍平成可读文本片段。"""
+        fragments = []
+
+        def _walk(value):
+            if value is None:
+                return
+            if isinstance(value, dict):
+                preferred_keys = ('name', 'skill', 'tag', 'title', 'label', 'value', 'keyword', 'text')
+                for key in preferred_keys:
+                    if value.get(key) is not None:
+                        _walk(value.get(key))
+                if value.get('skills') is not None:
+                    _walk(value.get('skills'))
+                if value.get('items') is not None:
+                    _walk(value.get('items'))
+                return
+            if isinstance(value, (list, tuple, set)):
+                for item in value:
+                    _walk(item)
+                return
+
+            text = str(value).strip()
+            if text:
+                fragments.append(text)
+
+        _walk(raw_value)
+        return fragments
+
+    @staticmethod
+    def _extract_question_skill_names(question):
+        """从题目标签/关键词中提取可用于 GraphRAG 的技能名。"""
+        skill_names = []
+        seen = set()
+
+        def push(text):
+            normalized = str(text or '').strip()
+            if normalized and normalized not in seen:
+                seen.add(normalized)
+                skill_names.append(normalized)
+
+        for tag in question.knowledge_tags or []:
+            push(tag.name)
+
+        for fragment in InterviewGraphHelper._flatten_text_fragments(question.keywords):
+            push(fragment)
+
+        if not skill_names and question.type:
+            push(question.type)
+
+        return skill_names[:6]
+
+    @staticmethod
+    def _extract_required_skill_names(required_skills_meta):
+        """从 required_skills_meta 中抽取技能名列表。"""
+        names = []
+        seen = set()
+
+        def push(text):
+            normalized = str(text or '').strip()
+            if normalized and normalized not in seen:
+                seen.add(normalized)
+                names.append(normalized)
+
+        if isinstance(required_skills_meta, dict):
+            for key in ('skills', 'items', 'required_skills', 'tags'):
+                value = required_skills_meta.get(key)
+                if value is not None:
+                    for fragment in InterviewGraphHelper._flatten_text_fragments(value):
+                        push(fragment)
+            if not names:
+                for key in ('primary_skill', 'secondary_skill', 'skill', 'name'):
+                    if required_skills_meta.get(key) is not None:
+                        push(required_skills_meta.get(key))
+        else:
+            for fragment in InterviewGraphHelper._flatten_text_fragments(required_skills_meta):
+                push(fragment)
+
+        return names[:8]
+
+    @staticmethod
+    def _infer_reference_answer_depth(question):
+        """基于题面、答案要点和题型推断参考答案深度。"""
+        reference_answer = question.reference_answer
+        answer_fragments = InterviewGraphHelper._flatten_text_fragments(reference_answer)
+        answer_text = ' '.join(answer_fragments)
+        content_text = f"{question.content or ''} {question.type or ''} {answer_text}".lower()
+
+        depth = 1
+        if len(answer_fragments) >= 5 or len(answer_text) >= 260:
+            depth = 3
+        elif len(answer_fragments) >= 2 or len(answer_text) >= 120:
+            depth = 2
+
+        deep_terms = ('原理', '机制', '源码', '性能', '边界', '权衡', '优化', '对比', '复杂度', '架构', '事务', '并发', '一致性', '落地', '扩展')
+        medium_terms = ('为什么', '如何', '怎么', '区别', '场景', '方案', '实现', '解释')
+
+        if any(term in content_text for term in deep_terms):
+            depth = max(depth, 3)
+        elif any(term in content_text for term in medium_terms):
+            depth = max(depth, 2)
+
+        q_type = str(question.type or '').strip().lower()
+        if q_type in ('project_deep_dive', 'scenario_design'):
+            depth = max(depth, 2)
+        if q_type == 'technical' and len(answer_fragments) >= 4:
+            depth = max(depth, 3)
+
+        return min(3, max(1, depth))
+
+    @staticmethod
+    def _infer_required_skills_meta(question, skill_names=None):
+        """根据题目标签、关键词和题型生成 required_skills_meta。"""
+        names = list(skill_names or [])
+        if not names:
+            names = InterviewGraphHelper._extract_question_skill_names(question)
+
+        if not names:
+            type_fallback = {
+                'technical': ['技术原理'],
+                'project_deep_dive': ['项目经验'],
+                'scenario_design': ['场景分析'],
+                'behavioral': ['行为面试'],
+            }
+            names = type_fallback.get(str(question.type or '').strip().lower(), ['综合能力'])
+
+        weights = []
+        total = max(1, len(names))
+        for idx, name in enumerate(names[:6]):
+            weight = max(0.35, round(1.0 - idx * 0.12, 2))
+            weights.append({
+                'name': name,
+                'weight': weight,
+            })
+
+        q_type = str(question.type or '').strip().lower()
+        if len(names) <= 2:
+            complexity = 'basic'
+        elif len(names) <= 4:
+            complexity = 'intermediate'
+        else:
+            complexity = 'advanced'
+
+        if q_type in ('project_deep_dive', 'scenario_design') and len(names) >= 3:
+            complexity = 'advanced'
+        elif q_type == 'behavioral' and len(names) <= 2:
+            complexity = 'basic'
+
+        return {
+            'skills': weights,
+            'count': len(weights),
+            'complexity': complexity,
+            'source': 'generated',
+        }
+
+    @staticmethod
+    def _infer_follow_up_templates(question, reference_answer_depth=None, required_skills_meta=None):
+        """根据题目元数据生成二轮/三轮追问链模板。"""
+        depth = int(reference_answer_depth or InterviewGraphHelper._infer_reference_answer_depth(question) or 1)
+        required_skill_names = InterviewGraphHelper._extract_required_skill_names(required_skills_meta)
+        question_skill_names = InterviewGraphHelper._extract_question_skill_names(question)
+        base_skill = required_skill_names[0] if required_skill_names else (question_skill_names[0] if question_skill_names else (question.content or '这个知识点'))
+        secondary_skill = required_skill_names[1] if len(required_skill_names) > 1 else (question_skill_names[1] if len(question_skill_names) > 1 else '')
+
+        templates = []
+
+        templates.append({
+            'step': 1,
+            'rounds': ['first_round', 'second_round', 'third_round'],
+            'focus': 'core_concept',
+            'prompt': f'先说说{base_skill}的核心作用、基本原理和适用场景。',
+        })
+
+        if depth >= 2:
+            templates.append({
+                'step': 2,
+                'rounds': ['second_round', 'third_round'],
+                'focus': 'implementation',
+                'prompt': f'如果把{base_skill}放到真实业务里，你会怎么落地实现，和{secondary_skill or "相关概念"}怎么配合？',
+            })
+
+        if depth >= 3:
+            templates.append({
+                'step': 3,
+                'rounds': ['third_round'],
+                'focus': 'boundary_and_tradeoff',
+                'prompt': f'再往下追一层，{base_skill}在边界条件、性能瓶颈或并发场景下会遇到什么问题，你会怎么权衡和优化？',
+            })
+
+        if not templates:
+            templates.append({
+                'step': 1,
+                'rounds': ['first_round', 'second_round', 'third_round'],
+                'focus': 'core_concept',
+                'prompt': f'请围绕{base_skill}说明你的理解。',
+            })
+
+        return templates
+
+    @staticmethod
+    def build_question_graph_meta(question):
+        """为题目生成可复用的 GraphRAG 元数据。"""
+        question_skill_names = InterviewGraphHelper._extract_question_skill_names(question)
+        reference_answer_depth = question.reference_answer_depth or InterviewGraphHelper._infer_reference_answer_depth(question)
+        required_skills_meta = question.required_skills_meta or InterviewGraphHelper._infer_required_skills_meta(question, question_skill_names)
+        follow_up_templates = question.follow_up_templates or InterviewGraphHelper._infer_follow_up_templates(
+            question,
+            reference_answer_depth=reference_answer_depth,
+            required_skills_meta=required_skills_meta,
+        )
+
+        return {
+            'reference_answer_depth': int(reference_answer_depth or 1),
+            'required_skills_meta': required_skills_meta,
+            'follow_up_templates': follow_up_templates,
+            'skill_names': question_skill_names,
+        }
+
+    @staticmethod
+    def build_follow_up_chain_context(question, interview_round='first_round', interview_style='confident', max_items=3):
+        """把题目的追问模板整理成可直接塞进提示词的文本。"""
+        if not question:
+            return ''
+
+        meta = InterviewGraphHelper.build_question_graph_meta(question)
+        templates = meta.get('follow_up_templates') or []
+        round_key = str(interview_round).strip().lower() if interview_round is not None else 'first_round'
+
+        formatted_lines = []
+        for template in templates:
+            if not isinstance(template, dict):
+                prompt = str(template).strip()
+                if prompt:
+                    formatted_lines.append(prompt)
+                continue
+
+            rounds = template.get('rounds') or []
+            if rounds and round_key not in rounds:
+                continue
+
+            prompt = str(template.get('prompt') or '').strip()
+            if not prompt:
+                continue
+
+            focus = str(template.get('focus') or '').strip()
+            if focus:
+                formatted_lines.append(f"- {prompt}（{focus}）")
+            else:
+                formatted_lines.append(f"- {prompt}")
+
+            if len(formatted_lines) >= max(1, int(max_items or 3)):
+                break
+
+        if not formatted_lines:
+            return ''
+
+        style_hint = {
+            'pressure': '追问时更直接，少铺垫，优先追根究底。',
+            'teaching': '追问时先解释半句，再一步步引导。',
+            'confident': '追问时保持自然、均衡。',
+        }.get(str(interview_style or '').strip().lower(), '追问时保持自然、均衡。')
+
+        return f"追问链模板（{style_hint}）:\n" + '\n'.join(formatted_lines)
+
+    @staticmethod
     def _compute_target_counts(limit, ratio_map, ordered_keys):
         """按比例计算目标数量，保证总和严格等于 limit。"""
         safe_limit = max(0, int(limit or 0))
@@ -202,6 +471,242 @@ class InterviewGraphHelper:
         if any(k in name for k in ('网络', 'network', '运维', 'devops', 'sre')):
             return 'network'
         return 'default'
+
+    @staticmethod
+    def _get_tag_depth(tag):
+        """计算知识点在图谱中的深度。"""
+        depth = 1
+        visited = set()
+        current = tag
+        while current and current.parent_id and current.parent_id not in visited:
+            visited.add(current.id)
+            current = KnowledgeTag.query.get(current.parent_id)
+            if current:
+                depth += 1
+        return depth
+
+    @staticmethod
+    def _build_graph_rag_signals(tag_map, mastery_map, interview_round='first_round', interview_style='confident', recent_tag_ids=None, dynamic_adjust=True):
+        """构建 GraphRAG 选题信号：弱节点、前沿节点与标签分数。"""
+        normalized_round = interview_round
+        round_key = str(interview_round).strip().lower() if interview_round is not None else ''
+        if round_key not in ('first_round', 'second_round', 'third_round'):
+            normalized_round = 'first_round'
+
+        style_key = str(interview_style).strip().lower() if interview_style is not None else 'confident'
+        if style_key not in ('pressure', 'confident', 'teaching'):
+            style_key = 'confident'
+
+        route_mode_map = {
+            'first_round': 'root',
+            'second_round': 'adjacent',
+            'third_round': 'bridge',
+        }
+        route_mode = route_mode_map.get(normalized_round, 'root')
+
+        if not dynamic_adjust or not tag_map:
+            return {
+                'round_key': normalized_round,
+                'weak_tag_ids': set(),
+                'frontier_tag_ids': set(),
+                'strong_tag_ids': set(),
+                'tag_depth_map': {},
+                'tag_boost_map': {},
+                'route_mode': route_mode,
+                'route_tag_ids': set(),
+                'adjustments': [],
+            }
+
+        weak_threshold_map = {
+            'first_round': 55,
+            'second_round': 60,
+            'third_round': 65,
+        }
+        weak_bonus_map = {
+            'first_round': 14.0,
+            'second_round': 12.0,
+            'third_round': 10.0,
+        }
+        frontier_bonus_map = {
+            'first_round': 8.0,
+            'second_round': 10.0,
+            'third_round': 12.0,
+        }
+        bridge_bonus_map = {
+            'first_round': 1.0,
+            'second_round': 2.5,
+            'third_round': 4.0,
+        }
+
+        weak_threshold = weak_threshold_map.get(normalized_round, 55)
+        weak_bonus = weak_bonus_map.get(normalized_round, 12.0)
+        frontier_bonus = frontier_bonus_map.get(normalized_round, 8.0)
+        bridge_bonus = bridge_bonus_map.get(normalized_round, 1.0)
+
+        style_bonus_map = {
+            'pressure': {
+                'weak_bonus_delta': 4.0,
+                'frontier_bonus_delta': -1.0,
+                'bridge_bonus_delta': 2.0,
+            },
+            'confident': {
+                'weak_bonus_delta': 0.0,
+                'frontier_bonus_delta': 0.0,
+                'bridge_bonus_delta': 0.0,
+            },
+            'teaching': {
+                'weak_bonus_delta': -2.0,
+                'frontier_bonus_delta': 3.0,
+                'bridge_bonus_delta': -1.5,
+            },
+        }
+        style_bonus = style_bonus_map.get(style_key, style_bonus_map['confident'])
+
+        weak_bonus += style_bonus['weak_bonus_delta']
+        frontier_bonus += style_bonus['frontier_bonus_delta']
+        bridge_bonus += style_bonus['bridge_bonus_delta']
+
+        recent_tag_ids = set(recent_tag_ids or [])
+        tag_depth_map = {}
+        weak_tag_ids = set()
+        frontier_tag_ids = set()
+        strong_tag_ids = set()
+        route_tag_ids = set()
+
+        for tag_id, tag in tag_map.items():
+            mastery = float(mastery_map.get(tag_id, 0) or 0)
+            tag_depth_map[tag_id] = InterviewGraphHelper._get_tag_depth(tag)
+            if mastery <= 0 or mastery < weak_threshold:
+                weak_tag_ids.add(tag_id)
+            elif mastery >= 75:
+                strong_tag_ids.add(tag_id)
+
+        for tag_id in list(weak_tag_ids):
+            tag = tag_map.get(tag_id)
+            if not tag:
+                continue
+            if tag.parent_id and tag.parent_id in tag_map:
+                frontier_tag_ids.add(tag.parent_id)
+            for child in tag.children or []:
+                if child.id in tag_map:
+                    frontier_tag_ids.add(child.id)
+
+        if normalized_round in ('second_round', 'third_round'):
+            for tag_id in strong_tag_ids:
+                tag = tag_map.get(tag_id)
+                if not tag:
+                    continue
+                for child in tag.children or []:
+                    if child.id in tag_map:
+                        frontier_tag_ids.add(child.id)
+
+        if normalized_round == 'third_round':
+            # 三面更适合跨节点综合判断：把弱节点的兄弟/下游节点也纳入前沿
+            for tag_id, tag in tag_map.items():
+                if tag.parent_id and tag.parent_id in weak_tag_ids:
+                    frontier_tag_ids.add(tag_id)
+
+        # 轮次推进路线：一面看根节点，二面看邻接节点，三面看桥接/组合节点
+        for tag_id, tag in tag_map.items():
+            depth = tag_depth_map.get(tag_id, 1)
+            if route_mode == 'root' and depth <= 2:
+                route_tag_ids.add(tag_id)
+            elif route_mode == 'adjacent' and (tag_id in frontier_tag_ids or depth == 2):
+                route_tag_ids.add(tag_id)
+            elif route_mode == 'bridge' and (depth >= 2 or len(getattr(tag, 'children', []) or []) > 0):
+                route_tag_ids.add(tag_id)
+
+        if style_key == 'pressure':
+            route_tag_ids.update(weak_tag_ids)
+            route_tag_ids.update(frontier_tag_ids)
+        elif style_key == 'teaching':
+            route_tag_ids.update(frontier_tag_ids)
+            route_tag_ids.update(tag_id for tag_id, depth in tag_depth_map.items() if depth <= 2)
+
+        tag_boost_map = {}
+        for tag_id, tag in tag_map.items():
+            mastery = float(mastery_map.get(tag_id, 0) or 0)
+            depth = tag_depth_map.get(tag_id, 1)
+            boost = 0.0
+
+            if tag_id in weak_tag_ids:
+                boost += weak_bonus
+                boost += max(0.0, (weak_threshold - mastery) * 0.25)
+
+            if tag_id in frontier_tag_ids:
+                boost += frontier_bonus
+
+            if tag_id in route_tag_ids:
+                boost += 3.0
+
+            if style_key == 'pressure':
+                if tag_id in weak_tag_ids:
+                    boost += 3.0
+                if depth >= 3:
+                    boost += 2.0
+            elif style_key == 'teaching':
+                if depth <= 2:
+                    boost += 3.0
+                if tag_id in frontier_tag_ids:
+                    boost += 1.5
+                if depth >= 3:
+                    boost -= 2.0
+            else:
+                if depth == 2:
+                    boost += 1.0
+
+            if normalized_round == 'third_round' and depth >= 3:
+                boost += 2.0
+
+            if normalized_round == 'second_round' and depth >= 2:
+                boost += 1.0
+
+            if tag_id in recent_tag_ids:
+                boost -= 10.0
+
+            tag_boost_map[tag_id] = boost
+
+        adjustments = []
+        if weak_tag_ids:
+            adjustments.append({
+                'rule': 'graph_weak_nodes',
+                'count': len(weak_tag_ids),
+                'reason': f'优先覆盖掌握度低于 {weak_threshold} 的图谱节点',
+            })
+        if frontier_tag_ids:
+            adjustments.append({
+                'rule': 'graph_frontier_nodes',
+                'count': len(frontier_tag_ids),
+                'reason': '优先沿弱节点的父子邻接边向外扩展',
+            })
+        if normalized_round == 'third_round':
+            adjustments.append({
+                'rule': 'graph_bridge_third_round',
+                'reason': '三面偏向跨节点综合判断与深层追问',
+            })
+        adjustments.append({
+            'rule': 'graph_style_route',
+            'style': style_key,
+            'reason': '风格会改变图谱检索偏好：pressure 偏弱点与组合题，teaching 偏基础与邻接，confident 保持均衡',
+        })
+        adjustments.append({
+            'rule': 'graph_round_route',
+            'route_mode': route_mode,
+            'reason': '按轮次推进路线引导选题：一面根节点，二面邻接节点，三面桥接组合题',
+        })
+
+        return {
+            'round_key': normalized_round,
+            'style_key': style_key,
+            'route_mode': route_mode,
+            'weak_tag_ids': weak_tag_ids,
+            'frontier_tag_ids': frontier_tag_ids,
+            'strong_tag_ids': strong_tag_ids,
+            'route_tag_ids': route_tag_ids,
+            'tag_depth_map': tag_depth_map,
+            'tag_boost_map': tag_boost_map,
+            'adjustments': adjustments,
+        }
     
     @staticmethod
     def normalize_tag_name(name):
@@ -261,6 +766,20 @@ class InterviewGraphHelper:
         """
         try:
             resume_data = ResumeService.get_main_resume(user_id)
+            resume_updated_at = (
+                resume_data.get('updatedAt')
+                or resume_data.get('updated_at')
+                or resume_data.get('createdAt')
+                or resume_data.get('created_at')
+                or ''
+            )
+            cache_key = (int(user_id or 0), str(resume_updated_at))
+
+            with InterviewGraphHelper._RESUME_CONTEXT_CACHE_LOCK:
+                cached_summary = InterviewGraphHelper._RESUME_CONTEXT_CACHE.get(cache_key)
+            if cached_summary is not None:
+                return cached_summary[:max_chars]
+
             content = resume_data.get('content', {})
             if not content:
                 return ""
@@ -319,7 +838,10 @@ class InterviewGraphHelper:
             """
             
             # 5. 安全硬截断
-            return resume_text.strip()[:max_chars]
+            resume_text = resume_text.strip()
+            with InterviewGraphHelper._RESUME_CONTEXT_CACHE_LOCK:
+                InterviewGraphHelper._RESUME_CONTEXT_CACHE[cache_key] = resume_text
+            return resume_text[:max_chars]
         
         except Exception as e:
             print(f"简历摘要提取失败: {str(e)}")
@@ -646,6 +1168,23 @@ class InterviewGraphHelper:
                 # 保持与默认策略一致的行为，不做额外动态修正
                 pass
         recent_tag_ids = set(recent_tag_ids or [])
+        resume_skill_names = set()
+        if dynamic_adjust:
+            try:
+                resume_data = ResumeService.get_main_resume(user_id)
+                resume_content = resume_data.get('content', {}) or {}
+                resume_skills = resume_content.get('skills', []) or []
+                for skill_item in resume_skills:
+                    if isinstance(skill_item, dict):
+                        skill_name = skill_item.get('name') or skill_item.get('skill') or skill_item.get('tag')
+                    else:
+                        skill_name = skill_item
+                    skill_name = str(skill_name or '').strip()
+                    if skill_name:
+                        resume_skill_names.add(InterviewGraphHelper.normalize_tag_name(skill_name))
+            except Exception:
+                resume_skill_names = set()
+
         recent_question_ids = set(
             InterviewGraphHelper.get_recent_asked_question_ids(
                 user_id=user_id,
@@ -660,6 +1199,16 @@ class InterviewGraphHelper:
             UserKnowledgeMastery.tag_id.in_(list(tag_map.keys()) or [0])
         ).all() if tag_map else []
         mastery_map = {row.tag_id: row.mastery_level or 0 for row in mastery_rows}
+
+        graph_signals = InterviewGraphHelper._build_graph_rag_signals(
+            tag_map=tag_map,
+            mastery_map=mastery_map,
+            interview_round=interview_round,
+            interview_style=style,
+            recent_tag_ids=recent_tag_ids,
+            dynamic_adjust=dynamic_adjust,
+        )
+        strategy_adjustments.extend(graph_signals.get('adjustments', []))
         
         # 为每个题目计算综合得分并按类型分桶
         by_type = {k: [] for k in type_order}
@@ -674,9 +1223,80 @@ class InterviewGraphHelper:
             mastery_values = [mastery_map.get(tag_id, 0) for tag_id in tag_ids]
             avg_mastery = sum(mastery_values) / len(mastery_values) if mastery_values else 0
             difficulty_key = InterviewGraphHelper._normalize_difficulty(question.difficulty)
+            question_graph_meta = InterviewGraphHelper.build_question_graph_meta(question)
+            inferred_depth = question_graph_meta.get('reference_answer_depth', 1)
+            required_skills_meta = question.required_skills_meta or question_graph_meta.get('required_skills_meta') or {}
+            follow_up_templates = question.follow_up_templates or question_graph_meta.get('follow_up_templates') or []
+            required_skill_names = InterviewGraphHelper._extract_required_skill_names(required_skills_meta)
+            required_skill_count = len(required_skill_names)
+            required_skill_complexity = str((required_skills_meta or {}).get('complexity') or '').strip().lower()
+            graph_boost = 0.0
+            if dynamic_adjust and tag_ids:
+                boost_map = graph_signals.get('tag_boost_map', {})
+                graph_boost = sum(float(boost_map.get(tag_id, 0.0) or 0.0) for tag_id in tag_ids) / len(tag_ids)
+                if len(tag_ids) > 1:
+                    graph_boost += 2.0 * (len(tag_ids) - 1)
+                if graph_signals.get('frontier_tag_ids') and set(tag_ids).intersection(graph_signals['frontier_tag_ids']):
+                    graph_boost += 2.0
+                if graph_signals.get('weak_tag_ids') and set(tag_ids).intersection(graph_signals['weak_tag_ids']):
+                    graph_boost += 2.5
+                route_mode = graph_signals.get('route_mode', 'root')
+                route_tag_ids = graph_signals.get('route_tag_ids') or set()
+                if route_tag_ids and set(tag_ids).intersection(route_tag_ids):
+                    graph_boost += 4.0
+                if route_mode == 'root' and any(graph_signals.get('tag_depth_map', {}).get(tag_id, 1) <= 2 for tag_id in tag_ids):
+                    graph_boost += 1.5
+                elif route_mode == 'adjacent' and any(graph_signals.get('tag_depth_map', {}).get(tag_id, 1) == 2 for tag_id in tag_ids):
+                    graph_boost += 2.0
+                elif route_mode == 'bridge' and len(tag_ids) > 1:
+                    graph_boost += 3.0
+                if graph_signals.get('strong_tag_ids') and graph_signals['round_key'] == 'third_round' and set(tag_ids).intersection(graph_signals['strong_tag_ids']):
+                    graph_boost += 1.0
+
+                style_key = graph_signals.get('style_key', 'confident')
+                if style_key == 'pressure':
+                    if difficulty_key == 'hard':
+                        graph_boost += 5.0
+                    elif difficulty_key == 'medium':
+                        graph_boost += 2.0
+                elif style_key == 'teaching':
+                    if difficulty_key == 'easy':
+                        graph_boost += 4.0
+                    elif difficulty_key == 'medium':
+                        graph_boost += 2.0
+                    elif difficulty_key == 'hard':
+                        graph_boost -= 2.0
+                else:
+                    if difficulty_key == 'medium':
+                        graph_boost += 1.0
+                    if difficulty_key == 'hard' and graph_signals.get('round_key') == 'third_round':
+                        graph_boost += 1.5
+
+                if required_skill_names:
+                    matched_skills = resume_skill_names.intersection({InterviewGraphHelper.normalize_tag_name(name) for name in required_skill_names})
+                    if matched_skills:
+                        graph_boost += min(6.0, len(matched_skills) * 1.8)
+
+                if style_key == 'pressure':
+                    if required_skill_count >= 3:
+                        graph_boost += 2.5
+                    if required_skill_complexity == 'advanced':
+                        graph_boost += 2.0
+                elif style_key == 'teaching':
+                    if required_skill_count <= 2:
+                        graph_boost += 2.5
+                    if required_skill_complexity == 'basic':
+                        graph_boost += 1.5
+                    if required_skill_complexity == 'advanced':
+                        graph_boost -= 1.5
+                else:
+                    if required_skill_count == 2:
+                        graph_boost += 1.0
+                    if required_skill_count >= 3:
+                        graph_boost += 1.5
             
             target_depth = InterviewGraphHelper.estimate_target_depth(avg_mastery)
-            depth = question.reference_answer_depth or 1
+            depth = inferred_depth or 1
             depth_gap = abs(depth - target_depth)
             
             # 基础分: 深度匹配度
@@ -685,6 +1305,9 @@ class InterviewGraphHelper:
             # 完美匹配加分
             if depth == target_depth:
                 score += 20
+
+            # GraphRAG 加权：优先弱节点、前沿节点和跨节点题
+            score += graph_boost
             
             # 最近提问惩罚
             if recent_tag_ids and recent_tag_ids.intersection(tag_ids):
@@ -706,7 +1329,13 @@ class InterviewGraphHelper:
                 'tag_names': [tag.name for tag in question_tags],
                 'avg_mastery': avg_mastery,
                 'target_depth': target_depth,
+                'reference_answer_depth': depth,
+                'required_skills_meta': required_skills_meta,
+                'required_skill_names': required_skill_names,
+                'required_skill_count': required_skill_count,
+                'follow_up_templates': follow_up_templates,
                 'difficulty_key': difficulty_key,
+                'graph_boost': graph_boost,
                 'score': score,
             }
 
@@ -863,6 +1492,10 @@ class InterviewGraphHelper:
                 'question_type': (q.type or '').strip(),
                 'difficulty': item.get('difficulty_key', 'medium'),
                 'source': q.source or '',
+                'reference_answer_depth': item.get('reference_answer_depth', 1),
+                'required_skill_count': item.get('required_skill_count', 0),
+                'required_skills_meta': item.get('required_skills_meta', {}),
+                'follow_up_templates': item.get('follow_up_templates', []),
             })
 
         return {
@@ -871,6 +1504,14 @@ class InterviewGraphHelper:
             'job_role': job_role,
             'selected_questions': selected_final,
             'selected_questions_meta': selected_questions_meta,
+            'graph_rag_meta': {
+                'weak_tag_count': len(graph_signals.get('weak_tag_ids', [])),
+                'frontier_tag_count': len(graph_signals.get('frontier_tag_ids', [])),
+                'strong_tag_count': len(graph_signals.get('strong_tag_ids', [])),
+                'route_tag_count': len(graph_signals.get('route_tag_ids', [])),
+                'route_mode': graph_signals.get('route_mode', 'root'),
+                'round_key': graph_signals.get('round_key', normalized_round),
+            },
             'question_mix': {
                 'target': target_mix_norm,
                 'actual': actual_mix,

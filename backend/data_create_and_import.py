@@ -15,6 +15,7 @@ from app.models.prompt import AiPrompt
 from app.models.learning import KnowledgeTag, Resource
 from app.models.question import Question
 from app.models.example import Example
+from app.services.interview_graph_helper import InterviewGraphHelper
 
 # 知识库基准路径配置 (当前脚本和 FuChuangTiKu 文件夹在同级)
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -405,6 +406,11 @@ def import_knowledge_base():
                         # 遍历关联的学习资源
                         for res in resources:
                             res_title = res.get('name')
+
+                            generated_meta = InterviewGraphHelper.build_question_graph_meta(q)
+                            q.reference_answer_depth = generated_meta.get('reference_answer_depth', 1)
+                            q.required_skills_meta = generated_meta.get('required_skills_meta')
+                            q.follow_up_templates = generated_meta.get('follow_up_templates')
                             res_url = res.get('url')
                             yaml_type = res.get('type')
 

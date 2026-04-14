@@ -17,6 +17,17 @@ from app.utils.llm_client import DeepSeekClient
 
 class InterviewReportGenerator:
     """面试报告生成器"""
+
+    DIMENSION_ALIASES = {
+        '表达沟通力': '表达沟通',
+        '表达能力': '表达沟通',
+        '沟通表达': '表达沟通',
+    }
+
+    @classmethod
+    def _normalize_dimension_name(cls, dim_name):
+        name = str(dim_name or '').strip()
+        return cls.DIMENSION_ALIASES.get(name, name)
     
     @staticmethod
     def finish_interview(interview_id):
@@ -95,7 +106,7 @@ class InterviewReportGenerator:
                     "技术正确性": {{"score": 80, "comment": "评价..."}},
                     "逻辑严谨性": {{"score": 90, "comment": "评价..."}},
                     "岗位匹配度": {{"score": 85, "comment": "评价..."}},
-                    "表达沟通力": {{"score": 80, "comment": "评价..."}},
+                    "表达沟通": {{"score": 80, "comment": "评价..."}},
                     "应变能力": {{"score": 75, "comment": "评价..."}}
                 }},
                 "highlights": "列出面试中表现突出的至少2个亮点",
@@ -163,7 +174,7 @@ class InterviewReportGenerator:
         
         # 8. 写入维度评分表
         for dim_name, dim_data in report_data.get("dimensions", {}).items():
-            dimension = Dimension.query.filter_by(name=dim_name).first()
+            dimension = Dimension.query.filter_by(name=InterviewReportGenerator._normalize_dimension_name(dim_name)).first()
             if dimension:
                 score_record = InterviewScore(
                     interview_id=interview.id,

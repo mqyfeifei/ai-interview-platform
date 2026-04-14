@@ -13,6 +13,12 @@ from app.utils.llm_client import DeepSeekClient
 
 
 class ReportService:
+    DIMENSION_ALIASES = {
+        '表达沟通力': '表达沟通',
+        '表达能力': '表达沟通',
+        '沟通表达': '表达沟通',
+    }
+
     DIMENSION_NAME_TO_KEY = {
         '技术正确性': 'technical',
         '逻辑严谨性': 'logic',
@@ -20,6 +26,11 @@ class ReportService:
         '表达沟通': 'expression',
         '应变能力': 'adaptability'
     }
+
+    @classmethod
+    def _normalize_dimension_name(cls, dim_name):
+        name = str(dim_name or '').strip()
+        return cls.DIMENSION_ALIASES.get(name, name)
 
     _MEANINGLESS_ANSWER_PATTERN = re.compile(
         r'^(好|好的|嗯|嗯嗯|嗯哼|哦|噢|啊|行|可以|是|对|没了|没有了|不知道|ok|okay|yes|no|1|2|3|4|5|6|7|8|9|0|[，。！？、\s]+)$',
@@ -361,7 +372,7 @@ class ReportService:
 
         dimensions = {v: 0 for v in cls.DIMENSION_NAME_TO_KEY.values()}
         for score_obj, dim in scores:
-            key = cls.DIMENSION_NAME_TO_KEY.get(dim.name)
+            key = cls.DIMENSION_NAME_TO_KEY.get(cls._normalize_dimension_name(dim.name))
             if key:
                 dimensions[key] = score_obj.score or 0
         return dimensions
@@ -382,7 +393,7 @@ class ReportService:
 
         avg_dimensions = {v: 65 for v in cls.DIMENSION_NAME_TO_KEY.values()}
         for dim_name, avg_score in rows:
-            key = cls.DIMENSION_NAME_TO_KEY.get(dim_name)
+            key = cls.DIMENSION_NAME_TO_KEY.get(cls._normalize_dimension_name(dim_name))
             if key and avg_score is not None:
                 avg_dimensions[key] = int(round(float(avg_score)))
         return avg_dimensions

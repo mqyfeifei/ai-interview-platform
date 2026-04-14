@@ -200,8 +200,11 @@ ROUND_ALIASES = {
 
 class InterviewSessionManager:
     """面试会话管理器"""
+    _OPENING_GREETING_WAIT_TIMEOUT_SECONDS = float(
+        os.environ.get('OPENING_GREETING_WAIT_TIMEOUT_SECONDS', '2.5')
+    )
     _OPENING_TTS_WAIT_TIMEOUT_SECONDS = float(
-        os.environ.get('OPENING_TTS_WAIT_TIMEOUT_SECONDS', '20.0')
+        os.environ.get('OPENING_TTS_WAIT_TIMEOUT_SECONDS', '3.0')
     )
     
     # === 多样化开场白池 ===
@@ -214,23 +217,23 @@ class InterviewSessionManager:
 
     _ROUND_OPENING_PREFIXES = {
         'first_round': [
-            '欢迎来到一面，我们先轻松聊聊，看看你的基础怎么样。',
-            '这一轮先别紧张，我先从基础和表达这两块开始问你。',
+            '欢迎来到一面，咱们先从基础概念和主干逻辑聊起。',
+            '这一轮我先看你最基础的部分，咱们慢慢展开。',
         ],
         'second_round': [
-            '欢迎来到二面，我们重点聊聊项目、思路和你是怎么做取舍的。',
-            '这一轮会更深入一点，我想多听听你做项目时的真实想法。',
+            '欢迎来到二面，这一轮我会围绕关联概念和实际项目细聊。',
+            '这一轮会往相邻知识点和方案取舍上多问一点。',
         ],
         'third_round': [
-            '来到三面了，这一轮我会更像真实业务场景那样追问一些。',
-            '这一轮我们会往深一点聊，重点看你怎么拆问题和做判断。',
+            '来到三面了，这一轮我会把几个知识点串起来一起问。',
+            '这一轮会更像业务评审，我们重点看你怎么综合判断。',
         ],
     }
 
     _STYLE_OPENING_SUFFIXES = {
-        'pressure': '我会追问得快一点、深一点，你尽量把思路讲清楚。',
-        'confident': '咱们按真实面试来，你可以先说结论，再补一句理由。',
-        'teaching': '你要是卡住，我会稍微带一下，但还是会继续考察核心能力。',
+        'pressure': '我会追问得快一点、直接一点，你尽量把思路讲清楚。',
+        'confident': '咱们按正常面试来，你先说结论，我再顺着问。',
+        'teaching': '你要是卡住，我会稍微带一下，再继续往下问。',
     }
 
     _FOCUS_OPENING_TEMPLATES = [
@@ -242,7 +245,7 @@ class InterviewSessionManager:
     _BRIDGE_OPENING_TEMPLATES = [
         '我先问个小问题，咱们慢慢展开。',
         '先看你的思路，再往细里聊。',
-        '先热个身，然后我再继续往下追问。',
+        '我先热个身，然后再继续往下追问。',
     ]
 
     _ROUND_LABELS = {
@@ -671,7 +674,8 @@ class InterviewSessionManager:
         )
         if picked:
             return picked
-        fallback_pool = [base_greeting] + InterviewSessionManager._DIVERSE_GREETING_FALLBACKS
+        fallback_pool = [base_greeting] if base_greeting else []
+        fallback_pool.extend(InterviewSessionManager._DIVERSE_GREETING_FALLBACKS)
         idx = int(interview_id or 0) % len(fallback_pool)
         return fallback_pool[idx]
     
@@ -815,7 +819,7 @@ class InterviewSessionManager:
 
         # 4. 动态获取角色设定与提示词
         prompt_config = AiPrompt.query.filter_by(job_id=job_id, is_active=True).first()
-        base_greeting = prompt_config.greeting_message if prompt_config else "你好，我们开始面试吧。"
+        base_greeting = prompt_config.greeting_message if prompt_config else ''
         base_greeting = InterviewSessionManager.align_round_greeting(
             base_greeting,
             session_payload.get('interview_round', 'first_round'),
@@ -824,6 +828,19 @@ class InterviewSessionManager:
             job_id,
             session_payload.get('interview_round', 'first_round'),
         )
+        if not base_greeting:
+            round_key = session_payload.get('interview_round', 'first_round')
+            round_prefix_pool = InterviewSessionManager._ROUND_OPENING_PREFIXES.get(
+                ROUND_ALIASES.get(str(round_key).strip().lower() if round_key is not None else '', 'first_round'),
+                InterviewSessionManager._ROUND_OPENING_PREFIXES['first_round'],
+            )
+            round_focus_text = round_strategy.get('focus', '基础能力与表达清晰度')
+            base_greeting = round_prefix_pool[0] if round_prefix_pool else '咱们先从基础能力聊起。'
+            base_greeting = InterviewSessionManager.apply_conversational_tone(
+                f"{base_greeting}本轮重点看：{round_focus_text}。",
+                interview_style=session_payload.get('interview_style', 'confident'),
+                voice_mode=voice_mode,
+            )
         round_focus = round_strategy.get('focus', '')
         greeting = InterviewSessionManager.build_fallback_greeting(
             base_greeting,
@@ -843,7 +860,7 @@ class InterviewSessionManager:
         )
         
         # 5. 结合简历生成个性化开场白
-        tts_voice = InterviewTTSHelper.get_tts_voice(prompt_config, voice)
+        tts_voice = InterviewTTSHelper.get_tts_voice(prompt_config, voice) if voice_mode else None
         greeting_audio_b64 = None
         
         if not is_resume_empty:
@@ -871,11 +888,22 @@ class InterviewSessionManager:
                     seed=interview.id,
                 )
                 
-                response = llm.generate_reply([
-                    {'role': 'system', 'content': sys_msg},
-                ], temperature=greeting_temp)
-                
-                personalized_greeting = response.strip()
+                personalized_greeting = None
+                try:
+                    with ThreadPoolExecutor(max_workers=1) as greeting_executor:
+                        future = greeting_executor.submit(
+                            llm.generate_reply,
+                            [{'role': 'system', 'content': sys_msg}],
+                            temperature=greeting_temp,
+                        )
+                        response = future.result(timeout=InterviewSessionManager._OPENING_GREETING_WAIT_TIMEOUT_SECONDS)
+                    personalized_greeting = (response or '').strip()
+                except FutureTimeoutError:
+                    print(
+                        f"[开场白生成] 等待超时（{InterviewSessionManager._OPENING_GREETING_WAIT_TIMEOUT_SECONDS:.1f}s），"
+                        "直接使用兜底开场白。"
+                    )
+
                 if personalized_greeting and len(personalized_greeting) > 10:
                     if InterviewSessionManager._is_opening_similar(personalized_greeting, recent_openings):
                         greeting = InterviewSessionManager.build_fallback_greeting(
@@ -895,37 +923,38 @@ class InterviewSessionManager:
             except Exception as e:
                 print(f"个性化开场白生成失败，使用默认开场白: {str(e)}")
         
-        # 6. 异步TTS合成开场白音频
-        speak_text = InterviewTTSHelper.strip_stream_control_tokens(greeting)
-        if speak_text:
-            def async_tts_task():
-                return InterviewTTSHelper.synthesize_audio_async(
-                    speak_text,
-                    tts_voice,
-                    'mp3'
-                )
-
-            timeout_seconds = max(0.5, InterviewSessionManager._OPENING_TTS_WAIT_TIMEOUT_SECONDS)
-            try:
-                # 开场白与流式回答共用全局队列会互相阻塞，这里使用独立执行器避免排队导致“先超时后成功”。
-                with ThreadPoolExecutor(max_workers=1) as opening_tts_executor:
-                    future = opening_tts_executor.submit(async_tts_task)
-                    audio_bytes = future.result(timeout=timeout_seconds)
-                if audio_bytes:
-                    greeting_audio_b64 = bytes_to_b64(audio_bytes)
-                    print(
-                        f"[开场白 TTS] {timeout_seconds:.1f}秒内合成成功，"
-                        f"音频大小={len(audio_bytes)} bytes"
+        # 6. 仅在语音面试时合成开场白音频
+        if voice_mode:
+            speak_text = InterviewTTSHelper.strip_stream_control_tokens(greeting)
+            if speak_text:
+                def async_tts_task():
+                    return InterviewTTSHelper.synthesize_audio_async(
+                        speak_text,
+                        tts_voice,
+                        'mp3'
                     )
-                else:
-                    print(f"[开场白 TTS] 合成返回空数据")
-            except FutureTimeoutError:
-                print(
-                    f"[开场白 TTS] 等待超时（{timeout_seconds:.1f}s），"
-                    "本次响应不携带开场白音频。"
-                )
-            except Exception as e:
-                print(f"[开场白 TTS] 异步合成异常: {type(e).__name__}: {e}")
+
+                timeout_seconds = max(0.5, InterviewSessionManager._OPENING_TTS_WAIT_TIMEOUT_SECONDS)
+                try:
+                    # 开场白与流式回答共用全局队列会互相阻塞，这里使用独立执行器避免排队导致“先超时后成功”。
+                    with ThreadPoolExecutor(max_workers=1) as opening_tts_executor:
+                        future = opening_tts_executor.submit(async_tts_task)
+                        audio_bytes = future.result(timeout=timeout_seconds)
+                    if audio_bytes:
+                        greeting_audio_b64 = bytes_to_b64(audio_bytes)
+                        print(
+                            f"[开场白 TTS] {timeout_seconds:.1f}秒内合成成功，"
+                            f"音频大小={len(audio_bytes)} bytes"
+                        )
+                    else:
+                        print(f"[开场白 TTS] 合成返回空数据")
+                except FutureTimeoutError:
+                    print(
+                        f"[开场白 TTS] 等待超时（{timeout_seconds:.1f}s），"
+                        "本次响应不携带开场白音频。"
+                    )
+                except Exception as e:
+                    print(f"[开场白 TTS] 异步合成异常: {type(e).__name__}: {e}")
         
         # 7. 保存开场白到聊天记录
         ai_chat = InterviewChat(
