@@ -940,8 +940,7 @@ export default {
           //   // 其他相对路径（如数据库存的 "job_icon/frontend.png"），直接拼到 /resourcesKu/ 下
           //   return '/resourcesKu/' + norm.replace(/^\.?\//, '')
           // })(j.icon_url),
-          iconUrl: "public/favicon.ico",
-          // iconUrl: '@/assets/backgroundA.jpg',
+          iconUrl: j.icon_url || null,
           icon: j.icon || '💼',
           level: j.level || '',
           avg_score: avgMap[j.id] != null ? avgMap[j.id] : (j.avg_score || 0),
