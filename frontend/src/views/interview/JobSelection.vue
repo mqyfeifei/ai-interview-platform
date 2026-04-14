@@ -125,7 +125,7 @@
                 </div>
                 <p v-if="job.description" class="job-row__desc">{{ job.description }}</p>
                 <div v-if="Array.isArray(job.techStack) && job.techStack.length" class="job-row__stack">
-                  <span v-for="tech in job.techStack.slice(0, 4)" :key="tech" class="stack-tag">{{ tech }}</span>
+                  <span v-for="tech in job.techStack.slice(0, 5)" :key="tech" class="stack-tag">{{ tech }}</span>
                 </div>
               </div>
 
@@ -928,7 +928,20 @@ export default {
         jobs = (jobs || []).map(j => ({
           ...j,
           techStack: j.tech_stack || [],
-          iconUrl: j.icon_url || null,
+          // iconUrl: (function(src) {
+          //   if (!src) return '/resourcesKu/job_icon/backend.png'
+          //   // 已经是绝对 URL 或以 '/' 开头，直接使用
+          //   if (/^(\/|https?:\/\/)/.test(src)) return src
+          //   // 规范化斜杠
+          //   const norm = src.replace(/\\\\/g, '/').replace(/\\/g, '/')
+          //   // 路径中含 resourcesKu，截取 resourcesKu/ 开始的部分
+          //   const mRes = norm.match(/resourcesKu\/(.+)$/)
+          //   if (mRes) return '/resourcesKu/' + mRes[1]
+          //   // 其他相对路径（如数据库存的 "job_icon/frontend.png"），直接拼到 /resourcesKu/ 下
+          //   return '/resourcesKu/' + norm.replace(/^\.?\//, '')
+          // })(j.icon_url),
+          iconUrl: "public/favicon.ico",
+          // iconUrl: '@/assets/backgroundA.jpg',
           icon: j.icon || '💼',
           level: j.level || '',
           avg_score: avgMap[j.id] != null ? avgMap[j.id] : (j.avg_score || 0),

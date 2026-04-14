@@ -268,8 +268,24 @@ frontend/src/views/system/ResumeBuilder.vue
         <!-- 技能特长 -->
         <section class="section-config" v-else-if="activeSection === 'skills'">
           <h3>技能特长</h3>
+
+          <!-- 岗位技术栈快速导入提示（仅当有关联岗位且技术栈不为空时显示） -->
+          <div v-if="currentJobTechStack.length > 0" class="skill-hint">
+            <span class="skill-hint__label">📌 可从下拉中选择岗位技术栈，也可手动输入</span>
+          </div>
+
+          <!-- datalist：定义下拉候选项 -->
+          <datalist id="tech-stack-options">
+            <option v-for="tech in currentJobTechStack" :key="tech" :value="tech" />
+          </datalist>
+
           <div class="skill-row" v-for="(item, idx) in skills" :key="item.id">
-            <input v-model="item.name" placeholder="熟练掌握该项技术" maxlength="40" />
+            <input
+              v-model="item.name"
+              list="tech-stack-options"
+              placeholder="熟练掌握该项技术，或从列表选择"
+              maxlength="40"
+            />
             <button class="btn-danger" @click="removeSkill(idx)">-</button>
             <button class="btn-success" @click="addSkillAt(idx)">+</button>
           </div>
@@ -775,6 +791,12 @@ export default {
       if (qualifies(campus) || qualifies(interns)) score += 3
 
       return Math.round((score / total) * 100)
+    },
+
+    currentJobTechStack() {
+      if (!this.currentJobId || !this.allJobs.length) return []
+      const job = this.allJobs.find(j => j.id === this.currentJobId)
+      return (job && Array.isArray(job.tech_stack)) ? job.tech_stack : []
     },
 
     currentResume() {
@@ -2046,5 +2068,17 @@ export default {
 .input-required:focus {
   border-color: #ef4444 !important;
   box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.15);
+}
+
+.skill-hint {
+  margin-bottom: 8px;
+  font-size: 12px;
+  color: #6b7280;
+}
+.skill-hint__label {
+  background: #f0f4ff;
+  border-radius: 4px;
+  padding: 3px 8px;
+  border: 1px solid #e0e7ff;
 }
 </style>
