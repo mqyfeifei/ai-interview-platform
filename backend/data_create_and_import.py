@@ -290,6 +290,34 @@ def run_job_m2m_backfill(reset=False):
         print("⚠️ 未找到关联回填脚本，跳过")
 
 
+def update_job_tech_stack_and_icon():
+    """更新 jobs 表的技术栈和图标地址"""
+    print("\n" + "="*60)
+    print("🖼️ 步骤 6/6: 正在更新岗位技术栈和图标...")
+    print("="*60)
+    try:
+        # 遍历默认岗位
+        for job_key, job_info in DEFAULT_JOBS.items():
+            # 查找对应的岗位记录
+            job = Job.query.filter_by(name=job_info['name']).first()
+            if job:
+                # 更新技术栈和图标地址
+                job.tech_stack = job_info.get('tech_stack')
+                job.icon_url = job_info.get('icon_url')
+                # 同时更新description字段
+                job.description = job_info.get('desc')
+                print(f"  ✅ 更新岗位: {job.name} - 技术栈: {job.tech_stack}, 图标: {job.icon_url}")
+            else:
+                print(f"  ⚠️ 未找到岗位: {job_info['name']}")
+        
+        # 提交事务
+        db.session.commit()
+        print("✅ 岗位技术栈和图标更新完成！")
+    except Exception as e:
+        print(f"❌ 更新失败: {str(e)}")
+        db.session.rollback()
+
+
 def import_knowledge_base():
     app = create_app('development')
 
@@ -514,6 +542,9 @@ def import_knowledge_base():
         
         # 9. 回填岗位-题目关联
         run_job_m2m_backfill(reset=True)
+        
+        # 10. 更新岗位技术栈和图标
+        update_job_tech_stack_and_icon()
 
         print("\n" + "="*60)
         print("🎉 知识库自动化构建全部完成！")
@@ -522,6 +553,7 @@ def import_knowledge_base():
         print("   ✅ 提示词配置已完成")
         print("   ✅ 图谱元数据已回填")
         print("   ✅ 岗位-题目关联已建立")
+        print("   ✅ 岗位技术栈和图标已更新")
         print("="*60)
 
 
