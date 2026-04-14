@@ -377,6 +377,7 @@ const actions = {
         jobDbId: state.jobDbId,     // 传给后端的 job_id（数字）
         resumeId: state.resumeId,   // 传给后端的 resume_id
         profileId: state.selectedProfileId,
+        interviewRound: state.selectedProfileConfig?.interview_round,
         sessionConfig: state.selectedProfileConfig,
         voiceMode: state.voiceMode,
         interviewStyle: state.interviewStyle,

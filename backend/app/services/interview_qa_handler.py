@@ -167,7 +167,29 @@ class InterviewQAHandler:
             interview.user_id,
             limit=6,
             recent_tag_ids=recent_tag_ids,
+            interview_round=session_round,
         )
+
+        # 兼容旧格式(list)和阶段二新格式(dict)
+        fallback_applied = False
+        fallback_detail = []
+        round_focus = ''
+        if isinstance(assigned_result, dict):
+            assigned_questions = assigned_result.get('selected_questions', [])
+            fallback_applied = bool(assigned_result.get('fallback_applied', False))
+            fallback_detail = assigned_result.get('fallback_detail', []) or []
+            round_focus = assigned_result.get('round_focus', '') or ''
+        else:
+            assigned_questions = assigned_result or []
+
+        if fallback_applied:
+            current_app.logger.info(
+                '[InterviewFallback] interview_id=%s round=%s job_id=%s detail=%s',
+                interview.id,
+                session_round,
+                interview.job_id,
+                json.dumps(fallback_detail, ensure_ascii=False),
+            )
         
         # 选择多样化候选题
         from app.services.interview_session_manager import InterviewSessionManager
@@ -257,6 +279,9 @@ class InterviewQAHandler:
             'confident': '自信面：保持鼓励式追问，兼顾基础与应用，适度深挖但避免持续施压。',
         }
         style_prompt = style_prompt_map.get(session_style, style_prompt_map['confident'])
+        assigned_question_prompt = '\n'.join(assigned_question_lines) if assigned_question_lines else '暂无候选题'
+        round_focus_prompt = round_focus or '本轮重点：综合考察候选人的基础能力、问题拆解与表达清晰度。'
+        user_answer_evidence = normalized_answer or ''
         # 风格 + 轮次的复合行为约束
         deep_dive_instruction = ''
         if session_style == 'pressure':
@@ -289,6 +314,13 @@ class InterviewQAHandler:
             如果你在上述"候选人简历摘要"中看到了相关的项目和技能，请尽量结合 TA 的实际过往经历进行提问
             （例如："你在 X 公司的 Y 项目中用到了 Z 技术，能具体说说..."）。
             如果简历为空，则直接进入常规提问。
+
+                        【事实一致性约束（必须遵守）】：
+                        - 不允许凭空说“你提到了XXX”或“你刚刚说了XXX”。
+                        - 只有当下方“用户本轮原话”中明确出现某术语，才可使用“你提到/你刚才说”的表达。
+                        - 若术语未在原话中出现，请改成中性表达：
+                            例如“你有 React 项目经验，我们聊聊调度机制/Fiber”。
+                        用户本轮原话："{user_answer_evidence}"
             
             【GraphRAG 图谱追问策略】：
             以下是候选人的知识点掌握度画像：{mastery_profile_str}。
@@ -302,6 +334,7 @@ class InterviewQAHandler:
             避免连续两轮围绕完全相同的知识点提问，优先切换到同层相邻节点或同岗位另一核心能力点。
             
             【面试提问大纲约束】：
+            本轮考察重点：{round_focus_prompt}
             为了保证面试的标准化，请 **严格** 围绕以下"面试大纲"中的知识点向候选人提问。
             - 每次提问请挑选 1 个具体的知识点进行深入考察。
             - 请不要提出大纲范围之外（天马行空）的技术问题。
@@ -322,6 +355,7 @@ class InterviewQAHandler:
                     f"参考题目：{related_question.content}。"
                     f"参考答案要点：{related_question.reference_answer}。"
                     f"请围绕此知识点对候选人进行专业追问。"
+                    f"不要声称候选人已经提到该知识点，除非其原话中明确出现该术语。"
                 )
             })
         
@@ -482,6 +516,52 @@ class InterviewQAHandler:
 
         # 6. 流式处理模型输出
         for chunk in response_stream:
+            content = chunk.choices[0].delta.content
+            if content:
+                for display_chunk in InterviewTTSHelper.split_stream_display_chunks(content):
+                    full_reply += display_chunk
+                    sentence_buffer += display_chunk
+                    
+                    # 初始化准备传给前端的payload
+                    payload = {'chunk': display_chunk}
+                    # 附带元信息，方便前端展示当前轮次与题型
+                    try:
+                        payload['meta'] = {
+                            'round': int(round_index),
+                            'question_type': getattr(related_question, 'type', None) if related_question else None
+                        }
+                    except Exception:
+                        payload['meta'] = {'round': round_index, 'question_type': None}
+                    
+                    # 提取完整句并异步合成
+                    if voice_mode:
+                        ready_segments, sentence_buffer = InterviewTTSHelper.extract_ready_tts_segments(sentence_buffer)
+                        for segment in ready_segments:
+                            submit_tts_segment(segment)
+                    
+                    # 将已经完成的异步TTS结果转入发送队列
+                    flush_ready_tts_futures()
+                    
+                    # 检查是否有已完成的TTS音频需要发送
+                    try:
+                        audio_b64_from_queue = audio_queue.get_nowait()
+                        payload['audio_b64'] = audio_b64_from_queue
+                        sent_audio_packets += 1
+                    except queue.Empty:
+                        pass
+                    
+                    # 立即发送文字chunk（如果有音频，会一起发送）
+                    yield f"data: {json.dumps(payload, ensure_ascii=False)}\n\n"
+                    
+                    # 继续非阻塞清空队列，避免已完成音频在队列中堆积到流末尾才发送
+                    while True:
+                        try:
+                            extra_audio_b64 = audio_queue.get_nowait()
+                            yield f"data: {json.dumps({'chunk': '', 'audio_b64': extra_audio_b64}, ensure_ascii=False)}\n\n"
+                            sent_audio_packets += 1
+                        except queue.Empty:
+                            break
+
             # 支持多种 response_stream 格式：
             # 1) LLM stream object with chunk.choices[0].delta.content
             # 2) plain string chunks (CoEM streaming generator yields strings)
@@ -514,15 +594,6 @@ class InterviewQAHandler:
 
                 # 初始化准备传给前端的payload
                 payload = {'chunk': display_chunk}
-                
-                # 附带元信息，方便前端展示当前轮次与题型
-                try:
-                    payload['meta'] = {
-                        'round': int(round_index),
-                        'question_type': getattr(related_question, 'type', None) if related_question else None
-                    }
-                except Exception:
-                    payload['meta'] = {'round': round_index, 'question_type': None}
 
                 # 提取完整句并异步合成
                 if voice_mode:
@@ -543,15 +614,6 @@ class InterviewQAHandler:
 
                 # 立即发送文字chunk（如果有音频，会一起发送）
                 yield f"data: {json.dumps(payload, ensure_ascii=False)}\n\n"
-
-                # 继续非阻塞清空队列，避免已完成音频在队列中堆积到流末尾才发送
-                while True:
-                    try:
-                        extra_audio_b64 = audio_queue.get_nowait()
-                        yield f"data: {json.dumps({'chunk': '', 'audio_b64': extra_audio_b64}, ensure_ascii=False)}\n\n"
-                        sent_audio_packets += 1
-                    except queue.Empty:
-                        break
 
         # 7. 处理剩余的尾句
         if voice_mode and sentence_buffer:

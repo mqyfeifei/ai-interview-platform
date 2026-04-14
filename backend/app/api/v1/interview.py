@@ -64,9 +64,11 @@ def start_interview():
     voice_mode = bool(data.get('voice_mode', False))
 
     interview_style = data.get('interview_style')
+    interview_round = data.get('interview_round')
     voice_role = data.get('voice_role')
-    voice = (data.get('voice') or '').strip() or None
-
+    voice_raw = data.get('voice')
+    voice = str(voice_raw).strip() if voice_raw is not None else None
+    voice = voice if voice else None
 
     # 参数验证
     if not user_id:
@@ -93,6 +95,8 @@ def start_interview():
                 return jsonify({"code": 400, "msg": "无效的面试套餐 profile_id"}), 400
             if profile.job_id != job_id:
                 return jsonify({"code": 400, "msg": "所选面试套餐与岗位不匹配"}), 400
+            if interview_round is None and profile.round is not None:
+                interview_round = profile.round
 
         # 后端最终校验：确保选中岗位与简历满足面试要求（若不满足则拒绝启动面试）
         try:
@@ -113,6 +117,7 @@ def start_interview():
             job_id,
             voice_mode=voice_mode,
             interview_style=interview_style,
+            interview_round=interview_round,
             voice_role=voice_role,
             voice=voice,
             profile_id=profile_id,
@@ -223,7 +228,9 @@ def chat_stream(interview_id):
     data = request.get_json() or {}
     user_answer = data.get('answer')
     voice_mode = bool(data.get('voice_mode', False))
-    voice = (data.get('voice') or '').strip() or None
+    voice_raw = data.get('voice')
+    voice = str(voice_raw).strip() if voice_raw is not None else None
+    voice = voice if voice else None
 
     def _event_stream():
         # 首包心跳：帮助代理和浏览器尽早建立流式渲染通道。
@@ -312,9 +319,11 @@ def voice_chat_stream(interview_id):
     """
     data = request.get_json() or {}
     user_answer = data.get('answer')
-    voice = (data.get('voice') or '').strip() or None
+    voice_raw = data.get('voice')
+    voice = str(voice_raw).strip() if voice_raw is not None else None
+    voice = voice if voice else None
     
-    if not user_answer or not user_answer.strip():
+    if not user_answer or not str(user_answer).strip():
         return jsonify({"code": 400, "msg": "回答内容不能为空"}), 400
 
     def _event_stream():
@@ -356,8 +365,4 @@ def finish_interview(interview_id):
         result = InterviewService.finish_interview(interview_id)
         return jsonify({"code": 200, "data": result, "msg": "success"}), 200
     except Exception as e:
-        import traceback
-        error_detail = traceback.format_exc()
-        print(f"[ERROR] 面试报告生成失败 (interview_id={interview_id}):")
-        print(error_detail)
-        return jsonify({"code": 500, "msg": f"报告生成失败: {str(e)}"}), 500
+        return jsonify({"code": 500, "msg": "报告生成失败，请稍后重试"}), 500

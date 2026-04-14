@@ -1,4 +1,4 @@
-<!--
+﻿<!--
   =============================================
   frontend/src/views/interview/JobSelection.vue
   岗位选择页 — 双栏重构版
@@ -1306,6 +1306,7 @@ export default {
           this.$store.commit('interview/SET_SELECTED_PROFILE_ID', this.selectedProfile.id)
           this.$store.commit('interview/SET_SELECTED_PROFILE_CONFIG', {
             profile_id: this.selectedProfile.id,
+            interview_round: this.selectedRound,
             interviewer_style: this.selectedProfile.interviewer_style,
             tech_ratio: this.selectedProfile.technique_percentage,
             scenario_ratio: this.selectedProfile.scenario_percentage,

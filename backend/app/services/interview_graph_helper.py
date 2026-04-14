@@ -5,6 +5,7 @@
 """
 
 import re
+import math
 from datetime import datetime
 from difflib import SequenceMatcher
 
@@ -12,7 +13,7 @@ from app.extensions import db
 from app.models.learning import KnowledgeTag, UserKnowledgeMastery
 from app.models.question import Question
 from app.models.job import Job
-from app.models.interview import InterviewChat
+from app.models.interview import Interview, InterviewChat
 from app.services.resume_service import ResumeService
 
 
@@ -41,6 +42,59 @@ class InterviewGraphHelper:
         'proficient': 80,
         'expert': 90,
     }
+
+    # 题型降级优先级（类型不足时按顺序回退）
+    _TYPE_FALLBACK_CHAIN = {
+        'technical': ['scenario_design', 'project_deep_dive', 'behavioral'],
+        'project_deep_dive': ['scenario_design', 'technical', 'behavioral'],
+        'scenario_design': ['technical', 'project_deep_dive', 'behavioral'],
+        'behavioral': ['project_deep_dive', 'scenario_design', 'technical'],
+    }
+
+    @staticmethod
+    def _is_project_experience_sparse(user_id, resume_context_text=''):
+        """判断简历项目经历是否缺失或过于稀疏。"""
+        try:
+            resume_data = ResumeService.get_main_resume(user_id)
+            content = resume_data.get('content', {}) or {}
+
+            projects = content.get('projects', []) or content.get('projectExperiences', []) or []
+            works = content.get('workExperiences', []) or []
+            interns = content.get('internshipExperiences', []) or []
+
+            # 显式项目优先
+            if isinstance(projects, list) and projects:
+                joined = ' '.join(
+                    [
+                        str(item.get('name', '')) + ' ' + str(item.get('description', ''))
+                        if isinstance(item, dict) else str(item)
+                        for item in projects
+                    ]
+                ).strip()
+                return len(joined) < 30
+
+            # 没有 projects 时，用工作/实习经历文本近似判断
+            exp_text = []
+            for exp in (works + interns):
+                if isinstance(exp, dict):
+                    exp_text.append(str(exp.get('description', '') or ''))
+                    exp_text.append(str(exp.get('achievements', '') or ''))
+                else:
+                    exp_text.append(str(exp))
+            joined_exp = ' '.join(exp_text).strip()
+            if joined_exp:
+                return len(joined_exp) < 40
+
+            # 再兜底到摘要文本
+            compact = (resume_context_text or '').strip()
+            if not compact:
+                return True
+            if '近期经历' in compact and '未填写' in compact:
+                return True
+            return len(compact) < 80
+        except Exception:
+            # 读取简历失败时不做激进判定，避免误伤
+            return False
     
     @staticmethod
     def normalize_tag_name(name):
@@ -191,10 +245,11 @@ class InterviewGraphHelper:
         aligned = []
         for skill in resume_skills_list:
             if isinstance(skill, dict):
-                raw_name = (skill.get('name') or skill.get('skill') or skill.get('tag') or '').strip()
+                raw_name_val = skill.get('name') or skill.get('skill') or skill.get('tag')
+                raw_name = str(raw_name_val).strip() if raw_name_val is not None else ''
             else:
                 raw_name = str(skill).strip()
-            
+
             if not raw_name:
                 continue
             
@@ -346,31 +401,80 @@ class InterviewGraphHelper:
         return 1
     
     @staticmethod
-    def assign_questions(job_id, user_id, limit=5, recent_tag_ids=None):
+    def assign_questions(job_id, user_id, limit=5, recent_tag_ids=None, interview_round='first_round'):
         """
-        为用户智能分配面试题目
+        为用户智能分配面试题目（轮次策略驱动）
         
-        评分策略:
-        1. 深度匹配度(主要权重)
-        2. 掌握度加成
-        3. 最近提问惩罚(避免重复)
+        分发策略:
+        1. 根据岗位与轮次加载 target_mix / focus
+        2. 按类型分桶计算目标数量
+        3. 在岗位图谱题池中按分数选题
+        4. 某类型不足时按降级链路回退并记录明细
         
         Args:
             job_id: 岗位ID
             user_id: 用户ID
             limit: 返回题目数量
             recent_tag_ids: 最近提问的标签ID列表
+            interview_round: 面试轮次(first_round/second_round/third_round)
             
         Returns:
-            list: 排序后的题目标记列表
+            dict: {
+                selected_questions: list,
+                fallback_applied: bool,
+                fallback_detail: list,
+                round_focus: str,
+            }
         """
+        from app.services.interview_session_manager import InterviewSessionManager
+
         questions, tag_map = InterviewGraphHelper.get_job_graph_snapshot(job_id)
-        
-        if not questions:
-            return []
+
+        strategy = InterviewSessionManager.get_round_strategy(job_id, interview_round)
+        target_mix = dict(strategy.get('target_mix') or {})
+        round_focus = strategy.get('focus', '')
+
+        if not questions or limit <= 0:
+            return {
+                'selected_questions': [],
+                'question_mix': {
+                    'target': {},
+                    'actual': {},
+                },
+                'fallback_applied': False,
+                'fallback_detail': [],
+                'round_focus': round_focus,
+            }
+
+        # 保障四类题型键存在
+        type_order = ['technical', 'project_deep_dive', 'scenario_design', 'behavioral']
+        for q_type in type_order:
+            target_mix.setdefault(q_type, 0.0)
+
+        # 阶段三：简历感知前置拦截
+        # 若项目经历缺失/稀疏，则将 project_deep_dive 权重按 6:4 分配给 scenario_design/technical。
+        resume_context = InterviewGraphHelper.extract_resume_context(user_id)
+        project_ratio = float(target_mix.get('project_deep_dive', 0.0) or 0.0)
+        if project_ratio > 0 and InterviewGraphHelper._is_project_experience_sparse(user_id, resume_context):
+            target_mix['project_deep_dive'] = 0.0
+            target_mix['scenario_design'] = float(target_mix.get('scenario_design', 0.0)) + project_ratio * 0.6
+            target_mix['technical'] = float(target_mix.get('technical', 0.0)) + project_ratio * 0.4
+
+            # 归一化，避免浮点叠加后总和偏离1
+            total = sum(float(target_mix.get(k, 0.0) or 0.0) for k in type_order)
+            if total > 0:
+                for k in type_order:
+                    target_mix[k] = float(target_mix.get(k, 0.0) or 0.0) / total
         
         recent_tag_ids = set(recent_tag_ids or [])
-        
+        recent_question_ids = set(
+            InterviewGraphHelper.get_recent_asked_question_ids(
+                user_id=user_id,
+                job_id=job_id,
+                lookback_limit=max(30, int(limit) * 8),
+            )
+        )
+
         # 获取用户对各标签的掌握度
         mastery_rows = UserKnowledgeMastery.query.filter(
             UserKnowledgeMastery.user_id == user_id,
@@ -378,9 +482,14 @@ class InterviewGraphHelper:
         ).all() if tag_map else []
         mastery_map = {row.tag_id: row.mastery_level or 0 for row in mastery_rows}
         
-        # 为每个题目计算综合得分
+        # 为每个题目计算综合得分并按类型分桶
+        by_type = {k: [] for k in type_order}
         ranked = []
-        for question in questions:
+        preferred_questions = [q for q in questions if q.id not in recent_question_ids]
+        # 若去重后候选过少，保留全量题池并施加强惩罚，避免无题可选
+        question_pool = preferred_questions if len(preferred_questions) >= max(2, min(limit, 3)) else questions
+
+        for question in question_pool:
             question_tags = list(question.knowledge_tags or [])
             tag_ids = [tag.id for tag in question_tags]
             mastery_values = [mastery_map.get(tag_id, 0) for tag_id in tag_ids]
@@ -402,19 +511,136 @@ class InterviewGraphHelper:
                 score -= 35
             elif recent_tag_ids:
                 score -= 8
+
+            # 跨场次去重惩罚：同用户同岗位近期问过的题目大幅降权
+            if question.id in recent_question_ids:
+                score -= 55
             
-            ranked.append({
+            item = {
                 'question': question,
                 'tag_ids': tag_ids,
                 'tag_names': [tag.name for tag in question_tags],
                 'avg_mastery': avg_mastery,
                 'target_depth': target_depth,
                 'score': score,
-            })
-        
+            }
+
+            ranked.append(item)
+            q_type = (question.type or '').strip()
+            if q_type in by_type:
+                by_type[q_type].append(item)
+
         # 按得分降序排列
         ranked.sort(key=lambda item: (-item['score'], -item['avg_mastery'], item['question'].id))
-        return ranked[:limit]
+        for q_type in by_type:
+            by_type[q_type].sort(key=lambda item: (-item['score'], -item['avg_mastery'], item['question'].id))
+
+        # 按 target_mix 计算每个题型目标数量（总和严格等于 limit）
+        raw_targets = {q_type: float(target_mix.get(q_type, 0.0)) * int(limit) for q_type in type_order}
+        desired_counts = {q_type: int(math.floor(raw_targets[q_type])) for q_type in type_order}
+        remained = int(limit) - sum(desired_counts.values())
+        if remained > 0:
+            # 将余数分配给小数部分最大的题型
+            residues = sorted(
+                type_order,
+                key=lambda t: (raw_targets[t] - desired_counts[t], raw_targets[t]),
+                reverse=True,
+            )
+            for idx in range(remained):
+                desired_counts[residues[idx % len(residues)]] += 1
+
+        selected = []
+        selected_question_ids = set()
+        fallback_detail = []
+
+        def _pick_from_type(q_type, need_count):
+            picked = []
+            if need_count <= 0:
+                return picked
+
+            for candidate in by_type.get(q_type, []):
+                qid = candidate['question'].id
+                if qid in selected_question_ids:
+                    continue
+                picked.append(candidate)
+                selected_question_ids.add(qid)
+                if len(picked) >= need_count:
+                    break
+            return picked
+
+        # 第一轮：按当前轮次目标数量优先级选题（避免固定 technical 先出）
+        dispatch_order = sorted(
+            type_order,
+            key=lambda t: (
+                desired_counts.get(t, 0),
+                float(target_mix.get(t, 0.0) or 0.0)
+            ),
+            reverse=True,
+        )
+
+        for q_type in dispatch_order:
+            wanted = desired_counts[q_type]
+            if wanted <= 0:
+                continue
+
+            picked = _pick_from_type(q_type, wanted)
+            selected.extend(picked)
+
+            short = wanted - len(picked)
+            if short <= 0:
+                continue
+
+            # 第二轮：按降级链路补足缺口
+            for fb_type in InterviewGraphHelper._TYPE_FALLBACK_CHAIN.get(q_type, []):
+                if short <= 0:
+                    break
+                fb_picked = _pick_from_type(fb_type, short)
+                if fb_picked:
+                    selected.extend(fb_picked)
+                    fallback_detail.append({
+                        'from': q_type,
+                        'to': fb_type,
+                        'reason': f'{q_type} inventory不足',
+                        'count': len(fb_picked),
+                    })
+                    short -= len(fb_picked)
+
+        # 第三轮：若总数仍不足，直接从全局高分池补齐（避免中断）
+        if len(selected) < limit:
+            for candidate in ranked:
+                qid = candidate['question'].id
+                if qid in selected_question_ids:
+                    continue
+                selected.append(candidate)
+                selected_question_ids.add(qid)
+                if len(selected) >= limit:
+                    break
+
+        fallback_applied = len(fallback_detail) > 0
+
+        # 计算实际题型分布
+        selected_final = selected[:limit]
+        actual_counts = {q_type: 0 for q_type in type_order}
+        for item in selected_final:
+            q_type = (item['question'].type or '').strip()
+            if q_type in actual_counts:
+                actual_counts[q_type] += 1
+        actual_mix = {
+            q_type: round((actual_counts[q_type] / len(selected_final)), 4) if selected_final else 0.0
+            for q_type in type_order
+        }
+        target_mix_norm = {q_type: round(float(target_mix.get(q_type, 0.0) or 0.0), 4) for q_type in type_order}
+
+        return {
+            'selected_questions': selected_final,
+            'question_mix': {
+                'target': target_mix_norm,
+                'actual': actual_mix,
+            },
+            'fallback_applied': fallback_applied,
+            'fallback_detail': fallback_detail,
+            'round_focus': round_focus,
+        }
     
     @staticmethod
     def get_recent_asked_tag_ids(interview_id, limit=3):
@@ -449,6 +675,32 @@ class InterviewGraphHelper:
                     recent_tag_ids.append(tag.id)
         
         return recent_tag_ids
+
+    @staticmethod
+    def get_recent_asked_question_ids(user_id, job_id, lookback_limit=40):
+        """获取同用户同岗位近期已问过的问题ID，用于跨场次去重。"""
+        if not user_id or not job_id:
+            return []
+
+        rows = (
+            db.session.query(InterviewChat.question_id)
+            .join(Interview, Interview.id == InterviewChat.interview_id)
+            .filter(Interview.user_id == user_id)
+            .filter(Interview.job_id == job_id)
+            .filter(InterviewChat.role == 'ai')
+            .filter(InterviewChat.question_id.isnot(None))
+            .order_by(InterviewChat.timestamp.desc(), InterviewChat.id.desc())
+            .limit(lookback_limit)
+            .all()
+        )
+
+        seen = set()
+        result = []
+        for (qid,) in rows:
+            if qid and qid not in seen:
+                seen.add(qid)
+                result.append(qid)
+        return result
     
     @staticmethod
     def build_adjacent_tag_context(tag_ids, interview_style='confident'):

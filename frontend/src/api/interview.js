@@ -1,4 +1,4 @@
-// =============================================
+﻿// =============================================
 // frontend/src/api/interview.js
 // 面试相关 API
 // Mock数据支持完整面试流程
@@ -22,6 +22,7 @@ export const startInterview = async (data) => {
     resume_id: data.resumeId,
     voice_mode: !!data.voiceMode,
     interview_style: data.interviewStyle,
+    interview_round: data.interviewRound || data.sessionConfig?.interview_round || data.sessionConfig?.round || null,
     profile_id: data.profileId || null,
     session_config: data.sessionConfig || null,
     voice_role: data.voiceRole,

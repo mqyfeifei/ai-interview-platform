@@ -92,7 +92,7 @@ class InterviewService:
     
     @staticmethod
     def start_interview(user_id, job_id, voice_mode=False, interview_style=None, 
-                       voice_role=None, voice=None, profile_id=None, session_config=None):
+                       interview_round=None, voice_role=None, voice=None, profile_id=None, session_config=None):
         """
         启动一场新的面试会话
         
@@ -103,9 +103,11 @@ class InterviewService:
             job_id: 岗位ID
             voice_mode: 是否语音模式
             interview_style: 面试风格(pressure/confident/teaching)
+            interview_round: 面试轮次(first_round/second_round/third_round)
             voice_role: 语音角色
             voice: 音色名称
             profile_id: InterviewProfile ID
+            session_config: 会话配置
             
         Returns:
             dict: 包含interview_id、开场白、音频等的初始化数据
@@ -115,6 +117,7 @@ class InterviewService:
             job_id=job_id,
             voice_mode=voice_mode,
             interview_style=interview_style,
+            interview_round=interview_round,
             voice_role=voice_role,
             voice=voice,
             profile_id=profile_id,
