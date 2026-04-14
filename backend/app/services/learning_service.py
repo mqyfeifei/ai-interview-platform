@@ -113,37 +113,63 @@ class LearningService:
 
     @staticmethod
     def get_personalized_recommendations(user_id, limit=5):
-        """基于技能短板精准推荐学习资源"""
-        weaknesses = LearningService.get_weaknesses(user_id, limit=3)
+        """基于技能短板精准推荐学习资源（优化版）"""
+        weakness_limit = max(3, limit)
+        weaknesses = LearningService.get_weaknesses(user_id, limit=weakness_limit)
         if not weaknesses:
             return []
 
         completed_resources = UserLearning.query.filter_by(user_id=user_id, status='completed').all()
-        completed_ids = [cr.resource_id for cr in completed_resources]
+        completed_ids = {cr.resource_id for cr in completed_resources}
 
         results = []
         recommended_ids = set()
 
-        # 1. 优先进行精确的标签匹配推荐
-        for w in weaknesses:
+        def get_target_difficulty(mastery_level):
+            if mastery_level < 40:
+                return ['beginner', 'easy', '入门', '初级', '简单']
+            if mastery_level < 75:
+                return ['intermediate', 'medium', '进阶', '中级', '中等']
+            return ['advanced', 'hard', '高级', '困难']
+
+        quotas = [limit // len(weaknesses) + (1 if i < limit % len(weaknesses) else 0) for i in range(len(weaknesses))]
+
+        from app.models.learning import resource_tags
+        from app.services.interview_service import InterviewService
+
+        for i, weakness in enumerate(weaknesses):
             if len(results) >= limit:
                 break
-            
-            tag_id = w['tag_id']
-            tag_name = w['name']
 
-            from app.models.learning import resource_tags
-            query = Resource.query.join(resource_tags, Resource.id == resource_tags.c.resource_id)\
-                                  .filter(resource_tags.c.tag_id == tag_id)
-            
-            if completed_ids:
-                query = query.filter(~Resource.id.in_(completed_ids))
-            if recommended_ids:
-                query = query.filter(~Resource.id.in_(recommended_ids))
-            
-            # 每个短板挑出最多2个最相关的资源
-            resources = query.limit(2).all()
-            for r in resources:
+            quota = quotas[i]
+            if quota <= 0:
+                continue
+
+            tag_id = weakness['tag_id']
+            tag_name = weakness['name']
+            target_diffs = get_target_difficulty(weakness.get('mastery_level', 0))
+
+            query = Resource.query.join(resource_tags, Resource.id == resource_tags.c.resource_id).filter(
+                resource_tags.c.tag_id == tag_id
+            )
+
+            exclude_ids = list(completed_ids | recommended_ids)
+            if exclude_ids:
+                query = query.filter(~Resource.id.in_(exclude_ids))
+
+            exact_resources = query.filter(Resource.difficulty.in_(target_diffs)).limit(quota).all()
+
+            if len(exact_resources) < quota:
+                more_needed = quota - len(exact_resources)
+                exclude_ids_now = exclude_ids + [r.id for r in exact_resources]
+                fallback_query = Resource.query.join(resource_tags, Resource.id == resource_tags.c.resource_id).filter(
+                    resource_tags.c.tag_id == tag_id
+                )
+                if exclude_ids_now:
+                    fallback_query = fallback_query.filter(~Resource.id.in_(exclude_ids_now))
+                exact_resources += fallback_query.limit(more_needed).all()
+
+            for r in exact_resources:
                 results.append({
                     "id": r.id,
                     "title": r.title,
@@ -153,39 +179,39 @@ class LearningService:
                     "source": r.source,
                     "difficulty": r.difficulty,
                     "tags": [t.name for t in r.knowledge_tags] if hasattr(r, 'knowledge_tags') else [],
-                    "completed": r.id in completed_ids,
-                    "relatedWeakness": tag_name  # 新增：明确告知前端这个资源是为了补齐哪个短板
+                    "completed": False,
+                    "relatedWeakness": tag_name,
                 })
                 recommended_ids.add(r.id)
 
-        # 2. 如果精确匹配数量不够 limit，则使用向量检索补充
-        if len(results) < limit:
-            from app.services.interview_service import InterviewService
-            weak_text = " ".join([w['name'] for w in weaknesses])
-            weak_vector = InterviewService.get_embedding(weak_text)
-            
-            query = Resource.query
-            exclude_ids = list(set(completed_ids) | recommended_ids)
-            if exclude_ids:
-                query = query.filter(~Resource.id.in_(exclude_ids))
-                
-            query = query.group_by(Resource.id)
-            fallback_resources = query.order_by(Resource.embedding.l2_distance(weak_vector)).limit(limit - len(results)).all()
-            
-            for r in fallback_resources:
-                results.append({
-                    "id": r.id,
-                    "title": r.title,
-                    "type": r.type,
-                    "url": r.url,
-                    "content": r.content,
-                    "source": r.source,
-                    "difficulty": r.difficulty,
-                    "tags": [t.name for t in r.knowledge_tags] if hasattr(r, 'knowledge_tags') else [],
-                    "completed": r.id in completed_ids,
-                    "relatedWeakness": weaknesses[0]['name']  # 兜底给最弱的那个短板
-                })
-        
+            current_count = len([res for res in results if res['relatedWeakness'] == tag_name])
+            if current_count < quota:
+                needed = quota - current_count
+                try:
+                    weak_vector = InterviewService.get_embedding(tag_name)
+                    vec_query = Resource.query
+                    exclude_vec_ids = list(completed_ids | recommended_ids)
+                    if exclude_vec_ids:
+                        vec_query = vec_query.filter(~Resource.id.in_(exclude_vec_ids))
+
+                    vec_resources = vec_query.order_by(Resource.embedding.l2_distance(weak_vector)).limit(needed).all()
+                    for r in vec_resources:
+                        results.append({
+                            "id": r.id,
+                            "title": r.title,
+                            "type": r.type,
+                            "url": r.url,
+                            "content": r.content,
+                            "source": r.source,
+                            "difficulty": r.difficulty,
+                            "tags": [t.name for t in r.knowledge_tags] if hasattr(r, 'knowledge_tags') else [],
+                            "completed": False,
+                            "relatedWeakness": tag_name,
+                        })
+                        recommended_ids.add(r.id)
+                except Exception as e:
+                    print(f"[{tag_name}] 向量检索兜底失败: {e}")
+
         return results
 
     @staticmethod
@@ -235,11 +261,7 @@ class LearningService:
 
     @staticmethod
     def update_task_status(user_id, task_id, done):
-        """更新学习中心每日任务状态。
-
-        仅资源任务支持持久化：task_id 形如 res-<resource_id>。
-        其他任务（例如 weakness）只返回成功，由前端本地态维护展示。
-        """
+        """更新学习中心每日任务状态。"""
         if not task_id:
             return {"success": False, "message": "invalid task id"}
 
@@ -260,12 +282,51 @@ class LearningService:
             record = UserLearning.query.filter_by(user_id=user_id, resource_id=resource_id).first()
             if record:
                 record.status = 'in_progress'
-                record.progress = 0
-                record.finish_time = None
                 db.session.commit()
             return {"success": True, "task_id": task_id, "done": False}
 
         return {"success": True, "task_id": task_id, "done": bool(done)}
+
+    @staticmethod
+    def start_learning(user_id, resource_id):
+        """开始学习：创建记录并记录开始时间"""
+        record = UserLearning.query.filter_by(user_id=user_id, resource_id=resource_id).first()
+        if not record:
+            record = UserLearning(user_id=user_id, resource_id=resource_id)
+            db.session.add(record)
+
+        record.status = 'in_progress'
+        record.start_time = datetime.now()
+        db.session.commit()
+        return {"msg": "Learning started"}
+
+    @staticmethod
+    def finish_learning(user_id, resource_id):
+        """完成学习：计算耗时，标记完成"""
+        record = UserLearning.query.filter_by(user_id=user_id, resource_id=resource_id).first()
+        if not record or record.status == 'completed':
+            return {"msg": "Record not found or already completed"}
+
+        record.finish_time = datetime.now()
+        record.status = 'completed'
+        record.progress = 100
+
+        time_spent = 0
+        if record.start_time:
+            time_spent = int((record.finish_time - record.start_time).total_seconds())
+
+        resource = Resource.query.get(resource_id)
+        if resource and resource.knowledge_tags:
+            for tag in resource.knowledge_tags:
+                mastery = UserKnowledgeMastery.query.filter_by(user_id=user_id, tag_id=tag.id).first()
+                if mastery:
+                    mastery.mastery_level = min(100, mastery.mastery_level + 5)
+                else:
+                    mastery = UserKnowledgeMastery(user_id=user_id, tag_id=tag.id, mastery_level=10)
+                    db.session.add(mastery)
+
+        db.session.commit()
+        return {"msg": "Learning finished", "time_spent_seconds": time_spent}
 
     @staticmethod
     def start_learning(user_id, resource_id):
