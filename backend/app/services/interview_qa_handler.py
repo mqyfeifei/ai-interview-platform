@@ -238,8 +238,8 @@ class InterviewQAHandler:
         for item in diverse_refs:
             assigned_tag_ids.extend(item['tag_ids'])
             assigned_question_lines.append(
-                f"- 深度{item['target_depth']}候选题：{item['question'].content[:80]}"
-                f"（标签：{'、'.join(item['tag_names'])}）"
+                f"- 深度{item.get('reference_answer_depth', item['target_depth'])}候选题：{item['question'].content[:80]}"
+                f"（标签：{'、'.join(item['tag_names'])}；必需技能：{'、'.join(item.get('required_skill_names', [])[:4]) or '暂无'}）"
             )
         
         graph_edge_context = InterviewGraphHelper.build_adjacent_tag_context(
@@ -312,6 +312,21 @@ class InterviewQAHandler:
             'confident': '自信面：语气自然一点，像真实面试官一样聊天，先问结论，再顺着理由追问。',
         }
         style_prompt = style_prompt_map.get(session_style, style_prompt_map['confident'])
+        route_prompt_map = {
+            'first_round': (
+                '【图谱推进路线 - 一面】：优先围绕根节点、基础概念、核心定义提问。'
+                '问题要短，先确认候选人是否掌握最基础的主干知识，再逐步展开。'
+            ),
+            'second_round': (
+                '【图谱推进路线 - 二面】：优先围绕邻接节点、父子关系、相邻知识点对比提问。'
+                '问题要比一面更深入，重点看候选人能不能把关联概念串起来。'
+            ),
+            'third_round': (
+                '【图谱推进路线 - 三面】：优先围绕跨节点组合题、桥接节点、边界条件和综合判断提问。'
+                '问题可以更开放一些，但必须能体现多节点关联与真实业务权衡。'
+            ),
+        }
+        route_prompt = route_prompt_map.get(session_round, route_prompt_map['first_round'])
         spoken_style_instruction = (
             '【口语化表达要求】：'
             '请把回答说得像真实面试官，不要写成说明书。'
@@ -321,7 +336,12 @@ class InterviewQAHandler:
             '提问时可以先一句自然铺垫，再直接问核心点。'
         )
         if voice_mode:
-            spoken_style_instruction += ' 语音模式下每次输出尽量控制在 1-3 句，不要太长。'
+            if session_style == 'pressure':
+                spoken_style_instruction += ' 语音模式下尽量 1-2 句，少铺垫，直接追问。'
+            elif session_style == 'teaching':
+                spoken_style_instruction += ' 语音模式下可以 2-4 句，先解释半句，再引导半句。'
+            else:
+                spoken_style_instruction += ' 语音模式下每次输出尽量控制在 1-3 句，保持自然。'
         assigned_question_prompt = '\n'.join(assigned_question_lines) if assigned_question_lines else '暂无候选题'
         round_focus_prompt = round_focus or '本轮重点：综合考察候选人的基础能力、问题拆解与表达清晰度。'
         user_answer_evidence = normalized_answer or ''
@@ -369,6 +389,7 @@ class InterviewQAHandler:
             以下是候选人的知识点掌握度画像：{mastery_profile_str}。
             当前面试类型：{session_style}。
             {style_prompt}
+            {route_prompt}
             {spoken_style_instruction}
             {deep_dive_instruction}
             本轮优先候选题如下：
@@ -392,14 +413,33 @@ class InterviewQAHandler:
         messages = [{"role": "system", "content": enhanced_system_prompt}]
         
         related_question = diverse_refs[0]['question'] if diverse_refs else None
+        related_question_meta = InterviewGraphHelper.build_question_graph_meta(related_question) if related_question else {}
+        follow_up_chain_text = ''
+        if related_question and session_round in ('second_round', 'third_round'):
+            follow_up_chain_text = InterviewGraphHelper.build_follow_up_chain_context(
+                related_question,
+                interview_round=session_round,
+                interview_style=session_style,
+                max_items=3,
+            )
         if related_question:
             messages.append({
                 "role": "system",
                 "content": (
                     f"参考题目：{related_question.content}。"
                     f"参考答案要点：{related_question.reference_answer}。"
+                    f"参考答案深度：{related_question_meta.get('reference_answer_depth', 1)}。"
+                    f"必需技能：{ '、'.join(related_question_meta.get('skill_names', [])[:6]) or '暂无' }。"
                     f"请围绕此知识点对候选人进行专业追问。"
                     f"不要声称候选人已经提到该知识点，除非其原话中明确出现该术语。"
+                )
+            })
+        if follow_up_chain_text:
+            messages.append({
+                "role": "system",
+                "content": (
+                    f"结构化追问链模板：\n{follow_up_chain_text}\n"
+                    f"请优先沿着这些链路继续追问，并根据候选人回答自然改写，不要生硬照搬。"
                 )
             })
         
