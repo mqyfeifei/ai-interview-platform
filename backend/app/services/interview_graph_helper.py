@@ -6,6 +6,7 @@
 
 import re
 import math
+import threading
 from datetime import datetime
 from difflib import SequenceMatcher
 
@@ -19,6 +20,9 @@ from app.services.resume_service import ResumeService
 
 class InterviewGraphHelper:
     """知识图谱辅助工具类"""
+
+    _RESUME_CONTEXT_CACHE = {}
+    _RESUME_CONTEXT_CACHE_LOCK = threading.Lock()
 
     _QUESTION_TYPES = ['technical', 'project_deep_dive', 'scenario_design', 'behavioral']
     _DIFFICULTY_LEVELS = ['easy', 'medium', 'hard']
@@ -762,6 +766,20 @@ class InterviewGraphHelper:
         """
         try:
             resume_data = ResumeService.get_main_resume(user_id)
+            resume_updated_at = (
+                resume_data.get('updatedAt')
+                or resume_data.get('updated_at')
+                or resume_data.get('createdAt')
+                or resume_data.get('created_at')
+                or ''
+            )
+            cache_key = (int(user_id or 0), str(resume_updated_at))
+
+            with InterviewGraphHelper._RESUME_CONTEXT_CACHE_LOCK:
+                cached_summary = InterviewGraphHelper._RESUME_CONTEXT_CACHE.get(cache_key)
+            if cached_summary is not None:
+                return cached_summary[:max_chars]
+
             content = resume_data.get('content', {})
             if not content:
                 return ""
@@ -820,7 +838,10 @@ class InterviewGraphHelper:
             """
             
             # 5. 安全硬截断
-            return resume_text.strip()[:max_chars]
+            resume_text = resume_text.strip()
+            with InterviewGraphHelper._RESUME_CONTEXT_CACHE_LOCK:
+                InterviewGraphHelper._RESUME_CONTEXT_CACHE[cache_key] = resume_text
+            return resume_text[:max_chars]
         
         except Exception as e:
             print(f"简历摘要提取失败: {str(e)}")
