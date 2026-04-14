@@ -1,4 +1,4 @@
-# backend/app/models/interview.py
+﻿# backend/app/models/interview.py
 from app.extensions import db
 from datetime import datetime
 from sqlalchemy.dialects.postgresql import JSONB, ARRAY
@@ -92,8 +92,8 @@ class InterviewSessionConfig(db.Model):
     id = db.Column(db.BigInteger, primary_key=True)
     interview_id = db.Column(db.Integer, db.ForeignKey('interviews.id', ondelete='CASCADE'), unique=True, nullable=False)
     profile_id = db.Column(db.BigInteger, db.ForeignKey('interview_profiles.id', ondelete='SET NULL'), nullable=True)
-
-    interview_style = db.Column(db.String(20), nullable=False, default='confident')
+    interview_round = db.Column(db.String(20), nullable=False, default='first_round')
+    interview_style = db.Column(db.String(50), nullable=False, default='confident')
     tech_ratio = db.Column(db.Float, nullable=False, default=60.0)
     scenario_ratio = db.Column(db.Float, nullable=False, default=40.0)
     project_deep_dive_percentage = db.Column(db.Float, nullable=False, default=15.0)
