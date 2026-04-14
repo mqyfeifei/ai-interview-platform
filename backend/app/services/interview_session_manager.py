@@ -214,35 +214,35 @@ class InterviewSessionManager:
 
     _ROUND_OPENING_PREFIXES = {
         'first_round': [
-            '欢迎来到一面，我们先从基础能力热身，逐步进入核心点。',
-            '这一轮是一面，我会先看你的基础理解和表达清晰度。',
+            '欢迎来到一面，我们先轻松聊聊，看看你的基础怎么样。',
+            '这一轮先别紧张，我先从基础和表达这两块开始问你。',
         ],
         'second_round': [
-            '欢迎来到二面，这一轮会更关注项目真实性与系统权衡。',
-            '本轮是二面，我会围绕项目决策与方案取舍继续深入。',
+            '欢迎来到二面，我们重点聊聊项目、思路和你是怎么做取舍的。',
+            '这一轮会更深入一点，我想多听听你做项目时的真实想法。',
         ],
         'third_round': [
-            '来到三面了，本轮更看重复杂问题拆解和高压决策。',
-            '这一轮是三面，我会重点考察边界条件与综合判断。',
+            '来到三面了，这一轮我会更像真实业务场景那样追问一些。',
+            '这一轮我们会往深一点聊，重点看你怎么拆问题和做判断。',
         ],
     }
 
     _STYLE_OPENING_SUFFIXES = {
-        'pressure': '我会追问得更快更深，请你尽量给出结构化且可落地的回答。',
-        'confident': '我们保持真实面试节奏，你可以先说结论，再补充关键依据。',
-        'teaching': '如果你卡住我会适度引导，但仍会坚持考察核心能力。',
+        'pressure': '我会追问得快一点、深一点，你尽量把思路讲清楚。',
+        'confident': '咱们按真实面试来，你可以先说结论，再补一句理由。',
+        'teaching': '你要是卡住，我会稍微带一下，但还是会继续考察核心能力。',
     }
 
     _FOCUS_OPENING_TEMPLATES = [
-        '本轮重点会放在：{focus}。',
-        '这一轮我们主要观察：{focus}。',
-        '今天这轮我会重点考察：{focus}。',
+        '这一轮重点我会放在 {focus}。',
+        '今天主要看你在 {focus} 这块的表现。',
+        '这轮我们就围绕 {focus} 来聊。',
     ]
 
     _BRIDGE_OPENING_TEMPLATES = [
-        '先从一个短问题热身，再逐步深入。',
-        '我们会先看核心思路，再追问落地细节。',
-        '先做快速开题，然后进入场景化追问。',
+        '我先问个小问题，咱们慢慢展开。',
+        '先看你的思路，再往细里聊。',
+        '先热个身，然后我再继续往下追问。',
     ]
 
     _ROUND_LABELS = {
@@ -304,6 +304,31 @@ class InterviewSessionManager:
                 text = text.replace(alias, target_label)
 
         return text
+
+    @staticmethod
+    def apply_conversational_tone(text, interview_style='confident', voice_mode=False):
+        """将开场/提问文本收敛到更口语化的表达。"""
+        content = str(text or '').strip()
+        if not content:
+            return content
+
+        replacements = [
+            ('我会', '我这边会'),
+            ('请你', '你可以'),
+            ('首先', '先'),
+            ('另外', '再就是'),
+            ('因此', '所以'),
+            ('此外', '还有'),
+            ('我们先从一个短问题热身，再逐步深入。', '我先问个小问题，咱们慢慢展开。'),
+        ]
+        for old, new in replacements:
+            content = content.replace(old, new)
+
+        if voice_mode:
+            content = content.replace('。', '，')
+            content = content.replace('，，', '，')
+
+        return content
     
     @staticmethod
     def normalize_interview_style(voice_mode=False, interview_style=None, voice_role=None):
@@ -594,29 +619,39 @@ class InterviewSessionManager:
 
         random.Random(int(seed or 0)).shuffle(pool)
 
-        for text in pool:
-            if not InterviewSessionManager._is_opening_similar(text, recent_texts):
-                return text
-
-        # 如果都相似，退化为选择相似度最低的一条
-        best_text = pool[0]
-        best_score = 1.0
+        best_candidates = []
+        best_score = -1.0
         for text in pool:
             max_ratio = 0.0
             for old in recent_texts or []:
                 ratio = SequenceMatcher(None, text, (old or '')).ratio()
                 if ratio > max_ratio:
                     max_ratio = ratio
-            if max_ratio < best_score:
-                best_score = max_ratio
-                best_text = text
 
-        return best_text
+            if max_ratio < 0.86:
+                best_candidates.append(text)
+                continue
+
+            if max_ratio > best_score:
+                best_score = max_ratio
+                best_candidates = [text]
+            elif max_ratio == best_score:
+                best_candidates.append(text)
+
+        if best_candidates:
+            return random.SystemRandom().choice(best_candidates)
+
+        return random.SystemRandom().choice(pool)
     
     @staticmethod
     def build_fallback_greeting(base_greeting, interview_id, interview_round='first_round', interview_style='confident', round_focus='', user_id=None, job_id=None):
         """无简历场景下给开场白加入多样化，避免每次完全一致。"""
         base_greeting = InterviewSessionManager.align_round_greeting(base_greeting, interview_round)
+        base_greeting = InterviewSessionManager.apply_conversational_tone(
+            base_greeting,
+            interview_style=interview_style,
+            voice_mode=True,
+        )
         candidates = InterviewSessionManager._build_opening_candidates(
             base_greeting=base_greeting,
             interview_round=interview_round,

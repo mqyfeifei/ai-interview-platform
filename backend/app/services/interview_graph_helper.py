@@ -145,6 +145,15 @@ class InterviewGraphHelper:
             return False
 
     @staticmethod
+    def _is_skill_sparse(user_id, resume_context_text=''):
+        """判断简历技能字段是否缺失或过于稀疏。"""
+        return InterviewGraphHelper._is_skill_profile_sparse(
+            user_id=user_id,
+            resume_profile=None,
+            resume_context_text=resume_context_text,
+        )
+
+    @staticmethod
     def _normalize_difficulty(raw_value):
         """标准化题目难度到 easy/medium/hard。"""
         if raw_value is None:
@@ -499,7 +508,7 @@ class InterviewGraphHelper:
         return 1
     
     @staticmethod
-    def assign_questions(job_id, user_id, limit=5, recent_tag_ids=None, interview_round='first_round', interview_style='confident', resume_profile=None):
+    def assign_questions(job_id, user_id, limit=5, recent_tag_ids=None, interview_round='first_round', interview_style='confident', resume_profile=None, is_dynamic_adjust=True):
         """
         为用户智能分配面试题目（轮次策略驱动）
         
@@ -521,6 +530,7 @@ class InterviewGraphHelper:
                 interview_round: str,
                 interview_style: str,
                 job_role: str,
+                is_dynamic_adjust: bool,
                 selected_questions: list,
                 selected_questions_meta: list,
                 fallback_applied: bool,
@@ -543,6 +553,7 @@ class InterviewGraphHelper:
         target_difficulty = dict(strategy.get('difficulty') or {})
         round_focus = strategy.get('focus', '')
         style = str(interview_style or 'confident').strip().lower() or 'confident'
+        dynamic_adjust = bool(is_dynamic_adjust)
 
         for level in InterviewGraphHelper._DIFFICULTY_LEVELS:
             target_difficulty.setdefault(level, 0.0)
@@ -554,6 +565,7 @@ class InterviewGraphHelper:
                 'interview_round': normalized_round,
                 'interview_style': style,
                 'job_role': job_role,
+                'is_dynamic_adjust': dynamic_adjust,
                 'selected_questions': [],
                 'selected_questions_meta': [],
                 'question_mix': {
@@ -575,38 +587,64 @@ class InterviewGraphHelper:
         for q_type in type_order:
             target_mix.setdefault(q_type, 0.0)
 
-        # 阶段三：简历感知前置拦截
-        # 若项目经历缺失/稀疏，则将 project_deep_dive 权重按 6:4 分配给 scenario_design/technical。
-        resume_context = InterviewGraphHelper.extract_resume_context(user_id)
-        project_ratio = float(target_mix.get('project_deep_dive', 0.0) or 0.0)
-        if project_ratio > 0 and InterviewGraphHelper._is_project_experience_sparse(user_id, resume_context):
-            target_mix['project_deep_dive'] = 0.0
-            target_mix['scenario_design'] = float(target_mix.get('scenario_design', 0.0)) + project_ratio * 0.6
-            target_mix['technical'] = float(target_mix.get('technical', 0.0)) + project_ratio * 0.4
-            strategy_adjustments.append({
-                'rule': 'project_experience_sparse',
-                'from': 'project_deep_dive',
-                'to': {'scenario_design': round(project_ratio * 0.6, 4), 'technical': round(project_ratio * 0.4, 4)},
-                'reason': '项目经历缺失/稀疏，按规则转移配比',
-            })
+        resume_context = ''
+        skill_sparse = False
+        if dynamic_adjust:
+            # 阶段三：简历感知前置拦截
+            # 若项目经历缺失/稀疏，则将 project_deep_dive 权重按 6:4 分配给 scenario_design/technical。
+            resume_context = InterviewGraphHelper.extract_resume_context(user_id)
+            project_ratio = float(target_mix.get('project_deep_dive', 0.0) or 0.0)
+            if project_ratio > 0 and InterviewGraphHelper._is_project_experience_sparse(user_id, resume_context):
+                target_mix['project_deep_dive'] = 0.0
+                target_mix['scenario_design'] = float(target_mix.get('scenario_design', 0.0)) + project_ratio * 0.6
+                target_mix['technical'] = float(target_mix.get('technical', 0.0)) + project_ratio * 0.4
+                strategy_adjustments.append({
+                    'rule': 'project_experience_sparse',
+                    'from': 'project_deep_dive',
+                    'to': {'scenario_design': round(project_ratio * 0.6, 4), 'technical': round(project_ratio * 0.4, 4)},
+                    'reason': '项目经历缺失/稀疏，按规则转移配比',
+                })
 
-            # 归一化，避免浮点叠加后总和偏离1
-            total = sum(float(target_mix.get(k, 0.0) or 0.0) for k in type_order)
-            if total > 0:
-                for k in type_order:
-                    target_mix[k] = float(target_mix.get(k, 0.0) or 0.0) / total
+                # 归一化，避免浮点叠加后总和偏离1
+                total = sum(float(target_mix.get(k, 0.0) or 0.0) for k in type_order)
+                if total > 0:
+                    for k in type_order:
+                        target_mix[k] = float(target_mix.get(k, 0.0) or 0.0) / total
 
-        skill_sparse = InterviewGraphHelper._is_skill_profile_sparse(
-            user_id=user_id,
-            resume_profile=resume_profile,
-            resume_context_text=resume_context,
-        )
-        if skill_sparse:
-            strategy_adjustments.append({
-                'rule': 'skills_sparse',
-                'reason': '技能字段稀疏，优先技术基础题（easy/medium）',
-            })
-        
+            skill_sparse = InterviewGraphHelper._is_skill_sparse(user_id, resume_context)
+            if skill_sparse:
+                # 技能稀疏时：降低 hard 题配额，并将一部分权重转到 easy / medium
+                hard_ratio = float(target_difficulty.get('hard', 0.0) or 0.0)
+                if hard_ratio > 0:
+                    target_difficulty['hard'] = 0.0
+                    target_difficulty['easy'] = float(target_difficulty.get('easy', 0.0) or 0.0) + hard_ratio * 0.7
+                    target_difficulty['medium'] = float(target_difficulty.get('medium', 0.0) or 0.0) + hard_ratio * 0.3
+
+                # 同时压低场景题，补充基础技术题和行为题
+                scenario_ratio = float(target_mix.get('scenario_design', 0.0) or 0.0)
+                if scenario_ratio > 0.15:
+                    transfer_amount = scenario_ratio - 0.15
+                    target_mix['scenario_design'] = 0.15
+                    target_mix['technical'] = float(target_mix.get('technical', 0.0) or 0.0) + transfer_amount * 0.7
+                    target_mix['behavioral'] = float(target_mix.get('behavioral', 0.0) or 0.0) + transfer_amount * 0.3
+
+                strategy_adjustments.append({
+                    'rule': 'skills_sparse',
+                    'reason': '技能字段稀疏，降低 hard 题并补强 technical / behavioral',
+                })
+
+            # 阶段 C：矩阵归一化（防止浮点溢出，确保权重加和严格为 1）
+            total_target = sum(float(v or 0.0) for v in target_mix.values())
+            if total_target > 0:
+                target_mix = {k: float(v or 0.0) / total_target for k, v in target_mix.items()}
+
+            total_diff = sum(float(v or 0.0) for v in target_difficulty.values())
+            if total_diff > 0:
+                target_difficulty = {k: float(v or 0.0) / total_diff for k, v in target_difficulty.items()}
+
+            if not skill_sparse:
+                # 保持与默认策略一致的行为，不做额外动态修正
+                pass
         recent_tag_ids = set(recent_tag_ids or [])
         recent_question_ids = set(
             InterviewGraphHelper.get_recent_asked_question_ids(
@@ -627,8 +665,8 @@ class InterviewGraphHelper:
         by_type = {k: [] for k in type_order}
         ranked = []
         preferred_questions = [q for q in questions if q.id not in recent_question_ids]
-        # 若去重后候选过少，保留全量题池并施加强惩罚，避免无题可选
-        question_pool = preferred_questions if len(preferred_questions) >= max(2, min(limit, 3)) else questions
+        # 优先严格避开近期已问过的题目；只有完全没有新题时，才退回全量题池
+        question_pool = preferred_questions if preferred_questions else questions
 
         for question in question_pool:
             question_tags = list(question.knowledge_tags or [])
@@ -659,7 +697,7 @@ class InterviewGraphHelper:
                 score -= 55
 
             # 技能稀疏时优先技术基础题
-            if skill_sparse and (question.type or '').strip() == 'technical' and difficulty_key in ('easy', 'medium'):
+            if dynamic_adjust and skill_sparse and (question.type or '').strip() == 'technical' and difficulty_key in ('easy', 'medium'):
                 score += 18
             
             item = {

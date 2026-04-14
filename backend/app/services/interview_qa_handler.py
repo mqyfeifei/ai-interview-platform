@@ -188,6 +188,7 @@ class InterviewQAHandler:
             recent_tag_ids=recent_tag_ids,
             interview_round=session_round,
             interview_style=session_style,
+            is_dynamic_adjust=bool(getattr(session_config, 'is_dynamic_adjust', True)),
         )
 
         # 兼容旧格式(list)和阶段二新格式(dict)
@@ -306,11 +307,21 @@ class InterviewQAHandler:
         resume_context = InterviewGraphHelper.extract_resume_context(interview.user_id)
         
         style_prompt_map = {
-            'pressure': '压力面：如果候选人回答正确且完整，请立即向下追问其子概念、实现细节和边界条件。',
-            'teaching': '教学面：如果候选人卡壳或回答偏浅，请优先回到父节点概念，并用同级兄弟概念做横向启发。',
-            'confident': '自信面：保持鼓励式追问，兼顾基础与应用，适度深挖但避免持续施压。',
+            'pressure': '压力面：说话短一点、直接一点，追问要紧凑，尽量像真实面试官那样连着追。',
+            'teaching': '教学面：语气温和一点，先点出问题，再一步一步带着候选人往下想。',
+            'confident': '自信面：语气自然一点，像真实面试官一样聊天，先问结论，再顺着理由追问。',
         }
         style_prompt = style_prompt_map.get(session_style, style_prompt_map['confident'])
+        spoken_style_instruction = (
+            '【口语化表达要求】：'
+            '请把回答说得像真实面试官，不要写成说明书。'
+            '句子尽量自然、简短、顺口，少用长串书面语。'
+            '不要重复同一个词，也不要一口气堆很多定语。'
+            '如果是语音面试，优先使用更像“当面聊天”的说法，避免过于正式。'
+            '提问时可以先一句自然铺垫，再直接问核心点。'
+        )
+        if voice_mode:
+            spoken_style_instruction += ' 语音模式下每次输出尽量控制在 1-3 句，不要太长。'
         assigned_question_prompt = '\n'.join(assigned_question_lines) if assigned_question_lines else '暂无候选题'
         round_focus_prompt = round_focus or '本轮重点：综合考察候选人的基础能力、问题拆解与表达清晰度。'
         user_answer_evidence = normalized_answer or ''
@@ -358,6 +369,7 @@ class InterviewQAHandler:
             以下是候选人的知识点掌握度画像：{mastery_profile_str}。
             当前面试类型：{session_style}。
             {style_prompt}
+            {spoken_style_instruction}
             {deep_dive_instruction}
             本轮优先候选题如下：
             {assigned_question_prompt}
