@@ -482,52 +482,6 @@ class InterviewQAHandler:
 
         # 6. 流式处理模型输出
         for chunk in response_stream:
-            content = chunk.choices[0].delta.content
-            if content:
-                for display_chunk in InterviewTTSHelper.split_stream_display_chunks(content):
-                    full_reply += display_chunk
-                    sentence_buffer += display_chunk
-                    
-                    # 初始化准备传给前端的payload
-                    payload = {'chunk': display_chunk}
-                    # 附带元信息，方便前端展示当前轮次与题型
-                    try:
-                        payload['meta'] = {
-                            'round': int(round_index),
-                            'question_type': getattr(related_question, 'type', None) if related_question else None
-                        }
-                    except Exception:
-                        payload['meta'] = {'round': round_index, 'question_type': None}
-                    
-                    # 提取完整句并异步合成
-                    if voice_mode:
-                        ready_segments, sentence_buffer = InterviewTTSHelper.extract_ready_tts_segments(sentence_buffer)
-                        for segment in ready_segments:
-                            submit_tts_segment(segment)
-                    
-                    # 将已经完成的异步TTS结果转入发送队列
-                    flush_ready_tts_futures()
-                    
-                    # 检查是否有已完成的TTS音频需要发送
-                    try:
-                        audio_b64_from_queue = audio_queue.get_nowait()
-                        payload['audio_b64'] = audio_b64_from_queue
-                        sent_audio_packets += 1
-                    except queue.Empty:
-                        pass
-                    
-                    # 立即发送文字chunk（如果有音频，会一起发送）
-                    yield f"data: {json.dumps(payload, ensure_ascii=False)}\n\n"
-                    
-                    # 继续非阻塞清空队列，避免已完成音频在队列中堆积到流末尾才发送
-                    while True:
-                        try:
-                            extra_audio_b64 = audio_queue.get_nowait()
-                            yield f"data: {json.dumps({'chunk': '', 'audio_b64': extra_audio_b64}, ensure_ascii=False)}\n\n"
-                            sent_audio_packets += 1
-                        except queue.Empty:
-                            break
-
             # 支持多种 response_stream 格式：
             # 1) LLM stream object with chunk.choices[0].delta.content
             # 2) plain string chunks (CoEM streaming generator yields strings)
@@ -560,6 +514,15 @@ class InterviewQAHandler:
 
                 # 初始化准备传给前端的payload
                 payload = {'chunk': display_chunk}
+                
+                # 附带元信息，方便前端展示当前轮次与题型
+                try:
+                    payload['meta'] = {
+                        'round': int(round_index),
+                        'question_type': getattr(related_question, 'type', None) if related_question else None
+                    }
+                except Exception:
+                    payload['meta'] = {'round': round_index, 'question_type': None}
 
                 # 提取完整句并异步合成
                 if voice_mode:
@@ -580,6 +543,15 @@ class InterviewQAHandler:
 
                 # 立即发送文字chunk（如果有音频，会一起发送）
                 yield f"data: {json.dumps(payload, ensure_ascii=False)}\n\n"
+
+                # 继续非阻塞清空队列，避免已完成音频在队列中堆积到流末尾才发送
+                while True:
+                    try:
+                        extra_audio_b64 = audio_queue.get_nowait()
+                        yield f"data: {json.dumps({'chunk': '', 'audio_b64': extra_audio_b64}, ensure_ascii=False)}\n\n"
+                        sent_audio_packets += 1
+                    except queue.Empty:
+                        break
 
         # 7. 处理剩余的尾句
         if voice_mode and sentence_buffer:
