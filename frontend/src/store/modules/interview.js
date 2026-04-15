@@ -281,6 +281,7 @@ const state = () => ({
   selectedProfileConfig: null,
   voiceMode: false,
   interviewStyle: 'confident',
+  interviewSource: '通用',
   voiceRole: 'role_calm',
   ttsVoice: DEFAULT_TTS_VOICE
 })
@@ -300,6 +301,7 @@ const mutations = {
   SET_QUESTION_INDEX(state, idx) { state.questionIndex = idx },
   SET_VOICE_MODE(state, v) { state.voiceMode = v },
   SET_INTERVIEW_STYLE(state, v) { state.interviewStyle = v || 'confident' },
+  SET_INTERVIEW_SOURCE(state, v) { state.interviewSource = v || '通用' },
   SET_VOICE_ROLE(state, v) { state.voiceRole = v || 'role_calm' },
   SET_TTS_VOICE(state, v) { state.ttsVoice = (v || DEFAULT_TTS_VOICE) },
   SET_AI_SPEAKING(state, v) { state.isAISpeaking = v },
@@ -341,6 +343,7 @@ const mutations = {
     state.selectedProfileConfig = null
     state.voiceMode = false
     state.interviewStyle = 'confident'
+    state.interviewSource = '通用'
     state.voiceRole = 'role_calm'
     state.ttsVoice = DEFAULT_TTS_VOICE
     state.resumeId = null
@@ -376,6 +379,7 @@ const actions = {
         selectedProfileId: state.selectedProfileId,
         selectedRound: state.selectedProfileConfig?.interview_round,
         selectedInterviewStyle: state.interviewStyle,
+        selectedInterviewSource: state.interviewSource,
         selectedProfileConfig: state.selectedProfileConfig,
       })
       const res = await startInterview({
@@ -384,6 +388,7 @@ const actions = {
         resumeId: state.resumeId,   // 传给后端的 resume_id
         profileId: state.selectedProfileId,
         interviewRound: state.selectedProfileConfig?.interview_round,
+        interviewSource: state.interviewSource || state.selectedProfileConfig?.target_source || '通用',
         sessionConfig: state.selectedProfileConfig,
         voiceMode: state.voiceMode,
         interviewStyle: state.interviewStyle,

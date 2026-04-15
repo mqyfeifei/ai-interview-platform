@@ -23,6 +23,7 @@ export const startInterview = async (data) => {
     voice_mode: !!data.voiceMode,
     interview_style: data.interviewStyle,
     interview_round: data.interviewRound || data.sessionConfig?.interview_round || data.sessionConfig?.round || null,
+    target_source: data.interviewSource || data.sessionConfig?.target_source || '通用',
     profile_id: data.profileId || null,
     session_config: data.sessionConfig || null,
     voice_role: data.voiceRole,
@@ -45,6 +46,13 @@ export const fetchInterviewProfiles = async (jobId) => {
     params: { job_id: jobId }
   })
   return res?.list || []
+}
+
+export const fetchInterviewSourceOptions = async (jobId) => {
+  const res = await request.get('/interviews/source-options', {
+    params: { job_id: jobId }
+  })
+  return Array.isArray(res) ? res : []
 }
 
 

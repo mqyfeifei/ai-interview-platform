@@ -1,14 +1,17 @@
 type: "cv_project_deep_dive_questions"
 source:
-  - "面经库"
+  - "Interview_Bank"
+  - "Personal_Notes"
+  - "字节跳动"
+  - "旷视科技"
+  - "商汤科技"
 items:
   - id: "CV-PQ-001"
     type: "project_deep_dive"
     question: "介绍一个你做过的目标检测/图像分割相关的实际落地项目。你是如何解决实际业务场景中数据极度不平衡（如长尾分布、缺陷样本稀缺）问题的？"
     tags: ["项目挖掘", "样本不平衡", "落地经验"]
     difficulty: "hard"
-    source: "面经库"
-    status: "draft"
+    source: "Interview_Bank" 
     key_points:
       - "能否讲清业务场景中的数据痛点（如正常样本多，异常样本少）"
       - "是否掌握数据级别增强策略（如重采样、Copy-Paste、生成对抗网络或扩散模型生成伪数据）"
@@ -18,8 +21,7 @@ items:
     question: "在你的视觉模型落地部署过程中，做过哪些轻量化与推理加速工作？如果遇到了某些算子在推理引擎（如TensorRT/NCNN）中不支持的情况，你是如何解决的？"
     tags: ["模型部署", "性能优化", "算子替换"]
     difficulty: "hard"
-    source: "面经库"
-    status: "draft"
+    source: "Interview_Bank" 
     key_points:
       - "具备工程化意识，能说清剪枝、蒸馏或量化（FP16/INT8）的具体实践与精度对齐损失"
       - "熟悉模型转换流程（如 PyTorch -> ONNX -> TensorRT）"
@@ -29,8 +31,7 @@ items:
     question: "很多CV模型在开源数据集上表现很好，但在你们的实际业务场景中泛化能力较差（比如光照变化、相机角度不同）。你在项目中是如何应对这种 Domain Shift（域偏移）问题的？"
     tags: ["泛化能力", "数据处理", "鲁棒性"]
     difficulty: "medium"
-    source: "面经库"
-    status: "draft"
+    source: "Interview_Bank" 
     key_points:
       - "提及丰富的数据增强手段（色彩抖动、随机遮挡、模拟各种光照/模糊）"
       - "介绍数据闭环系统的建设（发现Bad Case -> 挖掘回流 -> 重新标注 -> 增量训练）"
@@ -40,8 +41,7 @@ items:
     question: "在你的目标检测项目中，针对特定场景的数据极度匮乏，你设计了哪些有效的数据增强或合成策略？"
     tags: ["数据增强", "样本不平衡"]
     difficulty: "hard"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "讲述几何变换、颜色抖动等基础增强的局限性"
       - "引入CutMix、Mosaic或Copy-Paste等高级增强策略解决背景复杂与小目标问题"
@@ -51,8 +51,7 @@ items:
     question: "请详细说明你项目中使用的模型轻量化及端侧部署的全链路流程。"
     tags: ["模型压缩", "边缘计算部署"]
     difficulty: "hard"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "阐述剪枝（Pruning）或量化（PTQ/QAT，如INT8量化）的具体操作与精度对齐损失"
       - "讲解由 PyTorch 转 ONNX 再转 TensorRT/NCNN 过程中遇到的算子不支持（Unsupported Op）问题的解决思路"
@@ -62,8 +61,7 @@ items:
     question: "在你的CV项目中，是否遇到过模型在特定类别或特定环境下表现不佳的情况？你是如何定位问题并进行针对性优化的？"
     tags: ["模型诊断", "定位问题", "针对性优化"]
     difficulty: "medium"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "是否有系统地进行过错误分析（Error Analysis），定位到具体类别或环境的性能瓶颈"
       - "是否尝试过针对性的数据增强（如针对小目标、夜间场景的增强）或算法改进（如引入注意力机制提升特定类别的特征表达）"
@@ -73,8 +71,7 @@ items:
     question: "你在CV项目中是否有过与传统CV算法（如形态学处理、边缘检测）结合使用的经历？请举例说明这种结合是如何提升模型性能或鲁棒性的。"
     tags: ["传统CV算法", "模型增强"]
     difficulty: "medium"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "是否有过将传统CV算法作为前处理（如形态学处理去噪）或后处理（如边缘检测辅助定位）的实践"
       - "这种结合是否解决了某些特定场景下的性能瓶颈（如小目标漏检、复杂背景干扰）"
@@ -84,8 +81,7 @@ items:
     question: "在你的CV项目中，是否有过使用多模态数据（如结合视觉与传感器数据）来提升模型性能的经历？请举例说明多模态融合的具体方法和效果。"
     tags: ["多模态融合", "传感器数据"]
     difficulty: "medium"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "是否有过将视觉数据与其他模态数据（如重量传感器、IMU等）进行融合的实践"
       - "这种多模态融合是否解决了某些特定场景下的性能瓶颈（如相似外观的垃圾分类）"
@@ -95,8 +91,7 @@ items:
     question: "你在CV项目中是否有过使用领域自适应（Domain Adaptation）技术来提升模型泛化能力的经历？请举例说明你是如何实施领域自适应的，以及取得了什么效果。"
     tags: ["领域自适应", "泛化能力"]
     difficulty: "medium"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "是否有过使用领域自适应技术（如DANN、MMD、Adversarial Training）来提升模型在新环境下的性能的实践"
       - "这种领域自适应是否解决了某些特定场景下的性能瓶颈（如光照变化导致的检测性能下降）"
@@ -106,9 +101,327 @@ items:
     question: "在你的CV项目中，是否有过使用生成对抗网络（GAN）或扩散模型（Diffusion）来生成合成数据的经历？请举例说明你是如何使用这些技术来增强训练数据的，以及取得了什么效果。"
     tags: ["GAN", "扩散模型", "数据增强"]
     difficulty: "medium"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "是否有过使用GAN或扩散模型生成合成数据来增强训练集的实践"
       - "这种生成数据是否解决了某些特定场景下的性能瓶颈（如长尾类别样本不足）"
       - "是否有量化的性能提升数据支持（如特定类别AP提升了多少，误检率降低了多少）"
+
+  - id: "CV-PQ-ZJ-001"
+    type: "project_deep_dive"
+    question: "回顾你刚才介绍的核心项目，你觉得现有的系统或算法设计还有什么可以进一步迭代和改进的地方？你之前尝试过的优化策略具体起到了什么作用，是否有数据支撑？"
+    tags: ["项目复盘", "优化策略", "效果评估"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "能够客观跳出既有方案，指出当前项目架构的设计妥协与性能瓶颈"
+      - "对优化手段有清晰的数据化评估（如指标提升、耗时降低等数据支撑）"
+      - "提出符合业务发展趋势的切实可行的后续迭代思路"
+
+  - id: "CV-PQ-ZJ-002"
+    type: "project_deep_dive"
+    question: "请详细说明一下你在项目中使用的目标检测方法的推理速度表现如何？采用了哪些加速推理的手段？"
+    tags: ["目标检测", "模型部署", "推理加速"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "熟悉目标检测模型的常见耗时瓶颈组成部分（如NMS、Backbone、Anchor生成等）"
+      - "掌握TensorRT、ONNX、算子融合、模型剪枝、量化等常见的底层加速落地经验"
+      - "能够结合实际业务场景，清晰阐述推理速度优化与模型精度之间的权衡取舍（Trade-off）"
+
+  - id: "CV-PQ-ZJ-003"
+    type: "project_deep_dive"
+    question: "你做 CTR/CVR/CTCVR 联合建模时，ESMM/ESMM2 模型是如何推导的？具体的工程落地过程是怎样的，线上业务到底带来了什么具体收益？"
+    tags: ["推荐系统", "联合建模", "工程落地"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "准确推导说明ESMM如何利用CTCVR和CTR来隐式学习CVR，解决样本选择偏差与数据稀疏问题"
+      - "阐明模型上线的具体工程打点逻辑和训练推理流程"
+      - "清晰汇报线上A/B实验带来的核心业务指标（如转化率、大盘GMV）的实际提升"
+
+  - id: "CV-PQ-ZJ-004"
+    type: "project_deep_dive"
+    question: "请详细介绍一下你做过的最有挑战性的项目，你在项目中承担了什么角色？遇到了哪些技术难点，是如何解决的？"
+    tags: ["项目架构", "难点攻克", "团队协作"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "清晰阐述项目背景、业务场景与技术栈"
+      - "明确界定个人在团队中的核心职责与贡献占比"
+      - "深度剖析1-2个核心技术难点（如性能瓶颈、算法优化），并给出具体的解决方案和最终收益"
+
+  - id: "CV-PQ-ZJ-005"
+    type: "project_deep_dive"
+    question: "在你的多智能体(Agent)项目中，工具调用（Tool Calling）具体是如何设计与实现的？"
+    tags: ["Agent", "工具调用", "架构设计"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "说明LLM如何理解工具描述（Prompt构建与Schema定义）"
+      - "阐述工具路由、参数提取与校验机制"
+      - "描述执行结果的反馈闭环以及异常处理（兜底）策略"
+
+  - id: "CV-PQ-ZJ-006"
+    type: "project_deep_dive"
+    question: "在大模型相关项目中，位置编码这条线你是怎么选型的？请结合你的项目谈谈绝对PE、相对PE、RoPE各自的思路、优势和局限。"
+    tags: ["Transformer", "位置编码", "大模型"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "绝对PE：直接将位置信息加到输入上，缺乏相对位置感知"
+      - "相对PE：在Attention计算中融入相对距离，泛化性好但计算复杂度较高"
+      - "RoPE（旋转位置编码）：通过绝对位置的旋转操作实现相对位置表达，外推性强，结合项目说明为何选择RoPE"
+
+  - id: "CV-PQ-ZJ-007"
+    type: "project_deep_dive"
+    question: "你在进行模型训练（线上或离线）时，是如何处理过拟合问题的？请列举你在项目中实际用过最有效的三个方法并说明收益。"
+    tags: ["模型调优", "过拟合", "实战经验"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "数据层面：数据增强（Data Augmentation）、引入噪声等"
+      - "模型层面：Dropout、正则化（L1/L2）、Early Stopping"
+      - "具体收益：需结合项目给出量化指标（如准确率提升了百分之几，或泛化能力如何改善）"
+
+  - id: "CV-PQ-ZJ-008"
+    type: "project_deep_dive"
+    question: "在你的CTR/数据比赛项目中，遇到样本不平衡问题是如何解决的？具体怎么做特征工程？"
+    tags: ["机器学习", "样本不平衡", "特征工程"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "样本不平衡：重采样（SMOTE等）、损失函数调整（Focal Loss等）、类别权重调整"
+      - "特征工程：连续特征分箱、离散特征One-hot/Embedding、特征交叉组合"
+      - "注意One-hot维度爆炸带来的稀疏性问题及应对方案"
+
+  - id: "CV-PQ-ZJ-009"
+    type: "project_deep_dive"
+    question: "在你的多智能体（Agent）项目中，工具调用（Tool Calling）具体是如何设计与实现的？"
+    tags: ["Agent", "大模型应用", "工程架构"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "清晰说明Prompt中关于工具描述（Schema）的注入方式。"
+      - "描述模型识别并输出工具调用指令的解析逻辑。"
+      - "阐述环境反馈（Observation）如何回传给模型并维持多轮对话上下文。"
+
+  - id: "CV-PQ-ZJ-010"
+    type: "project_deep_dive"
+    question: "在你的实际算法项目中，是否遇到过模型过拟合的问题？你是如何发现的？具体用了哪些手段解决？"
+    tags: ["过拟合", "模型调优", "工程实践"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "能够通过Train Loss和Val Loss的曲线分离现象准确判断过拟合。"
+      - "列举数据层面的手段（如数据增强、引入噪声、欠采样/过采样）。"
+      - "列举模型和训练层面的手段（如Dropout、正则化L1/L2、Early Stopping）。"
+
+  - id: "CV-PQ-ZJ-011"
+    type: "project_deep_dive"
+    question: "在你的项目中做CTR/CVR联合建模时，ESMM（或ESMM2）模型是如何推导并在工程上落地的？最终带来了怎样的线上收益？"
+    tags: ["推荐系统", "多任务学习", "联合建模"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "准确写出基于条件概率的数学推导：pCTCVR = pCTR * pCVR。"
+      - "说明ESMM如何解决样本选择偏差（SSB）和数据稀疏性（DS）问题。"
+      - "清晰汇报线上AB实验带来的核心指标（如转化率、GMV）的正向收益。"
+
+  - id: "CV-PQ-ZJ-012"
+    type: "project_deep_dive"
+    question: "在之前的算法比赛中，你是如何解决长尾样本不平衡问题的？使用了哪些训练技巧，背后的原理是什么？"
+    tags: ["样本不平衡", "竞赛技巧", "Loss设计"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "答出重采样技术（如SMOTE、类别平衡采样）。"
+      - "答出重加权技术（如Class-balanced Loss）。"
+      - "答出改进的损失函数（如Focal Loss通过降低易分样本权重来关注困难/稀少样本）。"
+
+  - id: "CV-PQ-ZJ-013"
+    type: "project_deep_dive"
+    question: "简历上提到你修复过渲染流程相关的Bug，能具体讲讲这个Bug的成因定位过程和最终的修复方案吗？"
+    tags: ["Bug排查", "渲染管线", "OpenGL/Metal"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "清晰描述Bug的表象（如黑屏、闪烁、内存泄漏）。"
+      - "阐述排查链路（如Frame Capture抓帧、Shader Debug、内存分析等）。"
+      - "总结修复方法及如何通过工程规范避免此类问题再次发生。"
+
+  - id: "CV-PQ-KS-001"
+    type: "project_deep_dive"
+    question: "请详细讲讲你在项目中负责的视频处理部分，比如目标跟踪算法和光流等技术的应用情况，以及它们在项目中的优缺点分析？"
+    tags: ["项目经验", "视频处理", "目标跟踪", "光流法"]
+    difficulty: "medium"
+    source: "旷视科技"
+    key_points:
+      - "清楚描述使用的具体算法模型（如 SORT, DeepSORT, 传统光流等）及其原理"
+      - "结合项目实际业务场景阐述为什么选择该算法"
+      - "能客观地分析这些算法在此业务场景下存在的瓶颈及自身的优化思路"
+
+  - id: "CV-PQ-KS-002"
+    type: "project_deep_dive"
+    question: "你在之前的科研或实习项目中主要承担什么角色？具体负责了哪些核心模块或工作？"
+    tags: ["项目经验", "团队协作", "角色贡献"]
+    difficulty: "medium"
+    source: "旷视科技"
+    key_points:
+      - "能清晰界定个人的工作边界，明确自己的产出内容"
+      - "能体现出从发现问题、设计方案到落地解决的完整链路闭环"
+      - "数据支撑：能够用具体的指标和收益量化自己的贡献"
+
+  - id: "CV-PQ-KS-003"
+    type: "project_deep_dive"
+    question: "请详细描述你在该项目中承担的具体角色和主要贡献是什么？"
+    tags: ["项目分工", "个人贡献", "协作能力"]
+    difficulty: "medium"
+    source: "旷视科技"
+    key_points:
+      - "清晰界定项目整体目标与个人负责的模块边界"
+      - "详细阐述独立完成的技术攻关点或性能优化成果"
+      - "说明与其他团队成员（如前端、硬件或后端）的协同配合情况"
+
+  - id: "CV-PQ-KS-004"
+    type: "project_deep_dive"
+    question: "请详细说明你在简历中最核心的那个项目中承担的角色是什么？你具体负责了哪些模块？"
+    tags: ["项目经验", "角色认知", "贡献度"]
+    difficulty: "medium"
+    source: "旷视科技"
+    key_points:
+      - "清晰界定个人工作与团队工作的边界"
+      - "能具体说出自己主导或独立完成的核心算法、工程模块"
+      - "对整个项目的宏观架构也有清晰的了解，并非只懂自己的一亩三分地"
+
+  - id: "CV-PQ-KS-005"
+    type: "project_deep_dive"
+    question: "在目标检测/人脸识别的项目中，你认为最大的技术突破或改进点在哪里？你是如何进行模型训练和优化的？"
+    tags: ["目标检测", "模型优化", "人脸识别"]
+    difficulty: "hard"
+    source: "旷视科技"
+    key_points:
+      - "能结合具体业务痛点提出改进方案（如针对遮挡、小目标、光照变化的改进）"
+      - "熟悉模型训练Pipeline，包括数据清洗、数据增强、Loss函数改进等"
+      - "能清晰量化改进前后的指标差异（如mAP提升了多少）"
+
+  - id: "CV-PQ-KS-006"
+    type: "project_deep_dive"
+    question: "请结合具体业务场景谈谈你的项目。例如，识别时是采用逐帧识别还是抽帧策略？如何处理清晰度变化问题以及设计有效的跟踪策略？"
+    tags: ["业务落地", "视频处理", "目标跟踪"]
+    difficulty: "hard"
+    source: "旷视科技"
+    key_points:
+      - "理解工业界对性能与精度的权衡，能说明抽帧或关键帧提取的依据"
+      - "具备处理真实场景画质退化（模糊、运动伪影）的工程经验"
+      - "熟悉主流的多目标跟踪算法（如SORT/DeepSORT等）在工程中的应用和优化"
+
+  - id: "CV-PQ-KS-007"
+    type: "project_deep_dive"
+    question: "请详细解释你项目中涉及的各个算法所采用的评价指标及其业务意义，并列出模型最终达到的实际数值。"
+    tags: ["评价指标", "业务理解", "指标量化"]
+    difficulty: "medium"
+    source: "旷视科技"
+    key_points:
+      - "准确解释Precision, Recall, F1, mAP, ROC, AUC等指标的数学定义"
+      - "能将学术指标映射到业务痛点上（如：为什么在门禁场景要极力降低误识率FAR）"
+      - "对所做项目的最终指标数据烂熟于心，没有明显的数据逻辑漏洞"
+
+  - id: "CV-PQ-ST-001"
+    type: "project_deep_dive"
+    question: "请详细介绍一下你简历中最核心的一个计算机视觉项目。你在其中担任了什么职责？关键特征或关键点是如何提取的？"
+    tags: ["项目经历", "系统架构", "技术攻坚"]
+    difficulty: "medium"
+    source: "商汤科技"
+    key_points:
+      - "STAR法则：清晰阐述项目背景(Situation)、任务(Task)、你的具体行动(Action)和最终收益(Result)"
+      - "技术细节：能准确说出模型选型原因、网络结构细节及特征提取的具体算法实现"
+      - "难点攻克：说清楚在模型优化、精度提升或端侧部署过程中遇到的具体痛点以及解决方案"
+
+  - id: "CV-PQ-ST-002"
+    type: "project_deep_dive"
+    question: "请详细介绍一个你最熟悉的大模型或计算机视觉项目。"
+    tags: ["项目介绍", "大模型", "系统架构"]
+    difficulty: "medium"
+    source: "商汤科技"
+    key_points:
+      - "使用STAR法则（背景、任务、行动、结果）清晰描述项目全貌"
+      - "准确阐述该项目的核心技术栈、模型架构以及业务应用场景"
+      - "清晰说明技术指标（如准确率、延迟）与业务指标的提升"
+
+  - id: "CV-PQ-ST-003"
+    type: "project_deep_dive"
+    question: "在该项目中，你具体做了哪些技术上的优化工作？"
+    tags: ["性能优化", "问题解决", "工程落地"]
+    difficulty: "hard"
+    source: "商汤科技"
+    key_points:
+      - "能够从模型层面（剪枝、蒸馏、量化）或工程层面（算子优化、并发、缓存）举例说明"
+      - "说出优化前后的具体数据对比（如推理时间降低了多少，显存占用的减少量）"
+      - "解释优化方案的技术选型思考，为什么放弃其他方案"
+
+  - id: "CV-PQ-ST-004"
+    type: "project_deep_dive"
+    question: "在你的项目中，为什么采用当前的技术架构？请详细说明总体架构和技术细节。"
+    tags: ["架构设计", "技术选型", "项目反思"]
+    difficulty: "hard"
+    source: "商汤科技"
+    key_points:
+      - "结合业务痛点（如高并发、实时性、准确度要求）反推架构合理性"
+      - "能够白板画出或清晰描述数据流与各微服务/算法模块的交互细节"
+      - "体现出对系统瓶颈的前瞻性考虑和妥协（Trade-off）思维"
+
+  - id: "CV-PQ-ST-005"
+    type: "project_deep_dive"
+    question: "请问你在CV项目中具体标注了多少数据？数据筛选和标注的标准、流程是怎样的？"
+    tags: ["数据处理", "数据工程", "数据集"]
+    difficulty: "medium"
+    source: "商汤科技"
+    key_points:
+      - "清晰描述数据采集、清洗、预标注、人工复核的完整闭环流程"
+      - "说明在遇到边界或困难样本时，是如何定义标注规范以保证数据一致性的"
+      - "理解数据质量对最终模型性能（Data-centric AI）的决定性影响"
+
+  - id: "CV-PQ-ST-006"
+    type: "project_deep_dive"
+    question: "请总结一下你的项目最终产出了哪些具体的业务成果或技术指标？"
+    tags: ["项目成果", "业务价值", "指标量化"]
+    difficulty: "medium"
+    source: "商汤科技"
+    key_points:
+      - "提供可量化的评估指标（如 mAP、F1 Score 提升百分点）"
+      - "提供业务维度的影响（如节约了多少人力成本，或响应了多少日活并发）"
+      - "如有相关软产出（专利、学术论文或内部开源组件），需予以说明"
+
+  - id: "CV-PQ-ST-007"
+    type: "project_deep_dive"
+    question: "请重点讲一下你在AI Agent项目中负责的核心模块和技术难点。在开发过程中踩过最大的坑是什么？你是如何将大模型能力约束进一个可控系统里的？"
+    tags: ["项目架构", "Agent开发", "工程化落地"]
+    difficulty: "hard"
+    source: "商汤科技"
+    key_points:
+      - "清晰阐述核心模块的设计思路及其对业务的具体价值"
+      - "详细说明遇到的工程或算法瓶颈（如ReAct循环失效、工具误调）及排查过程"
+      - "有效阐述对模型幻觉控制、系统稳定性及Prompt系统工程约束的成熟方案"
+
+  - id: "CV-PQ-ST-008"
+    type: "project_deep_dive"
+    question: "请详细介绍你参与的项目中所使用的3D感知算法（如BEVFormer、BEVDepth等）的网络结构设计思路？"
+    tags: ["3D感知", "BEV", "自动驾驶"]
+    difficulty: "hard"
+    source: "商汤科技"
+    key_points:
+      - "清晰描述2D Backbone、Neck特征提取及2D到3D的视角转换模块（View Transformer）"
+      - "准确解释时空特征融合或Transformer注意力机制在此类模型中的应用原理"
+      - "说明该结构在当前特定业务场景或特定传感器配置下的优势"
+
+  - id: "CV-PQ-ST-009"
+    type: "project_deep_dive"
+    question: "针对项目中使用的基础算法模型，你在后续业务落地时做了哪些具体的优化或改进措施？涨点情况如何？"
+    tags: ["模型优化", "指标提升", "业务落地"]
+    difficulty: "medium"
+    source: "商汤科技"
+    key_points:
+      - "结合实际数据分布特征设计特定的网络分支、注意力模块或修改Loss"
+      - "采用了知识蒸馏、剪枝等模型压缩技术加速推理"
+      - "量化说明改进前后的各项关键指标（如mAP、FPS、显存占用）的实际收益"

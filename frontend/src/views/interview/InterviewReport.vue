@@ -189,6 +189,7 @@
                   <div class="q-index">
                     Q{{ idx + 1 }}
                     <span v-if="q.isFollowUp" class="followup-tag">追问</span>
+                    <span v-if="q.isEnterpriseQuestion" class="enterprise-tag">企业真题 · {{ q.questionSource || '企业' }}</span>
                   </div>
                   <p class="q-text" v-html="renderMarkdown((q.question || '').replace('[INTERVIEW_OVER]', ''))" />
                 </div>
@@ -218,6 +219,21 @@
                       <div class="comment-skeleton__line" />
                       <div class="comment-skeleton__line comment-skeleton__line--short" />
                     </div>
+                  </div>
+
+                  <div class="detail-reference">
+                    <div class="detail-reference__header">
+                      <p class="detail-label">参考优秀回答</p>
+                      <button
+                        class="reference-btn"
+                        :disabled="q.referenceAnswerLoading"
+                        @click="requestQuestionExcellentAnswer(q, idx)"
+                      >
+                        {{ q.referenceAnswerLoading ? '生成中...' : (q.referenceAnswer ? '重新生成' : '申请参考优秀答案') }}
+                      </button>
+                    </div>
+                    <p v-if="q.referenceAnswer" class="detail-content" v-html="renderMarkdown(q.referenceAnswer)" />
+                    <p v-else class="detail-content detail-content--muted">点击右侧按钮生成该题参考优秀回答</p>
                   </div>
                 </div>
               </transition>
@@ -251,7 +267,7 @@
 </template>
 
 <script>
-import { getReport, getReplyAnalysis } from '@/api/report'
+import { getReport, getReplyAnalysis, requestExcellentAnswer } from '@/api/report'
 import { INTERVIEW_DIMENSIONS } from '@/utils/constants'
 import { marked } from 'marked'
 let echarts = null
@@ -362,6 +378,11 @@ export default {
           if (q) {
             // Vue 响应式更新：直接赋值属性
             q.comment = item.evaluationText || ''
+            q.isEnterpriseQuestion = !!item.isEnterpriseQuestion
+            q.questionSource = item.questionSource || ''
+            if (!q.reference || !Array.isArray(q.reference) || !q.reference.length) {
+              q.reference = item.reference || []
+            }
           }
         })
       } catch (e) {
@@ -482,6 +503,18 @@ export default {
       if (!iso) return ''
       const d = new Date(iso)
       return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`
+    },
+    async requestQuestionExcellentAnswer(q, idx) {
+      if (!q) return
+      q.referenceAnswerLoading = true
+      try {
+        const res = await requestExcellentAnswer(this.reportId, idx + 1)
+        q.referenceAnswer = res?.referenceAnswer || ''
+      } catch (e) {
+        console.error('生成参考优秀回答失败', e)
+      } finally {
+        q.referenceAnswerLoading = false
+      }
     },
     retryInterview() {
       this.$store.dispatch('interview/resetInterview')
@@ -846,6 +879,14 @@ export default {
   font-size: 10px; padding: 1px 6px; border-radius: $border-radius-full;
 }
 
+.enterprise-tag {
+  background: #EEF2FF;
+  color: #4338CA;
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: $border-radius-full;
+}
+
 .q-text {
   font-size: $font-size-base; color: $text-primary;
   line-height: $line-height-normal;
@@ -917,6 +958,29 @@ export default {
   padding: $spacing-md; font-size: $font-size-base;
   color: $primary; line-height: $line-height-relaxed;
   border-left: 3px solid $primary;
+}
+
+.detail-reference__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: $spacing-xs;
+}
+
+.reference-btn {
+  border: 1px solid #C7D2FE;
+  background: #EEF2FF;
+  color: #4338CA;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.reference-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
 }
 
 // collapse 动画

@@ -1,112 +1,797 @@
 type: backend_project_deep_dive_questions
 source:
-  - "面经库"
+  - "Interview_Bank"
+  - "阿里巴巴"
+  - "腾讯"
+  - "华为"
+  - "京东"
+  - "美团"
+  - "拼多多"
+  - "字节跳动"
 items:
-  - id: BE-PQ-001
-    type: project_deep_dive
+  - id: "BE-PQ-001"
+    type: "project_deep_dive"
     question: "请介绍你项目的业务背景、目标用户、核心指标和当前阶段。"
     tags: ["项目背景", "业务理解"]
-    difficulty: easy
-    source: "面经库"
-    status: draft
+    difficulty: "easy"
+    source: "Interview_Bank" 
     key_points:
       - "清晰的STAR法则描述"
       - "说清痛点和业务背景"
       - "能够明确自己的贡献所带来的具体量化业务指标(如QPS带来多大提升，成本降了多少)"
-  - id: BE-PQ-002
-    type: project_deep_dive
+  - id: "BE-PQ-002"
+    type: "project_deep_dive"
     question: "你在项目中负责的模块边界是什么？如何与上下游协作？"
     tags: ["职责边界", "协作"]
-    difficulty: easy
-    source: "面经库"
-    status: draft
+    difficulty: "easy"
+    source: "Interview_Bank" 
     key_points:
       - "厘清自身的职责和开发边界"
       - "清晰展示出如何与上游(网关/端)和下游(DBA/基础架构)协作"
       - "展现出主动承担及突破边界的加分项"
-  - id: BE-PQ-003
-    type: project_deep_dive
+  - id: "BE-PQ-003"
+    type: "project_deep_dive"
     question: "系统整体架构是怎样的？请画出关键调用链路。"
     tags: ["系统架构", "调用链"]
-    difficulty: medium
-    source: "面经库"
-    status: draft
+    difficulty: "medium"
+    source: "Interview_Bank" 
     key_points:
       - "具备全局视野，能画清楚合理的系统分层架构(接入、逻辑、数据)"
       - "流畅讲述一次核心请求(如一次下单)从端到端打通的完成链路图"
-  - id: BE-PQ-004
-    type: project_deep_dive
+  - id: "BE-PQ-004"
+    type: "project_deep_dive"
     question: "你们为什么选择当前技术栈？有哪些备选方案，如何权衡？"
     tags: ["技术选型", "权衡"]
-    difficulty: medium
-    source: "面经库"
-    status: draft
+    difficulty: "medium"
+    source: "Interview_Bank" 
     key_points:
       - "体现出技术雷达深度(不仅只知道这个)"
       - "展现选型的妥协与权衡(基于团队熟悉度、交付周期、社区活跃度等客观对比)"
-  - id: BE-PQ-005
-    type: project_deep_dive
+  - id: "BE-PQ-005"
+    type: "project_deep_dive"
     question: "项目中遇到过最复杂的线上问题是什么？如何定位与修复？"
     tags: ["线上问题", "排障"]
-    difficulty: hard
-    source: "面经库"
-    status: draft
+    difficulty: "hard"
+    source: "Interview_Bank" 
     key_points:
       - "复杂度的真实性(死锁、并发异常、内存泄漏、脏数据穿透等)"
       - "排障工具的使用熟练度(SkyWalking链路/Arthas)"
       - "根因分析到位并形成修复反馈闭环(如沉淀为Code Review规范)"
-  - id: BE-PQ-006
-    type: project_deep_dive
+  - id: "BE-PQ-006"
+    type: "project_deep_dive"
     question: "你如何做性能优化？优化前后数据对比如何？"
     tags: ["性能优化", "指标"]
-    difficulty: medium
-    source: "面经库"
-    status: draft
+    difficulty: "medium"
+    source: "Interview_Bank" 
     key_points:
       - "通过火焰图或压测发现热点函数的切入点"
       - "实施了分步骤优化(如：加缓存、改异步、SQL加索引)"
       - "拥有前后对照的量化数据(例如响应时间从2s降低到300ms)"
-  - id: BE-PQ-007
-    type: project_deep_dive
+  - id: "BE-PQ-007"
+    type: "project_deep_dive"
     question: "你们如何保证接口幂等、数据一致性与事务正确性？"
     tags: ["一致性", "幂等"]
-    difficulty: hard
-    source: "面经库"
-    status: draft
+    difficulty: "hard"
+    source: "Interview_Bank" 
     key_points:
       - "保证了多次重试请求依然一致的幂等设计(Token/唯一键)"
       - "使用正确的手段保证事务(分布式事务如RocketMQ事务消息或Seata)"
       - "资金/库存等敏感数据的并发锁兜底机制"
-  - id: BE-PQ-008
-    type: project_deep_dive
+  - id: "BE-PQ-008"
+    type: "project_deep_dive"
     question: "项目中的缓存策略是什么？如何处理缓存与数据库双写一致性？"
     tags: ["缓存", "一致性"]
-    difficulty: hard
-    source: "面经库"
-    status: draft
+    difficulty: "hard"
+    source: "Interview_Bank" 
     key_points:
       - "明确采用双写还是CacheAside(先写DB再删缓存)策略"
       - "面对并发或异常导致脏数据的对策(基于Binlog同步更新、延时双删)"
       - "讲述如何面对极端突发流量(热点分散/多级缓存)"
-  - id: BE-PQ-009
-    type: project_deep_dive
+  - id: "BE-PQ-009"
+    type: "project_deep_dive"
     question: "你们的监控告警体系如何设计？关键 SLI/SLO 指标有哪些？"
     tags: ["可观测性", "监控"]
-    difficulty: medium
-    source: "面经库"
-    status: draft
+    difficulty: "medium"
+    source: "Interview_Bank" 
     key_points:
       - "全链路监控(Tracing)机制能快速追踪链路节点"
       - "完备的Metrics度量设计(TP99, 错误率, Http状态码监控)"
       - "合理的告警层级及阈值，防止狼来了效应导致团队脱敏"
-  - id: BE-PQ-010
-    type: project_deep_dive
+  - id: "BE-PQ-010"
+    type: "project_deep_dive"
     question: "如果让你重做一次该项目，你会如何重构架构与流程？"
     tags: ["复盘", "架构演进"]
-    difficulty: medium
-    source: "面经库"
-    status: draft
+    difficulty: "medium"
+    source: "Interview_Bank" 
     key_points:
       - "展示出了反思与成长的能力，体现'没有完美架构只有不断演进的架构'认知"
       - "找出系统当下的债务(技术债/架构债/流程债)"
       - "规划出明确的解耦和演化(如降级机制、缓存前置、底座重构等)路径"
+
+  - id: "BE-PQ-011"
+    type: "project_deep_dive"
+    question: "请结合你的实际经历，谈谈在项目中什么地方具体使用了Redis缓存？引入它解决了什么问题？"
+    tags: ["项目经验", "Redis", "缓存架构"]
+    difficulty: "medium"
+    source: "Personal_Notes"
+    key_points:
+      - "能清晰描述Redis的具体业务场景（如：热点数据缓存、分布式Session共享、排行榜、延时队列等）。"
+      - "阐述引入Redis前后，系统接口响应时间（RT）和数据库（QPS）压力的具体对比与性能提升。"
+      - "是否考虑到并妥善处理了缓存一致性、缓存穿透、缓存击穿、缓存雪崩等进阶问题。"
+
+  - id: "BE-PD-AL-001"
+    type: "project_deep_dive"
+    question: "请详细讲一下你参与的 BI 平台的业务流程是怎样的？"
+    tags: ["业务理解", "系统架构", "数据链路"]
+    difficulty: "hard"
+    source: "阿里巴巴"
+    key_points:
+      - "清晰描述数据的来源、采集、清洗与入库流程"
+      - "讲解后端接口如何支撑前端多维分析与图表渲染的并发需求"
+      - "说明系统的整体业务闭环及你在其中负责的核心模块"
+
+  - id: "BE-PD-AL-002"
+    type: "project_deep_dive"
+    question: "请介绍一下你实习期间的业务背景，你在其中承担了什么角色，以及收获最大的点是什么？"
+    tags: ["实习经历", "总结复盘", "个人成长"]
+    difficulty: "medium"
+    source: "阿里巴巴"
+    key_points:
+      - "精炼概述业务所处行业及解决的用户痛点"
+      - "量化个人的实际产出（如性能提升百分比、优化了几个核心接口）"
+      - "沉淀出可复用的方法论或底层技术认知"
+  
+  - id: "BE-PD-TX-001"
+    type: "project_deep_dive"
+    question: "在实际项目中，数据库的分页查询通常如何优化？特别是针对深分页问题，你是怎么解决的？"
+    tags: ["MySQL", "数据库优化", "深分页"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "理解传统 limit offset, n 导致扫描大量无用数据的性能瓶颈"
+      - "掌握游标（Cursor）或记录上次最大ID（where id > last_id limit n）的优化方案"
+      - "掌握子查询/延迟关联优化（先走覆盖索引查出ID，再回表查完整数据）"
+
+  - id: "BE-PD-TX-002"
+    type: "project_deep_dive"
+    question: "请谈谈你对Java反射机制的理解，你在实际项目中通常在哪些场景下会使用反射？"
+    tags: ["Java", "反射", "底层原理"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "能准确解释反射在运行期动态获取类信息、调用方法的机制"
+      - "结合项目举例：如开发自定义注解、AOP动态代理、依赖注入框架（Spring IOC）或ORM框架映射"
+      - "了解反射带来的性能开销及安全问题，并能提出优化建议（如缓存反射对象）"
+
+  - id: "BE-PQ-TX-003"
+    type: "project_deep_dive"
+    question: "请详细描述一下你在项目开发中遇到的最大技术难点是什么？你是通过什么思路和技术方案解决这个难点的？"
+    tags: ["难点攻克", "项目架构", "问题解决"]
+    difficulty: "hard"
+    source: "腾讯"
+    key_points:
+      - "难点具有足够的工程深度（如高并发、数据一致性、复杂链路排障等）"
+      - "解决思路具备逻辑性：问题复现 -> 原理分析 -> 方案选型 -> 落地实施"
+      - "对所采用的解决方案有优缺点评估"
+
+  - id: "BE-PQ-TX-004"
+    type: "project_deep_dive"
+    question: "结合你的项目实践，谈谈在使用关系型数据库（如MySQL）进行分页查询时遇到了哪些性能瓶颈？你是如何优化深分页问题的？"
+    tags: ["MySQL", "SQL优化", "深分页"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "理解深分页由于LIMIT offset, size中offset过大导致的扫描回表性能开销"
+      - "提到使用主键索引游标过滤（WHERE id > last_id LIMIT size）"
+      - "提到使用覆盖索引结合延迟关联（JOIN或子查询）优化回表"
+
+  - id: "BE-PQ-TX-005"
+    type: "project_deep_dive"
+    question: "谈谈你对Java反射机制的理解。在你的实际项目中，具体在哪些业务场景或底层框架封装中使用了反射技术？"
+    tags: ["Java基础", "反射", "框架原理"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "解释反射能够在运行时动态获取类信息、调用方法和修改属性的原理"
+      - "结合项目说明应用场景（如AOP动态代理、依赖注入DI、统一接口路由、对象属性拷贝等）"
+      - "认知到反射带来的性能损耗及安全问题"
+
+  - id: "BE-PQ-TX-006"
+    type: "project_deep_dive"
+    question: "说说你做过的最有挑战性的项目。能否以STAR法则描述该项目的业务背景、技术挑战，以及你在其中负责的核心模块和技术方案设计？"
+    tags: ["项目总结", "系统设计", "技术挑战"]
+    difficulty: "hard"
+    source: "腾讯"
+    key_points:
+      - "清晰的STAR法则叙述（情境、任务、行动、结果）"
+      - "技术挑战与业务量级匹配（如高并发下防超卖、系统高可用保障）"
+      - "明确说明个人的技术贡献占比，而非团队泛泛而谈"
+
+  - id: "BE-PQ-TX-007"
+    type: "project_deep_dive"
+    question: "在你的项目中，遇到过哪些最大的技术难点？你是如何逐步排查并解决的？"
+    tags: ["项目复盘", "问题解决", "系统优化"]
+    difficulty: "hard"
+    source: "腾讯"
+    key_points:
+      - "能够清晰描述问题的背景和触发条件（如高并发导致的OOM或死锁）"
+      - "展现出科学的排查链路（如监控报警 -> 日志排查 -> 链路追踪 -> 压测复现）"
+      - "提出了根本性的解决方案，并有明确的收益数据支持"
+  - id: "BE-PQ-TX-008"
+    type: "project_deep_dive"
+    question: "请详细介绍一下你项目中是如何落地使用 SingleFlight 合并请求来解决缓存穿透问题的？"
+    tags: ["缓存穿透", "高并发", "SingleFlight"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "解释缓存穿透/击穿的概念及常规解法（如布隆过滤器、空值缓存）"
+      - "阐述SingleFlight的原理：相同key的并发请求只让第一个去DB拉取，其他阻塞等待共享结果"
+      - "提及SingleFlight在极端情况下的问题（如请求超时）及配合兜底方案的应用"
+  - id: "BE-PQ-TX-009"
+    type: "project_deep_dive"
+    question: "在你的项目中具体是如何使用 Redis 的？结合业务场景谈谈用到了哪些数据类型？"
+    tags: ["Redis", "数据结构", "业务建模"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "String类型用于简单的K-V缓存或分布式锁"
+      - "Hash类型用于存储对象数据以节省内存"
+      - "Zset用于排行榜、延时队列等排序场景，或Set用于去重和交并集"
+  - id: "BE-PQ-TX-010"
+    type: "project_deep_dive"
+    question: "你的项目中提到了使用 SSE（Server-Sent Events），请问在什么业务场景下使用的？它解决了什么痛点？"
+    tags: ["SSE", "网络通信", "消息推送"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "说明SSE适用于服务端单向高频向客户端推送数据的场景（如AI流式对话、大屏监控）"
+      - "对比WebSocket，说明SSE基于HTTP协议、实现轻量且自带断线重连机制的优势"
+      - "指出SSE不支持双向通信的局限性"
+  - id: "BE-PQ-TX-011"
+    type: "project_deep_dive"
+    question: "项目中流量聚合是在内存中处理的，如果发生服务宕机导致数据丢失怎么办？如何保证数据的最终一致性？"
+    tags: ["高可用", "数据一致性", "容灾备份"]
+    difficulty: "hard"
+    source: "腾讯"
+    key_points:
+      - "内存数据丢失的风险评估及优雅停机（Graceful Shutdown）机制设计"
+      - "利用持久化队列（如Kafka）做流量缓冲和重放机制"
+      - "设计数据对齐和定时对账服务，发现数据不一致时进行补偿操作以满足最终一致性"
+
+  - id: "BE-PD-HW-001"
+    type: "project_deep_dive"
+    question: "请详细讲讲你做过的一个涉及ETL（数据抽取、转换、加载）的项目经历。数据是如何进行分流清洗并最终落库到平台的？"
+    tags: ["ETL", "数据处理", "架构设计"]
+    difficulty: "hard"
+    source: "华为"
+    key_points:
+      - "清晰阐述ETL全流程架构，包括数据源、抽取组件、清洗规则和目标库"
+      - "说明在清洗和转换阶段使用了哪些设计模式（如策略模式、责任链模式）来保证代码的可维护性"
+      - "能提出针对海量数据清洗的性能优化手段（如多线程、批处理、内存调优）"
+
+  - id: "BE-PD-HW-002"
+    type: "project_deep_dive"
+    question: "请介绍一下你的核心项目。你在项目中使用了布隆过滤器，请讲解其原理、缺点及应用场景。此外，项目中是如何使用Bitmap或HyperLogLog等Redis高级数据结构的？"
+    tags: ["Redis架构", "布隆过滤器", "复杂数据结构"]
+    difficulty: "hard"
+    source: "华为"
+    key_points:
+      - "准确解释布隆过滤器的原理（多个Hash函数+位图）及缺点（存在误判率、不支持删除元素）"
+      - "说明布隆过滤器在项目中的具体应用（如解决缓存穿透问题）"
+      - "讲清Bitmap（用于签到、状态统计等）或HyperLogLog（用于海量基数去重统计如UV）的具体业务落地场景"
+
+  - id: "BE-PD-HW-003"
+    type: "project_deep_dive"
+    question: "在参与项目开发时，你在设计数据库表结构时主要会考虑哪些因素？"
+    tags: ["数据库设计", "架构思维", "MySQL"]
+    difficulty: "medium"
+    source: "华为"
+    key_points:
+      - "考虑范式与反范式的权衡，为了查询性能是否需要适当冗余字段"
+      - "考虑字段类型的选择（如尽量使用整型、避免过长的VARCHAR、时间戳存储等）与空间占用"
+      - "考虑未来数据的扩展性与分库分表键（Sharding Key）的预留，以及联合索引的合理设置"
+
+  - id: "BE-PD-HW-004"
+    type: "project_deep_dive"
+    question: "你们的项目总共拆分了几个微服务？你主要负责其中的哪一个？具体承担了哪些开发工作？"
+    tags: ["微服务架构", "系统划分", "责任边界"]
+    difficulty: "medium"
+    source: "华为"
+    key_points:
+      - "能清晰描绘整个微服务系统的业务架构与服务拆分粒度"
+      - "明确界定个人职责，突出自己负责的核心模块或链路"
+      - "体现出对服务间通信（如RPC/HTTP）、服务治理及分布式问题的理解"
+
+  - id: "BE-PD-HW-005"
+    type: "project_deep_dive"
+    question: "你的项目中涉及到状态转移，且是通过事件来观测是否实现。请问具体是如何判断该事件是否成功触发并完成状态扭转的？"
+    tags: ["状态机", "事件驱动架构", "分布式一致性"]
+    difficulty: "hard"
+    source: "华为"
+    key_points:
+      - "说明采用的消息队列（如Kafka/RocketMQ）或事件总线机制"
+      - "阐述如何利用本地消息表或事务消息来保证事件发出的可靠性"
+      - "说明如何通过幂等性设计和状态机的版本号（乐观锁）来判断并确保状态转移的最终一致性"
+
+  - id: "BE-PQ-JD-001"
+    type: "project"
+    question: "请挑选你简历中最满意的一个项目进行详细介绍。"
+    tags: ["项目经历", "系统架构", "业务理解"]
+    difficulty: "medium"
+    source: "京东"
+    key_points:
+      - "清晰阐述项目背景、业务价值及整体架构"
+      - "明确界定个人在项目中的核心职责与贡献"
+      - "突出项目中的技术亮点或难点突破"
+  - id: "BE-PQ-JD-002"
+    type: "project"
+    question: "请详细介绍一下你在项目中遇到的最大技术难点是什么，以及你是如何克服的？"
+    tags: ["技术深度", "难点攻坚", "排障能力"]
+    difficulty: "hard"
+    source: "京东"
+    key_points:
+      - "具体描述难点场景（如高并发瓶颈、内存泄漏、复杂业务逻辑）"
+      - "展示严谨的排查思路或技术调研对比过程"
+      - "量化解决前后的收益（如QPS提升、响应时间下降）"
+  - id: "BE-PQ-JD-003"
+    type: "project"
+    question: "在你的项目中，Redis具体是如何使用的？主要用来存储哪些业务数据？"
+    tags: ["Redis", "缓存设计", "项目实战"]
+    difficulty: "medium"
+    source: "京东"
+    key_points:
+      - "结合具体业务场景说明Redis数据结构的选择（如String存Token，ZSet做排行榜）"
+      - "说明为何该数据适合存入Redis（高频访问、计算复杂等）"
+      - "是否考虑了缓存穿透、击穿、雪崩等防护机制"
+  - id: "BE-PQ-JD-004"
+    type: "project"
+    question: "你在项目中是如何改进秒杀流程的？为什么要将其重构为异步实现？"
+    tags: ["高并发", "秒杀系统", "异步解耦"]
+    difficulty: "hard"
+    source: "京东"
+    key_points:
+      - "阐述同步秒杀在瞬时高并发下的瓶颈（数据库锁竞争、连接池耗尽）"
+      - "讲解异步改造方案（前端限流+Redis预减库存+MQ异步下单）"
+      - "分析异步化带来的用户体验提升及系统吞吐量飙升"
+  - id: "BE-PQ-JD-005"
+    type: "project"
+    question: "针对你参与的这个开源项目，你个人主导了哪些具体的升级和改进？"
+    tags: ["开源贡献", "代码重构", "技术视野"]
+    difficulty: "hard"
+    source: "京东"
+    key_points:
+      - "具体说明提交的PR或Issue内容（如修复Bug、增加新特性、性能优化）"
+      - "展现阅读和理解优秀开源代码的能力"
+  - id: "BE-PQ-JD-006"
+    type: "project"
+    question: "你是否了解过Langchain等AI框架？在项目中是否有过RAG（检索增强生成）或Agent的实际落地经验？请具体讲讲。"
+    tags: ["AI大模型", "Langchain", "RAG", "Agent"]
+    difficulty: "hard"
+    source: "京东"
+    key_points:
+      - "清晰描述RAG的核心流程（文档解析、Chunking、Embedding、向量检索、Prompt拼接）"
+      - "阐述在项目中如何利用框架解决业务痛点"
+      - "讨论落地过程中遇到的坑及优化手段（如提高检索召回率、降低幻觉）"
+  - id: "BE-PQ-JD-007"
+    type: "project"
+    question: "在复杂项目中，约束AI行为的手段有哪些？如何确保AI严格遵守复杂的业务规则？"
+    tags: ["AI工程化", "Prompt Engineering", "风控"]
+    difficulty: "hard"
+    source: "京东"
+    key_points:
+      - "通过系统级Prompt制定严格的行为边界和输出格式（如JSON）"
+      - "利用Function Calling/Tools将复杂逻辑交由确定性的后端代码执行"
+      - "后置校验模块：对AI输出进行正则匹配、逻辑规则校验或安全拦截"
+  
+  - id: "BE-PQ-JD-008"
+    type: "project_deep_dive"
+    question: "请分享一个你做过的比较难的模块，并说明难点在哪里？"
+    tags: ["复杂系统设计", "问题解决", "架构能力"]
+    difficulty: "hard"
+    source: "京东"
+    key_points:
+      - "使用STAR法则（情境、任务、行动、结果）清晰描述业务背景"
+      - "深入剖析技术难点（如高并发、数据一致性、复杂状态流转、性能瓶颈等）"
+      - "阐述具体的攻坚手段和最终达成的可量化结果"
+
+  - id: "BE-PQ-JD-009"
+    type: "project_deep_dive"
+    question: "在代码组织和模块划分方面你遇到过哪些困难？是如何解决的？"
+    tags: ["代码重构", "设计模式", "工程化"]
+    difficulty: "medium"
+    source: "京东"
+    key_points:
+      - "提及早期设计不足导致的强耦合或代码冗余问题"
+      - "说明如何引入设计原则（如单一职责、开闭原则）或领域驱动设计(DDD)思想进行重构"
+      - "描述重构后的收益（如可测试性提升、扩展性增强）"
+
+  - id: "BE-PQ-JD-010"
+    type: "project_deep_dive"
+    question: "整体回顾你的核心项目，遇到的最大困难是什么？你是怎么解决的？"
+    tags: ["项目复盘", "技术攻坚", "综合排查"]
+    difficulty: "hard"
+    source: "京东"
+    key_points:
+      - "描述一个具有全局影响的困难（可以是技术选型、线上OOM/CPU飙高、跨团队协作等）"
+      - "展现系统的排查链路和推导逻辑，而非盲目试错"
+      - "总结经验教训并沉淀为通用方法论"
+
+  - id: "BE-PQ-JD-011"
+    type: "project_deep_dive"
+    question: "请具体讲讲你的项目中哪些业务场景使用了多线程？开发用时大概多久？"
+    tags: ["多线程", "项目架构", "并发实战"]
+    difficulty: "medium"
+    source: "京东"
+    key_points:
+      - "阐述使用多线程的业务痛点（如提升吞吐量、异步解耦）"
+      - "说明线程池的核心参数是如何根据该业务场景的IO/CPU密集度来配置的"
+      - "提及了对线程安全、事务一致性或异常处理的考量"
+
+  - id: "BE-PQ-JD-012"
+    type: "project_deep_dive"
+    question: "你项目中的点赞模块多层缓存是怎么设计的？每一级分别存储的是什么？了解Caffeine的原理吗？"
+    tags: ["多级缓存", "Redis", "Caffeine", "架构设计"]
+    difficulty: "hard"
+    source: "京东"
+    key_points:
+      - "清晰说明本地缓存（如Caffeine）与分布式缓存（Redis）的分工与命中顺序"
+      - "点赞数据在Redis中的数据结构选型（如Hash或Set）及其依据"
+      - "简述Caffeine基于W-TinyLFU的高效淘汰算法原理"
+
+  - id: "BE-PQ-JD-013"
+    type: "project_deep_dive"
+    question: "你在项目中对大模型做了哪些探索？Function Calling传递了什么方法？记忆模块是如何设计的？"
+    tags: ["AI Agent", "LLM", "项目实战"]
+    difficulty: "hard"
+    source: "京东"
+    key_points:
+      - "说明大模型在项目中的具体业务价值与嵌入方式"
+      - "清楚描述定义的Tool/Function结构以及模型是如何触发调用的"
+      - "记忆模块（短期/中期/长期）的存储载体（如Redis/Vector DB）及召回策略"
+
+  - id: "BE-PQ-JD-014"
+    type: "project_deep_dive"
+    question: "项目中的Redis具体是怎么用的？里面存了哪些业务数据，数据结构是如何选择的？"
+    tags: ["Redis实战", "数据结构"]
+    difficulty: "medium"
+    source: "京东"
+    key_points:
+      - "结合具体模块（如分布式锁、缓存、排行榜）说明Redis的作用"
+      - "合理阐述String、Hash、Zset等结构与业务字段的映射关系"
+      - "提及了针对大Key、热Key或内存过期的治理手段"
+
+  - id: "BE-PQ-JD-015"
+    type: "project_deep_dive"
+    question: "项目限流部分是怎么实现的？为什么要引入AOP和自定义注解？"
+    tags: ["高并发", "限流", "AOP"]
+    difficulty: "medium"
+    source: "京东"
+    key_points:
+      - "说明限流的具体算法（如令牌桶、漏桶、滑动窗口）及底层组件（如Redis+Lua）"
+      - "阐述AOP+注解的优势：业务代码与非功能性需求解耦，提升代码复用性"
+      - "解释AOP切面的拦截逻辑及限流触发后的降级/异常处理机制"
+
+  - id: "BE-PQ-JD-016"
+    type: "project_deep_dive"
+    question: "你项目的高并发场景有进行过压测吗？如何使用JMeter评估接口性能？"
+    tags: ["性能压测", "JMeter", "系统优化"]
+    difficulty: "medium"
+    source: "京东"
+    key_points:
+      - "说明压测的指标（如QPS、RT、错误率）及压测环境配置"
+      - "解释JMeter的线程组设置及并发模拟机制，认知到其局限性"
+      - "能够讲出压测发现的性能瓶颈并给出了对应的优化方案"
+
+  - id: "BE-PQ-MT-001"
+    type: "project_deep_dive"
+    question: "在你的项目中设计了哪些表？包含哪些核心字段？数据是如何流转和修改的？"
+    tags: ["数据库设计", "数据建模", "业务逻辑"]
+    difficulty: "medium"
+    source: "美团"
+    key_points:
+      - "清晰列举核心业务表（如用户表、订单表、流水表等）及其主键、外键或关联关系"
+      - "说明关键状态字段的设计，以及为了查询优化所做的冗余字段或索引设计"
+      - "准确描述业务核心场景下的数据状态机流转过程（如创建、支付成功、退款等操作对数据的状态修改）"
+
+  - id: "BE-PQ-MT-002"
+    type: "project_deep_dive"
+    question: "你在项目中提到GC压力很大，请问你是如何发现和定位这个问题的？"
+    tags: ["JVM调优", "性能排查", "监控预警"]
+    difficulty: "hard"
+    source: "美团"
+    key_points:
+      - "说明通过何种监控工具（如Prometheus、Grafana）或命令（jstat）发现了YGC/FGC频繁或停顿时间过长"
+      - "阐述排查过程，如使用jmap导出dump文件，利用MAT或JProfiler分析内存泄漏或大对象存活情况"
+      - "给出最终的优化结论，是调整了JVM参数（如堆内存大小、新生代比例）还是优化了业务代码（如减少大对象创建、复用对象）"
+
+  - id: "BE-PQ-MT-003"
+    type: "project_deep_dive"
+    question: "针对‘1000万数据点/10秒采集’的场景，数据链路压力很大，你们在传输段是如何做高可用的？"
+    tags: ["高并发", "高可用", "消息队列", "架构设计"]
+    difficulty: "hard"
+    source: "美团"
+    key_points:
+      - "说明所选用的消息中间件（如Kafka）的高可用机制（如多副本、Partition分布、ISR机制）"
+      - "阐述在生产端如何处理高并发写入（如微批处理、异步发送、压缩传输）以缓解链路网络压力"
+      - "讲解容灾处理方案，如网络抖动时的重试机制、死信队列或降级策略，保证数据不丢失"
+
+  - id: "BE-PQ-MT-004"
+    type: "project_deep_dive"
+    question: "在你的工作流编排平台项目中，你是如何使用 DSL 来定义业务逻辑的？具体解决了什么核心问题？"
+    tags: ["DSL", "工作流", "Spring Boot"]
+    difficulty: "hard"
+    source: "美团"
+    key_points:
+      - "DSL 对复杂逻辑的抽象能力，降低了非技术人员或复杂场景的接入门槛"
+      - "如何通过 Spring 解析 DSL 并转化为执行引擎可识别的节点链"
+      - "解决硬编码带来的业务扩展性差和维护成本高的问题"
+
+  - id: "BE-PQ-MT-005"
+    type: "project_deep_dive"
+    question: "针对 RAG 知识库项目，你是如何评估生成内容的准确率和召回率的？调研过哪些模型来进行效果对比？"
+    tags: ["RAG", "LLM", "评估机制"]
+    difficulty: "hard"
+    source: "美团"
+    key_points:
+      - "介绍使用 RAGAS 或人工标注等评估指标（忠实度、相关性等）"
+      - "对比过不同 Embedding 模型（如 OpenAI、BGE、M3）对召回的影响"
+      - "提及 Top-K 检索、重排序（Rerank）对准确率的提升作用"
+
+  - id: "BE-PQ-MT-006"
+    type: "project_deep_dive"
+    question: "在自愈监控系统中，如果监控系统本身出现宕机或故障，你是如何设计其自身的高可用方案的？"
+    tags: ["高可用", "监控系统", "容灾"]
+    difficulty: "hard"
+    source: "美团"
+    key_points:
+      - "监控系统的冗余部署（双机房、Active-Active 模式）"
+      - "引入外部看门狗（Watchdog）机制或互助监控"
+      - "数据链路的缓冲设计，防止监控失效期间的数据丢失"
+
+  - id: "BE-PQ-MT-007"
+    type: "project_deep_dive"
+    question: "请介绍一下你在项目配置线程池时使用的关键参数，以及针对不同业务场景的配置策略是怎样的？"
+    tags: ["线程池", "性能调优", "并发编程"]
+    difficulty: "hard"
+    source: "美团"
+    key_points:
+      - "准确说出核心参数（corePoolSize, maxPoolSize, queue, keepAliveTime, rejectPolicy）"
+      - "能区分CPU密集型（通常N+1）和IO密集型（通常2N或基于阻塞系数）的配置差异"
+      - "结合实际项目说明为何这样配置，以及压测或线上监控对参数调整的指导"
+  - id: "BE-PQ-MT-008"
+    type: "project_deep_dive"
+    question: "你在项目中遇到数据链路压力很大的情况，尤其是数据传输阶段，请问你们是如何设计保证高可用的？"
+    tags: ["高可用架构", "链路设计", "微服务"]
+    difficulty: "hard"
+    source: "美团"
+    key_points:
+      - "引入消息队列（如Kafka/RocketMQ）进行削峰填谷和异步解耦"
+      - "阐述重试机制、死信队列（DLQ）以及降级策略的使用"
+      - "涉及服务的限流策略以及集群部署容灾设计"
+  - id: "BE-PQ-MT-009"
+    type: "project_deep_dive"
+    question: "在你的项目中，是如何发现和排查JVM垃圾回收（GC）压力过大问题的？"
+    tags: ["JVM调优", "线上排查", "监控告警"]
+    difficulty: "hard"
+    source: "美团"
+    key_points:
+      - "说明监控工具的使用（如Prometheus、Grafana、Zabbix监控GC频率和耗时）"
+      - "说明排查工具的应用（如jstat, jmap, Arthas分析堆内存和Dump文件）"
+      - "阐述最终的优化方案（如调整堆大小、更换垃圾回收器、优化代码内存泄漏等）"
+  - id: "BE-PQ-MT-010"
+    type: "project_deep_dive"
+    question: "请详细讲解一下你在项目中使用的JWT的具体执行流程，以及Token中除了用户名和密码外，还包含了哪些信息？"
+    tags: ["单点登录", "JWT", "安全认证"]
+    difficulty: "medium"
+    source: "美团"
+    key_points:
+      - "阐述JWT的签发与验证流程（Header、Payload、Signature的生成与校验）"
+      - "明确说明Token中通常不应存放明文密码，而应包含用户ID、角色权限、过期时间（exp）等非敏感身份标识"
+      - "提到Token续期机制或黑名单处理策略"
+  - id: "BE-PQ-MT-011"
+    type: "project_deep_dive"
+    question: "你提到在项目中实现了一致性哈希算法，能否详细解释一下其原理以及你在项目中的具体实现细节？"
+    tags: ["分布式算法", "负载均衡", "一致性哈希"]
+    difficulty: "hard"
+    source: "美团"
+    key_points:
+      - "解释一致性哈希环的构造（0~2^32-1）及节点映射原理"
+      - "说明它如何解决传统哈希取模在节点增删时导致的大规模数据迁移问题"
+      - "强调虚拟节点（Virtual Nodes）的引入以解决数据倾斜问题"
+  - id: "BE-PQ-MT-012"
+    type: "project_deep_dive"
+    question: "项目整个开发流程中，哪些环节引入了AI？具体是如何与大模型进行交互以完成代码分析或评审的？"
+    tags: ["AI赋能", "大模型API", "研发效能"]
+    difficulty: "medium"
+    source: "美团"
+    key_points:
+      - "清晰说明AI在项目中的定位（如自动生成测试用例、代码评审、智能问答等）"
+      - "说明与大模型交互的技术实现（如Prompt工程设计、API调用、流式响应处理）"
+      - "阐述如何提取上下文（如Git Diff）并喂给模型以提高输出准确性"
+
+  - id: "BE-PQ-PDD-001"
+    type: "project_deep_dive"
+    question: "请挑选一个你最熟悉的项目进行详细讲解，针对解决的问题是什么，你的核心贡献与创新点在哪里？"
+    tags: ["项目架构", "难点攻坚", "业务理解"]
+    difficulty: "medium"
+    source: "拼多多"
+    key_points:
+      - "采用STAR法则（情境、任务、行动、结果）清晰描述项目背景和目标"
+      - "准确阐述个人在项目中承担的核心模块及具体实施方案"
+      - "能够总结出项目中的技术难点及最终的量化收益（如QPS提升、延迟降低等）"
+
+  - id: "BE-PQ-PDD-002"
+    type: "project_deep_dive"
+    question: "在你的项目中，为什么要引入消息队列（MQ）？解决了什么具体的业务痛点？"
+    tags: ["消息队列", "架构解耦", "削峰填谷"]
+    difficulty: "medium"
+    source: "拼多多"
+    key_points:
+      - "说明MQ的核心作用：系统解耦、异步处理、流量削峰"
+      - "结合具体业务场景（如订单创建、消息通知）阐述引入前后的架构对比和性能变化"
+      - "提到引入MQ后带来的额外挑战及解决方案（如消息丢失、重复消费、消息积压等）"
+
+  - id: "BE-PQ-ZJ-001"
+    type: "project_deep_dive"
+    question: "请问你简历上的项目是借鉴的开源项目还是自己独立从零开始做的？在其中你发挥了怎样的核心作用？"
+    tags: ["项目真实性", "独立思考", "系统设计"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "诚实说明项目来源（如课程设计、开源魔改或自主从零研发）"
+      - "能够清晰界定哪些是现成的框架能力，哪些是自己的创新和代码重构"
+      - "深入理解项目整体架构，而非仅停留在CV（复制粘贴）层面"
+
+  - id: "BE-PQ-ZJ-002"
+    type: "project_deep_dive"
+    question: "请详细介绍一下你参与的AI视频解析平台项目。核心业务流程中涉及了哪几张核心数据表？它们之间的具体交互关系是怎样的？"
+    tags: ["业务建模", "表结构设计", "系统链路"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "清晰表述项目的核心痛点和整体业务运转链路（如视频上传->提音->送大模型解析）"
+      - "准确列出核心表（如用户表、视频元数据表、解析任务表、长文本结果表）及核心字段"
+      - "明确说明状态流转、并发修改数据时的安全性和一致性保障机制"
+
+  - id: "BE-PQ-ZJ-003"
+    type: "project_deep_dive"
+    question: "在你的项目中，为了提高大模型生成的准确性，具体是如何设计提示词（Prompt）工程或相关机制来减少大模型幻觉问题的？"
+    tags: ["AIGC", "提示词工程", "问题解决"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "通过提供充分的上下文约束、Few-shot（少样本提示）来收敛模型输出"
+      - "结合RAG（检索增强生成）技术引入外部真实知识库进行校准"
+      - "增加结果的多重校验、结构化输出约束（如JSON格式）以及兜底策略"
+
+  - id: "BE-PQ-ZJ-004"
+    type: "project_deep_dive"
+    question: "你的项目中引入了分布式锁，请问具体是为了解决什么场景下的问题？Key是如何设计的？"
+    tags: ["分布式锁", "并发控制", "Redis"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "说明具体的业务痛点（如防止重复提交、高并发防超卖、定时任务防多节点并发执行）"
+      - "锁的Key设计需符合唯一性原则，通常结合业务前缀+用户ID/资源ID组合"
+      - "考虑到锁的粒度控制，粒度越细并发性能越高"
+
+  - id: "BE-PQ-ZJ-005"
+    type: "project_deep_dive"
+    question: "请详细介绍一下你负责的核心项目背景，以及系统整体架构是如何设计的？"
+    tags: ["架构设计", "业务理解", "项目介绍"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "清晰阐述业务场景、用户规模及核心痛点"
+      - "有条理地描述系统架构分层（如接入层、业务逻辑层、数据层）及微服务划分"
+      - "能说明技术选型背后的依据和利弊权衡"
+
+  - id: "BE-PQ-ZJ-006"
+    type: "project_deep_dive"
+    question: "请分享一下你在项目开发中遇到的最复杂的技术问题是什么？你是如何排查并最终解决的？"
+    tags: ["问题排查", "难点解决", "技术深度"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "问题描述具备真实的复杂性（如并发冲突、OOM、性能瓶颈、分布式一致性等）"
+      - "排查思路清晰，使用了合理的排查工具（如Arthas、日志链路追踪、压测工具）"
+      - "最终方案彻底解决了问题，且具备可扩展性或有事后复盘思考"
+
+  - id: "BE-PQ-ZJ-007"
+    type: "project_deep_dive"
+    question: "介绍一下你项目中的数据库设计，包含哪些核心表和关键字段？数据修改和流转的流程是怎样的？"
+    tags: ["数据库设计", "ER模型", "业务流转"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "能够画出或清晰口述核心E-R图关系（一对多、多对多）"
+      - "字段设计合理，考虑到索引优化、冗余字段设计及数据一致性"
+      - "数据流转链路闭环，状态机设计清晰无漏洞"
+
+  - id: "BE-PQ-ZJ-008"
+    type: "project_deep_dive"
+    question: "你的项目中使用了Spring Security做权限校验，为什么还要结合使用JWT？两者分别承担了什么作用？"
+    tags: ["Spring Security", "JWT", "权限认证"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "Spring Security 是一个完整的安全框架，负责拦截请求、提供鉴权机制（如RBAC模型）"
+      - "JWT (JSON Web Token) 是一种无状态的令牌规范，用于解决分布式/微服务环境下跨服务共享会话状态的问题"
+      - "能够说出JWT的防伪造原理（Header.Payload.Signature）及其无状态导致的Token注销痛点"
+
+  - id: "BE-PQ-ZJ-009"
+    type: "project_deep_dive"
+    question: "在微服务架构设计中，你是如何实现业务核心流量与特定模块（如合规检查模块）解耦的？使用了哪些RPC技术方案？"
+    tags: ["微服务解耦", "RPC", "架构重构"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "阐述解耦的必要性（防止边缘模块故障拖垮主链路业务）"
+      - "应用了合理的设计模式（如AOP、网关层过滤器拦截、事件驱动/消息队列异步削峰）"
+      - "对所使用的RPC框架（如Dubbo, gRPC或Spring Cloud Feign）的底层原理和限流熔断有深刻认知"
+
+  - id: "BE-PQ-ZJ-010"
+    type: "project_deep_dive"
+    question: "请详细介绍一下你负责的项目，系统架构是怎么设计的？"
+    tags: ["架构设计", "业务理解", "系统拆分"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "能够清晰阐述项目背景、业务场景、用户规模及QPS等关键指标"
+      - "准确描述接入层、网关层、微服务层及数据持久层的边界与交互"
+      - "说明在架构选型时的Trade-off（如为什么选用了某款MQ或缓存方案）"
+
+  - id: "BE-PQ-ZJ-011"
+    type: "project_deep_dive"
+    question: "你的项目中使用了Spring Security，为什么还要结合使用JWT？它们各自解决了什么问题？"
+    tags: ["身份认证", "安全框架", "Spring Security", "JWT"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "指出Spring Security主要负责鉴权与访问控制机制的构建"
+      - "明确JWT是为了解决分布式环境下的无状态（Stateless）身份认证，避免Session共享问题"
+      - "说明项目中如何处理JWT的防伪造、过期续签及黑名单机制"
+
+  - id: "BE-PQ-ZJ-012"
+    type: "project_deep_dive"
+    question: "请列举一下你项目中设计的核心数据库表及关键字段，并说明核心业务的数据流转与更新逻辑是怎样的？"
+    tags: ["表结构设计", "数据库", "业务建模"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "符合范式设计要求，或出于性能考虑进行了合理的反范式设计（冗余字段）"
+      - "核心字段类型选择合理（如使用decimal处理金额，设置合理的索引约束）"
+      - "清晰描述数据在多个微服务或表之间的流转流程及事务一致性保障"
+
+  - id: "BE-PQ-ZJ-013"
+    type: "project_deep_dive"
+    question: "请介绍一下你在项目中遇到的最复杂的技术问题是什么，以及你是如何排查并最终解决的？"
+    tags: ["问题排查", "线上故障", "性能优化"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "问题描述真实且具备一定的复杂度（如OOM、死锁、慢SQL、并发数据不一致等）"
+      - "排查思路清晰，使用了正确的工具（如jstack, jmap, Arthas, Explain等）"
+      - "给出了根本性的解决方案并形成了最佳实践，而非仅作临时规避"
+
+  - id: "BE-PQ-ZJ-014"
+    type: "project_deep_dive"
+    question: "你在实习项目中提到了“微服务架构设计”和“业务流量与合规模块解耦”，能否具体说明你是如何实现解耦的？使用了哪些技术方案？"
+    tags: ["服务解耦", "微服务", "RPC"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "明确解耦的原因（避免合规逻辑阻塞核心业务流，提升系统可维护性）"
+      - "解释具体的技术手段（如使用MQ异步解耦、AOP切面拦截、或单独的RPC服务调用）"
+      - "考虑了合规验证失败时的降级、熔断及业务回滚策略"
+
+  - id: "BE-PQ-ZJ-015"
+    type: "project_deep_dive"
+    question: "在包含大模型（Agent/RAG）的项目中，你是如何具体设计提示词（Prompt）或者系统流程来减少大模型幻觉问题的？"
+    tags: ["AIGC", "RAG", "Prompt Engineering"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "通过RAG引入外部高质量私有知识库，作为模型回答的Grounding依据"
+      - "在Prompt设计中限定其回答范围（如“请严格基于给定的背景信息作答，如果不知道请回答不知道”）"
+      - "建立回答的后置校验规则或交叉验证机制过滤虚假信息"

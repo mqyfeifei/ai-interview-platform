@@ -1,168 +1,670 @@
 type: "frontend_project_deep_dive_questions"
 source:
-  - "面经库"
+  - "Interview_Bank"
+  - "阿里巴巴"
+  - "腾讯"
+  - "网易"
+  - "字节跳动"
 items:
   - id: "FE-PQ-001"
     type: "project_deep_dive"
     question: "这个前端项目的整体架构是如何设计的？你在其中承担了什么角色？"
     tags: ["项目架构", "职责"]
     difficulty: "easy"
-    source: "面经库"
-    status: "draft"
+    source: "Interview_Bank" 
     key_points:
       - "全面透析工程宏大选型及项目组织建构脉络与层次分隔艺术(基础组件/网络层/核心逻辑等)"
       - "突出自己在浩大多人协同场内发散的核心向导或者破局者的独立高亮角色感"
+
   - id: "FE-PQ-002"
     type: "project_deep_dive"
     question: "项目中的状态管理（如 Redux/Pinia）是如何划分的？遇到过什么痛点？"
     tags: ["状态管理", "架构"]
     difficulty: "medium"
-    source: "面经库"
-    status: "draft"
+    source: "Interview_Bank" 
     key_points:
       - "严苛区分局部私需与全域通告状态流不乱搅和泥巴"
       - "利用强力状态管理中枢化解超深渊多层无用传导以及异族组件孤岛联动痛击"
       - "吐诉并拆解过多黑盒嵌套模板毒瘤的恶心及其抽象钩子化轻量封装救赎路线"
+
   - id: "FE-PQ-003"
     type: "project_deep_dive"
     question: "你们项目中针对首屏或者长列表等特定场景做过哪些性能优化？效果如何？"
     tags: ["性能优化", "真实数据"]
     difficulty: "hard"
-    source: "面经库"
-    status: "draft"
+    source: "Interview_Bank" 
     key_points:
       - "抛弃空口套白狼必亮量化利器打底表成绩(如FP/LCP由某到某)"
       - "重型列表必交的虚拟长卷滚动按需绘制渲染减少万节点负担的标准答卷"
       - "精通使用Lighthouse等探查监控雷达寻热热点卡顿源或图体优化的实际工程手腕"
+
   - id: "FE-PQ-004"
     type: "project_deep_dive"
     question: "前后端接口联调时遇到过哪些沟通或数据格式上的问题，是如何解决的？"
     tags: ["联调", "协作"]
     difficulty: "medium"
-    source: "面经库"
-    status: "draft"
+    source: "Interview_Bank" 
     key_points:
       - "展示因格式断代/超长字段撕裂崩坏等高频现实惨剧的处理嗅觉"
       - "主打前浪基建破局法（引出Swagger协议契约/ApiFox等打通屏障阻滞）"
       - "运用Mock隔离护城河构建并行加速不受后端落后步调干涉之自主强效把控节奏"
+
   - id: "FE-PQ-005"
     type: "project_deep_dive"
     question: "项目中是否有自研或二次封装的组件库？讲讲你封装的最复杂的组件。"
     tags: ["组件封装", "复用性"]
     difficulty: "medium"
-    source: "面经库"
-    status: "draft"
+    source: "Interview_Bank" 
     key_points:
       - "打出复用生态体系、低耦合高包容且健造参数多端下放的标准工业级思维王牌"
       - "深虑配置入参、事件分层反射、插槽包容化的高级抽象形态结构规划"
       - "外拓边界兜底完善防雷以及全量组件维护体系与测试规约建构闭环沉淀展现"
+
   - id: "FE-PQ-006"
     type: "project_deep_dive"
     question: "你在项目中是如何进行版本控制和发布的？遇到过哪些挑战？"
     tags: ["版本控制", "发布流程"]
     difficulty: "medium"
-    source: "面经库"
-    status: "draft"
+    source: "Interview_Bank" 
     key_points:
       - "讲述分支管理策略（如Git Flow）或 trunk-based development 的实践经验"
       - "描述CI/CD流程（如使用Jenkins/GitHub Actions自动化测试和部署）的设计与实施"
       - "分享遇到的挑战（如合并冲突、回滚策略）以及解决方案的具体案例"
+
   - id: "FE-PQ-007"
     type: "project_deep_dive"
     question: "在项目中你是如何进行代码质量控制的？是否有引入静态分析工具或代码审查流程？"
     tags: ["代码质量", "静态分析"]
     difficulty: "medium"
-    source: "面经库"
-    status: "draft"
+    source: "Interview_Bank" 
     key_points:
       - "介绍使用的静态分析工具（如ESLint、Prettier）以及配置规范"
       - "描述代码审查流程（如Pull Request流程、Code Review标准）的实施细节"
       - "分享通过这些措施提升代码质量的实际效果和团队反馈"
+
   - id: "FE-PQ-008"
     type: "project_deep_dive"
     question: "你在项目中是否有过与后端或设计师等其他角色的跨部门协作经历？请举例说明一次成功的协作经历。"
     tags: ["跨部门协作", "沟通"]
     difficulty: "medium"
-    source: "面经库"
-    status: "draft"
+    source: "Interview_Bank" 
     key_points:
       - "描述与后端或设计师的具体协作场景（如接口设计、UI/UX讨论）"
       - "强调沟通技巧（如同理心、数据驱动的决策）在协作中的重要作用"
       - "分享协作成功的结果（如项目按时交付、用户体验提升）以及从中学到的经验教训"
+
   - id: "FE-PQ-009"
     type: "project_deep_dive"
     question: "你在项目中有没有遇到过“技术债务”？你是如何识别和管理它的？"
     tags: ["技术债务", "项目管理"]
     difficulty: "hard"
-    source: "面经库"
-    status: "draft"
+    source: "Interview_Bank" 
     key_points:
       - "识别技术债务的能力：如代码质量下降、模块耦合度增加、缺乏文档等"
       - "展现主动沟通和说服能力，向团队和管理层说明技术债务的风险和长期成本"
       - "制定清晰的偿还计划，如定期重构、引入自动化测试覆盖、优化数据管道等措施逐步消除技术债务"
+
   - id: "FE-PQ-010"
     type: "project_deep_dive"
     question: "你在项目中有没有遇到过“技术孤岛”？你是如何打破它的？"
     tags: ["技术孤岛", "跨部门协作"]
     difficulty: "hard"
-    source: "面经库"
-    status: "draft"
+    source: "Interview_Bank" 
     key_points:
       - "识别技术孤岛的能力：如某个模块或功能只有特定人员理解和维护，缺乏文档和知识共享"
       - "展现主动沟通和协作能力，推动团队内部的知识分享和交叉培训"
       - "引入代码审查、文档规范和定期技术分享会等机制促进团队整体技术水平的提升和信息流通"
+
   - id: "FE-PQ-011"
     type: "project_deep_dive"
-    question: "你在项目中有没有遇到过“技术迷茫期”？你是如何走出它的？"
-    tags: ["技术迷茫", "自我驱动"]
+    question: "在项目中遇到过最棘手的线上Bug是什么？你是如何进行排查和修复的？"
+    tags: ["线上故障", "问题排查", "稳定性"]
     difficulty: "hard"
-    source: "面经库"
-    status: "draft"
+    source: "Interview_Bank" 
     key_points:
-      - "识别技术迷茫的能力：如对技术选型、架构设计等缺乏清晰方向感"
-      - "展现自我驱动和学习能力，通过阅读文档、咨询专家、进行小规模实验等方式寻找解决方案"
-      - "分享成功走出技术迷茫期的案例，以及从中学到的经验教训"
+      - "清晰阐述排查链路：如利用 Sentry 分析报错堆栈、SourceMap 反解析、查阅用户行为轨迹日志等"
+      - "分享具体的破局思路：针对内存泄漏检测、复杂竞态条件复现或第三方库底层的调试过程"
+      - "总结复盘经验并落地预防机制：如补充边界单元测试、增加异常监控告警、优化错误兜底UI"
+
   - id: "FE-PQ-012"
     type: "project_deep_dive"
-    question: "你在项目中有没有遇到过“技术瓶颈”？你是如何突破它的？"
-    tags: ["技术瓶颈", "创新"]
-    difficulty: "hard"
-    source: "面经库"
-    status: "draft"
+    question: "项目中有涉及到哪些前端安全方面的处理？你是如何防范常见的安全漏洞的？"
+    tags: ["前端安全", "XSS", "CSRF"]
+    difficulty: "medium"
+    source: "Interview_Bank" 
     key_points:
-      - "识别技术瓶颈的能力：如性能问题、架构限制等"
-      - "展现创新和解决问题的能力，通过引入新技术、优化算法、重构架构等方式突破瓶颈"
-      - "分享成功突破技术瓶颈的案例，以及从中学到的经验教训"
+      - "明确常见攻击面的防范手段：如防御 XSS 的转义机制、防 CSRF 的 Token 校验与 SameSite Cookie 策略"
+      - "结合实际业务场景讲述安全改造：如敏感数据的前端加密传输逻辑、防止越权访问的路由守卫拦截"
+      - "体现对安全红线的把控能力：分享自动化安全扫描工具的接入经历或参与安全审计的落地经验"
+
   - id: "FE-PQ-013"
     type: "project_deep_dive"
-    question: "你在项目中有没有遇到过“技术挑战”？你是如何迎接它的？"
-    tags: ["技术挑战", "挑战应对"]
+    question: "是否有过参与老旧巨石应用改造或重构的经历？在平滑迁移过程中踩过哪些坑？"
+    tags: ["系统重构", "微前端", "技术演进"]
     difficulty: "hard"
-    source: "面经库"
-    status: "draft"
+    source: "Interview_Bank" 
     key_points:
-      - "识别技术挑战的能力：如新技术的学习曲线、复杂问题的解决等"
-      - "展现迎接挑战的能力，通过积极学习、团队协作、寻求帮助等方式应对挑战"
-      - "分享成功迎接技术挑战的案例，以及从中学到的经验教训"
+      - "描述重构的背景与选型考量：如引入 qiankun / wujie 等微前端框架进行增量解耦升级"
+      - "详述核心痛点及其解决方案：包括全局状态跨应用共享、路由劫持冲突、样式隔离与沙箱穿透问题"
+      - "展示平滑过渡方案：灰度发布策略与新老系统并存期间的维稳手段，确保业务零中断"
+
   - id: "FE-PQ-014"
     type: "project_deep_dive"
-    question: "你在项目中有没有遇到过“技术创新”？你是如何推动它的？"
-    tags: ["技术创新", "推动创新"]
+    question: "你在项目中做过哪些提升团队研发效能的基建工作（如CLI工具、脚手架、构建提速）？"
+    tags: ["工程化", "研发效能", "构建优化"]
     difficulty: "hard"
-    source: "面经库"
-    status: "draft"
+    source: "Interview_Bank" 
     key_points:
-      - "识别技术创新的能力：如新技术的潜力、创新机会等"
-      - "展现推动创新的能力，通过提出新想法、进行实验验证、推动团队采纳等方式推动创新"
-      - "分享成功推动技术创新的案例，以及从中学到的经验教训"
+      - "切中团队研发痛点：如本地编译过慢、模板样板代码复制繁琐、规范对齐成本高"
+      - "展示具体技术手段：如 Webpack 迁移 Vite 的改造实战、编写定制化 Vite 插件、开发 CLI 自动化生成代码基架"
+      - "提供量化的工程收益：如构建时间缩短百分比、通过自动化收敛规范从而降低 Review 沟通成本"
+
   - id: "FE-PQ-015"
     type: "project_deep_dive"
-    question: "你在项目中有没有遇到过“技术突破”？你是如何实现它的？"
-    tags: ["技术突破", "实现突破"]
+    question: "你们项目是如何进行用户行为埋点和性能监控的？这套机制如何赋能实际业务？"
+    tags: ["前端监控", "数据埋点", "业务赋能"]
     difficulty: "hard"
-    source: "面经库"
-    status: "draft"
+    source: "Interview_Bank" 
     key_points:
-      - "识别技术突破的能力：如新技术的重大进展、突破性的解决方案等"
-      - "展现实现技术突破的能力，通过深入研究、持续优化、团队协作等方式实现突破"
-      - "分享成功实现技术突破的案例，以及从中学到的经验教训"
+      - "阐述监控系统全貌：覆盖全局 JavaScript 错误上报、白屏检测、核心性能指标（Web Vitals）采集"
+      - "解决代码侵入性高的痛点：分享采用无痕埋点、基于路由拦截或装饰器模式抽象埋点逻辑的设计方案"
+      - "体现数据驱动业务思维：如何通过漏斗数据分析优化转化率，或根据错误大盘趋势指导后续的版本迭代优化"
+
+  - id: "FE-PQ-AL-001"
+    type: "project_deep_dive"
+    question: "请详细介绍一下你简历中最满意的项目，你在其中承担了什么角色？遇到了哪些技术难点以及是如何解决的？"
+    tags:
+      - "项目经验"
+      - "架构设计"
+      - "难点解决"
+    difficulty: "medium"
+    source: "阿里巴巴"
+    key_points:
+      - "清晰阐述项目背景、核心业务逻辑与个人的具体贡献"
+      - "详细说明遇到的关键技术难点（如性能优化、复杂逻辑处理等）及排查过程"
+      - "总结解决方案的最终效果（如指标提升）以及个人的技术沉淀与反思"
+
+  - id: "FE-PQ-AL-002"
+    type: "project_deep_dive"
+    question: "请问你有过大模型微调（Fine-tuning）相关的项目经验吗？如果有，请详细介绍一下。"
+    tags: ["大模型", "模型微调", "项目经验"]
+    difficulty: "hard"
+    source: "阿里巴巴"
+    key_points:
+      - "清晰描述微调的场景、目标及使用的技术（如 LoRA, P-Tuning 等）"
+      - "介绍数据构造过程和微调前后模型性能的具体提升指标"
+
+  - id: "FE-PQ-AL-003"
+    type: "project_deep_dive"
+    question: "请介绍一下你所做模型/项目的训练数据集规模，大约有多少条训练样本？数据来源是什么？"
+    tags: ["数据处理", "数据集", "项目细节"]
+    difficulty: "medium"
+    source: "阿里巴巴"
+    key_points:
+      - "能准确报出数据规模量级，证明深入参与了项目"
+      - "说明数据清洗、标注和质量控制的标准和流程"
+
+  - id: "FE-PQ-AL-004"
+    type: "project_deep_dive"
+    question: "在模型优化过程中，除了你目前使用的方法，是否有考虑过使用其他的强化学习算法（如 PPO）？为什么？"
+    tags: ["强化学习", "算法对比", "项目优化"]
+    difficulty: "hard"
+    source: "阿里巴巴"
+    key_points:
+      - "体现对 PPO 等强化学习算法核心原理（如 Actor-Critic, 优势函数）的理解"
+      - "结合自身项目特点分析选用或不选用某类算法的权衡（如计算资源、稳定性、实现成本）"
+
+  - id: "FE-PQ-AL-005"
+    type: "project_deep_dive"
+    question: "请分享一个你在项目开发中遇到的最复杂的业务场景或技术难题，以及你是如何设计方案并最终解决的？"
+    tags: ["项目难点", "问题解决能力", "架构设计"]
+    difficulty: "hard"
+    source: "阿里巴巴"
+    key_points:
+      - "使用 STAR 法则清晰描述背景、难点和最终收益"
+      - "体现出技术深度，如性能优化指标提升、高并发应对策略或复杂链路的排查过程"
+
+  - id: "FE-PD-TX-001"
+    type: "project_deep_dive"
+    question: "你在项目中使用了SSE（Server-Sent Events），请说说它是如何实现的？如何处理断点重连问题？"
+    tags: ["SSE", "网络协议", "断点重连", "项目实战"]
+    difficulty: "hard"
+    source: "腾讯"
+    key_points:
+      - "能说出SSE基于HTTP长连接、单向通信的本质"
+      - "解释前端如何监听EventSource，及后端的事件流格式（text/event-stream）"
+      - "阐述断点重连机制：利用Last-Event-ID进行消息补偿或自定义重连逻辑"
+
+  - id: "FE-PD-TX-002"
+    type: "project_deep_dive"
+    question: "你提到了互斥锁，能详细聊聊你前端/Node项目里是如何使用互斥锁的吗？"
+    tags: ["并发控制", "互斥锁", "多线程"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "阐明引入锁的具体业务场景（如高并发请求去重、资源竞争写入等）"
+      - "解释锁的实现方式（如基于Redis的分布式锁、或Node进程内锁机制）"
+      - "说明如何处理死锁、锁过期等边缘情况"
+
+  - id: "FE-PD-TX-003"
+    type: "project_deep_dive"
+    question: "请问你在项目中是如何做打包优化的？有具体的量化指标来验证优化效果吗？"
+    tags: ["工程化", "Webpack", "Vite", "性能优化"]
+    difficulty: "hard"
+    source: "腾讯"
+    key_points:
+      - "能够列举具体的优化手段：分包（SplitChunks）、Tree-Shaking、Gzip压缩、CDN等"
+      - "能够清晰说出优化前后的构建时间差异和产物包体积差异（量化数据）"
+      - "掌握首屏加载速度提升的具体分析方法（如Lighthouse指标变化）"
+
+  - id: "FE-PD-TX-004"
+    type: "project_deep_dive"
+    question: "Markdown分块渲染算法你们是怎么做的？主要解决了什么问题？"
+    tags: ["长列表优化", "Markdown", "渲染性能"]
+    difficulty: "hard"
+    source: "腾讯"
+    key_points:
+      - "说明大文本直接渲染会导致DOM节点过多、引起卡顿的问题"
+      - "解释分块/虚拟渲染的原理：只渲染可视区域的DOM节点，复用非可视区域节点"
+      - "阐述如何精准计算每个块的高度以及处理滚动事件的防抖节流"
+
+  - id: "FE-PD-TX-005"
+    type: "project_deep_dive"
+    question: "请详细讲讲你在项目中是如何结合AI大模型（如使用Rules、Skills或微调）来完成具体功能的？"
+    tags: ["AIGC", "大模型应用", "Prompt工程"]
+    difficulty: "hard"
+    source: "腾讯"
+    key_points:
+      - "清晰描述所负责AI功能的业务链路（如智能问答、自动摘要等）"
+      - "说明Prompt设计技巧、Skills工具调用机制或RAG在其中的具体作用"
+      - "分析在接大模型时遇到的性能或上下文截断问题及解决方案"
+
+  - id: "FE-PD-TX-006"
+    type: "project_deep_dive"
+    question: "请问前端项目中如何实现无感的Token刷新与权限校验？"
+    tags: ["鉴权", "Token刷新", "网络拦截"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "熟悉双Token机制（Access Token与Refresh Token）"
+      - "掌握Axios等请求库的响应拦截器配置，在返回401时拦截并缓存队列"
+      - "说明无感刷新失败后的回退策略（如强制重新登录清空状态）"
+
+  - id: "FE-PQ-TX-007"
+    type: "project_deep_dive"
+    question: "请介绍一下你实习或过往项目中的一个核心技术难点，你是如何分析并最终解决它的？"
+    tags: ["项目难点", "问题解决", "实战经验"]
+    difficulty: "hard"
+    source: "腾讯"
+    key_points:
+      - "采用STAR法则清晰描述问题背景与技术挑战"
+      - "展现深入底层的排查过程或技术方案对比过程"
+      - "说明最终方案的实施效果及量化指标"
+
+  - id: "FE-PQ-TX-008"
+    type: "project_deep_dive"
+    question: "在你简历中的项目里，你觉得哪一个做得最好或者最有技术含量？请重点分享该项目的架构设计和技术栈选型思路。"
+    tags: ["架构设计", "技术选型", "项目深度"]
+    difficulty: "hard"
+    source: "腾讯"
+    key_points:
+      - "清晰阐述选型背景（为什么选A不选B）"
+      - "体现对所选技术栈优缺点的深刻理解"
+      - "展现项目中为了适配业务所做的特殊架构设计"
+
+  - id: "FE-PQ-TX-009"
+    type: "project_deep_dive"
+    question: "请说说浏览器插件项目开发的难点，例如Manifest V2迁移V3、权限适配以及低心跳保活，你是如何处理的？"
+    tags: ["浏览器插件", "Chrome Extension", "机制原理"]
+    difficulty: "hard"
+    source: "腾讯"
+    key_points:
+      - "清晰理解Manifest V3的核心限制（如Service Worker生命周期限制）"
+      - "阐述处理V3保活机制的具体方案（如定时唤醒、Alarms API等）"
+      - "说明跨域与权限适配在插件环境下的最佳实践"
+
+  - id: "FE-PQ-TX-010"
+    type: "project_deep_dive"
+    question: "你在项目中的代码有多少是独立编写的，多少是借助AI工具（如Copilot/Claude）完成的？你是如何把控AI生成代码的质量与安全性的？"
+    tags: ["AI编码", "代码规范", "质量把控"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "客观评估AI工具的使用占比"
+      - "具备Code Review能力，能识别并修正AI生成的潜在Bug或性能问题"
+      - "强调自主设计核心逻辑，仅用AI辅助繁琐代码生成"
+
+  - id: "FE-PQ-TX-011"
+    type: "project_deep_dive"
+    question: "请详细介绍一下实习期间参与的核心项目。在这个项目中遇到的最大技术难点是什么？你是如何拆解问题并最终解决的？"
+    tags: ["项目深挖", "问题拆解", "技术难点"]
+    difficulty: "hard"
+    source: "腾讯"
+    key_points:
+      - "能够清晰描述项目背景、业务价值及个人核心贡献"
+      - "具备将复杂技术问题拆解为可执行步骤的能力"
+      - "阐述最终的解决方案并总结沉淀了哪些方法论"
+
+  - id: "FE-PQ-TX-012"
+    type: "project_deep_dive"
+    question: "针对你简历上的仿淘宝神券/电商秒杀系统，请问这是你实际落地的商业项目还是个人学习项目？你在其中负责的核心交易模块是如何设计的？"
+    tags: ["架构设计", "秒杀系统", "业务逻辑"]
+    difficulty: "hard"
+    source: "腾讯"
+    key_points:
+      - "诚实说明项目性质与真实体量"
+      - "清晰阐述电商秒杀场景下的前端交互层削峰防刷机制"
+      - "熟练讲解前后端协作链路以及接口的幂等性设计"
+
+  - id: "FE-PQ-TX-013"
+    type: "project_deep_dive"
+    question: "在你的项目中，具体做了哪些打包优化和性能优化的工作？量化指标是怎么样的？如何验证这些优化是否真正有效？"
+    tags: ["性能优化", "工程化", "指标量化"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "说出具体的优化手段（如分包策略、Tree Shaking、按需加载、缓存控制等）"
+      - "具备性能监控思维，能用具体数据（如首屏时间降低百分比、Lighthouse跑分、包体积减少量）支撑优化结果"
+      - "掌握常见的性能指标分析工具（如 Chrome DevTools Performance, Webpack Bundle Analyzer 等）"
+
+  - id: "FE-PQ-WY-001"
+    type: "project_deep_dive"
+    question: "你在项目中有使用过 TypeScript 吗？具体是怎么结合使用的，带来了哪些收益？"
+    tags: ["TypeScript", "工程化", "类型推导"]
+    difficulty: "medium"
+    source: "网易"
+    key_points:
+      - "描述在项目中定义接口(Interface)、类型(Type)及泛型的具体场景"
+      - "说明TS在早期规避类型错误、提升代码可维护性和IDE提示方面的收益"
+      - "能提出Any滥用等常见问题及在项目中的解决规范"
+  - id: "FE-PQ-WY-002"
+    type: "project_deep_dive"
+    question: "请讲一下你在项目中使用的 Axios 拦截器是如何实现的？主要做了哪些处理逻辑？"
+    tags: ["Axios", "网络请求", "业务封装"]
+    difficulty: "medium"
+    source: "网易"
+    key_points:
+      - "请求拦截：统一携带Token、鉴权信息、设置全局请求头等"
+      - "响应拦截：统一格式化返回数据、全局错误处理（如401跳转登录、无权限提示）"
+      - "能够结合实际业务场景说明Token无感刷新或并发请求去重的处理"
+  - id: "FE-PQ-WY-003"
+    type: "project_deep_dive"
+    question: "请介绍一下 XSS 攻击的原理。你在项目中是如何防范和解决 XSS 攻击的？JS是如何被解析形成攻击的？"
+    tags: ["前端安全", "XSS", "性能与安全"]
+    difficulty: "medium"
+    source: "网易"
+    key_points:
+      - "解释XSS（跨站脚本攻击）的类型：反射型、存储型、DOM型"
+      - "防范策略：输入内容转义过滤、使用框架自带的防范（如Vue的v-html谨慎使用）、设置HttpOnly Cookie"
+      - "解析原理：浏览器将恶意注入的字符串误认为是可执行的脚本节点并解析执行"
+  - id: "FE-PQ-WY-004"
+    type: "project_deep_dive"
+    question: "你的项目是如何进行移动端适配的？如果需要控制移动端页面不能缩小和放大，应该怎么处理？"
+    tags: ["移动端适配", "响应式", "Viewport"]
+    difficulty: "medium"
+    source: "网易"
+    key_points:
+      - "适配方案：阐述 rem/vw/vh、媒体查询、Flex布局等移动端适配策略"
+      - "禁缩放方案：在 head 的 meta 标签中设置 viewport 的 user-scalable=no, initial-scale=1.0, maximum-scale=1.0"
+  - id: "FE-PQ-WY-005"
+    type: "project_deep_dive"
+    question: "在项目中监听页面滚动时，你是如何进行性能优化的？请详细说明防抖和节流的应用。"
+    tags: ["性能优化", "防抖节流", "事件处理"]
+    difficulty: "medium"
+    source: "网易"
+    key_points:
+      - "指出频繁触发 scroll 事件会导致严重的性能问题甚至浏览器卡顿"
+      - "防抖(Debounce)：操作结束后延迟执行，适用于只关心最后一次状态的场景"
+      - "节流(Throttle)：规定时间内只执行一次，适用于需要持续响应但降低频率的场景（如滚动加载更多）"
+  - id: "FE-PQ-WY-006"
+    type: "project_deep_dive"
+    question: "你负责的项目使用的是什么打包工具？如何配置按需加载和热更新？"
+    tags: ["Webpack", "打包优化", "工程化"]
+    difficulty: "hard"
+    source: "网易"
+    key_points:
+      - "描述Webpack/Vite/Rollup等打包工具的基础结构"
+      - "按需加载：结合路由懒加载（动态import()）以及分包策略（SplitChunksPlugin）"
+      - "热更新(HMR)：阐述配置 devServer.hot = true 及相关的 HMR 插件原理"
+
+  - id: "FE-PQ-WY-007"
+    type: "project_deep_dive"
+    question: "请结合你在项目中的实际运用，谈谈闭包的具体业务场景（如私有化、函数工厂、柯里化等）？"
+    tags: ["闭包", "项目实战", "JS基础"]
+    difficulty: "medium"
+    source: "网易"
+    key_points:
+      - "清晰解释闭包在自己项目中的具体落地点，而非仅背诵概念"
+      - "说明使用闭包解决了什么具体问题（如防抖节流的封装、状态保持、隐藏内部变量等）"
+      - "能够提到闭包可能带来的内存泄漏风险及在项目中的避免措施"
+
+  - id: "FE-PQ-WY-008"
+    type: "project_deep_dive"
+    question: "项目中的首屏优化（FCP）是如何做的？采取了哪些具体措施？性能指标从什么时候开始算，使用什么API获取？"
+    tags: ["性能优化", "FCP", "前端监控"]
+    difficulty: "hard"
+    source: "网易"
+    key_points:
+      - "准确解释 FCP (First Contentful Paint) 的计算起点及测量 API（PerformanceObserver）"
+      - "列举实质性的优化手段：如路由懒加载、CDN、Gzip、图片 WebP 格式、骨架屏、体积压缩等"
+      - "给出优化前后的具体数据对比，体现数据驱动优化的思维"
+
+  - id: "FE-PQ-WY-009"
+    type: "project_deep_dive"
+    question: "请详细讲一下你在实习或项目中遇到过的最大难点（或 Bug），以及你是如何设计技术方案并最终解决的？"
+    tags: ["难点攻克", "问题排查", "技术选型"]
+    difficulty: "hard"
+    source: "网易"
+    key_points:
+      - "问题描述具备复杂度和真实性，避免过于简单的语法错误"
+      - "体现出完整的排查逻辑：定位问题 -> 分析原因 -> 提出多种方案对比 -> 最终落地解决"
+      - "强调前期的技术选型考虑、极端情况处理及最终复盘"
+
+  - id: "FE-PQ-WY-010"
+    type: "project_deep_dive"
+    question: "在项目中如果使用静态 JSON 文件处理多语言文本切换，每次修改都需要重新部署，有什么更好的动态切换免部署方案吗？"
+    tags: ["i18n", "工程化", "架构设计"]
+    difficulty: "medium"
+    source: "网易"
+    key_points:
+      - "提出配置下发的思路，如将多语言配置存入数据库或接入配置中心（Apollo、Nacos等）"
+      - "结合前端缓存策略（LocalStorage/IndexedDB）优化拉取性能"
+      - "考虑到容灾兜底机制（服务端拉取失败时使用本地默认 JSON）"
+
+  - id: "FE-PQ-WY-011"
+    type: "project_deep_dive"
+    question: "请讲一下项目中使用的 Axios 拦截器是如何实现的？具体利用拦截器做了哪些业务处理？"
+    tags: ["Axios", "网络请求", "工程化"]
+    difficulty: "medium"
+    source: "网易"
+    key_points:
+      - "清晰说明请求拦截器（加 Token、通用参数）和响应拦截器（统一错误处理、数据解构）的实现"
+      - "提到如何处理 Token 无效/过期（如无感刷新 Token 的并发处理）"
+      - "提到如何利用拦截器做全局的 Loading 状态或取消重复请求"
+
+  - id: "FE-PQ-WY-012"
+    type: "project_deep_dive"
+    question: "项目中使用微前端（如 Qiankun）的原因是什么？具体是如何打包配置的？底层是如何实现 JS 和 CSS 隔离的？"
+    tags: ["微前端", "Qiankun", "沙箱隔离"]
+    difficulty: "hard"
+    source: "网易"
+    key_points:
+      - "阐述微前端的适用场景：巨石应用拆分、老旧系统渐进式重构、跨技术栈整合"
+      - "解释 Qiankun 的 JS 隔离机制（Proxy Sandbox 代理全局 window）"
+      - "解释 CSS 隔离机制（Shadow DOM 或 scoped 样式前缀/BEM规范）"
+
+  - id: "FE-PQ-WY-013"
+    type: "project_deep_dive"
+    question: "在你的项目中，静态 JSON 文件涉及到多语言文本切换，除了每次更改都需要重新部署之外，你有思考过更好的动态切换方案吗？"
+    tags: ["国际化", "i18n", "动态下发", "架构优化"]
+    difficulty: "hard"
+    source: "网易"
+    key_points:
+      - "提出远端下发配置、CDN 缓存等动态更新策略"
+      - "熟悉前端国际化框架（如 vue-i18n、react-i18next）的底层加载机制"
+      - "分析不同方案对首屏加载性能及运维成本的影响"
+
+  - id: "FE-PQ-WY-014"
+    type: "project_deep_dive"
+    question: "你在项目中使用了 useCallback，请具体讲一下使用它的业务场景是什么？以及它的底层原理。"
+    tags: ["React", "Hooks", "性能优化"]
+    difficulty: "medium"
+    source: "网易"
+    key_points:
+      - "明确指出为了避免子组件不必要的重新渲染（配合 React.memo）"
+      - "清晰说明闭包陷阱及依赖项数组（deps）的作用原理"
+      - "理解 React 底层 Fiber 架构对 Hook 链表的存储机制"
+
+  - id: "FE-PQ-WY-015"
+    type: "project_deep_dive"
+    question: "请结合你的实际项目，详细讲一下你是如何防范 XSS 攻击的？浏览器是如何解析 JS 进而形成 XSS 攻击的？"
+    tags: ["Web安全", "XSS", "DOM解析"]
+    difficulty: "hard"
+    source: "网易"
+    key_points:
+      - "说明转义/编码策略、CSP 内容安全策略的使用"
+      - "阐述反射型、存储型及 DOM 型 XSS 的区别及防御手段"
+      - "解释浏览器遇到内联脚本或恶意的 href/src 属性时的解析执行机制"
+
+  - id: "FE-PQ-WY-016"
+    type: "project_deep_dive"
+    question: "你的简历中提到了首屏优化，请问你是如何优化的？用了哪些具体措施来提升 FCP 等核心性能指标？"
+    tags: ["性能优化", "FCP", "工程化", "Webpack"]
+    difficulty: "hard"
+    source: "网易"
+    key_points:
+      - "提及路由懒加载、组件异步加载、拆包分包策略"
+      - "说明静态资源优化方案（如 CDN、图片 WebP 格式、Gzip/Brotli 压缩）"
+      - "讲述如何使用 Performance API 或 Lighthouse 获取并测算 FCP 等指标"
+
+  - id: "FE-PQ-WY-017"
+    type: "project_deep_dive"
+    question: "讲一下项目中使用的 Axios 拦截器是如何实现的？具体封装了哪些功能？"
+    tags: ["网络请求", "工程化封装", "Axios"]
+    difficulty: "medium"
+    source: "网易"
+    key_points:
+      - "解释请求拦截器中携带 Token、处理请求合并等逻辑"
+      - "解释响应拦截器中对统一错误码拦截、无感刷新 Token 的实现"
+      - "理解 Axios 底层 Adapter 机制（XHR 与 Node.js http 模块的适配）"
+
+  - id: "FE-PQ-ZJ-001"
+    type: "project_deep_dive"
+    question: "缺陷检测工具中的可靠性，你认为还能从哪些方面进行优化？前端缺陷检测工具中的二次校验机制是如何设计的？"
+    tags: ["工具链开发", "质量保障", "系统设计"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "结合具体项目阐述误报率与漏报率的优化策略"
+      - "清晰说明二次校验机制的流转原理与技术实现"
+  - id: "FE-PQ-ZJ-002"
+    type: "project_deep_dive"
+    question: "请详细介绍一下你负责的 MCP Server 项目是做什么的？相关的准确率是如何测评的？"
+    tags: ["微服务", "架构设计", "数据评估"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "清晰阐述 MCP Server 的业务背景与技术边界"
+      - "说明评测模型或自动化打分机制的指标设计"
+  - id: "FE-PQ-ZJ-003"
+    type: "project_deep_dive"
+    question: "在你的实习项目中，Agent 的节点验证具体是如何落地的？"
+    tags: ["AI Agent", "自动化测试", "状态管理"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "说明大模型输出的不确定性在前端链路中的兜底方案"
+      - "阐述节点状态流转图的边界校验逻辑"
+  - id: "FE-PQ-ZJ-004"
+    type: "project_deep_dive"
+    question: "使用 Jenkins 进行回归测试中出现了异常，你是如何快速进行定位与排查的？"
+    tags: ["CI/CD", "自动化部署", "故障排查"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "列举排查链路：查看构建日志 -> 定位错误代码/环境问题 -> 修复回滚机制"
+      - "阐述如何利用 Webhook 和消息通知提升报警时效"
+
+  - id: "FE-PQ-ZJ-005"
+    type: "project_deep_dive"
+    question: "你了解AI自动化测试平台的架构和选型吗？既然Appium的性能存在瓶颈，为什么在你的项目中依然选择它？"
+    tags: ["自动化测试", "架构设计", "技术选型"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "能够清晰阐述AI自动化测试平台的整体架构"
+      - "准确评估Appium的优缺点及适用场景（如跨平台支持、社区生态等）"
+      - "能说明在项目中如何通过其他手段弥补或优化Appium的性能短板"
+
+  - id: "FE-PQ-ZJ-006"
+    type: "project_deep_dive"
+    question: "在工作和项目中进行的性能测试涉及哪些核心指标？你是如何建立标准并判断项目是否通过测试的？"
+    tags: ["性能测试", "核心指标", "质量保证"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "列举关键的前端/客户端性能指标（如LCP、FCP、首屏时间、帧率FPS等）"
+      - "具备合理的测试方法论（如基准测试、压力测试对比）"
+      - "能结合实际业务场景说明通过阈值的制定标准"
+
+  - id: "FE-PQ-ZJ-007"
+    type: "project_deep_dive"
+    question: "请详细介绍一下你负责过的复杂组件封装经验。在这个过程中你做了哪些技术沉淀？UI还原和状态管理是如何设计的？"
+    tags: ["组件封装", "技术沉淀", "复杂业务"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "体现组件的高内聚、低耦合以及良好的扩展性设计（Props/Emit定义）"
+      - "有完善的UI还原策略（不仅仅靠视觉观察，有规范的还原流程）"
+      - "有将业务沉淀为通用工具或组件库的抽象思维"
+
+  - id: "FE-PQ-ZJ-008"
+    type: "project_deep_dive"
+    question: "你了解前端/移动端自动化测试平台的架构和选型吗？当时为什么选择这套方案，它的性能瓶颈在哪？"
+    tags: ["测试架构", "技术选型", "性能瓶颈"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "清晰阐述自动化测试方案（如Appium、Puppeteer、Cypress）的架构设计"
+      - "能客观分析方案的优缺点及选型考量（如生态、语言支持、执行速度）"
+      - "明确指出系统的性能瓶颈（如通信开销、DOM查找耗时）及后续优化思路"
+  - id: "FE-PQ-ZJ-009"
+    type: "project_deep_dive"
+    question: "请挑选一个你最满意的项目进行详细介绍，包括项目背景、核心技术难点以及你的具体贡献。"
+    tags: ["项目架构", "难点攻克", "业务闭环"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "遵循STAR法则（情境、任务、行动、结果）清晰表述"
+      - "重点突出技术难点的复杂度和破局思路，而非罗列简单的API调用"
+      - "有明确的业务收益和数据指标支撑"
+  - id: "FE-PQ-ZJ-010"
+    type: "project_deep_dive"
+    question: "在你的项目中，为什么最终选用 Vue3 而不是 React？请谈谈你的技术考量。"
+    tags: ["技术选型", "框架对比", "Vue3"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "结合团队基建、成员熟悉度和历史包袱分析"
+      - "从性能层面（Vue3的编译期优化、Proxy响应式）进行对比"
+      - "从开发体验和心智负担层面（Composition API vs React Hooks）进行剖析"
+  - id: "FE-PQ-ZJ-011"
+    type: "project_deep_dive"
+    question: "请讲一下你在项目中做过哪些前端性能优化，具体是怎么做的？效果如何评估？"
+    tags: ["性能优化", "核心指标", "业务收益"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "有系统性的优化思路（如网络层、资源加载、渲染层、代码执行）"
+      - "熟悉核心性能指标（LCP, FCP, TTI, CLS）及其计算方式"
+      - "通过数据监控证明优化前后的收益对比"
+  - id: "FE-PQ-ZJ-012"
+    type: "project_deep_dive"
+    question: "项目里为什么要用 JWT 去生成双 Token（Access Token 和 Refresh Token）而不是单 Token？具体是如何实现的？"
+    tags: ["登录鉴权", "安全机制", "JWT"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "解释单Token面临的安全隐患与有效期的两难问题"
+      - "双Token机制下无感刷新Token的具体业务流（处理并发请求、拦截器重发）"
+      - "Token的存储策略及其面临的XSS/CSRF防范手段"

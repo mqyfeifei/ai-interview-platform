@@ -198,6 +198,33 @@
                     </div>
                   </div>
 
+                  <div class="job-row__detail-block">
+                    <div class="job-row__detail-label">来源</div>
+                    <div class="resume-selector" :class="{ open: sourceDropdownOpen }">
+                      <button class="resume-selector__trigger" @click.stop="toggleSourceDropdown">
+                        <span class="resume-selector__value">{{ currentSourceLabel }}</span>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                          class="resume-selector__arrow">
+                          <polyline points="6 9 12 15 18 9"/>
+                        </svg>
+                      </button>
+                      <transition name="dropdown">
+                        <div v-if="sourceDropdownOpen" class="resume-selector__dropdown">
+                          <div
+                            v-for="option in sourceOptions"
+                            :key="option.value"
+                            class="resume-dropdown-item"
+                            :class="{ active: selectedSource === option.value }"
+                            @click.stop="selectInterviewSource(option.value)"
+                          >
+                            <div class="resume-dropdown-item__name">{{ option.label }}</div>
+                            <div class="resume-dropdown-item__date">{{ option.summary }}</div>
+                          </div>
+                        </div>
+                      </transition>
+                    </div>
+                  </div>
+
                 </div>
 
                 <div v-if="availableProfiles.length > 0" class="job-row__preview">
@@ -206,6 +233,7 @@
                     <div class="job-row__preview-line">题型分布：Technical {{ currentStrategy.technique }}% / Project {{ currentStrategy.project }}% / Scenario {{ currentStrategy.scenario }}% / Behavioral {{ currentStrategy.behavioral }}%</div>
                     <div class="job-row__preview-line">难度倾向：Easy {{ currentStrategy.easy }}% / Medium {{ currentStrategy.medium }}% / Hard {{ currentStrategy.hard }}%</div>
                     <div class="job-row__preview-line">风格：{{ currentStyleLabel }}{{ selectedStyleTone ? ' · ' + selectedStyleTone : '' }}</div>
+                    <div class="job-row__preview-line">来源：{{ currentSourceLabel }}</div>
                     <div class="job-row__preview-line" v-if="selectedProfile">
                       维度：{{ selectedProfile.enabled_dimensions && selectedProfile.enabled_dimensions.length ? selectedProfile.enabled_dimensions.join(', ') : '-' }}
                     
@@ -599,6 +627,10 @@ const INTERVIEW_STYLES = [
   { value: 'teaching', label: '教学面', summary: '引导式提问与知识串联', tone: '温和/耐心，注重解释' }
 ]
 
+const DEFAULT_SOURCE_OPTIONS = [
+  { value: '通用', label: '通用', summary: '通用题库，不限定公司' }
+]
+
 export default {
   name: 'JobSelection',
 
@@ -645,11 +677,14 @@ export default {
       // ── 轮次与风格选择 ──
       selectedRound: 1,
       selectedInterviewStyle: 'confident',
+      selectedSource: '通用',
       styleManuallySelected: false,
       roundOptions: INTERVIEW_ROUNDS,
       styleOptions: INTERVIEW_STYLES,
+      sourceOptions: DEFAULT_SOURCE_OPTIONS,
       roundDropdownOpen: false,
       styleDropdownOpen: false,
+      sourceDropdownOpen: false,
 
       // ── 语音角色（与管理员端保持一致） ──
       voiceRoles: VOICE_ID_OPTIONS,
@@ -708,6 +743,11 @@ export default {
     selectedStyleTone() {
       const item = this.styleOptions.find(opt => opt.value === this.selectedInterviewStyle)
       return item ? item.tone : ''
+    },
+
+    currentSourceLabel() {
+      const item = this.sourceOptions.find(opt => opt.value === this.selectedSource)
+      return item ? item.label : '通用'
     },
 
     formattedPersonality() {
@@ -889,6 +929,8 @@ export default {
       } else {
         this.availableProfiles = []
         this.selectedProfile = null
+        this.sourceOptions = DEFAULT_SOURCE_OPTIONS
+        this.selectedSource = '通用'
         this.$store.dispatch('interview/selectInterviewProfile', null)
       }
     },
@@ -940,27 +982,64 @@ export default {
       this.selectedProfile = null
       this.showProfileDetail = false
       try {
-        const { fetchInterviewProfiles } = await import('@/api/interview')
-        const profiles = await fetchInterviewProfiles(jobId)
+        const { fetchInterviewProfiles, fetchInterviewSourceOptions } = await import('@/api/interview')
+        const [profiles, sources] = await Promise.all([
+          fetchInterviewProfiles(jobId),
+          fetchInterviewSourceOptions(jobId)
+        ])
         this.availableProfiles = profiles || []
+        this.sourceOptions = this.normalizeSourceOptions(sources)
+        const sourceExists = this.sourceOptions.some(opt => opt.value === this.selectedSource)
+        if (!sourceExists) {
+          this.selectedSource = '通用'
+        }
         if (this.availableProfiles.length > 0) {
-          const match = this.availableProfiles.find(p => Number(p.round) === Number(this.selectedRound) && (p.interviewer_style || 'confident') === this.selectedInterviewStyle)
-          this.selectedProfile = match || this.availableProfiles[0]
-          this.selectedRound = this.selectedProfile.round || this.selectedRound
-          if (!this.styleManuallySelected) {
-            this.selectedInterviewStyle = this.selectedProfile.interviewer_style || this.selectedInterviewStyle
+          const match = this.availableProfiles.find(
+            p =>
+              Number(p.round) === Number(this.selectedRound) &&
+              (p.interviewer_style || 'confident') === this.selectedInterviewStyle &&
+              this.getProfileSource(p) === this.selectedSource
+          )
+          this.selectedProfile = match || null
+          if (this.selectedProfile) {
+            this.selectedRound = this.selectedProfile.round || this.selectedRound
+            if (!this.styleManuallySelected) {
+              this.selectedInterviewStyle = this.selectedProfile.interviewer_style || this.selectedInterviewStyle
+            }
+            if (this.selectedProfile.voice_id) {
+              this.selectedVoiceRole = this.selectedProfile.voice_id
+            }
+            this.$store.dispatch('interview/selectInterviewProfile', this.selectedProfile.id)
+          } else {
+            this.$store.dispatch('interview/selectInterviewProfile', null)
           }
-          if (this.selectedProfile.voice_id) {
-            this.selectedVoiceRole = this.selectedProfile.voice_id
-          }
-          this.$store.dispatch('interview/selectInterviewProfile', this.selectedProfile.id)
+        } else {
+          this.selectedProfile = null
+          this.$store.dispatch('interview/selectInterviewProfile', null)
         }
       } catch (e) {
         console.warn('加载面试套餐失败', e)
         this.availableProfiles = []
+        this.sourceOptions = DEFAULT_SOURCE_OPTIONS
+        this.selectedSource = '通用'
       } finally {
         this.profileLoading = false
       }
+    },
+
+    normalizeSourceOptions(sources) {
+      const values = Array.isArray(sources) ? sources : []
+      const deduped = ['通用', ...values.filter(v => v && v !== '通用')]
+      return deduped.map(item => ({
+        value: item,
+        label: item,
+        summary: item === '通用' ? '通用题库，不限定公司' : '企业真题来源'
+      }))
+    },
+
+    getProfileSource(profile) {
+      if (!profile) return '通用'
+      return profile.target_source || '通用'
     },
 
     selectInterviewProfile(profile) {
@@ -991,11 +1070,26 @@ export default {
       this.syncProfileSelection()
     },
 
+    selectInterviewSource(sourceValue) {
+      this.selectedSource = sourceValue || '通用'
+      this.sourceDropdownOpen = false
+      this.$store.commit('interview/SET_INTERVIEW_SOURCE', this.selectedSource)
+      this.syncProfileSelection()
+    },
+
     syncProfileSelection() {
       if (!this.availableProfiles.length) return
-      const match = this.availableProfiles.find(p => Number(p.round) === Number(this.selectedRound) && (p.interviewer_style || 'confident') === this.selectedInterviewStyle)
+      const match = this.availableProfiles.find(
+        p =>
+          Number(p.round) === Number(this.selectedRound) &&
+          (p.interviewer_style || 'confident') === this.selectedInterviewStyle &&
+          this.getProfileSource(p) === this.selectedSource
+      )
       if (match) {
         this.selectInterviewProfile(match)
+      } else {
+        this.selectedProfile = null
+        this.$store.dispatch('interview/selectInterviewProfile', null)
       }
     },
 
@@ -1003,6 +1097,7 @@ export default {
       this.roundDropdownOpen = !this.roundDropdownOpen
       if (this.roundDropdownOpen) {
         this.styleDropdownOpen = false
+        this.sourceDropdownOpen = false
       }
     },
 
@@ -1010,6 +1105,15 @@ export default {
       this.styleDropdownOpen = !this.styleDropdownOpen
       if (this.styleDropdownOpen) {
         this.roundDropdownOpen = false
+        this.sourceDropdownOpen = false
+      }
+    },
+
+    toggleSourceDropdown() {
+      this.sourceDropdownOpen = !this.sourceDropdownOpen
+      if (this.sourceDropdownOpen) {
+        this.roundDropdownOpen = false
+        this.styleDropdownOpen = false
       }
     },
 
@@ -1025,6 +1129,7 @@ export default {
         this.resumeDropdownOpen = false
         this.roundDropdownOpen = false
         this.styleDropdownOpen = false
+        this.sourceDropdownOpen = false
       }
     },
 
@@ -1149,6 +1254,7 @@ export default {
         this.$store.commit('interview/SET_JOB_DB_ID', jobDbId)
         this.$store.commit('interview/SET_VOICE_MODE', this.voiceMode)
         this.$store.commit('interview/SET_INTERVIEW_STYLE', interviewStyle)
+        this.$store.commit('interview/SET_INTERVIEW_SOURCE', this.selectedSource || '通用')
         this.$store.commit('interview/SET_VOICE_ROLE', this.voiceMode ? this.selectedVoiceRole : 'role_calm')
         if (this.voiceMode) {
           this.$store.commit('interview/SET_TTS_VOICE', this.selectedVoiceRole)
@@ -1174,10 +1280,15 @@ export default {
             tone_descriptor: this.selectedProfile.tone_descriptor,
             enabled_dimensions: this.selectedProfile.enabled_dimensions,
             difficulty_level: this.selectedProfile.difficulty_level,
+            target_source: this.selectedSource || '通用'
           })
         } else {
           this.$store.commit('interview/SET_SELECTED_PROFILE_ID', null)
-          this.$store.commit('interview/SET_SELECTED_PROFILE_CONFIG', null)
+          this.$store.commit('interview/SET_SELECTED_PROFILE_CONFIG', {
+            interview_round: this.selectedRound,
+            interview_style: interviewStyle,
+            target_source: this.selectedSource || '通用'
+          })
         }
 
         // 存储选中的简历ID

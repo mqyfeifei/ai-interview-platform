@@ -120,3 +120,24 @@ def get_reply_analysis(report_id):
         return error_response(msg, 400)
     except Exception as exc:
         return error_response(str(exc), 500)
+
+
+@report_bp.route('/<int:report_id>/reply-analysis/<int:item_index>/excellent-answer', methods=['POST'])
+def get_reference_excellent_answer(report_id, item_index):
+    try:
+        user_id = get_current_user_id_required()
+        data = ReportService.generate_reference_answer(
+            report_id=report_id,
+            item_index=item_index,
+            user_id=user_id
+        )
+        return success_response(data)
+    except ValueError as exc:
+        msg = str(exc)
+        if msg in {'缺少登录凭证', '登录已过期，请重新登录', '登录凭证无效'}:
+            return error_response(msg, 401)
+        if msg == '无权限访问该报告':
+            return error_response(msg, 403)
+        return error_response(msg, 400)
+    except Exception as exc:
+        return error_response(str(exc), 500)

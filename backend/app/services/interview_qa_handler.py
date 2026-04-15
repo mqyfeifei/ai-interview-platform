@@ -188,6 +188,7 @@ class InterviewQAHandler:
             recent_tag_ids=recent_tag_ids,
             interview_round=session_round,
             interview_style=session_style,
+            target_source=getattr(session_config, 'target_source', '通用'),
             is_dynamic_adjust=bool(getattr(session_config, 'is_dynamic_adjust', True)),
         )
 

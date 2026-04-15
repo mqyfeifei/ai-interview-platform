@@ -6,6 +6,7 @@
 
 import random
 import os
+import re
 from difflib import SequenceMatcher
 from copy import deepcopy
 from datetime import datetime
@@ -261,6 +262,15 @@ class InterviewSessionManager:
     }
 
     @staticmethod
+    def normalize_target_source(raw_source):
+        source = str(raw_source or '').strip()
+        if not source:
+            return '通用'
+        if re.fullmatch(r'[\u4e00-\u9fff·（）()、\s]+', source):
+            return source
+        return '通用'
+
+    @staticmethod
     def get_round_strategy(job_id, round_name):
         """
         获取指定岗位与轮次的策略配置。
@@ -396,8 +406,10 @@ class InterviewSessionManager:
             dict: 会话配置字典
         """
         # 如果前端把风格放在 session_config 里，也一并兼容读取
+        target_source = '通用'
         if isinstance(session_config, dict):
             interview_style = interview_style or session_config.get('interview_style') or session_config.get('interviewer_style')
+            target_source = session_config.get('target_source') or session_config.get('source') or '通用'
 
         # 标准化面试风格
         style = InterviewSessionManager.normalize_interview_style(
@@ -444,6 +456,9 @@ class InterviewSessionManager:
                     'tone_descriptor': profile.tone_descriptor or '',
                     'enabled_dimensions': profile.enabled_dimensions or ['technical', 'project_deep_dive', 'scenario_design', 'behavioral'],
                     'difficulty_level': int(profile.difficulty_level or 2),
+                    'target_source': InterviewSessionManager.normalize_target_source(
+                        target_source if target_source != '通用' else profile.target_source
+                    ),
                 }
         
         # 如果没有 profile 或 profile 不存在，使用默认配置
@@ -500,6 +515,7 @@ class InterviewSessionManager:
                 'tone_descriptor': profile['tone_descriptor'],
                 'enabled_dimensions': ['technical', 'project_deep_dive', 'scenario_design', 'behavioral'],
                 'difficulty_level': profile['difficulty_level'],
+                'target_source': InterviewSessionManager.normalize_target_source(target_source),
             }
         
         # 合并前端传来的 session_config 覆盖值
@@ -509,7 +525,7 @@ class InterviewSessionManager:
                 'project_deep_dive_percentage', 'behavioral_percentage', 
                 'difficulty_low_percentage', 'difficulty_medium_percentage',
                 'difficulty_high_percentage', 'is_dynamic_adjust', 'voice_id', 'speech_speed',
-                'tone_descriptor', 'enabled_dimensions', 'difficulty_level'
+                'tone_descriptor', 'enabled_dimensions', 'difficulty_level', 'target_source'
             ]
             for key in override_keys:
                 if key in session_config and session_config[key] is not None:
@@ -526,12 +542,17 @@ class InterviewSessionManager:
             # 特殊处理 speech_speed（确保是浮点数）
             if 'speech_speed' in session_config and session_config['speech_speed'] is not None:
                 payload['speech_speed'] = float(session_config['speech_speed'])
+
+            if 'source' in session_config and session_config['source'] is not None and 'target_source' not in session_config:
+                payload['target_source'] = session_config['source']
         
         # 最后，如果明确传入了 voice 参数，优先使用
         if voice:
             payload['voice_id'] = voice
         elif voice_role and not payload.get('voice_id'):
             payload['voice_id'] = voice_role
+
+        payload['target_source'] = InterviewSessionManager.normalize_target_source(payload.get('target_source'))
         
         return payload
 
@@ -809,7 +830,8 @@ class InterviewSessionManager:
             'project_deep_dive_percentage', 'behavioral_percentage',
             'difficulty_low_percentage', 'difficulty_medium_percentage',
             'difficulty_high_percentage', 'is_dynamic_adjust', 'voice_id',
-            'speech_speed', 'tone_descriptor', 'enabled_dimensions', 'difficulty_level'
+            'speech_speed', 'tone_descriptor', 'enabled_dimensions', 'difficulty_level',
+            'target_source'
         }
         config_data = {k: v for k, v in session_payload.items() if k in valid_fields}
         config_data['interview_id'] = interview.id
@@ -984,6 +1006,7 @@ class InterviewSessionManager:
                 "difficulty_medium_percentage": session_payload.get('difficulty_medium_percentage'),
                 "difficulty_high_percentage": session_payload.get('difficulty_high_percentage'),
                 "difficulty_level": session_payload['difficulty_level'],
+                "target_source": session_payload.get('target_source', '通用'),
             },
             "warning": "请先完善简历以获得更个性化的面试体验" if is_resume_empty else None,
         }

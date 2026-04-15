@@ -121,6 +121,7 @@ def _serialize_interview_profile(profile):
         'tone_descriptor': profile.tone_descriptor,
         'enabled_dimensions': profile.enabled_dimensions,
         'difficulty_level': profile.difficulty_level,
+        'target_source': profile.target_source or '通用',
         'created_at': profile.created_at.isoformat() if profile.created_at else None,
         'updated_at': profile.updated_at.isoformat() if profile.updated_at else None,
     }
@@ -157,6 +158,7 @@ def _get_profile_payload(data):
         'tone_descriptor': data.get('tone_descriptor'),
         'enabled_dimensions': data.get('enabled_dimensions'),
         'difficulty_level': data.get('difficulty_level'),
+        'target_source': data.get('target_source', '通用'),
     }
 
 

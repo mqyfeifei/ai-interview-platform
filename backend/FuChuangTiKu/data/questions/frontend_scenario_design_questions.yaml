@@ -1,14 +1,18 @@
 type: "frontend_scenario_design_questions"
 source:
-  - "技术博客"
+  - "Tech_Blog"
+  - "Personal_Notes"
+  - "阿里巴巴"
+  - "腾讯"
+  - "网易"
+  - "字节跳动"
 items:
   - id: "FE-SQ-001"
     type: "scenario_design"
     question: "设计一个前端埋点与监控SDK，如何保证不上报脏数据、防串报、并降低性能消耗？"
     tags: ["工程设计", "监控 SDK"]
     difficulty: "hard"
-    source: "技术博客"
-    status: "draft"
+    source: "Tech_Blog" 
     key_points:
       - "无感埋藏流与强制手动全包裹体系互补交错捕捉全盘图景"
       - "核心借助Navigator.sendBeacon/fetch keepalive坚固护航关闭页面终局发送不丢失不截断"
@@ -18,8 +22,7 @@ items:
     question: "设计一个高可用的大文件分片上传组件，需要支持断点续传、并发控制及错误重试。"
     tags: ["文件上传", "并发控制"]
     difficulty: "hard"
-    source: "技术博客"
-    status: "draft"
+    source: "Tech_Blog" 
     key_points:
       - "巧用WebWorker另起灶台开动分片大哈希规避主脑阻塞定格"
       - "严控并发高并发水闸（Promise机制节流并发量）打赢全频塞死僵局痛点"
@@ -29,8 +32,7 @@ items:
     question: "设计方案实现单点登录 (SSO)，如果是跨主域的情况，前端应该如何配合？"
     tags: ["安全设计", "SSO", "跨域"]
     difficulty: "medium"
-    source: "技术博客"
-    status: "draft"
+    source: "Tech_Blog" 
     key_points:
       - "单中心CAS登录全域核发强信行流枢纽中心建立"
       - "运用跨界票据传递术（携卷URL跳转或内嵌信道连通认证法）打破同源墙城"
@@ -40,8 +42,7 @@ items:
     question: "如果让你开发一个基于 Web IDE 的代码高亮编辑器，你会如何选型和架构？"
     tags: ["组件架构", "Web IDE"]
     difficulty: "hard"
-    source: "技术博客"
-    status: "draft"
+    source: "Tech_Blog" 
     key_points:
       - "极道基床核心强硬依托Monaco Editor引擎支撑等霸主生态压顶降维化解重任"
       - "主架构全依托AST剖心剥离辅以Worker强行渲染隔离计算实现长段重排毒打抵抗"
@@ -51,8 +52,7 @@ items:
     question: "针对复杂表单（例如近 100 项带联动的配置项），如何设计能避免卡顿并具有良好可维护性？"
     tags: ["性能优化", "复杂表单"]
     difficulty: "medium"
-    source: "技术博客"
-    status: "draft"
+    source: "Tech_Blog" 
     key_points:
       - "杜绝大水漫灌重排渲染采用极致颗粒响应分拆只点阵渲染防爆"
       - "抽取元级强引擎联动Schema外挂控制取代杂乱盘布于原身面条级无脑控制代码"
@@ -62,8 +62,7 @@ items:
     question: "设计一个前端自动化测试框架，如何支持多浏览器兼容性测试和持续集成？"
     tags: ["自动化测试", "持续集成"]
     difficulty: "medium"
-    source: "技术博客"
-    status: "draft"
+    source: "Tech_Blog" 
     key_points:
       - "选型强大跨平台的测试引擎（如Playwright）打通多浏览器兼容性测试的壁垒"
       - "架构层面设计分布式执行环境（如Selenium Grid或云测试服务）实现并行加速"
@@ -73,8 +72,7 @@ items:
     question: "设计一个前端性能监控系统，如何收集关键性能指标（KPI）并进行分析和报警？"
     tags: ["性能监控", "KPI", "报警"]
     difficulty: "medium"
-    source: "技术博客"
-    status: "draft"
+    source: "Tech_Blog" 
     key_points:
       - "选取核心KPI指标（如FCP、LCP、CLS等）并利用Performance API精准采集"
       - "架构设计分布式数据收集与处理管道（如使用Kafka和Elasticsearch）实现大规模数据分析"
@@ -84,8 +82,7 @@ items:
     question: "设计一个前端国际化（i18n）解决方案，如何支持多语言切换和动态内容翻译？"
     tags: ["国际化", "i18n", "多语言"]
     difficulty: "medium"
-    source: "技术博客"
-    status: "draft"
+    source: "Tech_Blog" 
     key_points:
       - "选型成熟的国际化库（如i18next或Vue I18n）提供基础的多语言支持"
       - "架构设计动态加载语言包和基于上下文的翻译机制实现高效切换和内容翻译"
@@ -95,8 +92,7 @@ items:
     question: "设计一个前端状态管理方案，如何处理复杂组件之间的状态共享和更新？"
     tags: ["状态管理", "组件通信"]
     difficulty: "medium"
-    source: "技术博客"
-    status: "draft"
+    source: "Tech_Blog" 
     key_points:
       - "选型适合项目需求的状态管理库（如Redux、MobX或Vuex）提供全局状态管理能力"
       - "架构设计模块化状态切片和基于事件的更新机制实现组件间高效共享和解耦"
@@ -106,9 +102,511 @@ items:
     question: "设计一个前端安全防护方案，如何防止常见的安全漏洞（如XSS、CSRF）？"
     tags: ["安全防护", "XSS", "CSRF"]
     difficulty: "medium"
-    source: "技术博客"
-    status: "draft"
+    source: "Tech_Blog" 
     key_points:
       - "采用内容安全策略（CSP）限制资源加载和执行来源防止XSS攻击"
       - "实现CSRF令牌机制确保请求合法性并防止跨站请求伪造"
       - "定期进行安全审计和使用自动化工具（如OWASP ZAP）检测潜在漏洞并及时修复"
+
+  - id: "BE-SD-011"
+    type: "scenario_design"
+    question: "请问如何设计一个秒杀系统来处理高并发请求，以及如何有效防止超卖现象？"
+    tags: ["系统设计", "高并发", "分布式锁", "Redis"]
+    difficulty: "hard"
+    source: "Personal_Notes"
+    key_points:
+      - "前端限流（按钮置灰防抖）与网关层拦截（恶意IP限流）。"
+      - "利用Redis缓存预热商品库存，承担绝大部分读写流量，避免直接打穿DB。"
+      - "防超卖核心：使用Redis Lua脚本或Redisson分布式锁保证扣减库存操作的原子性。"
+      - "引入消息队列（MQ）异步处理订单落库，实现请求的削峰填谷。"
+
+  - id: "BE-SD-012"
+    type: "scenario_design"
+    question: "请问如何设计一个能够根据任务的优先级来执行的线程池？"
+    tags: ["系统设计", "多线程", "并发编程"]
+    difficulty: "hard"
+    source: "Personal_Notes"
+    key_points:
+      - "核心思路：替换线程池默认的阻塞队列，改用优先级队列 PriorityBlockingQueue。"
+      - "任务封装：提交的任务需要实现 Comparable 接口，重写 compareTo 方法以定义具体的优先级权重规则。"
+      - "防饥饿策略：需要引入动态权重调整（如等待时间越长优先级越高），避免低优先级任务长时间得不到执行。"
+
+  - id: "FE-SQ-AL-001"
+    type: "scenario_design"
+    question: "在实际场景中，除了分布式锁，你还会使用 Redis 来解决哪些问题？"
+    tags: ["Redis", "应用场景", "缓存"]
+    difficulty: "medium"
+    source: "阿里巴巴"
+    key_points:
+      - "缓存热点数据以降低数据库压力"
+      - "利用特定数据结构解决业务问题（如 ZSet 做排行榜，Set 做交并集、去重，List 做消息队列）"
+      - "计数器、限流（Rate Limiting）、会话管理（Session）"
+
+  - id: "FE-SQ-AL-002"
+    type: "scenario_design"
+    question: "如何设计一个高效的 Agent 上下文维护方案？"
+    tags: ["AI Agent", "上下文管理", "架构设计"]
+    difficulty: "hard"
+    source: "阿里巴巴"
+    key_points:
+      - "长短记忆分离机制（短记忆用滑动窗口或Token截断，长记忆用向量数据库存储与检索）"
+      - "上下文压缩技术（如文本摘要、关键实体提取）"
+      - "状态机驱动或多轮对话状态追踪（DST）机制"
+
+  - id: "FE-SQ-AL-003"
+    type: "scenario_design"
+    question: "在你的项目中，是如何设计并实现防止超卖现象的？"
+    tags: ["高并发", "防超卖", "分布式事务"]
+    difficulty: "medium"
+    source: "阿里巴巴"
+    key_points:
+      - "数据库层面使用乐观锁（版本号机制或依靠库存大于0的条件）"
+      - "使用 Redis 预扣减库存并结合 Lua 脚本保证原子性"
+      - "消息队列异步削峰填谷落库"
+
+  - id: "FE-SQ-AL-004"
+    type: "scenario_design"
+    question: "在实际业务中，如何保证数据库与缓存（如 Redis）之间的数据一致性？"
+    tags: ["Redis", "数据一致性", "缓存架构"]
+    difficulty: "hard"
+    source: "阿里巴巴"
+    key_points:
+      - "旁路缓存模式（Cache Aside）：先更新数据库，再删除缓存"
+      - "延迟双删策略解决并发引起的不一致问题"
+      - "结合 Canal 等中间件监听 MySQL Binlog 异步更新缓存，保证最终一致性"
+
+  - id: "FE-SQ-AL-005"
+    type: "scenario_design"
+    question: "如果项目中 Redis 突然遇到极高并发（如瞬间一万个请求）导致服务不可用，你会如何排查和解决？"
+    tags: ["高可用", "Redis", "故障排查"]
+    difficulty: "hard"
+    source: "阿里巴巴"
+    key_points:
+      - "快速止损手段：限流、降级、熔断"
+      - "排查原因：是否发生缓存雪崩、缓存击穿、缓存穿透或大Key/热Key问题"
+      - "根治方案：Redis集群扩容、热点数据本地缓存（如 Guava/Caffeine）、优化慢查询"
+
+  - id: "FE-SQ-AL-006"
+    type: "scenario_design"
+    question: "如果要在系统中实现生成式召回，你需要对现有的模型结构做哪些具体的修改和调整？"
+    tags: ["推荐系统", "生成式召回", "架构演进"]
+    difficulty: "hard"
+    source: "阿里巴巴"
+    key_points:
+      - "从传统的双塔向量召回转变为基于序列生成（Seq2Seq）的架构"
+      - "构建统一的 ID 体系或语义表示以便于 LLM 理解"
+      - "引入 Beam Search 或其他受限解码策略以保证生成的 Item ID 合法且高效"
+
+  - id: "FE-SD-TX-001"
+    type: "scenario_design"
+    question: "假如有一个调用后台接口的场景：前端需要跨域调用B系统接口，但该接口不支持OPTIONS预检请求，你会怎么绕过去？"
+    tags: ["跨域", "OPTIONS", "网络代理"]
+    difficulty: "hard"
+    source: "腾讯"
+    key_points:
+      - "理解CORS跨域和简单请求/复杂请求的区别，明白为何会发出OPTIONS"
+      - "提出解决方案1：避免触发复杂请求（降级为简单请求如GET/POST，去除自定义Header）"
+      - "提出解决方案2：使用BFF层代理、Nginx反向代理或DevServer Proxy来解决跨域"
+
+  - id: "FE-SD-TX-002"
+    type: "scenario_design"
+    question: "如果生产环境中遇到用户打开页面直接白屏的情况，你会第一时间怎么排查和处理？"
+    tags: ["异常排查", "白屏监控", "性能监控"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "沟通定位法：确认白屏现象的范围（机型、网络环境、App版本）"
+      - "数据排查法：查看Sentry等前端异常监控报警，排查JS语法报错或资源加载失败"
+      - "降级与恢复：回滚最新发布的静态资源，或者利用兜底缓存页面保证可用性"
+
+  - id: "FE-SD-TX-003"
+    type: "scenario_design"
+    question: "假设用户一次性粘贴了一万行Markdown文本进入编辑器，导致页面滚动时出现卡顿，你会如何设计方案来优化？"
+    tags: ["性能优化", "大文本处理", "虚拟列表"]
+    difficulty: "hard"
+    source: "腾讯"
+    key_points:
+      - "解释卡顿原因：瞬间触发大量语法解析与DOM重绘"
+      - "优化方案1：Web Worker分离解析逻辑，避免阻塞主线程"
+      - "优化方案2：渲染层应用虚拟列表/可视区域渲染技术（DOM节点回收）"
+
+  - id: "FE-SD-TX-004"
+    type: "scenario_design"
+    question: "算法场景题：假设一栋楼有100层，你有两个玻璃球，有些楼层扔下去球会碎，有些不会碎。你需要利用这两个球找到临界楼层，最优解法是什么？"
+    tags: ["算法应用", "动态规划", "逻辑思维"]
+    difficulty: "hard"
+    source: "腾讯"
+    key_points:
+      - "能够指出不能用简单的二分法（因为球只有两个，碎了就没了）"
+      - "提出基于数学/动态规划的解法：假设第一次在第k层扔，最优策略应保证最坏情况下扔的次数相等"
+      - "得出方程 k + (k-1) + (k-2) + ... + 1 >= 100，算出最少次数为14次"
+
+  - id: "FE-SQ-TX-005"
+    type: "scenario_design"
+    question: "假设用户一次性粘贴了一万行Markdown内容，导致页面在滚动时发生卡顿，你会如何排查和优化处理这个问题？"
+    tags: ["性能优化", "大数据量渲染", "虚拟列表", "Markdown"]
+    difficulty: "hard"
+    source: "腾讯"
+    key_points:
+      - "排查思路：使用Chrome Performance工具定位Long Task（如解析耗时或DOM渲染耗时）"
+      - "优化解析：采用Web Worker将Markdown转HTML的解析过程移出主线程"
+      - "优化渲染：采用分块渲染（Chunking）或虚拟滚动（Virtual Scrolling）机制，仅渲染可视区域内的DOM节点"
+
+  - id: "FE-SQ-TX-006"
+    type: "scenario_design"
+    question: "思考题：有100层楼和两个一模一样的玻璃球，有些楼层扔下去球会碎，有些不会。你需要找到那个刚好能让球碎的临界楼层，最优解法是什么？最少尝试次数是多少？"
+    tags: ["算法与数据结构", "逻辑思维", "动态规划"]
+    difficulty: "hard"
+    source: "腾讯"
+    key_points:
+      - "识别题目本质为经典的双蛋问题（动态规划或数学方程求解）"
+      - "解释不能简单使用二分法的原因为球数受限（只有两个）"
+      - "推导最优步长方程 x + (x-1) + ... + 1 >= 100，得出最少尝试次数为14次"
+
+  - id: "FE-SQ-TX-007"
+    type: "scenario_design"
+    question: "如果现在有一批10万条视频数据，你会如何设计一个系统流程来完成从本地转移到云端，并在前端页面实现截帧、文字描述和数据存储？"
+    tags: ["系统设计", "大文件上传", "视频处理"]
+    difficulty: "hard"
+    source: "腾讯"
+    key_points:
+      - "上传方案：分片上传、断点续传、并发控制处理海量文件"
+      - "截帧处理：前端利用 Canvas + Video 标签进行抽帧，或由服务端利用 FFmpeg 异步截帧"
+      - "数据流转：设计合理的状态机跟踪单条视频的处理进度（上传中、截帧中、完成）"
+
+  - id: "FE-SQ-TX-008"
+    type: "scenario_design"
+    question: "假若有个调用后台接口的场景：前端调B系统接口，但接口不支持OPTIONS预检请求导致跨域失败，你怎么绕过去？"
+    tags: ["跨域问题", "CORS", "网络协议"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "方案一：使用前端代理（如Webpack/Vite DevServer Proxy 或 Nginx 反向代理）"
+      - "方案二：将请求改为简单请求（Simple Request），避免触发预检（如仅使用 GET/POST，避免自定义Header，设置 Content-Type 为 application/x-www-form-urlencoded 等）"
+
+  - id: "FE-SQ-TX-009"
+    type: "scenario_design"
+    question: "你是如何设计JWT权限分级管控的？具体做了哪些前端与后端的权限隔离细节？"
+    tags: ["权限管理", "安全控制", "JWT"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "前端层面：基于JWT中的Role或Permission字段做路由拦截（Router Guard）和组件/按钮级别的显隐控制"
+      - "后端层面：网关层验证JWT有效性，业务服务拦截器验证角色是否拥有具体接口调用权限"
+      - "安全细节：Token防重放、Token刷新机制（Access Token + Refresh Token）、敏感操作二次验证"
+
+  - id: "FE-SQ-TX-010"
+    type: "scenario_design"
+    question: "你是如何设计 JWT 权限分级管控的？在前端路由、组件渲染以及接口请求拦截层面，具体做了哪些权限隔离的细节？"
+    tags: ["权限管理", "JWT", "系统设计"]
+    difficulty: "hard"
+    source: "腾讯"
+    key_points:
+      - "阐述前端路由动态挂载（动态路由）的实现原理"
+      - "说明细粒度权限控制（如按钮级、组件级显示隐藏）的设计方案"
+      - "讲解 Axios 拦截器中对无权限或 Token 过期的优雅处理机制"
+
+  - id: "FE-SQ-TX-011"
+    type: "scenario_design"
+    question: "如果要设计一套高并发的票务系统，如何确保前端界面的高吞吐响应，同时配合后端确保稳定性和绝对防止超卖？"
+    tags: ["高并发", "防超卖", "前端架构"]
+    difficulty: "hard"
+    source: "腾讯"
+    key_points:
+      - "前端请求层的削峰填谷（如答题验证码、按钮防抖与冷却倒计时）"
+      - "利用 CDN 缓存静态资源，动静分离"
+      - "配合后端理解乐观锁、Redis预扣减、MQ异步排队等机制，并在前端做相应的加载状态或轮询处理"
+
+  - id: "FE-SQ-TX-012"
+    type: "scenario_design"
+    question: "在大型业务请求到达网关时，通常需要进行限流。请列举并解释常见的限流算法有哪些？"
+    tags: ["网关限流", "算法设计", "高可用"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "理解固定窗口计数器算法及其临界问题"
+      - "讲解滑动窗口限流算法的优化思路"
+      - "深入解析漏桶算法（Leaky Bucket）和令牌桶算法（Token Bucket）的区别与适用场景"
+
+  - id: "FE-SQ-TX-013"
+    type: "scenario_design"
+    question: "前端项目的自动化部署流程是怎样的？如何基于现有工具实现从代码提交到生产环境的 CI/CD 流水线？"
+    tags: ["CI/CD", "自动化部署", "工程化"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "理解 Git Flow 协作规范与 Webhook 触发机制"
+      - "阐述使用 Jenkins/GitLab CI/GitHub Actions 等工具构建 Docker 镜像或打包制品的流程"
+      - "说明在自动化流程中如何集成代码 Lint 检测、单元测试以及自动化回滚机制"  
+
+  - id: "FE-SQ-WY-001"
+    type: "scenario_design"
+    question: "如果让你设计一个复杂的前端 UI 模块（如可拖拽弹框组件），你会如何设计它的状态管理和事件交互？"
+    tags: ["组件设计", "DOM事件", "UI交互"]
+    difficulty: "medium"
+    source: "网易"
+    key_points:
+      - "组件接口设计：支持传入配置项（如大小、层级、是否遮罩等）"
+      - "拖拽事件流：合理绑定 mousedown、mousemove、mouseup 事件（注意绑定在document上防止滑动过快脱离）"
+      - "状态隔离：组件内部维护位置坐标状态，对外暴露关键生命周期或事件钩子"
+  - id: "FE-SQ-WY-002"
+    type: "scenario_design"
+    question: "假设需要开发一个具有强交互性的背包系统（类似游戏内的物品栏），你会如何设计？底层数据应如何与 UI 层进行交互？"
+    tags: ["架构设计", "状态管理", "数据驱动"]
+    difficulty: "hard"
+    source: "网易"
+    key_points:
+      - "数据层：分离数据逻辑，定义物品的数据结构，使用全局状态库（如 Vuex/Redux）统一管理背包库存"
+      - "UI层：采用数据驱动视图的理念，只需监听状态树的变更映射为列表渲染"
+      - "交互处理：设计拖放交互（Drag and Drop API）和插槽系统更新底层数据模型"
+  - id: "FE-SQ-WY-003"
+    type: "scenario_design"
+    question: "当面临前端需要发起大量并发请求时，你会如何设计一个带有并发数限制的请求任务池？"
+    tags: ["并发控制", "异步编程", "队列设计"]
+    difficulty: "hard"
+    source: "网易"
+    key_points:
+      - "数据结构：维护一个任务队列和一个正在执行的计数器"
+      - "调度逻辑：使用 Promise 封装任务，每当有任务完成（finally），取出下一个任务并执行"
+      - "异常处理：任务失败时不仅要捕获异常，还要确保计数器正确释放以避免队列阻塞"
+  - id: "FE-SQ-WY-004"
+    type: "scenario_design"
+    question: "什么是对象池模式？在前端开发中（如大量DOM渲染或Canvas），如何设计和实现一个对象池机制来优化性能？"
+    tags: ["设计模式", "内存管理", "性能优化"]
+    difficulty: "hard"
+    source: "网易"
+    key_points:
+      - "概念：预先实例化一组对象保留在内存中，需要时取出，用完后归还，避免频繁的垃圾回收（GC）和内存分配"
+      - "实现：维护空闲队列和活动队列，设计获取对象(acquire)和回收对象(release)的方法"
+      - "销毁策略：当对象池溢出或长时间未被使用时，采用 LRU 等策略销毁部分对象释放内存"
+
+  - id: "FE-SQ-WY-005"
+    type: "scenario_design"
+    question: "请设计并手写一个 EventBus（发布订阅模式），你的 `.on`、`.emit` 和 `.off` 方法会怎么实现？"
+    tags: ["设计模式", "手写代码", "发布订阅"]
+    difficulty: "medium"
+    source: "网易"
+    key_points:
+      - "内部使用对象或 Map 维护事件名称和对应的回调函数数组"
+      - "正确实现 `.on` 注册事件，处理同一事件绑定多个回调的情况"
+      - "正确实现 `.emit` 触发事件并传递参数，实现 `.off` 移除特定回调"
+
+  - id: "FE-SQ-WY-006"
+    type: "scenario_design"
+    question: "如果服务端有一个集群，数据分散在不同的服务器上，前端或 Node中间层 应该怎么处理和汇总这些海量数据？"
+    tags: ["大并发处理", "BFF层", "数据聚合"]
+    difficulty: "hard"
+    source: "网易"
+    key_points:
+      - "提出 BFF（Node.js 中间层）或 GraphQL 方案进行数据聚合"
+      - "使用异步并发控制（如 Promise.all）分发请求"
+      - "具备分页拉取、流式传输、或者结合 Redis 缓存的性能优化思维"
+
+  - id: "FE-SQ-WY-007"
+    type: "scenario_design"
+    question: "假设有一个包含多个异步任务的队列，如何保证任务严格串行执行，并且如何进行错误监听和中断处理？"
+    tags: ["异步编程", "队列控制", "Promise"]
+    difficulty: "medium"
+    source: "网易"
+    key_points:
+      - "使用 async/await 结合 for...of 循环实现严格串行"
+      - "或使用 Promise.prototype.then 链式递归调用实现"
+      - "具备完善的 try...catch 错误捕获机制，并能设计出错重试或中断后续任务的逻辑"
+
+  - id: "FE-SQ-WY-008"
+    type: "scenario_design"
+    question: "大文件上传在项目中应该怎么处理？如果中途断网如何保证体验？"
+    tags: ["大文件上传", "断点续传", "文件切片"]
+    difficulty: "hard"
+    source: "网易"
+    key_points:
+      - "利用 Blob.prototype.slice 进行文件分片（Chunk）上传"
+      - "利用 Web Worker 计算文件 Hash 值实现秒传"
+      - "服务端记录已上传切片，前端发生网络中断后重发未上传的分片，实现断点续传"
+
+  - id: "FE-SQ-WY-009"
+    type: "scenario_design"
+    question: "如果有一个包含多个异步任务的队列，如何设计方案来保证这些任务串行执行？执行过程中如何进行有效的错误监听和中断处理？"
+    tags: ["异步编程", "队列控制", "Promise"]
+    difficulty: "hard"
+    source: "网易"
+    key_points:
+      - "利用 async/await 结合 for...of 循环实现串行等待"
+      - "基于 Promise.then 链式调用构建 Reduce 执行队列"
+      - "设计合理的 try-catch 错误捕获机制，并支持任务状态中断与重试恢复"
+
+  - id: "FE-SQ-WY-010"
+    type: "scenario_design"
+    question: "如果在不借助第三方库的情况下，让你自己设计并手写一个 EventBus，你的思路是什么？特别是 `.on`、`.emit`、`.off` 方法你会怎么实现？"
+    tags: ["设计模式", "发布订阅", "组件通信"]
+    difficulty: "medium"
+    source: "网易"
+    key_points:
+      - "基于发布-订阅模式，内部维护一个存储事件名的 Map 或 Object，值为回调函数数组"
+      - ".on() 实现事件名到回调数组的 push 绑定"
+      - ".emit() 遍历对应事件的数组并依序执行回调"
+      - ".off() 准确解绑具体的事件或清空某类事件"
+
+  - id: "FE-SQ-WY-011"
+    type: "scenario_design"
+    question: "如何实现一个弹框组件的拖拽功能？在此过程中需要监听和触发哪些 DOM 事件？边界情况怎么处理？"
+    tags: ["DOM操作", "事件监听", "组件设计"]
+    difficulty: "medium"
+    source: "网易"
+    key_points:
+      - "在弹框顶部监听 mousedown 记录初始坐标"
+      - "在 document 或 window 层面监听 mousemove 实时计算偏移量并修改样式（避免滑动过快丢失焦点）"
+      - "在 mouseup 阶段解绑事件"
+      - "处理边界碰撞检测，防止弹框被拖拽出可视区域外"
+
+  - id: "FE-SQ-WY-012"
+    type: "scenario_design"
+    question: "如果要实现一个企业级的大文件上传功能，你应该怎么设计前后端的处理流程？"
+    tags: ["网络架构", "分片上传", "断点续传"]
+    difficulty: "hard"
+    source: "网易"
+    key_points:
+      - "利用 File/Blob 的 slice 方法进行文件切片"
+      - "结合 Web Worker 计算文件的 Hash 值（如 MD5）实现秒传识别"
+      - "实现并行上传，控制最大并发数，并在失败时支持断点续传重试"
+
+  - id: "FE-SQ-WY-013"
+    type: "scenario_design"
+    question: "在高频数据刷新的场景中（如频繁切换样式），直接进行类名切换可能会耗费较高性能。有什么更好的方案来处理高频动态样式的渲染？"
+    tags: ["性能优化", "渲染机制", "CSS"]
+    difficulty: "hard"
+    source: "网易"
+    key_points:
+      - "利用 CSS 变量 (CSS Variables) 进行动态更新"
+      - "借助 transform 和 opacity 替代宽高/位置的变动，从而仅触发合成层 (Composite)，避免重排(Reflow)和重绘(Repaint)"
+      - "通过 requestAnimationFrame 对高频触发动作进行节流渲染"
+
+  - id: "FE-SQ-ZJ-001"
+    type: "scenario_design"
+    question: "针对游戏中会出现的限定皮肤获取，或者商城优惠券超发的场景，你该如何测试其并发安全性以及系统的可靠性？"
+    tags: ["高并发场景", "压力测试", "安全性保障"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "设计多线程/多用户的压测脚本模拟并发抢购"
+      - "说明如何验证后端的分布式锁或防重机制是否生效"
+  - id: "FE-SQ-ZJ-002"
+    type: "scenario_design"
+    question: "如果项目即将上线，你正在做最后的排期检查，但突然发现了一个巨大的 Bug，你会如何处理？"
+    tags: ["发布流程", "紧急响应", "风险评估"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "首先评估Bug的爆炸半径（影响范围与阻碍程度）"
+      - "制定临时规避方案(Hotfix)，若为致命Bug应果断申请延迟发版并通知相关干系人"
+  - id: "FE-SQ-ZJ-003"
+    type: "scenario_design"
+    question: "如何设计一个可扩展的 AI 组件库，使其能够同时支持多种大语言模型接入和多种交互形态（如文本、流式、卡片）？"
+    tags: ["组件库设计", "AI场景化", "架构拓展"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "设计底层的适配器模式(Adapter)，将不同厂商的模型接口抹平为统一的输入输出"
+      - "通过依赖注入和插槽(Slot)机制支持UI层的多形态渲染"
+  - id: "FE-SQ-ZJ-004"
+    type: "scenario_design"
+    question: "针对 AI 响应较慢的问题，前端在不改变后端模型耗时的前提下，可以做哪些用户体验上的优化设计？"
+    tags: ["用户体验(UX)", "性能优化", "骨架屏设计"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "引入流式传输(SSE/WebSocket)实现打字机效果，缓解等待焦虑"
+      - "设计生动的 Loading 状态、骨架屏，或在等待期提供占位提示"
+  - id: "FE-SQ-ZJ-005"
+    type: "scenario_design"
+    question: "像小乔的扇子飞出去会再飞回来，在这期间玩家可以进行其他操作。对于这种异步动作分离的技能机制，你会补充哪些异常测试点？"
+    tags: ["状态机流转", "游戏机制测试", "异常用例设计"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "考虑在此期间玩家被控、死亡或闪现时的扇子寻道逻辑"
+      - "测试网络断线重连、画面切换导致的状态不同步问题"
+
+  - id: "FE-SQ-ZJ-006"
+    type: "scenario_design"
+    question: "在前端及系统架构设计中，接口降级方案具体是怎么实现的？请详细说明你的设计思路和触发条件。"
+    tags: ["接口降级", "高可用架构", "前端容灾"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "明确降级的触发条件（如超时、HTTP状态码异常、特定错误码）"
+      - "具备多层级降级策略（如使用本地缓存兜底、展示默认骨架屏、提供简化版UI）"
+      - "解释熔断机制与限流重试策略在前端和BFF层的配合"
+
+  - id: "FE-SQ-ZJ-007"
+    type: "scenario_design"
+    question: "场景设计：如果在API接口测试或实际生产环境中发现视频/数据流响应卡顿缓慢，你会从哪些维度进行全链路排查？"
+    tags: ["全链路排查", "性能调优", "网络请求"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "前端维度：排查渲染阻塞、代码逻辑性能、资源加载时间（Network面板）"
+      - "网络维度：排查DNS解析、TCP连接建立时间、强弱网环境、CDN命中率"
+      - "后端维度：分析接口响应时间、数据库查询慢SQL、服务器负载"
+
+  - id: "FE-SQ-ZJ-008"
+    type: "scenario_design"
+    question: "场景设计：如果在业务中需要实现一个超大文件的上传功能，你会如何设计前端的分片上传、断点续传及秒传方案？"
+    tags: ["大文件上传", "断点续传", "前端工程化"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "掌握通过 File.slice() 对文件进行分片处理的核心逻辑"
+      - "理解计算文件Hash（如利用Web Worker）以实现“秒传”机制"
+      - "能设计合理的并发控制与失败重试机制，以及进度条状态的计算"
+
+  - id: "FE-SQ-ZJ-009"
+    type: "scenario_design"
+    question: "接口降级方案具体是怎么设计的？在前端如何优雅地处理接口熔断或降级逻辑？"
+    tags: ["接口降级", "高可用", "容灾兜底"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "前端请求拦截层（如Axios Interceptors）统一处理错误状态"
+      - "降级策略设计：本地缓存兜底、CDN静态数据兜底、友好的占位UI展示"
+      - "配合后端服务状态，支持手动或自动切换接口降级开关"
+  - id: "FE-SQ-ZJ-010"
+    type: "scenario_design"
+    question: "详细说明一下如何实现 AI 聊天界面自动滚动到底部，并优雅处理用户手动向上滚动查看历史时的交互冲突？"
+    tags: ["交互冲突处理", "DOM操作", "用户体验"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "监听滚动事件与用户交互意图（如`wheel`、`touchmove`），动态设置 `isAutoScroll` 锁"
+      - "当新消息到来时，判断当前滚动条位置，若在底部则自动滚动，否则展示“有新消息”气泡提示"
+      - "合理使用 `requestAnimationFrame` 或防抖节流优化滚动性能"
+  - id: "FE-SQ-ZJ-011"
+    type: "scenario_design"
+    question: "大文件进行分片上传和分片加载是如何设计的？如何保证断点续传的可靠性？"
+    tags: ["大文件处理", "断点续传", "网络传输"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "利用 File API `slice` 方法进行文件切片，使用 Web Worker 计算文件 Hash"
+      - "上传前校验 Hash 判断是否秒传或获取已上传切片列表"
+      - "并发上传切片，失败重试机制，最后发送合并请求"
+  - id: "FE-SQ-ZJ-012"
+    type: "scenario_design"
+    question: "针对 AI 大模型流式响应慢的问题，前端可以做哪些用户体验层面的优化？"
+    tags: ["流式输出", "用户体验", "前端渲染"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "使用 SSE (Server-Sent Events) 或 Fetch API 处理流式数据并实时渲染"
+      - "增加骨架屏、打字机光标闪烁效果缓解等待焦虑"
+      - "流数据Markdown解析时的防抖渲染优化，避免频繁触发重排卡顿"
+  - id: "FE-SQ-ZJ-013"
+    type: "scenario_design"
+    question: "如果线上长期使用了强缓存策略，当你发布了紧急修复的版本，前端/运维侧如何保证用户能立刻获取到最新资源？"
+    tags: ["缓存更新", "部署策略", "前端工程化"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "打包工具配置 ContentHash，文件名变更强制浏览器拉取新资源"
+      - "入口 `index.html` 强制不缓存或使用协商缓存"
+      - "在紧急情况下可通过更改引用路径上的 query 参数（如 `?v=2`）强制刷新"

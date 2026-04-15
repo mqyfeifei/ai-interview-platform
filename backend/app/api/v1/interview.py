@@ -1,9 +1,12 @@
 import json
+import re
+from pathlib import Path
+import yaml
 from flask import Blueprint, request, Response, stream_with_context, jsonify
 from app.services.interview_service import InterviewService
 from app.services.asr_service import ASRService
 from app.services.auth_service import AuthService
-from app.models.job import Job, DEFAULT_JOBS
+from app.models.job import Job, DEFAULT_JOBS, get_job_front_key
 from app.models.interview import InterviewProfile
 from app.services.resume_service import ResumeService
 
@@ -53,6 +56,15 @@ def resolve_job_id(job_id_input):
     return None
 
 
+def normalize_target_source(raw_source):
+    source = str(raw_source or '').strip()
+    if not source:
+        return '通用'
+    if re.fullmatch(r'[\u4e00-\u9fff·（）()、\s]+', source):
+        return source
+    return '通用'
+
+
 @interview_bp.route('/start', methods=['POST'])
 def start_interview():
     data = request.get_json() or {}
@@ -62,6 +74,7 @@ def start_interview():
         'interview_style': data.get('interview_style'),
         'interview_round': data.get('interview_round'),
         'profile_id': data.get('profile_id'),
+        'target_source': data.get('target_source'),
         'session_config': data.get('session_config'),
     })
     
@@ -70,6 +83,7 @@ def start_interview():
     job_id_input = data.get('job_id')
     resume_id = data.get('resume_id')
     voice_mode = bool(data.get('voice_mode', False))
+    target_source = normalize_target_source(data.get('target_source'))
 
     interview_style = data.get('interview_style')
     interview_round = data.get('interview_round')
@@ -120,6 +134,11 @@ def start_interview():
             return jsonify({"code": 400, "msg": str(ve)}), 400
 
         session_config = data.get('session_config')
+        if not isinstance(session_config, dict):
+            session_config = {}
+        session_config['target_source'] = normalize_target_source(
+            session_config.get('target_source', target_source)
+        )
         result = InterviewService.start_interview(
             user_id,
             job_id,
@@ -129,7 +148,7 @@ def start_interview():
             voice_role=voice_role,
             voice=voice,
             profile_id=profile_id,
-            session_config=session_config,
+            session_config=session_config or None,
         )
 
         return jsonify({"code": 200, "data": result, "msg": "success"}), 200
@@ -167,6 +186,7 @@ def list_interview_profiles():
                 'tone_descriptor': profile.tone_descriptor,
                 'enabled_dimensions': profile.enabled_dimensions,
                 'difficulty_level': profile.difficulty_level,
+                'target_source': normalize_target_source(profile.target_source),
             }
 
         return jsonify({
@@ -177,6 +197,42 @@ def list_interview_profiles():
             },
             'msg': 'success'
         }), 200
+    except Exception as e:
+        return jsonify({'code': 500, 'msg': str(e)}), 500
+
+
+@interview_bp.route('/source-options', methods=['GET'])
+def list_interview_source_options():
+    try:
+        job_id = request.args.get('job_id', type=int)
+        if not job_id:
+            return jsonify({'code': 200, 'data': ['通用'], 'msg': 'success'}), 200
+
+        job = Job.query.get(job_id)
+        if not job:
+            return jsonify({'code': 200, 'data': ['通用'], 'msg': 'success'}), 200
+
+        sources = set()
+
+        # 来源选项按“岗位原始题库文件”计算，避免 job_questions 跨岗位回填带来的来源污染
+        job_key = get_job_front_key(job)
+        backend_root = Path(__file__).resolve().parents[3]
+        question_dir = backend_root / 'FuChuangTiKu' / 'data' / 'questions'
+
+        if job_key and question_dir.exists():
+            for yaml_path in sorted(question_dir.glob(f'{job_key}_*_questions.yaml')):
+                try:
+                    with open(yaml_path, 'r', encoding='utf-8') as fp:
+                        payload = yaml.safe_load(fp) or {}
+                except Exception:
+                    continue
+
+                for item in (payload.get('items') or []):
+                    normalized = normalize_target_source(item.get('source'))
+                    sources.add(normalized)
+
+        ordered = ['通用'] + sorted([s for s in sources if s != '通用'])
+        return jsonify({'code': 200, 'data': ordered, 'msg': 'success'}), 200
     except Exception as e:
         return jsonify({'code': 500, 'msg': str(e)}), 500
 

@@ -1,78 +1,1010 @@
 type: backend_behavioral_questions
 source:
-  - "面经库"
+  - "Interview_Bank"
+  - "Tech_Blog"
+  - "阿里巴巴"
+  - "腾讯"
+  - "华为"
+  - "京东"
+  - "美团"
+  - "拼多多"
+  - "字节跳动"
 items:
-  - id: BE-BQ-001
-    type: behavioral
+  - id: "BE-BQ-001"
+    type: "behavioral"
     question: "讲一次你推动跨团队协作并最终落地的经历。"
     tags: ["协作", "沟通"]
-    difficulty: medium
-    source: "面经库"
-    status: draft
+    difficulty: "medium"
+    source: "Interview_Bank" 
     key_points:
       - "沟通强调寻找双赢局面的共赢心智"
       - "主动承担串联职责与组织推进的领导力"
       - "遇卡点能快速升级并合理撬动周边资源"
-  - id: BE-BQ-002
-    type: behavioral
+  - id: "BE-BQ-002"
+    type: "behavioral"
     question: "讲一次你在高压下处理线上故障的经历。"
     tags: ["抗压", "应急响应"]
-    difficulty: medium
-    source: "面经库"
-    status: draft
-  - id: BE-BQ-003
-    type: behavioral
+    difficulty: "medium"
+    source: "Interview_Bank" 
+  - id: "BE-BQ-003"
+    type: "behavioral"
     question: "讲一次你做技术决策被质疑，最后如何达成一致。"
     tags: ["技术决策", "影响力"]
-    difficulty: medium
-    source: "面经库"
-    status: draft
-  - id: BE-BQ-004
-    type: behavioral
+    difficulty: "medium"
+    source: "Interview_Bank" 
+  - id: "BE-BQ-004"
+    type: "behavioral"
     question: "讲一次你主导代码重构并显著改善质量的经历。"
     tags: ["代码质量", "重构"]
-    difficulty: medium
-    source: "面经库"
-    status: draft
-  - id: BE-BQ-005
-    type: behavioral
+    difficulty: "medium"
+    source: "Interview_Bank" 
+  - id: "BE-BQ-005"
+    type: "behavioral"
     question: "讲一次项目延期风险出现后，你如何纠偏并按期交付。"
     tags: ["项目管理", "风险控制"]
-    difficulty: medium
-    source: "面经库"
-    status: draft
-  - id: BE-BQ-006
-    type: behavioral
+    difficulty: "medium"
+    source: "Interview_Bank" 
+  - id: "BE-BQ-006"
+    type: "behavioral"
     question: "讲一次你在信息不完整情况下做判断的经历。"
     tags: ["不确定性", "决策"]
-    difficulty: hard
-    source: "面经库"
-    status: draft
-  - id: BE-BQ-007
-    type: behavioral
+    difficulty: "hard"
+    source: "Interview_Bank" 
+  - id: "BE-BQ-007"
+    type: "behavioral"
     question: "讲一次你帮助低绩效同事成长的经历。"
     tags: ["辅导", "团队建设"]
-    difficulty: medium
-    source: "面经库"
-    status: draft
-  - id: BE-BQ-008
-    type: behavioral
+    difficulty: "medium"
+    source: "Interview_Bank" 
+  - id: "BE-BQ-008"
+    type: "behavioral"
     question: "讲一次你在需求频繁变动中仍保持稳定交付的经历。"
     tags: ["需求管理", "交付"]
-    difficulty: medium
-    source: "面经库"
-    status: draft
-  - id: BE-BQ-009
-    type: behavioral
+    difficulty: "medium"
+    source: "Interview_Bank" 
+  - id: "BE-BQ-009"
+    type: "behavioral"
     question: "讲一次你主动承担非职责范围工作并产生价值的经历。"
     tags: ["主人翁精神", "责任心"]
-    difficulty: easy
-    source: "面经库"
-    status: draft
-  - id: BE-BQ-010
-    type: behavioral
+    difficulty: "easy"
+    source: "Interview_Bank" 
+  - id: "BE-BQ-010"
+    type: "behavioral"
     question: "讲一次失败经历，你如何复盘并避免再次发生。"
     tags: ["复盘", "成长"]
-    difficulty: easy
-    source: "面经库"
-    status: draft
+    difficulty: "easy"
+    source: "Interview_Bank" 
+
+  - id: "BE-BQ-AL-001"
+    type: "behavioral"
+    question: "在过去的项目或经历中，有什么让你感受到自豪的事情？"
+    tags: ["自我认知", "成就动机", "沟通表达"]
+    difficulty: "easy"
+    source: "阿里巴巴"
+    key_points:
+      - "采用 STAR 法则清晰描述具体情境与面临的挑战"
+      - "明确自身在其中发挥的关键作用及解决问题的核心思路"
+      - "总结该事件带来的技术收获与业务价值"
+
+  - id: "BE-BQ-AL-002"
+    type: "behavioral"
+    question: "需求做到一半发生变化时，你应该如何应对？"
+    tags: ["项目管理", "沟通协作", "抗压能力"]
+    difficulty: "medium"
+    source: "阿里巴巴"
+    key_points:
+      - "理性评估需求变更的合理性及对当前架构、进度的影响程度"
+      - "主动与产品经理及利益相关方沟通，重新明确优先级与排期"
+      - "在技术实现上强调代码的扩展性，以包容未来的合理变更"
+
+  - id: "BE-BQ-AL-003"
+    type: "behavioral"
+    question: "如果产品经理给了一个不太好的方案，你该怎么办？"
+    tags: ["跨部门协作", "沟通技巧", "技术驱动"]
+    difficulty: "medium"
+    source: "阿里巴巴"
+    key_points:
+      - "先理解产品背后的真实业务痛点，而非直接否定方案"
+      - "从技术可行性、系统性能、长期维护成本等角度给出客观数据或理由"
+      - "主动提供一个能达成同样业务目标且技术更优的替代（折中）方案"
+
+  - id: "BE-BQ-AL-004"
+    type: "behavioral"
+    question: "领导临时给你一个完成了一半的系统，后续工作全权交给你，你会怎么做？"
+    tags: ["接手老旧项目", "工程能力", "风险管理"]
+    difficulty: "hard"
+    source: "阿里巴巴"
+    key_points:
+      - "第一步盘点资产：包括梳理业务流程、核心文档、系统架构及部署情况"
+      - "第二步评估风险：跑通现有测试用例，排查隐藏 Bug、安全漏洞或未结技术债"
+      - "第三步平稳过渡：制定分阶段接手计划，避免大幅重构导致业务停摆"
+
+  - id: "BE-BQ-AL-005"
+    type: "behavioral"
+    question: "如果你自己去做一次 Code Review，你通常会重点注意哪些内容？"
+    tags: ["代码质量", "工程规范", "团队协作"]
+    difficulty: "medium"
+    source: "阿里巴巴"
+    key_points:
+      - "规范性：命名规范、代码风格、有无硬编码、日志记录是否合理"
+      - "健壮性：空指针处理、异常捕获机制、并发安全问题"
+      - "性能与架构：循环内查库/RPC问题、慢 SQL 风险、设计模式是否被滥用"
+
+  - id: "BE-TQ-AL-006"
+    type: "technical"
+    question: "请实现一个算法，将一个只包含 0 和 1 的单链表（代表一个二进制数）转换为对应的十进制整数。"
+    tags: ["算法", "链表", "位运算"]
+    difficulty: "medium"
+    source: "阿里巴巴"
+    key_points:
+      - "通过遍历链表逐位累加计算结果"
+      - "熟练使用位运算（如左移、或运算）以提高运算效率"
+      - "在实际应用中需考虑到链表过长可能导致的大数溢出问题"
+
+  - id: "BE-TQ-AL-007"
+    type: "technical"
+    question: "给定一个整数数组，请根据数字的二进制表示中 1 的数目进行升序排序。如果 1 的数目相同，则根据数字本身大小进行排序，该如何实现？"
+    tags: ["算法", "排序", "位运算"]
+    difficulty: "medium"
+    source: "阿里巴巴"
+    key_points:
+      - "能够正确编写统计整数二进制中 1 数量的函数（如 Brian Kernighan 算法 `n & (n - 1)`）"
+      - "掌握自定义排序比较规则的实现方式"
+      - "评估并优化位运算操作的时间复杂度"
+
+  - id: "BE-TQ-AL-008"
+    type: "technical"
+    question: "请设计并实现一个算法来计算单支股票价格的跨度。股票价格跨度定义为：从今天开始往回数，连续的、价格小于或等于今天价格的日数。"
+    tags: ["算法", "栈", "单调栈"]
+    difficulty: "medium"
+    source: "阿里巴巴"
+    key_points:
+      - "识别出可以使用单调栈结构来优化寻找最近大于当前值元素的时间复杂度"
+      - "避免使用暴力的 O(n^2) 遍历方案，实现 O(1) 的均摊时间复杂度"
+      - "正确维护栈内元素的递减顺序并累加跨度值状态"
+
+  - id: "BE-TQ-AL-009"
+    type: "technical"
+    question: "在进行链表相关操作时，什么情况下会推荐使用哨兵节点（dummy node）？使用它有什么具体好处？"
+    tags: ["数据结构", "链表", "边界处理"]
+    difficulty: "easy"
+    source: "阿里巴巴"
+    key_points:
+      - "说明哨兵节点主要用于处理头节点可能被修改、删除或频繁变动的场景"
+      - "解释它能够避免对真正的头节点进行特殊的判空和冗余的分支处理"
+      - "哨兵节点能够极大简化代码逻辑，降低边界情况处理出错的概率"
+
+  - id: "BE-TQ-AL-010"
+    type: "technical"
+    question: "给定一个无向图的节点和边集，以及一个起点和终点，请描述并编写算法判断该图中是否存在从起点到终点的有效路径。"
+    tags: ["算法", "图", "BFS", "DFS", "并查集"]
+    difficulty: "medium"
+    source: "阿里巴巴"
+    key_points:
+      - "可使用广度优先搜索(BFS)或深度优先搜索(DFS)遍历图节点"
+      - "能够结合并查集算法(Disjoint Set)在连通性问题上做出时间层面的优化"
+      - "必须考虑到图中存在环路的情况，使用 visited 数组或集合防止死循环"
+
+  - id: "BE-TQ-AL-011"
+    type: "technical"
+    question: "给定一个非负整数数组和一个起始位置，每次跳跃可以向左或向右移动当前元素值指定的步数。请判断是否能到达数组中值为 0 的元素位置？"
+    tags: ["算法", "BFS", "DFS", "数组"]
+    difficulty: "medium"
+    source: "阿里巴巴"
+    key_points:
+      - "将问题抽象为图的遍历，使用 DFS 或 BFS 探索所有可能到达的下标"
+      - "需要记录已访问过的下标路径，避免在两个相同值之间陷入无限循环跳跃"
+      - "给出正确的边界越界判断，确保左右跳跃后的下标在数组有效范围内"
+
+  - id: "BE-TQ-AL-012"
+    type: "technical"
+    question: "给定一个单链表，请找出一个数组，该数组记录了链表中每个节点的“下一个具有更大值的节点”。如果不存在更大值，则对应位置返回 0。"
+    tags: ["算法", "链表", "单调栈"]
+    difficulty: "medium"
+    source: "阿里巴巴"
+    key_points:
+      - "由于单链表不可逆向遍历，可先将其转化为数组或结合递归处理"
+      - "核心考点是使用单调递减栈来保存尚未找到最大值的节点信息"
+      - "确保将问题处理在 O(N) 的时间复杂度与空间复杂度内"
+
+  - id: "BE-TQ-AL-013"
+    type: "technical"
+    question: "请解释什么是汉明距离？并给出计算两个整数之间的汉明距离的最优算法实现。"
+    tags: ["算法", "位运算", "基础知识"]
+    difficulty: "easy"
+    source: "阿里巴巴"
+    key_points:
+      - "准确解释汉明距离的概念：两个整数对应的二进制位不同的位置数目"
+      - "对两个整数进行异或（XOR）操作，从而将问题转化为求异或结果中 1 的个数"
+      - "使用位操作技巧（如 `n & (n - 1)`）快速统计 1 的个数"
+
+  - id: "BE-TQ-AL-014"
+    type: "technical"
+    question: "在遍历单链表时，循环条件使用 `while (node != null)` 和 `while (node.next != null)` 有什么本质区别？分别适用于哪些经典场景？"
+    tags: ["数据结构", "链表", "代码规范"]
+    difficulty: "easy"
+    source: "阿里巴巴"
+    key_points:
+      - "`node != null` 会遍历直到当前节点越过尾节点（变为null），适合求链表长度或进行全量遍历"
+      - "`node.next != null` 会在尾节点处停下，适合需要操作或获取尾节点（如追加节点、删除倒数节点）的场景"
+      - "需主动指出当链表初始为空 (`node == null`) 时，使用 `node.next != null` 会直接引发空指针异常（NPE）的风险"
+
+  - id: "BE-TQ-AL-015"
+    type: "technical"
+    question: "给定一个不含重复元素的整数数组，请设计算法构建最大二叉树。规则是：根节点为数组最大值，左右子树分别为最大值左右部分的子数组递归构建的最大二叉树。"
+    tags: ["算法", "二叉树", "分治法", "单调栈"]
+    difficulty: "medium"
+    source: "阿里巴巴"
+    key_points:
+      - "能提出基础的分治递归解法：每次遍历寻找当前区间最大值作为根节点"
+      - "能够正确划分左右子树的数组边界并进行递归处理"
+      - "能给出进阶优化方案：使用单调递减栈在线性 O(N) 时间内完成最大二叉树的构建"
+
+  - id: "BE-BQ-TX-001"
+    type: "behavioral"
+    question: "请简单做一下自我介绍，重点介绍自己的技术栈、做过的核心项目及你在其中承担的职责。"
+    tags: ["自我介绍", "软素质", "项目经验"]
+    difficulty: "easy"
+    source: "腾讯"
+    key_points:
+      - "结构清晰：基本信息 -> 核心技术栈 -> 重点项目及职责 -> 匹配该岗位的优势"
+      - "时间控制在1-2分钟左右，突出与C++/后端岗位的契合度"
+      - "陈述项目时能明确量化产出或解决的核心问题"
+
+  - id: "BE-BQ-TX-002"
+    type: "behavioral"
+    question: "请讲一个你在实习或项目开发中遇到的最大技术难点，以及你是如何解决它的？"
+    tags: ["问题解决能力", "软素质", "项目深挖"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "能够清晰描述问题的背景及引发的后果（STAR法则）"
+      - "体现出严谨的排查思路（如：日志分析、性能监控、源码阅读）"
+      - "最终的解决方案合理，且能总结出避免同类问题复发的经验"
+
+  - id: "BE-BQ-TX-003"
+    type: "behavioral"
+    question: "请做一个简单的自我介绍，重点说明你的技术栈、做过的核心项目、承担的职责，以及与后端开发岗位相关的能力储备。"
+    tags: ["自我介绍", "软素质", "项目总结"]
+    difficulty: "easy"
+    source: "腾讯"
+    key_points:
+      - "技术栈与岗位匹配度（如C++/Java/Go基础、数据库、中间件等）"
+      - "项目经历的复杂度及个人承担的核心职责清晰度"
+      - "表达流畅，重点突出，时长控制在合理范围（约1-2分钟）"
+
+  - id: "BE-BQ-TX-004"
+    type: "behavioral"
+    question: "请讲一下你在之前的实习经历中主要负责了什么工作？取得了哪些具体成果或学到了哪些技术？"
+    tags: ["实习经历", "软素质", "个人成长"]
+    difficulty: "easy"
+    source: "腾讯"
+    key_points:
+      - "能够清晰阐述实习期间的业务背景与核心任务"
+      - "说明使用了哪些技术栈解决了什么实际工程问题"
+      - "具有明确的产出指标或对团队的正向贡献"
+
+  - id: "BE-BQ-TX-005"
+    type: "behavioral"
+    question: "在日常开发工作中，你是如何将AI工具（如Copilot、大模型等）应用于提高工作效率的？是否遇到过AI生成代码导致Bug的情况，你是如何解决的？"
+    tags: ["AI辅助开发", "问题排查", "软素质"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "具备使用AI工具加速基础代码编写或辅助排错的意识与经验"
+      - "强调AI仅作为辅助，对AI生成的代码有Code Review和单元测试的严谨态度"
+      - "遇到Bug时能通过单步调试、日志分析等传统工程手段准确定位并修复"
+
+  - id: "BE-BQ-TX-006"
+    type: "behavioral"
+    question: "平时除了工作和课业，你是如何了解和跟进前沿技术（如AI大模型的发展）的最新动向的？"
+    tags: ["持续学习", "技术视野", "软素质"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "具备主动学习的习惯（如阅读官方文档、关注技术开源社区GitHub、阅读Tech_Blog等）"
+      - "能说出几个具体的技术趋势或近期关注的技术点"
+      - "有将新技术转化为个人实践（Demo或小工具）的经历加分"
+
+  - id: "BE-BQ-TX-007"
+    type: "behavioral"
+    question: "请做一下自我介绍，并顺便介绍两个你的核心项目。"
+    tags: ["自我介绍", "项目经验", "表达能力"]
+    difficulty: "easy"
+    source: "腾讯"
+    key_points:
+      - "表达清晰流畅，条理分明"
+      - "能够简明扼要地突出核心项目的业务价值和个人贡献"
+      - "技术栈和个人亮点总结到位"
+  - id: "BE-BQ-TX-008"
+    type: "behavioral"
+    question: "在团队合作中，如果与同事的技术方案发生了冲突，你会如何沟通和解决？"
+    tags: ["团队协作", "沟通能力", "冲突解决"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "保持客观，对事不对人，避免情绪化沟通"
+      - "基于数据和业务场景进行对比分析（如性能、可维护性、工期评估）"
+      - "向上汇报或寻求资深同事（Tech Lead）的评审与建议"
+  - id: "BE-BQ-TX-009"
+    type: "behavioral"
+    question: "作为跨专业（或转码）的同学，你是如何规划自己的后端学习路径的？"
+    tags: ["学习能力", "职业规划", "转码历程"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "具备清晰的学习路线（如基础语法 -> 数据结构与算法 -> 框架 -> 中间件 -> 项目实战）"
+      - "展现出主观能动性和解决未知问题的能力"
+      - "有明确的阶段性成果（如开源贡献、个人博客、上线的项目等）"
+  - id: "BE-BQ-TX-010"
+    type: "behavioral"
+    question: "日常开发中，你是如何利用大模型或AI工具辅助工作的？遇到了AI写出bug的情况是如何排查的？"
+    tags: ["AI工具", "效率提升", "问题排查"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "合理利用AI进行代码生成、单测编写或方案调研，提升开发效率"
+      - "强调AI的辅助角色，具备Code Review意识，不盲目信任生成代码"
+      - "遇到bug时，能够回归基础逻辑，利用打断点、日志等传统排查手段定位问题"
+  - id: "BE-BQ-TX-011"
+    type: "behavioral"
+    question: "最近在学习什么后端的新技术或新方向？你是如何保持技术敏感度并了解最新技术发展动向的？"
+    tags: ["技术前瞻", "持续学习", "技术视野"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "能够说出具体的新技术名称及应用场景（如云原生新组件、Agent开发、Rust等）"
+      - "有固定的技术信息获取渠道（如GitHub趋势、技术社区、官方文档等）"
+      - "能够将学习的新技术与当前业务或项目结合进行思考"
+
+  - id: "BE-BQ-HW-001"
+    type: "behavioral"
+    question: "请做一个简单的自我介绍，并分享一件在以往学习或工作中让你特别有成就感的事情。"
+    tags: ["自我介绍", "个人成就", "软素质"]
+    difficulty: "easy"
+    source: "华为"
+    key_points:
+      - "自我介绍结构清晰，包含基本背景、核心技术栈和关键经历"
+      - "采用STAR法则描述成就事件（情境、任务、行动、结果）"
+      - "突出个人的主动性、解决难题的能力或对团队的实际贡献"
+
+  - id: "BE-BQ-HW-002"
+    type: "behavioral"
+    question: "请谈谈你未来3到5年的职业发展规划。同时，你对项目开发中可能遇到的加班和出差情况接受程度如何？"
+    tags: ["职业规划", "工作意愿", "抗压能力"]
+    difficulty: "medium"
+    source: "华为"
+    key_points:
+      - "具有清晰的技术成长路线（如从技术开发向架构师、技术专家方向发展）"
+      - "对加班和出差表达出客观、合理的理解，态度积极且具备责任心"
+      - "强调以目标和结果为导向，愿意为了项目交付在必要时付出额外努力"
+
+  - id: "BE-BQ-HW-003"
+    type: "behavioral"
+    question: "在过往的工作或学习中，有没有遇到过让你觉得压力特别大的时期或事情？你是如何解决的，从中又学到了什么？"
+    tags: ["抗压能力", "情绪管理", "复盘总结"]
+    difficulty: "medium"
+    source: "华为"
+    key_points:
+      - "真实描述一个具有挑战性的压力场景（时间紧、任务重、技术难等）"
+      - "展现出积极应对压力的策略（如任务拆解、寻求资源协助、加班攻坚等）"
+      - "有深刻的复盘总结，提炼出可以复用到未来的通用经验"
+
+  - id: "BE-BQ-HW-004"
+    type: "behavioral"
+    question: "请问你之前为什么选择从上一家公司（或华为OD）离职？"
+    tags: ["离职原因", "职业动机"]
+    difficulty: "medium"
+    source: "华为"
+    key_points:
+      - "离职原因客观、正向，避免过度抱怨前公司或前团队"
+      - "原因聚焦于个人职业发展诉求、技术栈瓶颈或寻求更大的平台"
+      - "逻辑自洽，与当前应聘本公司的求职动机相吻合"
+
+  - id: "BE-BQ-HW-005"
+    type: "behavioral"
+    question: "简历中提到你有一段较长的毕业空窗期（GAP期），请说明一下这段时间你主要在做些什么？"
+    tags: ["经历梳理", "GAP期解释"]
+    difficulty: "medium"
+    source: "华为"
+    key_points:
+      - "能够合理、诚实地解释空白期的原因（如备考、休整、自主学习等）"
+      - "展示在空窗期内依然保持了对技术的关注或进行了相关的能力提升"
+      - "态度积极，表明目前已经做好充分准备重新投入高强度的研发工作"
+
+  - id: "BE-BQ-HW-006"
+    type: "behavioral"
+    question: "请谈谈你对华为狼性文化和核心价值观的理解，你认为自己符合这些价值观吗？"
+    tags: ["企业文化", "价值观匹配"]
+    difficulty: "medium"
+    source: "华为"
+    key_points:
+      - "理解狼性文化的内核：艰苦奋斗、团队合作、敏锐的市场嗅觉与不屈不挠的进取精神"
+      - "能结合自身经历（如攻坚克难、主动承担责任）证明与该文化的契合度"
+      - "态度积极，展现出强烈的事业心和集体荣誉感"
+  
+  - id: "BE-BQ-JD-001"
+    type: "behavioral"
+    question: "请做一下自我介绍，时长约一至两分钟。"
+    tags: ["自我介绍", "表达能力", "过往经历"]
+    difficulty: "easy"
+    source: "京东"
+    key_points:
+      - "清晰流畅地概述个人教育背景与核心工作/项目经历"
+      - "重点突出与应聘岗位（后端开发）强相关的技术栈或业务经验"
+      - "展示积极的沟通态度与自信"
+  - id: "BE-BQ-JD-002"
+    type: "behavioral"
+    question: "请分享一件能体现你团队合作能力的事情。"
+    tags: ["团队协作", "沟通能力", "软素质"]
+    difficulty: "medium"
+    source: "京东"
+    key_points:
+      - "采用STAR法则描述具体场景、任务、行动与结果"
+      - "明确体现个人在团队中扮演的角色以及如何促进目标达成"
+      - "展现跨部门或跨角色沟通、化解分歧的能力"
+  - id: "BE-BQ-JD-003"
+    type: "behavioral"
+    question: "请客观评价一下自己的能力，并谈谈你的优缺点。"
+    tags: ["自我认知", "优缺点", "软素质"]
+    difficulty: "medium"
+    source: "京东"
+    key_points:
+      - "优点需结合具体事例，且与技术岗位要求匹配（如学习能力强、抗压等）"
+      - "缺点需真实且非致命性（不能说代码不严谨），并给出具体的改进措施"
+  - id: "BE-BQ-JD-004"
+    type: "behavioral"
+    question: "你未来是打算直接就业还是读研？为什么坚定选择目前的规划？"
+    tags: ["职业规划", "稳定性", "意愿度"]
+    difficulty: "easy"
+    source: "京东"
+    key_points:
+      - "给出清晰明确的选择，不摇摆不定"
+      - "结合个人发展诉求、家庭因素或对技术实践的渴望给出合理逻辑"
+  - id: "BE-BQ-JD-005"
+    type: "behavioral"
+    question: "为什么选择投递京东？你目前对京东及其核心业务有哪些了解？"
+    tags: ["意愿度", "公司认知", "求职动机"]
+    difficulty: "medium"
+    source: "京东"
+    key_points:
+      - "体现出对京东电商、物流或相关技术底座的提前了解"
+      - "展现出对公司技术氛围或业务规模的向往"
+  - id: "BE-BQ-JD-006"
+    type: "behavioral"
+    question: "你手里目前有几个Offer？分别是哪些公司的？在你的排序里它们的优先级是怎样的？"
+    tags: ["Offer情况", "意愿度", "职业选择"]
+    difficulty: "medium"
+    source: "京东"
+    key_points:
+      - "诚实回答但保持话语权，不显得傲慢或过于急切"
+      - "给出合理的优先级排序逻辑（如看重平台、技术氛围、业务场景）"
+      - "适度表达对当前面试公司的强烈意向"
+  - id: "BE-BQ-JD-007"
+    type: "behavioral"
+    question: "分享一件让你感到挫败的事情，详细谈谈你当时的心路历程以及受到的启发。"
+    tags: ["抗压能力", "复盘总结", "心态调整"]
+    difficulty: "hard"
+    source: "京东"
+    key_points:
+      - "真实描述挫败场景，不推卸责任"
+      - "重点阐述事后的复盘过程、采取的补救措施"
+      - "提炼出可复用的经验教训"
+  - id: "BE-BQ-JD-008"
+    type: "behavioral"
+    question: "如果在工作中向同事提出正确的建议，但同事不听，你应该怎么办？"
+    tags: ["职场沟通", "冲突解决", "团队协作"]
+    difficulty: "hard"
+    source: "京东"
+    key_points:
+      - "展现同理心，先倾听对方拒绝的原因（可能存在自己未考虑到的信息差）"
+      - "采用客观数据或案例进行论证，而非单纯的情绪说服"
+      - "在必要时寻求Leader的帮助或提出灰度测试方案"
+  - id: "BE-BQ-JD-009"
+    type: "behavioral"
+    question: "你在实习或项目中遇到的最大困难是什么？最终是如何解决的？"
+    tags: ["问题解决", "实习经历", "执行力"]
+    difficulty: "medium"
+    source: "京东"
+    key_points:
+      - "清晰定义困难点（技术难点、沟通壁垒或时间紧迫）"
+      - "展示排查问题的方法论或寻求资源的策略"
+      - "输出最终的解决方案及反思"
+  - id: "BE-BQ-JD-010"
+    type: "behavioral"
+    question: "你是否会在任务已经完成得比较出色的情况下，主动进行复盘总结？"
+    tags: ["复盘习惯", "持续改进", "自我驱动"]
+    difficulty: "medium"
+    source: "京东"
+    key_points:
+      - "明确表达有主动复盘的习惯"
+      - "举例说明某次成功项目后的复盘产出（如沉淀了文档、优化了工具、分享了经验）"
+  - id: "BE-BQ-JD-011"
+    type: "behavioral"
+    question: "你认为在学校学习和企业实习期间，最大的不一样是什么？"
+    tags: ["职业认知", "角色转换", "实习经历"]
+    difficulty: "easy"
+    source: "京东"
+    key_points:
+      - "认知到从“关注个人成绩”向“关注团队目标和业务产出”的转变"
+      - "指出工业界代码对稳定性、可维护性、边界情况处理的严格要求"
+  - id: "BE-BQ-JD-012"
+    type: "behavioral"
+    question: "你是否考虑过未来转向类似销售或带领团队的管理岗位？"
+    tags: ["职业规划", "个人定位", "发展路径"]
+    difficulty: "medium"
+    source: "京东"
+    key_points:
+      - "结合自身性格特点给出真实倾向，无绝对对错"
+      - "若倾向管理，需强调目前会先夯实技术基础；若专注技术，需表达对技术专家的追求"
+
+  - id: "BE-BQ-JD-013"
+    type: "behavioral"
+    question: "请问你在实习或项目中有没有遇到过“技术孤岛”？你是如何打破它的？"
+    tags: ["技术孤岛", "跨部门协作"]
+    difficulty: "hard"
+    source: "京东"
+    key_points:
+      - "识别技术孤岛的能力：如某个网络设备或配置只有特定人员理解和维护，缺乏文档和知识共享"
+      - "展现主动沟通和协作能力，推动团队内部的知识分享和交叉培训"
+      - "引入代码审查、文档规范和定期技术分享会等机制促进团队整体技术水平的提升和信息流通"
+
+  - id: "BE-BQ-JD-014"
+    type: "behavioral"
+    question: "春招/秋招至今，你的整体面试进展如何？"
+    tags: ["求职状态", "意愿度", "抗压能力"]
+    difficulty: "easy"
+    source: "京东"
+    key_points:
+      - "诚实说明目前的求职进度（如正在推进中、已有部分意向等）"
+      - "表达对当前面试公司的重视和强烈意愿"
+      - "体现出在求职过程中的复盘与总结能力"
+
+  - id: "BE-BQ-JD-015"
+    type: "behavioral"
+    question: "请谈谈你对当前 Agent 开发热潮的感受和理解，后端开发是否有必要转向这个领域？"
+    tags: ["行业认知", "技术视野", "职业规划"]
+    difficulty: "medium"
+    source: "京东"
+    key_points:
+      - "能够客观分析Agent技术的优势与其解决的业务痛点"
+      - "结合后端基础（如工程化能力、高并发），说明传统后端与AI Agent的结合点"
+      - "展现持续学习的态度，而非盲目跟风"
+
+  - id: "BE-BQ-JD-016"
+    type: "behavioral"
+    question: "在 AI 时代，你认为作为开发者还有必要坚持刷算法题（如 LeetCode）吗？"
+    tags: ["技术认知", "学习态度", "基础扎实度"]
+    difficulty: "medium"
+    source: "京东"
+    key_points:
+      - "强调算法是计算机科学的基础，锻炼的是逻辑思维和复杂问题拆解能力"
+      - "指出AI工具虽能生成代码，但审查、优化边界条件和解决特定场景性能瓶颈仍依赖人的算法底子"
+      - "表达拥抱AI工具提高效率，但不放弃底层能力修炼的态度"
+
+  - id: "BE-BQ-JD-017"
+    type: "behavioral"
+    question: "如果投递简历后长时间没有回复，你会选择继续海投还是优化简历后再投？为什么？"
+    tags: ["抗挫折能力", "复盘能力", "求职策略"]
+    difficulty: "easy"
+    source: "京东"
+    key_points:
+      - "体现出遇到挫折时的理性分析能力（如分析是行情原因还是自身履历匹配度问题）"
+      - "倾向于先复盘优化简历（针对JD调整亮点），再进行精准投递，而非盲目海投"
+
+  - id: "BE-BQ-JD-018"
+    type: "behavioral"
+    question: "如果团队里有一个成员能力较弱，影响了整体进度，你会怎么做？"
+    tags: ["团队管理", "沟通能力", "责任心"]
+    difficulty: "hard"
+    source: "京东"
+    key_points:
+      - "首先要理解该成员能力弱的具体表现和原因（技术能力、沟通能力还是态度问题）"
+      - "针对不同原因采取不同策略：如技术辅导、明确分工或必要时升级给Leader"
+      - "强调团队合作精神，尽力帮助同事提升，同时保证项目进度不受影响"
+
+  - id: "BE-BQ-JD-019"
+    type: "behavioral"
+    question: "你的简历中提到了一些竞赛，请问这些竞赛是编程、数学建模相关，还是你专业本身相关的？你在其中承担了什么角色？"
+    tags: ["团队协作", "项目深挖", "领导力"]
+    difficulty: "medium"
+    source: "京东"
+    key_points:
+      - "清晰说明竞赛的性质、难度和含金量"
+      - "明确界定自己在团队中的核心贡献（如核心代码编写、算法设计、统筹协调）"
+      - "分享在竞赛过程中遇到的最大挑战及团队克服困难的过程"
+
+  - id: "BE-BQ-JD-020"
+    type: "behavioral"
+    question: "如果公司规定是996的上班模式，或者需要经常性加班，你能接受吗？为什么？"
+    tags: ["工作强度", "压力应对", "意愿度"]
+    difficulty: "hard"
+    source: "京东"
+    key_points:
+      - "表达对互联网行业工作节奏的理解和一定的抗压能力"
+      - "强调更看重工作效率和产出质量，愿意为解决紧急线上问题或项目攻坚主动加班"
+      - "体现出对个人成长和业务价值创造的关注，而非单纯排斥工作时长"
+  
+  - id: "BE-BQ-JD-021"
+    type: "behavioral"
+    question: "请谈谈你的职业规划，未来是否打算读研？如果不打算读研，坚定选择本科就业的原因是什么？"
+    tags: ["职业规划", "求职意向"]
+    difficulty: "easy"
+    source: "京东"
+    key_points:
+      - "具备清晰的中长期职业发展目标"
+      - "对自身学历与职场的匹配度有成熟的思考逻辑"
+      - "展现出对当前求职岗位的热情与稳定性"
+
+  - id: "BE-BQ-JD-022"
+    type: "behavioral"
+    question: "在团队合作中，你觉得协作的地方多吗？有没有提出过什么创新性的想法并被采纳？"
+    tags: ["团队协作", "创新能力"]
+    difficulty: "medium"
+    source: "京东"
+    key_points:
+      - "能够结合具体项目案例说明团队协作的过程与分工"
+      - "分享的具体创新想法具有实际业务或技术价值"
+      - "展现出良好的沟通推进能力与团队影响力"
+
+  - id: "BE-BQ-JD-023"
+    type: "behavioral"
+    question: "你在项目中遇到过最大的困难是什么？你是如何分析并解决的？"
+    tags: ["抗压能力", "问题解决"]
+    difficulty: "medium"
+    source: "京东"
+    key_points:
+      - "能够清晰描述问题的背景与复杂性（非低级错误）"
+      - "具备结构化排查问题、定位问题的思路"
+      - "不仅解决了问题，还有复盘反思或机制上的沉淀"
+
+  - id: "BE-BQ-JD-024"
+    type: "behavioral"
+    question: "在你的排序里，当前手里的大厂Offer优先级是怎样的？秋招选择正式Offer时会重点考虑哪三个因素？"
+    tags: ["求职意向", "价值观"]
+    difficulty: "medium"
+    source: "京东"
+    key_points:
+      - "回答客观真实，展现出对不同平台特点的合理认知"
+      - "选择因素（如技术氛围、业务前景、薪酬福利等）的主次排序合理"
+      - "与京东的业务形态及企业文化有较高的契合度"
+
+  - id: "BE-BQ-JD-025"
+    type: "behavioral"
+    question: "你偏好独立解决问题还是团队协作？独立解决问题是因为缺乏协作环境，还是本身更享受沉浸式做事情的状态？"
+    tags: ["工作习惯", "性格特质"]
+    difficulty: "medium"
+    source: "京东"
+    key_points:
+      - "不走极端，能够辩证看待独立思考与团队协作的价值"
+      - "展现出自我驱动力和深度思考（沉浸式）的能力"
+      - "强调在遇到瓶颈或需要大局观时，能够及时寻求协作闭环"
+
+  - id: "BE-BQ-JD-026"
+    type: "behavioral"
+    question: "在作为小组长做项目或作业时，通常的作业流程和分工是怎样的？你平时起到怎样的带头作用？"
+    tags: ["领导力", "项目管理"]
+    difficulty: "medium"
+    source: "京东"
+    key_points:
+      - "具备清晰的需求拆解、排期与任务分配逻辑"
+      - "在进度把控、规范制定或攻克核心难点上发挥了关键作用"
+      - "展现出责任心与良好的跨角色协同沟通能力"
+
+  - id: "BE-BQ-MT-001"
+    type: "behavioral"
+    question: "你本科和研究生阶段都主攻网络安全相关方向，为什么选择投递软件开发和AI智能开发工程师岗位？"
+    tags: ["求职意向", "职业规划", "跨领域"]
+    difficulty: "medium"
+    source: "美团"
+    key_points:
+      - "结合自身经历，给出合理的职业路径转变原因（如兴趣、市场需求等）"
+      - "强调在网络安全领域的积累如何反哺软件开发（如开发更安全的系统，注重安全编码）"
+      - "表达对软件开发/AI领域的热情、已做出的实际准备（如自学、相关项目落地）和持续学习的能力"
+
+  - id: "BE-BQ-MT-002"
+    type: "behavioral"
+    question: "如果简历投递后长时间没有回复，你会选择继续海投还是停下来优化简历再投？"
+    tags: ["抗压能力", "自我反思", "求职策略"]
+    difficulty: "easy"
+    source: "美团"
+    key_points:
+      - "展现出复盘和反思能力，首选分析未获回复的原因（是否匹配度低、亮点不突出）"
+      - "强调会针对目标岗位进行简历的针对性优化（提取核心关键字、突出项目成果）"
+      - "兼顾效率与精准度，在优化简历的基础上进行精准定向投递，而非盲目海投"
+
+  - id: "BE-BQ-MT-003"
+    type: "behavioral"
+    question: "你认为什么样的人最适合在大厂工作？"
+    tags: ["价值观", "职场认知", "自我定位"]
+    difficulty: "medium"
+    source: "美团"
+    key_points:
+      - "具备强大的抗压能力和自驱力，能适应快速变化的业务节奏"
+      - "拥有良好的团队协作沟通能力，能在复杂的跨部门协作中推进结果"
+      - "具备系统性思维和深度思考能力，不仅能完成执行，还能总结沉淀方法论"
+
+  - id: "BE-BQ-MT-004"
+    type: "behavioral"
+    question: "你本科阶段主攻网络安全相关方向，为什么在职业规划上选择投递软件开发和AI智能开发工程师岗位？"
+    tags: ["职业规划", "个人背景"]
+    difficulty: "easy"
+    source: "美团"
+    key_points:
+      - "说明安全背景对软件开发的质量（安全性、鲁棒性）的正面影响"
+      - "表达对全栈开发或AI技术结合的个人兴趣与技术积累"
+      - "展示个人学习能力和跨领域迁移能力"
+
+  - id: "BE-BQ-MT-005"
+    type: "behavioral"
+    question: "在团队协作或项目中，如果你发现面试官或上级给出的反馈建议与你的技术方案有冲突，你会如何处理？"
+    tags: ["沟通能力", "冲突解决"]
+    difficulty: "medium"
+    source: "美团"
+    key_points:
+      - "保持客观理性的态度，首先审视自身方案的不足"
+      - "通过数据或Demo进行有效沟通，寻求技术上的共识"
+      - "在非原则性问题上服从团队整体决策"
+
+  - id: "BE-BQ-MT-006"
+    type: "behavioral"
+    question: "作为班级宣传委员或团队核心成员，你是如何平衡繁重的学业压力与项目/社团管理工作的？"
+    tags: ["时间管理", "压力应对"]
+    difficulty: "easy"
+    source: "美团"
+    key_points:
+      - "优先级排序（四象限法则）的应用"
+      - "团队授权与协作，避免个人单打独斗"
+      - "展示在高压环境下依然保持高效率的实例"
+    
+  - id: "BE-BQ-MT-007"
+    type: "behavioral"
+    question: "请做一个简短的自我介绍，并概括一下你的核心项目经历。"
+    tags: ["自我介绍", "软素质", "沟通表达"]
+    difficulty: "easy"
+    source: "美团"
+    key_points:
+      - "表达清晰流畅，逻辑结构完整（背景+核心经历+优势总结）"
+      - "能够准确提炼项目中的技术亮点和个人贡献"
+
+  - id: "BE-BQ-MT-008"
+    type: "behavioral"
+    question: "你本科和研究生阶段主攻网络安全相关方向，为什么最终选择投递软件开发和AI智能开发工程师岗位？"
+    tags: ["职业规划", "求职意向", "个人成长"]
+    difficulty: "medium"
+    source: "美团"
+    key_points:
+      - "给出合理且具有说服力的转方向理由（如兴趣驱动、行业前景、技术积累的迁移等）"
+      - "体现出对目标岗位（软开/AI开发）的深入了解与热情"
+      - "证明自己在转方向上所付出的实际行动与学习成果"
+
+  - id: "BE-BQ-MT-009"
+    type: "behavioral"
+    question: "你是如何系统学习Java的？你认为Java与C++在语言特性和生态上最大的区别是什么？"
+    tags: ["学习方法", "技术对比", "Java生态"]
+    difficulty: "medium"
+    source: "美团"
+    key_points:
+      - "具备清晰的学习路线和自我驱动力（如看书、实战项目、研读源码等）"
+      - "能准确说出Java与C++的核心差异（如内存管理/GC、指针操作、多继承与接口、跨平台特性等）"
+
+  - id: "BE-BQ-MT-010"
+    type: "behavioral"
+    question: "在春招或秋招期间，如果简历投递后迟迟没有回复，你会选择继续海投还是停下来优化简历再投？"
+    tags: ["抗压能力", "复盘反思", "求职策略"]
+    difficulty: "medium"
+    source: "美团"
+    key_points:
+      - "体现出复盘与反思能力，优先寻找自身简历或技能组合的不足并优化"
+      - "具备积极应对挫折的心态，不盲目焦虑，策略性调整求职方向"
+
+
+  - id: "BE-BQ-MT-011"
+    type: "behavioral"
+    question: "你认为具备什么样特质的人最适合在大厂工作？"
+    tags: ["职场认知", "自我评价", "企业文化"]
+    difficulty: "medium"
+    source: "美团"
+    key_points:
+      - "强调抗压能力、快速学习能力和拥抱变化的心态"
+      - "体现团队协作精神以及跨部门沟通的主动性"
+      - "强调对业务价值的关注和Owner意识"
+  
+
+  - id: "BE-BQ-PDD-001"
+    type: "behavioral"
+    question: "请做一个三分钟的自我介绍，包含你的学习经历、项目经验以及擅长的技术栈。"
+    tags: ["自我介绍", "软素质", "表达能力"]
+    difficulty: "easy"
+    source: "拼多多"
+    key_points:
+      - "清晰表达个人基本信息与教育背景"
+      - "突出与后端开发高度相关的项目经验和核心技术栈（如Java、C++、Redis等）"
+      - "逻辑清晰，重点突出个人的技术深度或业务理解"
+
+  - id: "BE-BQ-PDD-002"
+    type: "behavioral"
+    question: "春招/秋招至今，你收到了几个Offer？或者进入了哪些公司的面试流程？"
+    tags: ["求职意向", "职业规划", "稳定性"]
+    difficulty: "easy"
+    source: "拼多多"
+    key_points:
+      - "如实反馈当前的求职进度，体现个人的市场竞争力"
+      - "合理表达对当前公司（拼多多）的强烈意向，说明吸引你的具体原因"
+      - "展示清晰的职业发展规划与目标"
+
+  - id: "BE-BQ-PDD-003"
+    type: "behavioral"
+    question: "你如何看待大厂的高强度工作节奏？你能接受我们的作息时间吗？"
+    tags: ["抗压能力", "工作意愿", "文化匹配"]
+    difficulty: "medium"
+    source: "拼多多"
+    key_points:
+      - "表达出较强的抗压能力和对高强度工作的心理预期"
+      - "强调以结果和产出为导向，愿意为了攻克技术难题或业务目标投入时间"
+      - "展现自我调节能力，说明如何在高强度下保持工作效率和身心健康"
+
+  - id: "BE-BQ-ZJ-001"
+    type: "behavioral"
+    question: "请谈谈你在之前实习经历中负责的核心工作是什么？有哪些最大的收获或成长？"
+    tags: ["实习经历", "个人成长", "项目复盘"]
+    difficulty: "easy"
+    source: "字节跳动"
+    key_points:
+      - "能够清晰陈述实习期间的具体职责和交付成果"
+      - "体现出主动学习的态度和解决实际业务问题的能力"
+      - "具备良好的团队协作与沟通表达能力"
+
+  - id: "BE-BQ-ZJ-002"
+    type: "behavioral"
+    question: "你在以往的学习、实习或项目开发中，觉得自己有哪些不足之处？打算如何改进？"
+    tags: ["自我认知", "抗压能力", "职业规划"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "有客观且真诚的自我反思（如基础知识不够扎实、算法需提升等）"
+      - "能够提出切实可行的改进计划（如阅读源码、系统复盘等）"
+      - "展现出持续学习的意愿和成长心态"
+
+  - id: "BE-BQ-ZJ-003"
+    type: "behavioral"
+    question: "开放性问题：如何理解AI辅助编程（AI Coding）对程序员的影响？你认为AI的到来会降低程序员的门槛吗？"
+    tags: ["前沿技术", "行业认知", "开放性思维"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "辩证看待AI的作用：提升基础代码编写效率，但无法替代核心架构设计和业务理解"
+      - "认为低水平的增删改查门槛会降低，但对工程师的系统思维、排错能力要求更高"
+      - "展现出拥抱新技术并利用工具赋能自身开发的积极态度"
+
+  - id: "BE-BQ-ZJ-004"
+    type: "behavioral"
+    question: "请说明一下你的个人基本情况，包括毕业届次、目前的课程安排、预期实习时长以及最快到岗时间？"
+    tags: ["基本意愿", "时间规划", "入职沟通"]
+    difficulty: "easy"
+    source: "字节跳动"
+    key_points:
+      - "实习时间充裕，能够满足岗位基本出勤要求"
+      - "课程安排与工作时间无严重冲突"
+      - "沟通顺畅，职业规划与当前投递岗位相匹配"
+
+  - id: "BE-BQ-ZJ-005"
+    type: "behavioral"
+    question: "还记得你第一次参加技术面试的经历吗？当时遇到了什么困难，又是如何应对和调整的？"
+    tags: ["抗压经历", "心态调整", "自我迭代"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "坦诚分享曾经的失败或挫折经历"
+      - "体现出面试后的深度总结复盘能力"
+      - "展示出遇到挫折不气馁，快速查漏补缺的抗挫折能力"
+
+  - id: "BE-BQ-ZJ-006"
+    type: "behavioral"
+    question: "请做一个简单的自我介绍，并简述一下你的核心技术栈和项目经历。"
+    tags: ["自我介绍", "破冰问题", "沟通表达"]
+    difficulty: "easy"
+    source: "字节跳动"
+    key_points:
+      - "表达流畅，逻辑清晰，时间控制在1-2分钟内"
+      - "能够准确提炼个人的核心技术栈（如Java基础、Spring Cloud等）"
+      - "重点突出在过往项目中承担的角色和落地成果"
+
+  - id: "BE-BQ-ZJ-007"
+    type: "behavioral"
+    question: "你本科和研究生阶段主攻的是网络安全方向，为什么现在选择跨方向投递后端软件开发和AI智能开发岗位？"
+    tags: ["求职动机", "跨考/跨专业", "职业规划"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "展现出对后端/AI方向真实的兴趣与长期学习的自驱力"
+      - "能够合理将网络安全的背景（如安全思维、底层网络原理）转化为开发岗位的优势"
+      - "职业规划清晰，并非盲目跟风投递"
+
+  - id: "BE-BQ-ZJ-008"
+    type: "behavioral"
+    question: "春招至今你的求职进展如何？目前有没有收到其他公司的Offer？"
+    tags: ["求职进展", "意愿度考察", "Offer选择"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "诚实反馈当前进度，不夸大也不隐瞒"
+      - "表达出对当前公司（字节跳动）的强烈意愿和匹配度"
+      - "展现出从容自信的求职心态"
+
+  - id: "BE-BQ-ZJ-009"
+    type: "behavioral"
+    question: "结合你的实习经历，你认为在大厂实习和小厂实习最大的区别是什么？"
+    tags: ["实习经历", "平台认知", "工作方法"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "从规范性出发：大厂注重流程、代码规范、Review和架构设计；小厂注重敏捷开发和快速落地"
+      - "从视野出发：大厂接触的并发量级大、基础设施完善；小厂接触的业务面广、全栈能力要求高"
+      - "总结在不同环境中沉淀下的通用能力（如抗压能力、规范化协作等）"
+
+  - id: "BE-BQ-ZJ-010"
+    type: "behavioral"
+    question: "在AI时代（如各类AI Coding Agent的普及），你认为程序员的门槛会被降低吗？你觉得现在还有必要坚持刷LeetCode等算法题吗？"
+    tags: ["行业认知", "AI发展", "技术视野"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "辩证看待AI的影响：低端重复劳动的门槛确实在降低，但对系统架构、业务理解和复杂问题排查的要求变高"
+      - "指出AI是提效工具，核心竞争力依然是工程师的底层思维和设计能力"
+      - "回答刷题的意义：算法题锻炼的是逻辑抽象能力、边界条件把控和数据结构基础，这正是Review和指挥AI代码所必需的能力"
+
+  - id: "BE-BQ-ZJ-011"
+    type: "behavioral"
+    question: "请做一个简单的自我介绍，并简要概述一下你简历中的核心项目。"
+    tags: ["自我介绍", "破冰", "简历评估"]
+    difficulty: "easy"
+    source: "字节跳动"
+    key_points:
+      - "表达清晰流畅，具备良好的沟通能力"
+      - "能够高度概括个人优势与岗位匹配度"
+      - "准确提炼项目核心难点与个人贡献，而非流水账陈述"
+
+  - id: "BE-BQ-ZJ-012"
+    type: "behavioral"
+    question: "你之前的学习阶段主攻的是网络安全方向，为什么现在选择投递软件开发和AI智能开发工程师相关的后端岗位？"
+    tags: ["职业规划", "求职动机", "意愿度"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "给出合理的职业转向理由，避免盲目跟风的负面印象"
+      - "能够结合自身掌握的技能树（如Java/Python底层基础）说明对后端岗位的复用性"
+      - "展现出对所投递岗位及技术方向的强烈热情与长期规划"
+
+  - id: "BE-BQ-ZJ-013"
+    type: "behavioral"
+    question: "你在之前的实习中拿到转正Offer了吗？如果没有，能谈谈原因并总结一下经验教训吗？"
+    tags: ["实习经历", "抗压能力", "复盘反思"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "态度诚恳客观，不刻意贬低前公司或推卸责任"
+      - "具备良好的自我反思能力，能精准识别自身的短板或不足"
+      - "给出具体的改进措施，并证明自己在离开后有所成长"
+
+  - id: "BE-BQ-ZJ-014"
+    type: "behavioral"
+    question: "能谈谈你觉得自己最大的优点和缺点分别是什么吗？"
+    tags: ["自我认知", "性格特质", "综合素质"]
+    difficulty: "easy"
+    source: "字节跳动"
+    key_points:
+      - "优点需结合具体事例（如学习能力强、善于排查问题），并与后端岗位核心需求相匹配"
+      - "缺点不能是致命缺陷（如粗心大意、厌恶沟通），应是真实的且已在积极改善中的不足"
+      - "展现出真诚、踏实且具备成长型思维的人格特质"
+
+  - id: "BE-BQ-ZJ-015"
+    type: "behavioral"
+    question: "回顾你过去一年里的学习和项目经历，你觉得你最有成就感的一件事是什么？最大的成长在哪里？"
+    tags: ["成就感", "自我驱动", "成长复盘"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "事件应具有挑战性和一定的技术深度，而非单纯完成日常任务"
+      - "清晰阐述面临的困境、采取的行动以及最终取得的可量化结果（STAR法则）"
+      - "展现出独立思考能力、克服困难的韧性以及技术广度/深度的拓宽"

@@ -67,6 +67,103 @@ class ReportService:
         return bool(cls._MEANINGLESS_ANSWER_PATTERN.match(t))
 
     @staticmethod
+    def _is_enterprise_source(source):
+        normalized = (source or '').strip()
+        return bool(normalized) and normalized != '通用'
+
+    @staticmethod
+    def _normalize_reference_answer(value):
+        if value is None:
+            return []
+        if isinstance(value, list):
+            return [str(v).strip() for v in value if str(v).strip()]
+        if isinstance(value, str):
+            text = value.strip()
+            return [text] if text else []
+        return [str(value).strip()] if str(value).strip() else []
+
+    @staticmethod
+    def _fetch_job_questions(job):
+        if not job:
+            return []
+        if hasattr(job.questions, 'all'):
+            return job.questions.filter_by(status='published').all() or job.questions.all()
+        return list(job.questions or [])
+
+    @classmethod
+    def _match_question_by_text(cls, text, job_question_ids):
+        if not text or not job_question_ids:
+            return None
+        try:
+            q_vec = InterviewService.get_embedding(str(text)[:200])
+            return (
+                Question.query
+                .filter(Question.id.in_(job_question_ids))
+                .order_by(Question.embedding.l2_distance(q_vec))
+                .first()
+            )
+        except Exception:
+            return None
+
+    @classmethod
+    def _collect_reply_items(cls, interview):
+        if not interview:
+            return []
+
+        job = db.session.get(Job, interview.job_id)
+        job_questions = cls._fetch_job_questions(job)
+        job_question_ids = [q.id for q in job_questions]
+
+        chats = (
+            InterviewChat.query
+            .filter_by(interview_id=interview.id)
+            .order_by(InterviewChat.timestamp.asc())
+            .all()
+        )
+
+        items = []
+        analysis_index = 1
+        for idx, chat in enumerate(chats):
+            if chat.role != 'ai':
+                continue
+
+            user_reply = None
+            for j in range(idx + 1, len(chats)):
+                if chats[j].role == 'user':
+                    if not cls._is_meaningless_answer(chats[j].content or ''):
+                        user_reply = chats[j]
+                    break
+                if chats[j].role == 'ai':
+                    break
+
+            matched_q = None
+            if chat.question_id:
+                matched_q = db.session.get(Question, int(chat.question_id))
+                if matched_q and job_question_ids and matched_q.id not in job_question_ids:
+                    matched_q = None
+            if matched_q is None:
+                matched_q = cls._match_question_by_text(chat.content or '', job_question_ids)
+
+            source = (matched_q.source or '').strip() if matched_q else ''
+            is_enterprise = cls._is_enterprise_source(source)
+
+            items.append({
+                'index': analysis_index,
+                'questionChatId': chat.id,
+                'answerChatId': user_reply.id if user_reply else None,
+                'question': chat.content or '',
+                'answer': (user_reply.content if user_reply else '') or '',
+                'answerAt': user_reply.timestamp.isoformat() if (user_reply and user_reply.timestamp) else None,
+                'questionId': matched_q.id if matched_q else None,
+                'questionSource': source,
+                'isEnterpriseQuestion': is_enterprise,
+                'reference': cls._normalize_reference_answer(matched_q.reference_answer if matched_q else None),
+            })
+            analysis_index += 1
+
+        return items
+
+    @staticmethod
     def _tag_depth(tag):
         depth = 1
         visited = set()
@@ -401,60 +498,23 @@ class ReportService:
     @classmethod
     def _build_questions(cls, interview_id, fallback_score):
         interview = db.session.get(Interview, int(interview_id))
-        job = db.session.get(Job, interview.job_id) if interview else None
-
-        if job and hasattr(job.questions, 'all'):
-            job_questions = job.questions.filter_by(status='published').all() or job.questions.all()
-        elif job:
-            job_questions = list(job.questions or [])
-        else:
-            job_questions = []
-        job_question_ids = [q.id for q in job_questions]
-
-        chats = InterviewChat.query.filter_by(interview_id=interview_id).order_by(InterviewChat.timestamp.asc()).all()
         questions = []
-        question_index = 1
-
-        for idx, chat in enumerate(chats):
-            if chat.role != 'ai':
-                continue
-
-            answer = ''
-            for j in range(idx + 1, len(chats)):
-                if chats[j].role == 'user':
-                    maybe_answer = chats[j].content or ''
-                    if not cls._is_meaningless_answer(maybe_answer):
-                        answer = maybe_answer
-                    break
-                if chats[j].role == 'ai':
-                    break
-
-            q_text = chat.content or ''
+        for item in cls._collect_reply_items(interview):
+            q_text = item.get('question') or ''
             is_follow_up = ('追问' in q_text) or ('继续' in q_text and '请' in q_text)
-
-            reference = None
-            if job_question_ids:
-                try:
-                    q_vec = InterviewService.get_embedding(q_text[:200])
-                    # 【核心逻辑】依赖 question.py：查询题库匹配原题的标准知识点/参考答案
-                    matched_q = Question.query.filter(Question.id.in_(job_question_ids)) \
-                        .order_by(Question.embedding.l2_distance(q_vec)).first()
-                    if matched_q:
-                        reference = matched_q.reference_answer
-                except Exception:
-                    reference = None
-
             questions.append({
-                'id': chat.id,
+                'id': item.get('questionChatId'),
                 'question': q_text,
-                'answer': answer,
+                'answer': item.get('answer') or '',
                 'score': fallback_score,
                 'comment': '',
                 'isFollowUp': is_follow_up,
-                'index': question_index,
-                'reference': reference
+                'index': item.get('index'),
+                'reference': item.get('reference') or [],
+                'questionId': item.get('questionId'),
+                'questionSource': item.get('questionSource') or '',
+                'isEnterpriseQuestion': bool(item.get('isEnterpriseQuestion')),
             })
-            question_index += 1
         return questions
 
     @staticmethod
@@ -572,32 +632,7 @@ class ReportService:
         if user_id and interview.user_id != user_id:
             raise ValueError('无权限访问该报告')
 
-        chats = InterviewChat.query.filter_by(interview_id=interview.id).order_by(InterviewChat.timestamp.asc()).all()
-        analyses = []
-        analysis_index = 1
-
-        for idx, chat in enumerate(chats):
-            if chat.role != 'ai':
-                continue
-
-            user_reply = None
-            for j in range(idx + 1, len(chats)):
-                if chats[j].role == 'user':
-                    if not cls._is_meaningless_answer(chats[j].content or ''):
-                        user_reply = chats[j]
-                    break
-                if chats[j].role == 'ai':
-                    break
-
-            analyses.append({
-                'index': analysis_index,
-                'questionChatId': chat.id,
-                'answerChatId': user_reply.id if user_reply else None,
-                'question': chat.content or '',
-                'answer': (user_reply.content if user_reply else '') or '',
-                'answerAt': user_reply.timestamp.isoformat() if (user_reply and user_reply.timestamp) else None
-            })
-            analysis_index += 1
+        analyses = cls._collect_reply_items(interview)
 
         try:
             ai_eval_map = cls._build_reply_text_evaluations(analyses)
@@ -616,6 +651,85 @@ class ReportService:
             'userId': interview.user_id,
             'totalRounds': len(analyses),
             'items': analyses
+        }
+
+    @classmethod
+    def generate_reference_answer(cls, report_id, item_index, user_id):
+        interview = db.session.get(Interview, int(report_id))
+        if not interview:
+            raise ValueError('报告不存在')
+        if user_id and interview.user_id != user_id:
+            raise ValueError('无权限访问该报告')
+
+        try:
+            target_index = int(item_index)
+        except Exception:
+            raise ValueError('题目序号无效')
+        if target_index <= 0:
+            raise ValueError('题目序号无效')
+
+        items = cls._collect_reply_items(interview)
+        target = next((it for it in items if it.get('index') == target_index), None)
+        if not target:
+            raise ValueError('未找到对应题目')
+
+        question_text = (target.get('question') or '').strip()
+        if not question_text:
+            raise ValueError('题目内容为空，无法生成参考答案')
+
+        answer_text = (target.get('answer') or '').strip()
+        example_payload = None
+        try:
+            vec = InterviewService.get_embedding(question_text[:200])
+            example = (
+                Example.query
+                .filter_by(job_id=interview.job_id)
+                .order_by(Example.embedding.l2_distance(vec))
+                .first()
+            )
+            if example:
+                example_payload = {
+                    'question': example.question or '',
+                    'framework': example.framework or '',
+                    'answer': example.answer or '',
+                }
+        except Exception:
+            example_payload = None
+
+        reference_points = target.get('reference') or []
+        source = target.get('questionSource') or '通用'
+        special_tag = f'企业真题（{source}）' if cls._is_enterprise_source(source) else '通用题'
+        prompt_lines = [
+            '你是资深面试官，请针对这道题生成一份“参考优秀回答”。',
+            '要求：',
+            '1. 结构清晰，先结论后展开，控制在 220-380 字。',
+            '2. 用中文输出，风格贴近真实候选人的高质量面试回答，不要出现“作为AI”。',
+            '3. 如有给定要点和优秀范例，请融合其优点但不要原文照抄。',
+            f'4. 题目类型标签：{special_tag}。',
+            '',
+            f'面试题：{question_text}',
+            f'用户原回答（用于改进对比）：{answer_text or "（用户未作答）"}',
+            f'题库参考要点：{json.dumps(reference_points, ensure_ascii=False)}',
+            f'历史优秀范例：{json.dumps(example_payload, ensure_ascii=False)}',
+            '',
+            '请直接输出“参考优秀回答”正文，不要输出标题和额外说明。'
+        ]
+        llm = DeepSeekClient()
+        generated = llm.generate_reply(
+            messages=[{'role': 'system', 'content': '\n'.join(prompt_lines)}],
+            temperature=0.6
+        )
+        result_text = (generated or '').strip()
+        if not result_text:
+            raise ValueError('生成参考优秀回答失败，请稍后重试')
+
+        return {
+            'reportId': interview.id,
+            'index': target_index,
+            'question': question_text,
+            'questionSource': source,
+            'isEnterpriseQuestion': cls._is_enterprise_source(source),
+            'referenceAnswer': result_text,
         }
 
     @classmethod

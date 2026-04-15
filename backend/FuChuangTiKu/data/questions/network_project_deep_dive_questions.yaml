@@ -1,16 +1,18 @@
 type: "network_project_deep_dive_questions"
 source:
-  - "面经库"
+  - "Interview_Bank"
+  - "Personal_Notes"
+  - "华为"
+  - "中兴通讯"
 items:
   - id: "NW-PQ-001"
     type: "project_deep_dive"
     question: "介绍一个你主导的企业园区网或数据中心网络的从零规划与实施项目。"
     tags: ["网络规划", "架构设计"]
     difficulty: "hard"
-    source: "面经库"
-    status: "draft"
+    source: "Interview_Bank" 
     key_points:
-      - "阐述清晰的层级架构选择（核心-汇聚-接入 三层架构 vs Spine-Leaf 扁平架构）"
+      - "阐述清晰的层级架构选择（核心-汇聚-接入 三层架构 vs SpiNW-Leaf 扁平架构）"
       - "详细说明 IP 地址规划原则、VLAN 划分策略及路由协议选型思路"
       - "强调对高可用性（HA）的设计考量（如 VRRP/HSRP，跨设备链路聚合 VSS/M-LAG）"
   - id: "NW-PQ-002"
@@ -18,8 +20,7 @@ items:
     question: "在你参与的核心网络割接（核心交换机替换/路由重分发调整）项目中，你是如何保证业务“零感知”断网的？"
     tags: ["割接迁移", "风险控制"]
     difficulty: "hard"
-    source: "面经库"
-    status: "draft"
+    source: "Interview_Bank" 
     key_points:
       - "极其详尽的割接前演练与方案设计（包括步骤颗粒度到分钟级）"
       - "利用路由优先级控制（如 OSPF Cost、BGP Local Pref）实现流量的平滑引流与抽流"
@@ -29,8 +30,7 @@ items:
     question: "讲述一次你解决过的最复杂的网络疑难杂症（如间歇性丢包、神秘路由环路）。"
     tags: ["疑难排障", "抓包分析"]
     difficulty: "hard"
-    source: "面经库"
-    status: "draft"
+    source: "Interview_Bank" 
     key_points:
       - "复杂度的真实体现（如非对称路由导致的防火墙状态阻断、MTU 不匹配导致的黑洞问题）"
       - "展现扎实的协议级抓包分析能力（Wireshark 追踪 TCP Stream）及 OS 内核网络参数的排查"
@@ -40,8 +40,7 @@ items:
     question: "在高密无线网络覆盖项目（如大型会议室、体育场馆）中，你是如何优化 Wi-Fi 漫游与抗干扰的？"
     tags: ["无线网络", "优化调优"]
     difficulty: "medium"
-    source: "面经库"
-    status: "draft"
+    source: "Interview_Bank" 
     key_points:
       - "合理的信道与功率规划（动态射频调整 RRM），避免同频干扰"
       - "启用快速漫游协议（802.11r/k/v），并调整探针响应与剔除弱信号终端的阈值"
@@ -51,8 +50,7 @@ items:
     question: "你在项目中是如何实现网络安全分区与细粒度访问控制的？"
     tags: ["网络安全", "防火墙策略"]
     difficulty: "medium"
-    source: "面经库"
-    status: "draft"
+    source: "Interview_Bank" 
     key_points:
       - "阐述多安全域（Trust, Untrust, DMZ）的设计逻辑"
       - "利用防火墙安全策略或交换机 ACL 进行细粒度的端口/IP级管控，秉持最小权限原则"
@@ -62,8 +60,7 @@ items:
     question: "请详细说明你在网络项目中是如何进行版本控制和发布的？遇到过哪些挑战？"
     tags: ["版本控制", "发布管理"]
     difficulty: "medium"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "介绍使用的版本控制工具（如 Git）及分支管理策略（如 Git Flow）"
       - "阐述配置变更的审批流程与自动化部署工具（如 Ansible、Terraform）的应用"
@@ -73,8 +70,7 @@ items:
     question: "在你的网络项目中，是否遇到过设备兼容性或供应链问题？你是如何应对的？"
     tags: ["供应链管理", "兼容性"]
     difficulty: "medium"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "描述具体的兼容性问题（如新旧设备间的协议支持差异、供应商停产导致的替代方案）"
       - "展现多供应商策略的优势（如避免单点故障、增强议价能力）"
@@ -84,8 +80,7 @@ items:
     question: "你在网络项目中是否有过与云服务（如 AWS VPC、Azure Virtual Network）集成的经历？请举例说明云网融合的具体方法和效果。"
     tags: ["云网融合", "混合云"]
     difficulty: "medium"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "描述具体的云网集成场景（如数据中心与 AWS 之间的 VPN 连接或 Direct Connect）"
       - "阐述网络设计原则（如 IP 地址规划、路由策略）以确保云网之间的无缝通信"
@@ -95,8 +90,7 @@ items:
     question: "在你的网络项目中，是否有过使用自动化工具（如 Ansible、Terraform）来管理网络设备配置的经历？请举例说明自动化的具体应用和效果。"
     tags: ["网络自动化", "配置管理"]
     difficulty: "medium"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "描述具体的自动化应用场景（如批量配置交换机 VLAN、自动化部署防火墙规则）"
       - "阐述使用的工具及其优势（如 Ansible 的无代理架构、Terraform 的基础设施即代码理念）"
@@ -106,8 +100,7 @@ items:
     question: "你在网络项目中是否有过使用网络监控和分析工具（如 Nagios、Wireshark）来排查性能问题的经历？请举例说明你是如何使用这些工具来定位问题的，以及取得了什么效果。"
     tags: ["网络监控", "性能分析"]
     difficulty: "medium"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "描述具体的监控和分析场景（如利用 Nagios 监控链路状态、使用 Wireshark 分析 TCP 流量）"
       - "阐述使用工具的具体方法（如设置合适的监控指标、进行协议级抓包分析）"
@@ -117,8 +110,7 @@ items:
     question: "你在网络项目中有没有遇到过“技术债务”？你是如何识别和管理它的？"
     tags: ["技术债务", "项目管理"]
     difficulty: "hard"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "识别技术债务的能力：如配置混乱、缺乏文档、过度复杂的拓扑等"
       - "展现主动沟通和说服能力，向团队和管理层说明技术债务的风险和长期成本"
@@ -128,8 +120,7 @@ items:
     question: "你在网络项目中有没有遇到过“技术孤岛”？你是如何打破它的？"
     tags: ["技术孤岛", "跨部门协作"]
     difficulty: "hard"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "识别技术孤岛的能力：如某个网络设备或配置只有特定人员理解和维护，缺乏文档和知识共享"
       - "展现主动沟通和协作能力，推动团队内部的知识分享和交叉培训"
@@ -139,8 +130,7 @@ items:
     question: "你在网络项目中有没有遇到过“技术迷茫期”？你是如何走出它的？"
     tags: ["技术迷茫", "自我驱动"]
     difficulty: "hard"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "识别技术迷茫的能力：如对网络架构设计、协议选型等缺乏清晰方向感"
       - "展现自我驱动和学习能力，通过阅读文档、咨询专家、进行小规模实验等方式寻找解决方案"
@@ -150,8 +140,7 @@ items:
     question: "你在网络项目中有没有遇到过“技术瓶颈”？你是如何突破它的？"
     tags: ["技术瓶颈", "创新"]
     difficulty: "hard"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "识别技术瓶颈的能力：如性能问题、架构限制等"
       - "展现创新和解决问题的能力，通过引入新技术、优化算法、重构架构等方式突破瓶颈"
@@ -161,9 +150,217 @@ items:
     question: "你在网络项目中有没有遇到过“技术挑战”？你是如何迎接它的？"
     tags: ["技术挑战", "挑战应对"]
     difficulty: "hard"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "识别技术挑战的能力：如新技术的学习曲线、复杂问题的解决等"
       - "展现迎接挑战的能力，通过积极学习、团队协作、寻求帮助等方式应对挑战"
       - "分享成功迎接技术挑战的案例，以及从中学到的经验教训"
+
+  - id: "NW-PQ-HW-001"
+    type: "project_deep_dive"
+    question: "请详细讲讲你在安全项目中遇到的Shiro漏洞原理，以及高版本中AES Oracle Padding的具体利用方式？"
+    tags: ["项目经历", "网络安全", "Shiro反序列化", "密码学"]
+    difficulty: "hard"
+    source: "华为"
+    key_points:
+      - "阐述Shiro 550漏洞的本质：RememberMe Cookie使用默认硬编码AES密钥导致反序列化RCE"
+      - "阐述Shiro 721漏洞的机制：利用Padding Oracle Attack（填充提示攻击）构造有效的RememberMe Cookie"
+      - "说明高版本AES Oracle Padding攻击无需知道密钥，只需利用服务器对解密失败和反序列化失败的响应差异，逐字节猜解明文或伪造密文"
+
+  - id: "NW-PQ-HW-002"
+    type: "project_deep_dive"
+    question: "在你的渗透项目中，对安卓应用进行抓包的具体细节是怎样的？另外，OSS任意文件上传如果仅仅限制后缀名，能够完全防护吗？为什么？"
+    tags: ["渗透项目", "移动端抓包", "文件上传漏洞", "OSS"]
+    difficulty: "medium"
+    source: "华为"
+    key_points:
+      - "安卓抓包细节需提及：证书安装（高版本安卓需将证书导入系统目录）、绕过SSL Pinning（如使用Frida/Xposed模块）"
+      - "限制后缀名不能完全防护文件上传漏洞，可能存在黑名单被绕过（如PHP3、PHTML等冷门后缀）"
+      - "可能存在中间件解析漏洞（如Apache多后缀解析、IIS解析漏洞），或者结合文件包含漏洞进行利用"
+
+  - id: "NW-PQ-HW-003"
+    type: "project_deep_dive"
+    question: "讲讲你在实习期间，主要负责了哪些工作？解决了什么实际问题？"
+    tags: ["实习经历", "项目经验", "落地能力"]
+    difficulty: "medium"
+    source: "华为"
+    key_points:
+      - "清晰表述自己在实习团队中的定位"
+      - "列举具体参与的项目或运维任务，说明使用的技术栈"
+      - "重点描述在实习中独立解决的难点或产出的量化成果"
+
+  - id: "NW-PQ-HW-004"
+    type: "project_deep_dive"
+    question: "你在参与国家或企业护网期间，都用到了在学校学到的哪些技能？除了学校教的，你还额外自学了哪些技术？"
+    tags: ["护网演练", "实战能力", "持续学习"]
+    difficulty: "hard"
+    source: "华为"
+    key_points:
+      - "学校技能映射：如计算机网络基础（TCP/IP、抓包分析）、操作系统原理等"
+      - "实战技能补充：如态势感知平台的使用、日志分析、WAF规则绕过与防护、应急响应流程"
+      - "展现出理论知识与一线安全攻防实战相结合的能力"
+
+  - id: "NW-PQ-HW-005"
+    type: "project_deep_dive"
+    question: "针对你的简历项目，你们系统处理的数据量级大概是多少？你在其中扮演了什么角色？"
+    tags: ["项目深挖", "架构设计", "性能优化"]
+    difficulty: "hard"
+    source: "华为"
+    key_points:
+      - "准确描述数据规模（如QPS并发量、表数据量级、网络吞吐量）"
+      - "阐述在海量数据背景下采取的优化策略（如分库分表、缓存架构、索引优化）"
+      - "明确自身职责，体现项目主导性与技术深度"
+
+  - id: "NW-PQ-HW-006"
+    type: "project_deep_dive"
+    question: "你平时写过哪些Python脚本或工具？除了爬虫相关，还用Python做过什么实质性的东西？"
+    tags: ["自动化编程", "Python应用", "工具开发"]
+    difficulty: "medium"
+    source: "华为"
+    key_points:
+      - "运维自动化：批量设备配置下发脚本（Paramiko/Netmiko）、日志清洗与分析脚本"
+      - "后端开发：基于Flask/Django开发的后台接口或控制台"
+      - "AI落地：调用大模型API进行数据处理或搭建简单的问答系统等"
+
+  - id: "NW-PQ-HW-007"
+    type: "project_deep_dive"
+    question: "请详细介绍一下你在学校期间做过的最核心的课程设计或项目，你在其中承担了什么角色？遇到了哪些难点以及是如何解决的？"
+    tags: ["项目经历", "问题解决", "角色担当"]
+    difficulty: "medium"
+    source: "华为"
+    key_points:
+      - "项目背景交代清晰，能够把复杂问题用简练的语言描述出来"
+      - "明确界定自己负责的模块和贡献度（不夸大也不略过）"
+      - "遇到难点的思路展示：从排查定位、查阅文档、方案对比到最终落地闭环"
+
+  - id: "NW-PQ-HW-008"
+    type: "project_deep_dive"
+    question: "请结合你的护网/渗透实战经历，谈谈你在其中主要运用了哪些安全技能，最终产出了怎样的成果？"
+    tags: ["网络安全", "实战经历", "护网"]
+    difficulty: "hard"
+    source: "华为"
+    key_points:
+      - "清晰描述安全服务生命周期或红蓝对抗的过程（如资产梳理、漏洞挖掘、社工钓鱼或防守溯源）"
+      - "列举真实利用的工具及深层次原理（如不只是会用Nmap/Burp，还能手写脚本或分析流量）"
+      - "能够阐述通过该经历对企业级内网安全架构的整体思考"
+
+  - id: "NW-PQ-HW-009"
+    type: "project_deep_dive"
+    question: "针对你简历上的核心开发/部署项目，能具体说说当时的业务数据量级（如日活、QPS、数据库表大小或网络节点数量）大概是多少吗？你的架构设计是如何支撑该量级的？"
+    tags: ["架构设计", "性能优化", "项目深度"]
+    difficulty: "hard"
+    source: "华为"
+    key_points:
+      - "对项目真实指标了如指掌，数据不虚报、符合逻辑常识"
+      - "根据指标瓶颈，准确描述出所采取的技术选型原因（如引入Redis做缓存、读写分离、分库分表、集群负载均衡）"
+      - "能够探讨当前架构继续横向扩展时可能面临的下一个痛点"
+
+  - id: "NW-PQ-ZX-001"
+    type: "project_deep_dive"
+    question: "在你的项目里，如果一个任务既要保证实时性，又要避免占用过多CPU，你会怎么设计？"
+    tags: ["实时系统", "CPU优化", "架构设计"]
+    difficulty: "hard"
+    source: "中兴通讯"
+    key_points:
+      - "优先采用事件驱动（Event-Driven）而非纯轮询（Polling）方式"
+      - "利用硬件中断、消息队列、信号量或任务通知机制来触发任务执行"
+      - "合理设置任务优先级和时间片，避免高优先级任务饿死其他任务"
+
+  - id: "NW-PQ-ZX-002"
+    type: "project_deep_dive"
+    question: "MVC设计模式具体在你的项目里是怎么体现的？"
+    tags: ["MVC", "设计模式", "项目架构"]
+    difficulty: "medium"
+    source: "中兴通讯"
+    key_points:
+      - "清晰阐述Model（数据层）、View（视图层）、Controller（控制层）的各自职责"
+      - "结合具体业务场景（如某一个查询或提交功能）说明数据流转全过程"
+      - "强调解耦带来的可维护性和开发效率提升"
+
+  - id: "NW-PQ-ZX-003"
+    type: "project_deep_dive"
+    question: "你在项目中的网页或接口有没有设计相关的安全防护机制？"
+    tags: ["Web安全", "项目经验", "网络防护"]
+    difficulty: "medium"
+    source: "中兴通讯"
+    key_points:
+      - "提及常见的Web攻击防护（如XSS转义、CSRF Token）"
+      - "说明数据传输加密（如HTTPS/SSL证书配置）和密码安全哈希存储"
+      - "提到接口层面的鉴权（JWT/Session）、限流以及输入校验"
+
+  - id: "NW-PQ-ZX-004"
+    type: "project_deep_dive"
+    question: "请详细讲讲你印象最深的项目，遇到的最大技术难题是什么，你是如何解决的？"
+    tags: ["项目复盘", "问题排查", "技术难点"]
+    difficulty: "hard"
+    source: "中兴通讯"
+    key_points:
+      - "使用STAR法则（情境、任务、行动、结果）描述问题"
+      - "展现排查问题的逻辑链条（如通过日志定位、性能监控工具抓取、查阅源码等）"
+      - "给出量化的结果与个人的反思总结"
+
+  - id: "NW-PQ-ZX-005"
+    type: "project_deep_dive"
+    question: "在之前的项目中，你遇到过哪些最大的技术困难？是如何解决的？"
+    tags: ["难点攻克", "问题排查", "项目复盘"]
+    difficulty: "hard"
+    source: "中兴通讯"
+    key_points:
+      - "采用STAR法则清晰描述背景和具体的技术难点"
+      - "展现排查问题的完整逻辑链（如日志分析、压测复现、查阅源码）"
+      - "阐述最终的解决方案及优化后的具体指标提升"
+
+  - id: "NW-PQ-ZX-006"
+    type: "project_deep_dive"
+    question: "请介绍一下你参与的项目中，采用了哪些安全机制来防范常见的网络攻击？"
+    tags: ["网络安全", "项目架构", "系统防护"]
+    difficulty: "medium"
+    source: "中兴通讯"
+    key_points:
+      - "提及认证授权机制（如JWT、OAuth2）及Token防伪造"
+      - "防范常见Web攻击（如XSS转义、CSRF Token校验、SQL注入预编译）"
+      - "传输层安全（HTTPS/SSL加密）及接口限流/防刷机制"
+
+  - id: "NW-PQ-ZX-007"
+    type: "project_deep_dive"
+    question: "请详细介绍一下你项目的来源、部署方式，以及针对该项目做了哪些具体的性能优化？"
+    tags: ["项目架构", "运维部署", "性能优化"]
+    difficulty: "hard"
+    source: "中兴通讯"
+    key_points:
+      - "清晰说明项目是学术研究、开源贡献还是企业级应用"
+      - "描述部署架构（如Docker容器化部署、CI/CD流水线、Nginx反向代理）"
+      - "列举优化手段（如引入Redis缓存、数据库索引优化、异步处理、连接池参数调优）"
+
+  - id: "NW-PQ-ZX-008"
+    type: "project_deep_dive"
+    question: "在对系统或项目进行性能优化时，你的思考路径和分析方法是怎样的？"
+    tags: ["优化思路", "系统设计", "性能调优"]
+    difficulty: "hard"
+    source: "中兴通讯"
+    key_points:
+      - "先测量后优化：利用压测工具和监控面板找出系统的真正瓶颈"
+      - "自顶向下排查：从前端网络请求、网关、服务层到底层数据库/存储逐层分析"
+      - "根据木桶原理优先解决资源竞争最严重的环节，权衡时间与空间成本"
+
+  - id: "NW-PQ-ZX-009"
+    type: "project_deep_dive"
+    question: "在之前的项目中，你是如何进行测试和质量保证的？"
+    tags: ["软件测试", "质量保证", "工程化"]
+    difficulty: "medium"
+    source: "中兴通讯"
+    key_points:
+      - "说明在开发阶段编写单元测试（如JUnit）保证基础逻辑正确"
+      - "提及集成测试、接口自动化测试验证服务间协同"
+      - "注重边界条件处理、异常流程测试以及必要的压力测试"
+
+  - id: "NW-PQ-ZX-010"
+    type: "project_deep_dive"
+    question: "请结合你的实际项目，详细谈谈MVC设计模式在其中的具体体现和应用？"
+    tags: ["设计模式", "架构设计", "MVC"]
+    difficulty: "medium"
+    source: "中兴通讯"
+    key_points:
+      - "Model层负责数据持久化与业务逻辑（如Entity、Service、DAO）"
+      - "View层负责数据展示（如前端页面或返回给客户端的JSON视图）"
+      - "Controller层负责接收请求、参数校验、调用业务逻辑并返回响应"

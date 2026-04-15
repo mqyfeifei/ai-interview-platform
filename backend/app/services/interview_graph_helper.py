@@ -74,6 +74,15 @@ class InterviewGraphHelper:
     }
 
     @staticmethod
+    def normalize_target_source(raw_source):
+        source = str(raw_source or '').strip()
+        if not source:
+            return '通用'
+        if re.fullmatch(r'[\u4e00-\u9fff·（）()、\s]+', source):
+            return source
+        return '通用'
+
+    @staticmethod
     def _is_project_experience_sparse(user_id, resume_context_text=''):
         """判断简历项目经历是否缺失或过于稀疏。"""
         try:
@@ -1030,7 +1039,7 @@ class InterviewGraphHelper:
         return 1
     
     @staticmethod
-    def assign_questions(job_id, user_id, limit=5, recent_tag_ids=None, interview_round='first_round', interview_style='confident', resume_profile=None, is_dynamic_adjust=True):
+    def assign_questions(job_id, user_id, limit=5, recent_tag_ids=None, interview_round='first_round', interview_style='confident', target_source='通用', resume_profile=None, is_dynamic_adjust=True):
         """
         为用户智能分配面试题目（轮次策略驱动）
         
@@ -1071,6 +1080,35 @@ class InterviewGraphHelper:
             str(interview_round).strip().lower() if interview_round is not None else '',
             'first_round',
         )
+        normalized_source = InterviewGraphHelper.normalize_target_source(target_source)
+        if questions:
+            generic_sources = {'', '通用'}
+            if normalized_source == '通用':
+                generic_questions = [
+                    q for q in questions
+                    if InterviewGraphHelper.normalize_target_source(getattr(q, 'source', None)) in generic_sources
+                ]
+                if generic_questions:
+                    questions = generic_questions
+            else:
+                company_questions = [
+                    q for q in questions
+                    if InterviewGraphHelper.normalize_target_source(getattr(q, 'source', None)) == normalized_source
+                ]
+                generic_questions = [
+                    q for q in questions
+                    if InterviewGraphHelper.normalize_target_source(getattr(q, 'source', None)) in generic_sources
+                ]
+                if company_questions:
+                    seen_ids = set()
+                    merged = []
+                    for q in company_questions + generic_questions:
+                        if q.id not in seen_ids:
+                            seen_ids.add(q.id)
+                            merged.append(q)
+                    questions = merged
+                elif generic_questions:
+                    questions = generic_questions
         target_mix = dict(strategy.get('target_mix') or {})
         target_difficulty = dict(strategy.get('difficulty') or {})
         round_focus = strategy.get('focus', '')

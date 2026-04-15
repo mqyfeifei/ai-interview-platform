@@ -1,116 +1,819 @@
 type: backend_scenario_design_questions
 source:
-  - "技术博客"
+  - "Tech_Blog"
+  - "阿里巴巴"
+  - "腾讯"
+  - "华为"
+  - "京东"
+  - "美团"
+  - "拼多多"
+  - "字节跳动"
 items:
-  - id: BE-SQ-001
-    type: scenario_design
+  - id: "BE-SQ-001"
+    type: "scenario_design"
     question: "设计一个高并发秒杀系统，重点说明削峰、限流、库存一致性。"
     tags: ["高并发", "秒杀", "分布式"]
-    difficulty: hard
-    source: "技术博客"
-    status: draft
+    difficulty: "hard"
+    source: "Tech_Blog" 
     key_points:
       - "CDN动静资源分离"
       - "风控网关限流/验证码防刷"
       - "引入MQ异步削峰"
       - "Redis预扣库存避免击穿DB"
       - "最终一致兜底策略"
-  - id: BE-SQ-002
-    type: scenario_design
+  - id: "BE-SQ-002"
+    type: "scenario_design"
     question: "设计一个短链接系统，如何保证唯一性、跳转性能与统计准确性？"
     tags: ["系统设计", "短链接"]
-    difficulty: medium
-    source: "技术博客"
-    status: draft
+    difficulty: "medium"
+    source: "Tech_Blog" 
     key_points:
       - "核心算法：使用自增ID配合Base62进制转换解决短链长度"
       - "冲突处理方案(布隆过滤器)"
       - "高并发下如何跳转(利用302临时重定向加Cache预热)"
-  - id: BE-SQ-003
-    type: scenario_design
+  - id: "BE-SQ-003"
+    type: "scenario_design"
     question: "设计一个分布式 ID 生成服务，如何保证全局唯一与趋势递增？"
     tags: ["分布式", "ID生成"]
-    difficulty: medium
-    source: "技术博客"
-    status: draft
+    difficulty: "medium"
+    source: "Tech_Blog" 
     key_points:
       - "选用雪花算法(Snowflake)生成趋势递增的长整形数"
       - "处理时钟回拨漏洞补偿(等待重试、采用历史时间戳)"
       - "利用发号器或号段模式(如美团Leaf)减少DB寻址压力"
-  - id: BE-SQ-004
-    type: scenario_design
+  - id: "BE-SQ-004"
+    type: "scenario_design"
     question: "设计一个订单系统的状态机，如何处理超时取消与补偿？"
     tags: ["订单系统", "状态机"]
-    difficulty: medium
-    source: "技术博客"
-    status: draft
+    difficulty: "medium"
+    source: "Tech_Blog" 
     key_points:
       - "状态机的设计与订单状态单向扭转约束防并发修改"
       - "使用RocketMQ延迟消息或持久化定时任务处理超期自动取消"
       - "防重复支付及逆向操作补偿流水机制"
-  - id: BE-SQ-005
-    type: scenario_design
+  - id: "BE-SQ-005"
+    type: "scenario_design"
     question: "设计一个日志采集与检索平台，如何平衡写入吞吐与查询延迟？"
     tags: ["日志系统", "检索"]
-    difficulty: hard
-    source: "技术博客"
-    status: draft
+    difficulty: "hard"
+    source: "Tech_Blog" 
     key_points:
       - "端侧采集代理(如Filebeat)低开销无侵入式的设计"
       - "使用Kafka集群作为缓冲避免因ES毛刺或瞬间高并发导致采集端阻塞"
       - "基于Elasticsearch的倒排索引支撑及设置冷热分层提升性能"
-  - id: BE-SQ-006
-    type: scenario_design
+  - id: "BE-SQ-006"
+    type: "scenario_design"
     question: "设计一个消息重试系统，如何避免重复消费和消息风暴？"
     tags: ["MQ", "重试机制"]
-    difficulty: hard
-    source: "技术博客"
-    status: draft
+    difficulty: "hard"
+    source: "Tech_Blog" 
     key_points:
       - "使用阶梯递增的时间配置重试间隔"
       - "超过最大次数投递进入死信队列(DLQ)落表报警等待人工干预"
       - "重试消费的接收端必须实现防重复的强幂等逻辑约束"
-  - id: BE-SQ-007
-    type: scenario_design
+  - id: "BE-SQ-007"
+    type: "scenario_design"
     question: "设计一个多级缓存架构（本地缓存+Redis+DB），如何保障一致性？"
     tags: ["缓存", "架构设计"]
-    difficulty: hard
-    source: "技术博客"
-    status: draft
+    difficulty: "hard"
+    source: "Tech_Blog" 
     key_points:
       - "本地缓存(Caffeine)处理极热点读取抗共性峰流量"
       - "分布式Redis作为二级共享核心缓存应对高扇出查找"
       - "利用监听DB Binlog(如Canal做变更广播)来保障各节点缓存强一致刷新"
-  - id: BE-SQ-008
-    type: scenario_design
+  - id: "BE-SQ-008"
+    type: "scenario_design"
     question: "设计一个支持租户隔离的 SaaS 后端，如何做数据权限控制？"
     tags: ["SaaS", "多租户", "权限"]
-    difficulty: hard
-    source: "技术博客"
-    status: draft
+    difficulty: "hard"
+    source: "Tech_Blog" 
     key_points:
       - "采取合理的物理隔离级别(单库分租户字段 vs 分库隔离)"
       - "利用AOP切面织入，通过拦截层(如Mybatis-Plus的TenantLine)自动组装租户限制"
       - "RBAC模型管理与严防越权水平读取及串数据问题"
-  - id: BE-SQ-009
-    type: scenario_design
+  - id: "BE-SQ-009"
+    type: "scenario_design"
     question: "设计一个文件上传服务，如何实现断点续传与防刷策略？"
     tags: ["文件服务", "安全"]
-    difficulty: medium
-    source: "技术博客"
-    status: draft
+    difficulty: "medium"
+    source: "Tech_Blog" 
     key_points:
       - "前端文件分片和基于Web Worker隔离的MD5哈希生成"
       - "提供并发控制且具备秒传校验与断点偏移续传能力"
       - "服务端对于断点片段的完整性拼接与针对单一会话防大量恶意切片刷库的防护治理"
-  - id: BE-SQ-010
-    type: scenario_design
+  - id: "BE-SQ-010"
+    type: "scenario_design"
     question: "设计一个灰度发布与回滚方案，如何降低发布风险？"
     tags: ["发布系统", "灰度"]
-    difficulty: medium
-    source: "技术博客"
-    status: draft
+    difficulty: "medium"
+    source: "Tech_Blog" 
     key_points:
       - "全链路透传流量标识(灰度标/UID等)及策略制定下发"
       - "流量接入层(Nginx+Lua)实现分流分流与配比递增(1%->全量)"
       - "配套监控数据盘分析对照与支持突发异常能做到秒级一键秒回滚的心智意识"
+  - id: "BE-SD-AL-001"
+    type: "scenario_design"
+    question: "在并发请求场景下，如何统计下游接口的失败率？如何在尽量不影响原接口性能的前提下实现并发 counter 统计？"
+    tags: ["高并发", "性能优化", "指标监控"]
+    difficulty: "hard"
+    source: "阿里巴巴"
+    key_points:
+      - "基础方案：使用 Redis 的 INCR 操作或本地缓存（如 AtomicLong/LongAdder）"
+      - "性能优化：推荐使用 LongAdder 分散热点以提升并发更新性能"
+      - "异步解耦：通过消息队列（MQ）或异步线程池收集日志，旁路计算统计结果，零侵入主业务流"
+
+  - id: "BE-SD-AL-002"
+    type: "scenario_design"
+    question: "线上系统出现故障导致用户无法使用，你该怎么排查和处理？"
+    tags: ["故障排查", "线上应急", "可用性"]
+    difficulty: "hard"
+    source: "阿里巴巴"
+    key_points:
+      - "应急止血：第一时间查看告警，优先考虑限流、降级、回滚或扩容，先恢复核心业务"
+      - "排查定位：保留现场（Dump 内存/线程），查看监控大盘（CPU/内存/网络/IO），分析报错日志及慢 SQL"
+      - "复盘改进：故障修复后需输出复盘报告，制定并落地对应的预防和监控策略"
+
+  - id: "BE-SD-AL-003"
+    type: "scenario_design"
+    question: "有两类任务 A 和 B 并发到来，要求必须等所有 A 任务执行完成后才能执行 B 任务，应该怎么设计？"
+    tags: ["并发编程", "多线程协作", "任务编排"]
+    difficulty: "medium"
+    source: "阿里巴巴"
+    key_points:
+      - "使用 CountDownLatch，初始化为 A 任务数量，A 执行完 countDown，B 在 await 后执行"
+      - "使用 CyclicBarrier 或 Phaser 进行阶段性任务拦截"
+      - "使用 CompletableFuture 工具类，通过 allOf 组合 A 任务集，再接 thenRun 执行 B 任务（最优推荐）"
+
+  - id: "BE-SD-AL-004"
+    type: "scenario_design"
+    question: "如果要做一个分布式的调度系统（可能涉及集群调度保证高可用），我们需要考虑哪些核心问题？"
+    tags: ["分布式系统", "调度系统", "高可用架构"]
+    difficulty: "hard"
+    source: "阿里巴巴"
+    key_points:
+      - "高可用与防单点：调度节点的 Leader 选举机制（如基于 ZK/DB 锁实现）"
+      - "防重复执行与幂等：如何通过分布式锁或状态机保证同一个任务在同一时刻只被一个节点触发"
+      - "负载均衡与任务分片：面对海量任务时，如何将任务切片路由到不同的 Worker 节点"
+  
+  - id: "BE-SD-TX-001"
+    type: "scenario_design"
+    question: "场景设计：如果在秒杀场景下，限制只能使用 MySQL，你会如何设计以应对高并发并防止超卖？"
+    tags: ["场景设计", "秒杀系统", "MySQL", "并发控制"]
+    difficulty: "hard"
+    source: "腾讯"
+    key_points:
+      - "利用数据库行级锁（如 update stock = stock - 1 where id = x and stock > 0）实现乐观锁或防超卖"
+      - "请求排队或限流削峰，避免大量并发请求直接压垮数据库"
+      - "热点数据隔离，或采用批量扣减库存的方式提升吞吐量"
+
+  - id: "BE-SD-TX-002"
+    type: "scenario_design"
+    question: "场景设计：设计一个电商平台秒杀系统，需要支持10万+并发抢购，你将如何进行整体技术方案设计？"
+    tags: ["系统架构", "高并发", "微服务"]
+    difficulty: "hard"
+    source: "腾讯"
+    key_points:
+      - "前端层面：动静分离，按钮置灰限制重复提交"
+      - "网关层面：接口限流、熔断降级、风控拦截黑产"
+      - "应用层面：引入 Redis 预扣减库存，消息队列（MQ）异步削峰下单"
+
+  - id: "BE-SQ-TX-003"
+    type: "scenario_design"
+    question: "场景设计：在一个高并发的秒杀场景中，如果系统架构限制只能使用MySQL作为数据存储层（禁止引入Redis等缓存中间件），你会如何进行表结构设计、事务控制和SQL优化来应对秒杀请求并防止超卖？"
+    tags: ["秒杀系统", "MySQL", "并发控制"]
+    difficulty: "hard"
+    source: "腾讯"
+    key_points:
+      - "利用MySQL行级锁（如 UPDATE stock SET amount = amount - 1 WHERE id = X AND amount > 0）防止超卖"
+      - "考虑通过请求队列削峰、限流以保护数据库底层连接数"
+      - "使用乐观锁（版本号机制）或悲观锁处理并发更新冲突"
+
+  - id: "BE-SQ-TX-004"
+    type: "scenario_design"
+    question: "场景设计：针对电商平台的秒杀系统（需要支持10万+并发抢购），在不限制技术栈的前提下，你会如何设计技术架构方案以解决高并发读写、防超卖以及系统稳定性问题？"
+    tags: ["架构设计", "高并发", "分布式系统"]
+    difficulty: "hard"
+    source: "腾讯"
+    key_points:
+      - "分层过滤设计：CDN静态资源缓存 -> 网关限流/黑名单过滤 -> 应用层验证"
+      - "缓存前置架构：库存预热到Redis，利用Lua脚本保证库存扣减原子性"
+      - "异步削峰：通过RocketMQ/Kafka等消息队列异步处理生成订单和支付流程"
+
+  - id: "BE-SQ-TX-005"
+    type: "scenario_design"
+    question: "场景设计：在处理海量长列表数据或AI对话流式输出时，如果需要引入虚拟滚动（Virtual Scrolling）。当用户进行快速滚动时，底层应该如何设计事件监听和DOM复用机制，以保证页面的流畅度且不掉帧？"
+    tags: ["性能优化", "大前端", "渲染机制"]
+    difficulty: "hard"
+    source: "腾讯"
+    key_points:
+      - "动态计算可视区域（Viewport）内的起始索引和结束索引，仅渲染可见的DOM节点"
+      - "利用节流（throttle）或 requestAnimationFrame 优化滚动事件的触发频率"
+      - "使用绝对定位和动态Transform平移模拟滚动效果，避免频繁的DOM回流重绘"
+
+  - id: "BE-SQ-TX-006"
+    type: "scenario_design"
+    question: "如果让你从零设计一个高并发的秒杀系统，你会如何进行架构设计？请说出核心组件、限流降级及防超卖措施。"
+    tags: ["系统设计", "秒杀系统", "高并发", "防超卖"]
+    difficulty: "hard"
+    source: "腾讯"
+    key_points:
+      - "流量拦截层：前端限流、CDN静态资源缓存、网关层限流（令牌桶/漏桶算法）"
+      - "核心逻辑层：基于Redis的库存预扣减，配合Lua脚本保证原子性，防止超卖"
+      - "异步削峰层：引入消息队列（如RocketMQ）将同步下单转为异步处理，平滑后端数据库压力"
+  - id: "BE-SQ-TX-007"
+    type: "scenario_design"
+    question: "讨论一下数据库异地多活与容灾设计：北京机房的数据如何高效、可靠地同步到上海机房？"
+    tags: ["数据库", "架构设计", "异地容灾", "数据同步"]
+    difficulty: "hard"
+    source: "腾讯"
+    key_points:
+      - "利用MySQL Binlog订阅（如Canal、Otter）实现增量数据异步同步"
+      - "针对延迟要求极高的场景，考虑基于分布式共识算法（如Raft、Paxos）的分布式数据库（如TiDB、OceanBase）"
+      - "解决双向同步中的循环复制和数据冲突问题（如通过时间戳或全局ID区分数据源）"
+  - id: "BE-SQ-TX-008"
+    type: "scenario_design"
+    question: "请设计一个微信红包的发放算法，如何保证每个人抢到的金额尽量随机，且整体概率相对公平？"
+    tags: ["算法设计", "随机算法", "微信红包"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "二倍均值法：每次随机金额范围是 [0.01, (剩余总金额/剩余人数) * 2]"
+      - "线段分割法：在总金额大小的线段上随机撒下N-1个点，将其切分为N段"
+      - "考虑精度问题和并发抢红包时的数据库或Redis事务处理"
+  - id: "BE-SQ-TX-009"
+    type: "scenario_design"
+    question: "在高并发的秒查（读多写少）场景下，如果为了极简架构只允许使用 MySQL，你会如何优化设计来抗住高并发查询？"
+    tags: ["MySQL调优", "高并发读取", "系统架构"]
+    difficulty: "hard"
+    source: "腾讯"
+    key_points:
+      - "架构层面：采用主从架构、读写分离，扩展只读节点分摊查询压力"
+      - "索引优化：针对高频查询建立合适的联合索引，利用覆盖索引避免回表查询"
+      - "数据表设计层面：进行冷热数据分离、适当的数据冗余设计避免复杂的多表Join"
+  - id: "BE-SQ-TX-010"
+    type: "scenario_design"
+    question: "场景题：在电商或内容搜索业务中，如果发现 ElasticSearch 的搜索评分（相关度）不准，你会如何排查和进行调优？"
+    tags: ["ElasticSearch", "搜索引擎调优", "问题排查"]
+    difficulty: "hard"
+    source: "腾讯"
+    key_points:
+      - "利用 `_explain` API 深入分析文档的算分过程及TF-IDF/BM25计算细节"
+      - "检查分词器配置是否合理，同义词库或自定义词库是否需要更新"
+      - "利用 Function Score Query 进行干预，引入业务权重（如销量、评价、点击率）影响最终排序"
+
+  - id: "BE-SD-HW-001"
+    type: "scenario_design"
+    question: "对于一个高可用的分布式系统来说，如何设计架构以实现RTO（恢复时间目标）等于或接近0？"
+    tags: ["高可用架构", "容灾备份", "分布式系统"]
+    difficulty: "hard"
+    source: "华为"
+    key_points:
+      - "采用多活架构（同城双活/异地多活），避免单点故障"
+      - "存储层面的实时同步机制（如MySQL的MGR、分布式存储的多副本一致性协议Paxos/Raft）"
+      - "接入层的智能流量调度（DNS/GSLB动态切换，微服务网关的故障快速剔除）"
+
+  - id: "BE-SD-HW-002"
+    type: "scenario_design"
+    question: "场景分析：在使用分布式锁时，有以下两种方式。方式一：先获取分布式锁，在锁内开启数据库事务，事务提交后再释放锁。方式二：先开启数据库事务，在事务内抢占分布式锁，操作完先释放锁，再提交事务。请问这两者有什么区别？会引发什么问题？"
+    tags: ["分布式锁", "事务管理", "并发控制"]
+    difficulty: "hard"
+    source: "华为"
+    key_points:
+      - "方式一（锁包事务）：是安全的。能保证事务提交并在数据库落盘后才释放锁，其他线程获取锁后能读到最新数据"
+      - "方式二（事务包锁）：是危险的。锁释放了但外层事务可能还未提交，此时其他线程抢到锁读到的依然是旧数据，会导致并发情况下的脏写或数据不一致"
+      - "结论：分布式锁的范围必须大于事务的范围"
+
+  - id: "BE-SD-HW-003"
+    type: "scenario_design"
+    question: "在系统进行灰度发布时，如果涉及到数据库表结构的重大改变（如字段拆分，导致一部分流量打向新表，一部分打向旧表），系统架构应当如何平滑发布？"
+    tags: ["灰度发布", "数据库重构", "高并发设计"]
+    difficulty: "hard"
+    source: "华为"
+    key_points:
+      - "阐述数据双写的思路（在新老系统并行期间，旧服务写旧表，新服务同时写新老表）"
+      - "说明历史数据增量和全量的迁移与清洗验证机制"
+      - "说明灰度流量分流策略（如基于用户白名单、UID哈希切流等）逐步切流，观察无误后最终下线旧表"
+
+  - id: "BE-SD-HW-004"
+    type: "scenario_design"
+    question: "在海量数据分页场景下，系统通常会将数据分为热数据和冷数据。如果在查询分页时，用户的请求跨越了冷热数据的边界，你会如何处理冷热数据的分页合并及联合查询问题？"
+    tags: ["冷热分离", "海量数据", "分页查询"]
+    difficulty: "hard"
+    source: "华为"
+    key_points:
+      - "方案一：在业务层或中间件层面进行路由，根据查询游标计算偏移量，向热库和冷库分别发起计算好的Limit查询，再在内存聚合"
+      - "方案二：引入Elasticsearch等搜索引擎作为全量只读索引，避免在关系型数据库中做复杂的冷热联合跨库分页"
+      - "提及冷热分离架构下，应尽量在产品设计上避免过深的分页查询（如采用基于Cursor的滚动查询取代传统的Offset分页）"
+
+  - id: "BE-SQ-JD-001"
+    type: "scenario_design"
+    question: "在ToB项目中，如果调用第三方API（如运营商接口）存在数秒的延迟，你应该如何设计架构来解决或缓解这个问题？"
+    tags: ["架构设计", "异步处理", "系统解耦"]
+    difficulty: "hard"
+    source: "京东"
+    key_points:
+      - "请求异步化：接收客户请求后立即返回受理成功（Ack），后台通过线程池或MQ异步调用第三方API"
+      - "状态回调/轮询：第三方接口返回后，通过Callback通知客户，或提供查询接口供客户轮询状态"
+      - "补偿机制：针对超时或失败的调用设计重试策略"
+  - id: "BE-SQ-JD-002"
+    type: "scenario_design"
+    question: "如果秒杀活动流量极大，单机Redis无法支撑，你应该如何进行架构改造和应对？"
+    tags: ["Redis", "高并发", "架构演进"]
+    difficulty: "hard"
+    source: "京东"
+    key_points:
+      - "集群化部署：引入Redis Cluster进行数据分片，水平扩展读写能力"
+      - "读写分离：主节点负责写库存，从节点负责读请求拦截"
+      - "多级缓存：引入本地缓存（如Guava/Caffeine）阻挡大部分无效流量"
+      - "热点数据散列：将极度热点的商品库存分段存储到多个Key中，减少单节点热点访问瓶颈"
+  - id: "BE-SQ-JD-003"
+    type: "scenario_design"
+    question: "在高并发场景下，如何保证接口的幂等性？例如用户连续多次点击提交订单，系统该如何设计防重机制？"
+    tags: ["分布式", "幂等性设计", "并发控制"]
+    difficulty: "medium"
+    source: "京东"
+    key_points:
+      - "前端防重：点击后置灰按钮"
+      - "唯一Token机制：进入页面生成全局唯一Token，提交时校验并删除Token（基于Redis原子操作）"
+      - "数据库唯一索引：在核心业务表上建立基于业务单号的唯一索引"
+      - "分布式锁：处理请求前以用户ID+商品ID作为Key加锁"
+  - id: "BE-SQ-JD-004"
+    type: "scenario_design"
+    question: "面对MQ因网络等原因导致的消息发送延迟问题，你会采取哪些优化手段？"
+    tags: ["消息队列", "高可用", "性能优化"]
+    difficulty: "hard"
+    source: "京东"
+    key_points:
+      - "发送端本地消息表：先将消息写入本地DB，通过定时任务异步扫表重发，解耦核心业务与MQ网络延迟"
+      - "批量发送与异步发送：调整MQ客户端参数，采用异步Callback模式发送，提升发送吞吐量"
+      - "网络架构优化：检查跨机房/跨专线网络带宽，必要时在同机房内部署代理"
+  - id: "BE-SQ-JD-005"
+    type: "scenario_design"
+    question: "请谈谈系统中的限流是如何实现的？为什么选择使用AOP结合自定义注解的方式，这种设计有什么好处？"
+    tags: ["系统稳定性", "限流降级", "AOP"]
+    difficulty: "medium"
+    source: "京东"
+    key_points:
+      - "常见限流算法：令牌桶、漏桶、滑动窗口（结合Redis+Lua或Sentinel实现）"
+      - "AOP+注解的好处：业务代码与非业务切面逻辑（限流）高度解耦，提升代码可读性和可维护性"
+      - "灵活配置：通过注解参数动态调整各个接口的限流阈值"
+  - id: "BE-SQ-JD-006"
+    type: "scenario_design"
+    question: "如果生产环境中发生数据库故障导致无法写入，系统的容灾和降级方案应该是怎样的？"
+    tags: ["高可用架构", "容灾降级", "故障处理"]
+    difficulty: "hard"
+    source: "京东"
+    key_points:
+      - "主从切换：借助MHA、Orchestrator或云产品能力，迅速将VIP漂移到健康的从库并提升为主库"
+      - "流量降级：返回友好的系统繁忙提示，暂时关闭非核心写入链路"
+      - "请求缓存（MQ堆积）：将核心写入请求暂存入MQ或本地日志，待数据库恢复后回放消费"
+  - id: "BE-SQ-JD-007"
+    type: "scenario_design"
+    question: "请系统地讲一下你的请求拦截逻辑，Redis配合Lua脚本主要完成了什么工作？Lua脚本中主要处理了哪些参数？"
+    tags: ["Redis", "Lua脚本", "安全拦截"]
+    difficulty: "medium"
+    source: "京东"
+    key_points:
+      - "利用Redis执行Lua脚本的原子性，避免并发竞争条件下的拦截失效"
+      - "主要工作：通常用于复杂限流（如检查当前QPS是否超限）、分布式防刷"
+      - "处理参数：传入KEYS（如IP地址、用户ID）、ARGVS（如限流时间窗口、最大访问次数）"
+  - id: "BE-SQ-JD-008"
+    type: "scenario_design"
+    question: "针对1亿个无序数字，如何快速找到其中最大的1000个数？"
+    tags: ["海量数据处理", "算法", "堆"]
+    difficulty: "medium"
+    source: "京东"
+    key_points:
+      - "不应将所有数据加载到内存进行全量排序"
+      - "最佳方案：维护一个大小为1000的小顶堆。遍历剩余数据，大于堆顶元素则替换并重新调整堆"
+      - "分治法：若数据分布在多台机器，可在各台机器求Top1000，再汇总求全局Top1000"
+
+  - id: "BE-SQ-JD-009"
+    type: "scenario_design"
+    question: "在客户端或前端存在多个弹窗任务时，如何从后端架构层面保证指定弹窗（如新手指引、紧急公告）能以第一优先级弹出？"
+    tags: ["系统设计", "优先级队列", "规则引擎"]
+    difficulty: "medium"
+    source: "京东"
+    key_points:
+      - "设计中心化的弹窗调度服务或规则引擎"
+      - "为不同类型的弹窗定义优先级权重，使用优先级队列进行下发"
+      - "考虑并发冲突与拦截机制，避免同时下发多个强阻断弹窗"
+
+  - id: "BE-SQ-JD-010"
+    type: "scenario_design"
+    question: "假设数据库中有1000万条数据，现在需要写一个接口从中查数据提供给其他服务。怎么保证查询的高效性以及数据传输的不丢失？"
+    tags: ["海量数据查询", "深分页优化", "可靠性设计"]
+    difficulty: "hard"
+    source: "京东"
+    key_points:
+      - "查询高效性：避免深分页(limit offset)，改用游标查询(cursor/基于自增ID或索引列的范围查询)"
+      - "数据库层面：合理建立索引，必要时使用Elasticsearch等搜索引擎或引入Redis缓存热点数据"
+      - "传输可靠性：支持流式读取/分批拉取，接口设计具有幂等性，提供断点续传或重试机制"
+
+  - id: "BE-SQ-JD-011"
+    type: "scenario_design"
+    question: "场景设计：如果让你设计一个直播系统，包含点赞、评论、弹幕、打赏等功能，你会怎么设计架构？"
+    tags: ["架构设计", "高并发", "直播系统"]
+    difficulty: "hard"
+    source: "京东"
+    key_points:
+      - "点赞/弹幕的高并发写场景：使用Redis异步聚合排队，削峰填谷后落库"
+      - "评论模块的存储选型及推拉结合的读扩散/写扩散设计"
+      - "打赏模块对强一致性的要求：分布式事务、幂等性与资金安全防范"
+
+  - id: "BE-SQ-JD-012"
+    type: "scenario_design"
+    question: "秒杀场景下，如果扣减库存后，向消息队列发送创建订单的消息失败，同时更新数据库也失败了，该怎么办？"
+    tags: ["秒杀系统", "分布式事务", "异常处理"]
+    difficulty: "hard"
+    source: "京东"
+    key_points:
+      - "事务的本地原子性保证：数据库更新失败应回滚库存扣减"
+      - "消息发送与本地事务的一致性保证：利用MQ的事务消息（如RocketMQ）或本地消息表"
+      - "引入定时任务对账补偿机制，确保最终一致性"
+
+  - id: "BE-SQ-JD-013"
+    type: "scenario_design"
+    question: "如何做接口的幂等性设计？比如防抖场景下，用户连续点击两次提交订单，系统该如何处理？"
+    tags: ["幂等性", "并发安全", "系统设计"]
+    difficulty: "medium"
+    source: "京东"
+    key_points:
+      - "前端拦截：按钮防抖置灰机制"
+      - "Token机制：提交前获取全局唯一Token，首次消耗后校验失败"
+      - "数据库兜底：唯一索引（如订单流水号）防止重复插入，或使用Redis SETNX+分布式锁"
+
+  - id: "BE-SQ-JD-014"
+    type: "scenario_design"
+    question: "如果系统中有海量商品，导致Redis内存不足了，你会怎么办？选择哪种淘汰策略，为什么？"
+    tags: ["Redis", "内存管理", "海量数据"]
+    difficulty: "medium"
+    source: "京东"
+    key_points:
+      - "横向扩展（集群分片）扩容，或排查清理大Key/僵尸Key"
+      - "合理配置缓存过期时间，避免全量数据常驻内存"
+      - "淘汰策略选型：推荐使用 volatile-lru 或 allkeys-lru，热点明显可结合业务场景使用 LFU"
+
+  - id: "BE-SQ-JD-015"
+    type: "scenario_design"
+    question: "有1亿个数，如何高效地取出其中最大的前1000个（TopK问题）？"
+    tags: ["海量数据处理", "算法", "TopK"]
+    difficulty: "medium"
+    source: "京东"
+    key_points:
+      - "不应全量加载到内存进行排序"
+      - "最优解：维护一个容量为1000的小顶堆，遍历数据与堆顶比较，大于则替换并调整堆"
+      - "分布式场景下的分治法（MapReduce），分块求Top1000最后再合并"
+
+  - id: "BE-SQ-MT-001"
+    type: "scenario_design"
+    question: "场景题：实现两个账户之间的互相转账，如何设计以解决死锁问题？这种方案可能会引入哪些新风险？"
+    tags: ["并发编程", "死锁", "锁粒度", "场景设计"]
+    difficulty: "hard"
+    source: "美团"
+    key_points:
+      - "说明产生死锁的原因（如A转B锁定A请求B，同时B转A锁定B请求A）"
+      - "提出解决方案：通过固定的顺序加锁（如按账户ID大小顺序加锁）破坏环路等待条件"
+      - "指出潜在风险：全局排序可能导致并发度下降，或者使用分布式锁时可能引入单点故障及锁超时导致的不一致问题"
+
+  - id: "BE-SQ-MT-002"
+    type: "scenario_design"
+    question: "场景设计题：请设计美团话费充值功能的MySQL表结构，需要设计几张核心表？请说明字段设计。"
+    tags: ["数据库设计", "业务建模", "支付系统"]
+    difficulty: "medium"
+    source: "美团"
+    key_points:
+      - "至少需要两到三张核心表：充值订单表（记录充值请求）、支付流水表（记录支付状态）、用户账户/充值记录表"
+      - "订单表核心字段需包含：订单号（唯一）、用户ID、手机号、充值金额、订单状态（待支付、充值中、成功、失败）、创建时间等"
+      - "考虑到并发和幂等，需明确唯一索引（如支付流水号唯一），并说明状态推进（如基于乐观锁版本号的并发更新）"
+
+  - id: "BE-SQ-MT-003"
+    type: "scenario_design"
+    question: "分布式场景下，如何解决用户短时间内连续两次提交带来的防重和幂等性问题？"
+    tags: ["分布式", "幂等性", "并发控制"]
+    difficulty: "medium"
+    source: "美团"
+    key_points:
+      - "数据库层面：利用唯一业务流水号建立唯一索引，防止插入重复数据"
+      - "缓存层面：借助Redis的SETNX或Redisson实现分布式锁，基于User_ID+Action作为Key，拦截短时间内的重复并发请求"
+      - "业务应用层面：利用状态机防重（如订单仅在'待支付'状态才能推进），结合前端按钮置灰等辅助拦截"
+
+  - id: "BE-SQ-MT-004"
+    type: "scenario_design"
+    question: "设计美团话费充值功能的 MySQL 表结构，请说明需要设计几张核心表以及关键字段是什么？"
+    tags: ["数据库设计", "支付业务"]
+    difficulty: "medium"
+    source: "美团"
+    key_points:
+      - "用户表、商品/套餐表、订单表、流水表、充值状态映射表"
+      - "订单幂等性控制字段（out_trade_no）"
+      - "状态机设计（待支付、充值中、充值成功/失败、已退款）"
+
+  - id: "BE-SQ-MT-005"
+    type: "scenario_design"
+    question: "在分布式场景下，如何优雅地解决用户由于网络抖动导致的连续两次点击提交的问题？"
+    tags: ["幂等性", "分布式锁", "缓存"]
+    difficulty: "medium"
+    source: "美团"
+    key_points:
+      - "前端 Loading 状态置灰与 Token 机制（防重放）"
+      - "后端基于分布式锁（Redis SETNX）的防并发处理"
+      - "数据库层面唯一索引做兜底幂等"
+
+  - id: "BE-SQ-MT-006"
+    type: "scenario_design"
+    question: "假如账户互相转账产生死锁，在不影响用户体验的前提下，有哪些成熟的解决方案及潜在风险？"
+    tags: ["死锁", "分布式事务", "MySQL"]
+    difficulty: "hard"
+    source: "美团"
+    key_points:
+      - "固定加锁顺序（按 ID 大小排序加锁）"
+      - "死锁检测与超时回滚机制"
+      - "将同步转账异步化，通过消息队列保证最终一致性"
+  
+  - id: "BE-SQ-MT-007"
+    type: "scenario_design"
+    question: "在高并发的分布式场景下，如何设计防重机制和幂等处理，防止用户连续两次提交订单请求？"
+    tags: ["高并发", "幂等性", "防重设计"]
+    difficulty: "hard"
+    source: "美团"
+    key_points:
+      - "前端层面：按钮置灰、防抖处理"
+      - "网关/接口层：Token机制（防重Token，提交前获取，提交后核销）"
+      - "存储层：利用Redis的SETNX实现分布式锁，或者数据库唯一索引防止重复插入"
+  - id: "BE-SQ-MT-008"
+    type: "scenario_design"
+    question: "在使用消息队列时，如果有多个分区（Partition），但在某些场景下必须保证业务消息的“顺序消费”，应该如何实现？"
+    tags: ["消息队列", "顺序消费", "Kafka/RocketMQ"]
+    difficulty: "hard"
+    source: "美团"
+    key_points:
+      - "局部顺序：通过指定Message Key（如订单ID），利用Hash算法确保同一业务实体投递到同一个Partition"
+      - "消费端保证：单一消费者线程处理，或内部使用有边界的内存队列（如队列按Key分配对应线程）"
+      - "处理重试时的顺序乱序问题：失败时需阻塞同Key的后续消息，或者进入专门的顺序死信处理"
+  - id: "BE-SQ-MT-009"
+    type: "scenario_design"
+    question: "在微服务架构中，熔断规则通常是如何配置的（如慢调用比例、异常率）？触发熔断后系统是如何恢复的？"
+    tags: ["服务治理", "熔断降级", "Spring Cloud Alibaba"]
+    difficulty: "medium"
+    source: "美团"
+    key_points:
+      - "说明熔断指标的统计维度（如滑动窗口时间内的错误比例阈值、慢调用阈值）"
+      - "解释熔断器的状态转换机制：Closed（关闭） -> Open（打开） -> Half-Open（半开）"
+      - "说明Half-Open状态下的探针机制，若请求成功则恢复Closed，失败则重置Open的时间窗口"
+  - id: "BE-SQ-MT-010"
+    type: "scenario_design"
+    question: "请设计一个话费充值功能的MySQL表结构，实现核心功能最少需要设计几张表？请简述表结构和关联关系。"
+    tags: ["数据库设计", "MySQL", "业务建模"]
+    difficulty: "medium"
+    source: "美团"
+    key_points:
+      - "用户/账户表：记录用户余额和基础信息"
+      - "充值套餐/商品表：配置可选的充值面额及优惠策略"
+      - "充值订单流水表：记录订单号、用户ID、金额、支付状态（待支付、已支付、充值成功、失败退款）等，需强调幂等性和防并发控制（如状态机乐观锁）"
+  - id: "BE-SQ-MT-011"
+    type: "scenario_design"
+    question: "如何使用Redis的ZSet（有序集合）数据结构实现热点商品的实时排行？ZSet的Key应该如何设计？"
+    tags: ["Redis", "ZSet", "排行榜"]
+    difficulty: "medium"
+    source: "美团"
+    key_points:
+      - "解释ZSet的数据结构特性，基于Score进行排序"
+      - "Key设计：按业务和时间维度设计（如 `hot_goods:rank:20260414`）"
+      - "Score设计：可以是销量、浏览量或综合热度值；Value为商品ID"
+      - "更新与查询操作：通过ZINCRBY累加分数，ZREVRANGE获取TopN"
+  - id: "BE-SQ-MT-012"
+    type: "scenario_design"
+    question: "如果上线一个新需求，数据结构和量级均已确定，你会如何评估存储这些数据所需的Redis内存空间是否充足？"
+    tags: ["Redis", "容量评估", "架构设计"]
+    difficulty: "hard"
+    source: "美团"
+    key_points:
+      - "计算单个KV占用的内存：分析Key长度、Value的数据类型及序列化后的字节大小"
+      - "考虑Redis的底层数据结构开销（如dictEntry、redisObject头信息等元数据开销）"
+      - "结合数据总量计算总内存，并预留足够的缓冲空间（如内存碎片的开销、BGSAVE时的写时复制内存冗余，通常预留30%-50%）"
+
+  - id: "BE-SQ-PDD-001"
+    type: "scenario_design"
+    question: "请详细设计并描述一下高并发秒杀系统的整体架构方案。核心优化的重点应该放在哪里？"
+    tags: ["高并发", "秒杀系统", "架构设计"]
+    difficulty: "hard"
+    source: "拼多多"
+    key_points:
+      - "前端优化：防抖、页面静态化（CDN隔离）"
+      - "网络层/网关层：限流（令牌桶/漏桶）、黑名单拦截、恶意请求过滤"
+      - "应用层：Redis缓存预热、利用Lua脚本或Redis单线程特性处理库存扣减"
+      - "异步削峰：通过MQ将订单请求异步化，缓解数据库写压力"
+
+  - id: "BE-SQ-PDD-002"
+    type: "scenario_design"
+    question: "在优惠券秒杀场景中，大量用户发起订单但未支付导致库存被无效占用，该如何设计架构来解决这个问题？"
+    tags: ["延迟队列", "库存一致性", "订单中心"]
+    difficulty: "hard"
+    source: "拼多多"
+    key_points:
+      - "引入延迟队列机制（如RabbitMQ的死信队列/延迟插件，或Redis的ZSet）"
+      - "设置订单支付超时时间（例如15或30分钟）"
+      - "超时未支付后，消费延迟消息，触发取消订单并归还库存的逻辑"
+      - "做好幂等性控制，防止库存的重复归还"
+
+  - id: "BE-SQ-PDD-003"
+    type: "scenario_design"
+    question: "在大促高并发场景下，你会如何合理设置 ThreadPoolExecutor 的各项核心参数？如果采用动态线程池方案该如何设计？"
+    tags: ["线程池优化", "高并发", "动态调参"]
+    difficulty: "medium"
+    source: "拼多多"
+    key_points:
+      - "根据任务类型区分：CPU密集型（N+1）和 IO密集型（2N或更高配置）"
+      - "结合压测数据，合理设置 corePoolSize、maximumPoolSize 以及阻塞队列的长度，坚决避免使用无界队列"
+      - "大促期间可参考拼多多的动态线程池方案，基于配置中心（如Apollo/Nacos）动态下发参数并实时生效，配合监控告警"
+
+  - id: "BE-SQ-PDD-004"
+    type: "scenario_design"
+    question: "在缓存架构中，为什么使用分布式锁能够避免回源风暴（缓存击穿）？如何防止恶意请求击穿缓存？"
+    tags: ["缓存击穿", "分布式锁", "布隆过滤器"]
+    difficulty: "medium"
+    source: "拼多多"
+    key_points:
+      - "对于热点Key过期（缓存击穿），使用分布式锁确保同一时刻只有一个线程能够去数据库查询并重建缓存，其他线程等待"
+      - "对于防范恶意请求（缓存穿透），采用布隆过滤器（Bloom Filter）提前拦截不存在的Key"
+      - "或者对查询不到的数据在缓存中存入一个带较短过期时间的空值（Null/特定标识）"
+  
+  - id: "BE-SQ-ZJ-001"
+    type: "scenario_design"
+    question: "在缓存和数据库双写一致性的场景中，如果你采用先更新数据库再删除缓存的方案，要是缓存删除失败了应该怎么办？"
+    tags: ["缓存一致性", "Redis", "高并发设计"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "引入消息队列（MQ）进行异步重试删除"
+      - "使用Canal监听MySQL的Binlog，在下游消费Binlog进行缓存的精确清理"
+      - "结合缓存自身的TTL过期时间作为最终兜底机制"
+
+  - id: "BE-SQ-ZJ-002"
+    type: "scenario_design"
+    question: "在使用MinIO进行大文件分片上传时，如果遇到网络波动导致分片合并失败应该如何处理？残余的临时分片文件的清理机制应该如何设计？"
+    tags: ["分布式存储", "断点续传", "异常处理"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "利用MD5校验分片完整性，提供重试合并机制"
+      - "记录每个分片的上传状态（Redis/DB），客户端重启后可以查询进度进行续传"
+      - "使用定时任务（如XXL-Job）定期扫描过期未合并的临时文件夹，或利用MinIO自身的生命周期管理（Lifecycle）自动清理"
+
+  - id: "BE-SQ-ZJ-003"
+    type: "scenario_design"
+    question: "场景设计：假设系统中有两个账户进行并发互相转账操作，如何设计代码或数据库机制来避免死锁？这种方案可能会引入什么新的风险？"
+    tags: ["并发控制", "死锁预防", "分布式事务"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "按照固定的顺序进行加锁（例如总是先锁账户ID较小的一方，再锁较大的），打破环路等待条件"
+      - "使用分布式事务或利用Redis/ZooKeeper实现分布式排他锁来控制转账串行化"
+      - "风险认知：强行排队串行化会降低系统并发吞吐量，需权衡锁粒度和性能"
+
+  - id: "BE-SQ-ZJ-004"
+    type: "scenario_design"
+    question: "针对微博、抖音这种数亿用户级别的App，如果你负责其后台的用户数据或动态模块，应该如何进行分库分表设计？面对跨表查询需求应如何优化？"
+    tags: ["海量数据处理", "分库分表", "系统架构"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "按照用户ID（如取模或一致性哈希）进行水平拆分，解决单表容量与写入瓶颈"
+      - "涉及复杂维度的查询（如搜索动态），将数据同步至Elasticsearch等搜索引擎解决跨表查询难题"
+      - "热点数据（大V动态）需做读扩散或写扩散优化，并结合多级缓存进行抵挡"
+
+  - id: "BE-SQ-ZJ-005"
+    type: "scenario_design"
+    question: "在RAG（检索增强生成）知识库系统中，如何设计一套机制来保证大规模私有化数据的持续更新和知识“保鲜”？"
+    tags: ["RAG架构", "大模型应用", "数据流"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "建立实时或准实时的数据管道，通过监听数据库Binlog增量更新向量数据库"
+      - "对于非结构化文档，通过定时爬虫或Webhook触发重切片、重Embedding机制"
+      - "利用版本控制和时间戳衰减权重，在向量检索时让最新知识的打分优先"
+
+  - id: "BE-SQ-ZJ-006"
+    type: "scenario_design"
+    question: "场景设计：如果需要实现系统内账户之间的互相转账功能，如何避免产生死锁问题？你的方案可能会引入哪些新的技术风险？"
+    tags: ["并发编程", "死锁防范", "分布式事务"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "识别死锁原因：高并发下交叉加锁（A转B锁A再锁B，B转A锁B再锁A）"
+      - "防死锁方案：对锁资源进行全局排序（如按账户ID从小到大加锁），确保加锁顺序一致"
+      - "风险认知：大事务可能导致数据库连接池被占满，性能下降，需考虑拆分事务或引入分布式事务/消息队列异步记账"
+
+  - id: "BE-SQ-ZJ-007"
+    type: "scenario_design"
+    question: "如果让你从零设计一个高可用的分布式旅游订单系统，你会重点考虑哪些维度的容灾与高可用方案？"
+    tags: ["高可用设计", "分布式架构", "容灾方案"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "接入层：DNS轮询、CDN加速、Nginx集群与限流降级"
+      - "应用层：微服务无状态化设计、异地多活、熔断隔离机制（Sentinel/Hystrix）"
+      - "数据层：MySQL主从同步与分库分表、Redis集群哨兵模式、MQ防消息丢失机制"
+
+  - id: "BE-SQ-ZJ-008"
+    type: "scenario_design"
+    question: "针对像微博、抖音这样具有几亿用户量级的国民级App，如果你来设计其核心数据（如用户关注关系或内容流），应该如何进行分库分表与高效查询方案设计？"
+    tags: ["海量数据", "分库分表", "查询优化"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "分片键（Sharding Key）的选择：通常以 UserID 作为分表键，采用 Hash 取模或一致性 Hash 算法"
+      - "读写扩散问题的处理：关注关系往往需要“发件箱”和“收件箱”双写，或采用推拉结合（Push & Pull）架构"
+      - "复杂查询：非分片键查询需引入 ES (ElasticSearch) 或宽表构建二级索引"
+
+  - id: "BE-SQ-ZJ-009"
+    type: "scenario_design"
+    question: "在高并发场景下，如果更新数据库后，Redis缓存删除操作失败了，会导致双写不一致。这种情况下应该怎么办？有哪些兜底机制？"
+    tags: ["缓存一致性", "Redis", "高并发兜底"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "利用消息队列（MQ）重试机制：将删除缓存任务放入MQ，保证At Least Once消费重试"
+      - "利用Canal订阅MySQL Binlog机制：业务代码不感知缓存，由Canal监听数据变更异步更新/删除Redis，实现解耦"
+      - "设置合理的缓存TTL（过期时间）作为最终的兜底防线"
+
+  - id: "BE-SQ-ZJ-010"
+    type: "scenario_design"
+    question: "如果希望将大模型RAG（检索增强生成）能力引入到传统的客服或推荐系统中，你在整体架构设计和数据隐私安全方面会注意哪些问题？"
+    tags: ["AI架构", "RAG", "数据安全"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "架构层面：向量数据库（Vector DB）的选型与扩展，大模型API调用的限流降级与异步处理机制（防长连接超时）"
+      - "知识保鲜：如何设计增量索引更新机制，确保知识库的实时性"
+      - "安全层面：用户私域数据的隔离（租户隔离），敏感信息在送入LLM前的脱敏（PII屏蔽），以及输出的安全合规审核"
+
+
+  - id: "BE-SQ-ZJ-011"
+    type: "scenario_design"
+    question: "在实际业务中，什么场景下必须使用分布式锁？如果高并发访问Redis执行限流/加锁，如何保证数据处理的一致性与原子性？"
+    tags: ["分布式锁", "Redis", "高并发", "数据一致性"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "场景匹配：定时任务防重发、超卖扣减库存、缓存击穿保护等涉及分布式多节点操作同一共享资源的场景"
+      - "使用Lua脚本打包多条Redis命令（如判断+扣减）来保证执行的原子性"
+      - "考虑锁的误删防范（比对Value）、锁的自动续期（WatchDog机制）"
+
+  - id: "BE-SQ-ZJ-012"
+    type: "scenario_design"
+    question: "如果让你设计一个高可用的旅游订单系统，你会如何选择技术栈并考虑哪些关键的容灾与高可用因素？"
+    tags: ["系统设计", "高可用", "容灾", "架构选型"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "多级缓存策略应对高并发读（本地缓存 + Redis集群）"
+      - "数据库的高可用保障（主从同步、读写分离、甚至分库分表）及数据异构（ES用于复杂查询）"
+      - "全面考虑降级（非核心链路剥离）、熔断（异常时快速失败保护）、限流（压垮系统前拦截）及异地多活灾备方案"
+
+  - id: "BE-SQ-ZJ-013"
+    type: "scenario_design"
+    question: "假设线上分析发现，使用的Seata分布式事务机制导致了严重的性能瓶颈，大量高并发请求阻塞在等待全局锁上。你会如何设计方案来优化或替代？"
+    tags: ["分布式事务", "高并发", "性能调优", "Seata"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "降级一致性要求，从强一致性（AT模式全局锁）改为最终一致性（BASE理论）"
+      - "采用基于MQ的可靠消息最终一致性方案或最大努力通知型方案解耦链路"
+      - "针对必须同步的场景，优化锁粒度、调整隔离级别或转为利用TCC模式提高并发度"
+
+  - id: "BE-SQ-ZJ-014"
+    type: "scenario_design"
+    question: "面对微博、抖音这种数亿活跃用户的系统，如果要做一张历史排行榜单，底层应该如何进行分表设计与查询优化？"
+    tags: ["分库分表", "海量数据", "Redis ZSet"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "实时榜单坚决不能查DB，必须利用Redis ZSet配合定时任务落盘"
+      - "DB历史数据按时间（月/年）或按榜单类别进行冷热分离与水平分表"
+      - "设计合理的Sharding Key避免数据倾斜，并结合ClickHouse/ES等大数据OLAP组件处理历史复杂分析查询"
+
+  - id: "BE-SQ-ZJ-015"
+    type: "scenario_design"
+    question: "在账户互相转账场景中，如何通过代码级锁或DB锁控制解决死锁问题？你的方案可能会引入什么新的风险？"
+    tags: ["死锁", "并发编程", "数据库事务"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "防死锁方案：对转账双方的账户ID进行排序，始终按照从小到大的固定顺序获取锁，破坏循环等待条件"
+      - "若使用数据库行锁，由于网络或事务处理延迟可能降低吞吐量，带来高并发下的性能急剧下降"
+      - "引入风险解决方案：可改为基于状态机和MQ的异步转账清算系统，提高吞吐并保证最终一致"
+
+  - id: "BE-SQ-ZJ-016"
+    type: "scenario_design"
+    question: "如果要设计一个支持瞬间超大流量的商品秒杀系统，你会从哪些维度进行架构设计？"
+    tags: ["系统设计", "秒杀", "高并发", "削峰填谷"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "前端层面：动静分离（CDN）、按键置灰防重复点击"
+      - "网络/网关层：恶意请求拦截、基于UID或IP的限流"
+      - "服务计算层：利用Redis进行库存预热和内存中扣减（Lua保证原子性），极度轻量化业务逻辑"
+      - "数据持久层：利用MQ消息队列削峰填谷，异步化执行MySQL扣减与订单创建，保护数据库"
+  

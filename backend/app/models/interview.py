@@ -111,6 +111,8 @@ class InterviewSessionConfig(db.Model):
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    target_source = db.Column(db.String(50), default='通用') # 前端传入的期望公司，用于去 Question 表过滤 source
 
     profile = db.relationship('InterviewProfile', backref='session_configs')
 
@@ -143,6 +145,8 @@ class InterviewProfile(db.Model):
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    target_source = db.Column(db.String(50), default='通用') # 前端传入的期望公司，用于去 Question 表过滤 source
 
     job = db.relationship('Job', backref='interview_profiles')
 

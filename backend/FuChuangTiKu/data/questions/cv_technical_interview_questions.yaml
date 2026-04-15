@@ -1,15 +1,19 @@
 type: "cv_technical_interview_questions"
 source:
-  - "牛客网"
-  - "顶会论文"
+  - "Nowcoder"
+  - "Personal_Notes"
+  - "Tech_Blog"
+  - "Papers"
+  - "字节跳动"
+  - "旷视科技"
+  - "商汤科技"
 items:
   - id: "CV-TQ-001"
     type: "technical"
     question: "详细阐述支持向量机（SVM）的核技巧（Kernel Trick）原理，以及在视觉特征分类中常用的核函数。"
     tags: ["机器学习", "SVM", "基础算法"]
     difficulty: "medium"
-    source: "牛客网"
-    status: "draft"
+    source: "Nowcoder" 
     key_points:
       - "解释低维线性不可分数据向高维映射的思想"
       - "说明核函数在不显式计算高维映射下完成内积运算的数学机制"
@@ -19,8 +23,7 @@ items:
     question: "在解决存在隐变量的图像聚类或分割问题时，期望最大化（EM）算法的工作原理是什么？"
     tags: ["机器学习", "EM算法", "数学推导"]
     difficulty: "hard"
-    source: "牛客网"
-    status: "draft"
+    source: "Nowcoder" 
     key_points:
       - "E步（Expectation）：基于当前参数估计隐变量的后验概率或期望"
       - "M步（Maximization）：基于E步求得的隐变量期望，最大化完整数据的对数似然以更新参数"
@@ -30,8 +33,7 @@ items:
     question: "目标检测中，Focal Loss 是如何解决正负样本极度不平衡问题的？它的数学公式核心思想是什么？"
     tags: ["目标检测", "损失函数"]
     difficulty: "medium"
-    source: "技术博客"
-    status: "draft"
+    source: "Tech_Blog" 
     key_points:
       - "相比标准交叉熵，引入了调制系数 (1 - pt)^γ"
       - "降低了大量易分负样本（背景）在Loss中的权重"
@@ -41,8 +43,7 @@ items:
     question: "Vision Transformer (ViT) 中的 Self-Attention 机制与传统 CNN 的感受野有什么本质区别？"
     tags: ["深度学习", "Transformer", "架构对比"]
     difficulty: "hard"
-    source: "顶会论文"
-    status: "draft"
+    source: "Papers" 
     key_points:
       - "CNN 具备平移不变性和局部性归纳偏置，感受野随深度逐渐扩大"
       - "ViT 的 Self-Attention 在初始层就具备全局感受野，能捕捉远距离像素的依赖关系"
@@ -52,8 +53,7 @@ items:
     question: "详细解释 NMS（非极大值抑制）的原理，以及 Soft-NMS 和 DIoU-NMS 解决了什么痛点？"
     tags: ["目标检测", "后处理"]
     difficulty: "medium"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "NMS依赖IoU阈值暴力剔除，导致高度重叠的密集目标（如人群）被误删"
       - "Soft-NMS采用高斯惩罚函数平滑降低置信度而非直接置零，提升高重叠场景召回率"
@@ -63,8 +63,7 @@ items:
     question: "RoI Pooling 和 RoI Align 的本质区别是什么？为什么实例分割必须用 RoI Align？"
     tags: ["目标检测", "图像分割"]
     difficulty: "medium"
-    source: "面经库"
-    status: "draft"
+    source: "Interview_Bank" 
     key_points:
       - "RoI Pooling 存在两次量化取整（坐标映射取整、池化单元取整），导致空间位置错位"
       - "RoI Align 取消量化，保留浮点数坐标，利用双线性插值计算池化网格的特征值"
@@ -74,8 +73,7 @@ items:
     question: "在对比学习（Contrastive Learning）中，MoCo 和 SimCLR 在构建负样本队列上的核心区别是什么？"
     tags: ["自监督学习", "前沿视觉"]
     difficulty: "hard"
-    source: "顶会论文"
-    status: "draft"
+    source: "Papers" 
     key_points:
       - "SimCLR 强依赖超大 Batch Size 来提供足够的负样本，对算力要求极高"
       - "MoCo 引入了动量编码器（Momentum Encoder）和动态字典（Queue），解耦了负样本数量与 Batch Size 的强绑定关系"
@@ -84,8 +82,7 @@ items:
     question: "解释 Batch Normalization (BN) 与 Layer Normalization (LN) 的计算维度差异，为何 Transformer 偏向用 LN？"
     tags: ["深度学习基础", "归一化"]
     difficulty: "medium"
-    source: "牛客网"
-    status: "draft"
+    source: "Nowcoder" 
     key_points:
       - "BN 跨样本在通道（Channel）维度上求均值方差，受 Batch Size 大小影响大，且难以处理变长序列"
       - "LN 在单个样本的所有特征维度上归一化，与 Batch Size 无关"
@@ -95,8 +92,7 @@ items:
     question: "你如何理解计算机视觉中的“域适应”（Domain Adaptation）问题？有哪些常用的解决方法？"
     tags: ["域适应", "泛化能力"]
     difficulty: "medium"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "域适应指模型在训练数据分布（源域）与测试数据分布（目标域）不一致时性能下降的问题"
       - "解决方法包括：对抗训练（如DANN）通过引入域分类器和梯度反转层实现特征分布对齐；统计匹配（如MMD）通过最小化源域和目标域特征分布的距离；生成式方法（如CycleGAN）通过图像翻译将源域样本转换为目标域风格 进行训练"
@@ -105,8 +101,7 @@ items:
     question: "你在CV项目中有没有遇到过模型过拟合的情况？你是如何诊断和解决这个问题的？"
     tags: ["过拟合", "模型诊断"]
     difficulty: "medium"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "诊断过拟合的能力：如训练集表现优异但验证集性能较差，或训练过程中验证损失开始上升"
       - "解决过拟合的方法：如增加数据量（数据增强、收集更多样本）、引入正则化（L1/L2正则化、Dropout）、简化模型结构（减少参数量）等"
@@ -116,8 +111,7 @@ items:
     question: "你在CV项目中有没有遇到过模型欠拟合的情况？你是如何诊断和解决这个问题的？"
     tags: ["欠拟合", "模型诊断"]
     difficulty: "medium"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "诊断欠拟合的能力：如训练集和验证集性能都较差，或训练过程中损失下降缓慢"
       - "解决欠拟合的方法：如增加模型复杂度（增加层数或参数量）、减少正则化强度、增加训练轮数等"
@@ -127,8 +121,7 @@ items:
     question: "你在CV项目中有没有遇到过模型训练不收敛的情况？你是如何诊断和解决这个问题的？"
     tags: ["训练不收敛", "模型诊断"]
     difficulty: "medium"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "诊断训练不收敛的能力：如训练损失持续震荡或不下降，或验证性能没有提升"
       - "解决训练不收敛的方法：如调整学习率（降低过高的学习率）、更换优化器（如从SGD换成Adam）、检查数据质量（如是否有标签错误或异常值）等"
@@ -138,8 +131,7 @@ items:
     question: "你在CV项目中有没有遇到过模型训练过程中出现梯度爆炸的情况？你是如何诊断和解决这个问题的？"
     tags: ["梯度爆炸", "模型诊断"]
     difficulty: "medium"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "诊断梯度爆炸的能力：如训练过程中损失突然变为NaN或Inf，或模型权重更新异常大"
       - "解决梯度爆炸的方法：如引入梯度裁剪（Gradient Clipping）限制梯度的最大范数、调整网络结构（如使用更稳定的激活函数）、降低学习率等"
@@ -149,8 +141,7 @@ items:
     question: "你在CV项目中有没有遇到过模型训练过程中出现梯度消失的情况？你是如何诊断和解决这个问题的？"
     tags: ["梯度消失", "模型诊断"]
     difficulty: "medium"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "诊断梯度消失的能力：如训练过程中损失下降非常缓慢，或模型权重更新非常小"
       - "解决梯度消失的方法：如使用更稳定的激活函数（如ReLU）、引入残差连接（ResNet结构）、使用批归一化（Batch Normalization）等"
@@ -160,8 +151,7 @@ items:
     question: "你在CV项目中有没有遇到过模型训练过程中出现过拟合的情况？你是如何诊断和解决这个问题的？"
     tags: ["过拟合", "模型诊断"]
     difficulty: "medium"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "诊断过拟合的能力：如训练集表现优异但验证集性能较差，或训练过程中验证损失开始上升"
       - "解决过拟合的方法：如增加数据量（数据增强、收集更多样本）、引入正则化（L1/L2正则化、Dropout）、简化模型结构（减少参数量）等"
@@ -171,8 +161,7 @@ items:
     question: "你在CV项目中有没有遇到过模型训练过程中出现欠拟合的情况？你是如何诊断和解决这个问题的？"
     tags: ["欠拟合", "模型诊断"]
     difficulty: "medium"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "诊断欠拟合的能力：如训练集和验证集性能都较差，或训练过程中损失下降缓慢"
       - "解决欠拟合的方法：如增加模型复杂度（增加层数或参数量）、减少正则化强度、增加训练轮数等"
@@ -182,8 +171,7 @@ items:
     question: "你在CV项目中有没有遇到过模型训练过程中出现训练不收敛的情况？你是如何诊断和解决这个问题的？"
     tags: ["训练不收敛", "模型诊断"]
     difficulty: "medium"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "诊断训练不收敛的能力：如训练损失持续震荡或不下降，或验证性能没有提升"
       - "解决训练不收敛的方法：如调整学习率（降低过高的学习率）、更换优化器（如从SGD换成Adam）、检查数据质量（如是否有标签错误或异常值）等"
@@ -193,8 +181,7 @@ items:
     question: "你在CV项目中有没有遇到过模型训练过程中出现梯度爆炸的情况？你是如何诊断和解决这个问题的？"
     tags: ["梯度爆炸", "模型诊断"]
     difficulty: "medium"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "诊断梯度爆炸的能力：如训练过程中损失突然变为NaN或Inf，或模型权重更新异常大"
       - "解决梯度爆炸的方法：如引入梯度裁剪（Gradient Clipping）限制梯度的最大范数、调整网络结构（如使用更稳定的激活函数）、降低学习率等"
@@ -204,8 +191,7 @@ items:
     question: "你在CV项目中有没有遇到过模型训练过程中出现梯度消失的情况？你是如何诊断和解决这个问题的？"
     tags: ["梯度消失", "模型诊断"]
     difficulty: "medium"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "诊断梯度消失的能力：如训练过程中损失下降非常缓慢，或模型权重更新非常小"
       - "解决梯度消失的方法：如使用更稳定的激活函数（如ReLU）、引入残差连接（ResNet结构）、使用批归一化（Batch Normalization）等"
@@ -215,8 +201,7 @@ items:
     question: "你在CV项目中有没有遇到过模型训练过程中出现过拟合的情况？你是如何诊断和解决这个问题的？"
     tags: ["过拟合", "模型诊断"]
     difficulty: "medium"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "诊断过拟合的能力：如训练集表现优异但验证集性能较差，或训练过程中验证损失开始上升"
       - "解决过拟合的方法：如增加数据量（数据增强、收集更多样本）、引入正则化（L1/L2正则化、Dropout）、简化模型结构（减少参数量）等"
@@ -226,8 +211,7 @@ items:
     question: "你在CV项目中有没有遇到过模型训练过程中出现欠拟合的情况？你是如何诊断和解决这个问题的？"
     tags: ["欠拟合", "模型诊断"]
     difficulty: "medium"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "诊断欠拟合的能力：如训练集和验证集性能都较差，或训练过程中损失下降缓慢"
       - "解决欠拟合的方法：如增加模型复杂度（增加层数或参数量）、减少正则化强度、增加训练轮数等"
@@ -237,8 +221,7 @@ items:
     question: "你在CV项目中有没有遇到过模型训练过程中出现训练不收敛的情况？你是如何诊断和解决这个问题的？"
     tags: ["训练不收敛", "模型诊断"]
     difficulty: "medium"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "诊断训练不收敛的能力：如训练损失持续震荡或不下降，或验证性能没有提升"
       - "解决训练不收敛的方法：如调整学习率（降低过高的学习率）、更换优化器（如从SGD换成Adam）、检查数据质量（如是否有标签错误或异常值）等"
@@ -248,8 +231,7 @@ items:
     question: "你在CV项目中有没有遇到过模型训练过程中出现梯度爆炸的情况？你是如何诊断和解决这个问题的？"
     tags: ["梯度爆炸", "模型诊断"]
     difficulty: "medium"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "诊断梯度爆炸的能力：如训练过程中损失突然变为NaN或Inf，或模型权重更新异常大"
       - "解决梯度爆炸的方法：如引入梯度裁剪（Gradient Clipping）限制梯度的最大范数、调整网络结构（如使用更稳定的激活函数）、降低学习率等"
@@ -259,8 +241,7 @@ items:
     question: "你在CV项目中有没有遇到过模型训练过程中出现梯度消失的情况？你是如何诊断和解决这个问题的？"
     tags: ["梯度消失", "模型诊断"]
     difficulty: "medium"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "诊断梯度消失的能力：如训练过程中损失下降非常缓慢，或模型权重更新非常小"
       - "解决梯度消失的方法：如使用更稳定的激活函数（如ReLU）、引入残差连接（ResNet结构）、使用批归一化（Batch Normalization）等"
@@ -270,8 +251,7 @@ items:
     question: "你在CV项目中有没有遇到过模型训练过程中出现过拟合的情况？你是如何诊断和解决这个问题的？"
     tags: ["过拟合", "模型诊断"]
     difficulty: "medium"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "诊断过拟合的能力：如训练集表现优异但验证集性能较差，或训练过程中验证损失开始上升"
       - "解决过拟合的方法：如增加数据量（数据增强、收集更多样本）、引入正则化（L1/L2正则化、Dropout）、简化模型结构（减少参数量）等"
@@ -281,8 +261,7 @@ items:
     question: "你在CV项目中有没有遇到过模型训练过程中出现欠拟合的情况？你是如何诊断和解决这个问题的？"
     tags: ["欠拟合", "模型诊断"]
     difficulty: "medium"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "诊断欠拟合的能力：如训练集和验证集性能都较差，或训练过程中损失下降缓慢"
       - "解决欠拟合的方法：如增加模型复杂度（增加层数或参数量）、减少正则化强度、增加训练轮数等"
@@ -292,8 +271,7 @@ items:
     question: "你在CV项目中有没有遇到过模型训练过程中出现训练不收敛的情况？你是如何诊断和解决这个问题的？"
     tags: ["训练不收敛", "模型诊断"]
     difficulty: "medium"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "诊断训练不收敛的能力：如训练损失持续震荡或不下降，或验证性能没有提升"
       - "解决训练不收敛的方法：如调整学习率（降低过高的学习率）、更换优化器（如从SGD换成Adam）、检查数据质量（如是否有标签错误或异常值）等"
@@ -303,8 +281,7 @@ items:
     question: "你在CV项目中有没有遇到过模型训练过程中出现梯度爆炸的情况？你是如何诊断和解决这个问题的？"
     tags: ["梯度爆炸", "模型诊断"]
     difficulty: "medium"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "诊断梯度爆炸的能力：如训练过程中损失突然变为NaN或Inf，或模型权重更新异常大"
       - "解决梯度爆炸的方法：如引入梯度裁剪（Gradient Clipping）限制梯度的最大范数、调整网络结构（如使用更稳定的激活函数）、降低学习率等"
@@ -314,8 +291,7 @@ items:
     question: "你在CV项目中有没有遇到过模型训练过程中出现梯度消失的情况？你是如何诊断和解决这个问题的？"
     tags: ["梯度消失", "模型诊断"]
     difficulty: "medium"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "诊断梯度消失的能力：如训练过程中损失下降非常缓慢，或模型权重更新非常小"
       - "解决梯度消失的方法：如使用更稳定的激活函数（如ReLU）、引入残差连接（ResNet结构）、使用批归一化（Batch Normalization）等"
@@ -325,8 +301,7 @@ items:
     question: "你在CV项目中有没有遇到过模型训练过程中出现过拟合的情况？你是如何诊断和解决这个问题的？"
     tags: ["过拟合", "模型诊断"]
     difficulty: "medium"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "诊断过拟合的能力：如训练集表现优异但验证集性能较差，或训练过程中验证损失开始上升"
       - "解决过拟合的方法：如增加数据量（数据增强、收集更多样本）、引入正则化（L1/L2正则化、Dropout）、简化模型结构（减少参数量）等"
@@ -336,8 +311,7 @@ items:
     question: "你在CV项目中有没有遇到过模型训练过程中出现欠拟合的情况？你是如何诊断和解决这个问题的？"
     tags: ["欠拟合", "模型诊断"]
     difficulty: "medium"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "诊断欠拟合的能力：如训练集和验证集性能都较差，或训练过程中损失下降缓慢"
       - "解决欠拟合的方法：如增加模型复杂度（增加层数或参数量）、减少正则化强度、增加训练轮数等"
@@ -347,8 +321,7 @@ items:
     question: "你在CV项目中有没有遇到过模型训练过程中出现训练不收敛的情况？你是如何诊断和解决这个问题的？"
     tags: ["训练不收敛", "模型诊断"]
     difficulty: "medium"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "诊断训练不收敛的能力：如训练损失持续震荡或不下降，或验证性能没有提升"
       - "解决训练不收敛的方法：如调整学习率（降低过高的学习率）、更换优化器（如从SGD换成Adam）、检查数据质量（如是否有标签错误或异常值）等"
@@ -358,8 +331,7 @@ items:
     question: "你在CV项目中有没有遇到过模型训练过程中出现梯度爆炸的情况？你是如何诊断和解决这个问题的？"
     tags: ["梯度爆炸", "模型诊断"]
     difficulty: "medium"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "诊断梯度爆炸的能力：如训练过程中损失突然变为NaN或Inf，或模型权重更新异常大"
       - "解决梯度爆炸的方法：如引入梯度裁剪（Gradient Clipping）限制梯度的最大范数、调整网络结构（如使用更稳定的激活函数）、降低学习率等"
@@ -369,8 +341,7 @@ items:
     question: "你在CV项目中有没有遇到过模型训练过程中出现梯度消失的情况？你是如何诊断和解决这个问题的？"
     tags: ["梯度消失", "模型诊断"]
     difficulty: "medium"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "诊断梯度消失的能力：如训练过程中损失下降非常缓慢，或模型权重更新非常小"
       - "解决梯度消失的方法：如使用更稳定的激活函数（如ReLU）、引入残差连接（ResNet结构）、使用批归一化（Batch Normalization）等"
@@ -380,8 +351,7 @@ items:
     question: "你在CV项目中有没有遇到过模型训练过程中出现过拟合的情况？你是如何诊断和解决这个问题的？"
     tags: ["过拟合", "模型诊断"]
     difficulty: "medium"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "诊断过拟合的能力：如训练集表现优异但验证集性能较差，或训练过程中验证损失开始上升"
       - "解决过拟合的方法：如增加数据量（数据增强、收集更多样本）、引入正则化（L1/L2正则化、Dropout）、简化模型结构（减少参数量）等"
@@ -391,8 +361,7 @@ items:
     question: "你在CV项目中有没有遇到过模型训练过程中出现欠拟合的情况？你是如何诊断和解决这个问题的？"
     tags: ["欠拟合", "模型诊断"]
     difficulty: "medium"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "诊断欠拟合的能力：如训练集和验证集性能都较差，或训练过程中损失下降缓慢"
       - "解决欠拟合的方法：如增加模型复杂度（增加层数或参数量）、减少正则化强度、增加训练轮数等"
@@ -402,8 +371,7 @@ items:
     question: "你在CV项目中有没有遇到过模型训练过程中出现训练不收敛的情况？你是如何诊断和解决这个问题的？"
     tags: ["训练不收敛", "模型诊断"]
     difficulty: "medium"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "诊断训练不收敛的能力：如训练损失持续震荡或不下降，或验证性能没有提升"
       - "解决训练不收敛的方法：如调整学习率（降低过高的学习率）、更换优化器（如从SGD换成Adam）、检查数据质量（如是否有标签错误或异常值）等"
@@ -413,8 +381,7 @@ items:
     question: "你在CV项目中有没有遇到过模型训练过程中出现梯度爆炸的情况？你是如何诊断和解决这个问题的？"
     tags: ["梯度爆炸", "模型诊断"]
     difficulty: "medium"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "诊断梯度爆炸的能力：如训练过程中损失突然变为NaN或Inf，或模型权重更新异常大"
       - "解决梯度爆炸的方法：如引入梯度裁剪（Gradient Clipping）限制梯度的最大范数、调整网络结构（如使用更稳定的激活函数）、降低学习率等"
@@ -424,8 +391,7 @@ items:
     question: "你在CV项目中有没有遇到过模型训练过程中出现梯度消失的情况？你是如何诊断和解决这个问题的？"
     tags: ["梯度消失", "模型诊断"]
     difficulty: "medium"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "诊断梯度消失的能力：如训练过程中损失下降非常缓慢，或模型权重更新非常小"
       - "解决梯度消失的方法：如使用更稳定的激活函数（如ReLU）、引入残差连接（ResNet结构）、使用批归一化（Batch Normalization）等"
@@ -435,8 +401,7 @@ items:
     question: "你在CV项目中有没有遇到过模型训练过程中出现过拟合的情况？你是如何诊断和解决这个问题的？"
     tags: ["过拟合", "模型诊断"]
     difficulty: "medium"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "诊断过拟合的能力：如训练集表现优异但验证集性能较差，或训练过程中验证损失开始上升"
       - "解决过拟合的方法：如增加数据量（数据增强、收集更多样本）、引入正则化（L1/L2正则化、Dropout）、简化模型结构（减少参数量）等"
@@ -446,8 +411,7 @@ items:
     question: "你在CV项目中有没有遇到过模型训练过程中出现欠拟合的情况？你是如何诊断和解决这个问题的？"
     tags: ["欠拟合", "模型诊断"]
     difficulty: "medium"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "诊断欠拟合的能力：如训练集和验证集性能都较差，或训练过程中损失下降缓慢"
       - "解决欠拟合的方法：如增加模型复杂度（增加层数或参数量）、减少正则化强度、增加训练轮数等"
@@ -457,8 +421,7 @@ items:
     question: "你在CV项目中有没有遇到过模型训练过程中出现训练不收敛的情况？你是如何诊断和解决这个问题的？"
     tags: ["训练不收敛", "模型诊断"]
     difficulty: "medium"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "诊断训练不收敛的能力：如训练损失持续震荡或不下降，或验证性能没有提升"
       - "解决训练不收敛的方法：如调整学习率（降低过高的学习率）、更换优化器（如从SGD换成Adam）、检查数据质量（如是否有标签错误或异常值）等"
@@ -468,8 +431,7 @@ items:
     question: "你在CV项目中有没有遇到过模型训练过程中出现梯度爆炸的情况？你是如何诊断和解决这个问题的？"
     tags: ["梯度爆炸", "模型诊断"]
     difficulty: "medium"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "诊断梯度爆炸的能力：如训练过程中损失突然变为NaN或Inf，或模型权重更新异常大"
       - "解决梯度爆炸的方法：如引入梯度裁剪（Gradient Clipping）限制梯度的最大范数、调整网络结构（如使用更稳定的激活函数）、降低学习率等"
@@ -479,8 +441,7 @@ items:
     question: "你在CV项目中有没有遇到过模型训练过程中出现梯度消失的情况？你是如何诊断和解决这个问题的？"
     tags: ["梯度消失", "模型诊断"]
     difficulty: "medium"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "诊断梯度消失的能力：如训练过程中损失下降非常缓慢，或模型权重更新非常小"
       - "解决梯度消失的方法：如使用更稳定的激活函数（如ReLU）、引入残差连接（ResNet结构）、使用批归一化（Batch Normalization）等"
@@ -490,8 +451,7 @@ items:
     question: "你在CV项目中有没有遇到过模型训练过程中出现过拟合的情况？你是如何诊断和解决这个问题的？"
     tags: ["过拟合", "模型诊断"]
     difficulty: "medium"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "诊断过拟合的能力：如训练集表现优异但验证集性能较差，或训练过程中验证损失开始上升"
       - "解决过拟合的方法：如增加数据量（数据增强、收集更多样本）、引入正则化（L1/L2正则化、Dropout）、简化模型结构（减少参数量）等"
@@ -501,8 +461,7 @@ items:
     question: "你在CV项目中有没有遇到过模型训练过程中出现欠拟合的情况？你是如何诊断和解决这个问题的？"
     tags: ["欠拟合", "模型诊断"]
     difficulty: "medium"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "诊断欠拟合的能力：如训练集和验证集性能都较差，或训练过程中损失下降缓慢"
       - "解决欠拟合的方法：如增加模型复杂度（增加层数或参数量）、减少正则化强度、增加训练轮数等"
@@ -512,8 +471,7 @@ items:
     question: "你在CV项目中有没有遇到过模型训练过程中出现训练不收敛的情况？你是如何诊断和解决这个问题的？"
     tags: ["训练不收敛", "模型诊断"]
     difficulty: "medium"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "诊断训练不收敛的能力：如训练损失持续震荡或不下降，或验证性能没有提升"
       - "解决训练不收敛的方法：如调整学习率（降低过高的学习率）、更换优化器（如从SGD换成Adam）、检查数据质量（如是否有标签错误或异常值）等"
@@ -523,8 +481,7 @@ items:
     question: "你在CV项目中有没有遇到过模型训练过程中出现梯度爆炸的情况？你是如何诊断和解决这个问题的？"
     tags: ["梯度爆炸", "模型诊断"]
     difficulty: "medium"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "诊断梯度爆炸的能力：如训练过程中损失突然变为NaN或Inf，或模型权重更新异常大"
       - "解决梯度爆炸的方法：如引入梯度裁剪（Gradient Clipping）限制梯度的最大范数、调整网络结构（如使用更稳定的激活函数）、降低学习率等"
@@ -534,8 +491,7 @@ items:
     question: "你在CV项目中有没有遇到过模型训练过程中出现梯度消失的情况？你是如何诊断和解决这个问题的？"
     tags: ["梯度消失", "模型诊断"]
     difficulty: "medium"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "诊断梯度消失的能力：如训练过程中损失下降非常缓慢，或模型权重更新非常小"
       - "解决梯度消失的方法：如使用更稳定的激活函数（如ReLU）、引入残差连接（ResNet结构）、使用批归一化（Batch Normalization）等"
@@ -545,9 +501,1099 @@ items:
     question: "你在CV项目中有没有遇到过模型训练过程中出现过拟合的情况？你是如何诊断和解决这个问题的？"
     tags: ["过拟合", "模型诊断"]
     difficulty: "medium"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "诊断过拟合的能力：如训练集表现优异但验证集性能较差，或训练过程中验证损失开始上升"
       - "解决过拟合的方法：如增加数据量（数据增强、收集更多样本）、引入正则化（L1/L2正则化、Dropout）、简化模型结构（减少参数量）等"
       - "是否有量化的效果提升数据支持（如验证集准确率提升了多少，过拟合程度降低了多少）"
+
+  - id: "CV-TQ-ZJ-001"
+    type: "technical"
+    question: "请详细解释一下均衡学习率（Equalized Learning Rate）和权重归一化（Weight Normalization）的原理，以及它们在模型训练中分别起到的具体作用？"
+    tags: ["模型优化", "归一化", "网络训练"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "说明均衡学习率如何通过动态调整使得网络不同层的参数更新尺度保持一致"
+      - "解释Weight Normalization是如何将权重向量的方向和长度进行解耦的"
+      - "能横向对比它们与Batch Normalization在加速收敛和正则化方面的异同"
+
+  - id: "CV-TQ-ZJ-002"
+    type: "technical"
+    question: "请详细讲解Batch Normalization（BN）的底层原理。训练期和推理期计算的统计量有何不同？与Layer Normalization（LN）和Group Normalization（GN）相比，在实际工程中应该如何取舍？"
+    tags: ["深度学习基础", "Batch Normalization", "模型正则化"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "讲清BN是对Batch维度进行标准化，通过缩放和平移参数缓解内部协变量偏移"
+      - "准确指出训练期使用当前Batch的实时均值与方差，而推理期使用滑动平均（EMA）累计的全局统计量"
+      - "总结场景差异：LN适合NLP和序列模型，GN适合小Batch Size的计算机视觉任务"
+
+  - id: "CV-TQ-ZJ-003"
+    type: "technical"
+    question: "请解释一下AUC在统计学上到底代表什么含义？你是如何计算它的？"
+    tags: ["机器学习评估", "AUC", "分类指标"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "统计学意义：随机抽取一个正样本和一个负样本，分类器将正样本排在负样本前面的概率"
+      - "说明AUC几何上是ROC曲线下的面积"
+      - "熟练回答基于排序对（组合对）的具体计算逻辑，体现工程落地能力"
+
+  - id: "CV-TQ-ZJ-004"
+    type: "technical"
+    question: "在Decoder-only架构的Transformer中，因果注意力（Causal Attention）的Q、K、V分别是从哪里来的？Mask机制具体是如何实现的，目的是什么？"
+    tags: ["Transformer", "大模型基建", "注意力机制"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "说明在自注意力计算中，Q、K、V均来自上一层隐含层输出的线性映射矩阵乘法"
+      - "解释Mask是通过构建下三角矩阵并在无穷大（或极小的负数）处进行遮蔽来实现掩码操作"
+      - "明确Mask机制的核心目的是防止自回归生成过程中的信息泄露（即禁止当前token看到未来的token信息）"
+
+  - id: "CV-TQ-ZJ-005"
+    type: "technical"
+    question: "请对比分析一下L1和L2正则化的底层原理、效果差异以及带来的风险。在工程落地时你是怎么权衡和选择的？"
+    tags: ["机器学习基础", "正则化", "模型抗拟合"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "原理对比：L1是对参数施加绝对值惩罚，L2是对参数施加平方和惩罚"
+      - "效果差异：L1倾向于产生稀疏的权重矩阵（自带特征选择能力），L2倾向于使得权重分布平滑（防止单一特征过大）"
+      - "工程取舍：需要高维稀疏特征且注重模型解释性时多用L1，注重整体模型泛化能力、防止过拟合时多用L2，有时采用Elastic Net结合二者"
+
+  - id: "CV-TQ-ZJ-006"
+    type: "technical"
+    question: "请详细讲解ResNet的核心原理。为什么引入残差连接（Residual Connection）能够有效解决深层神经网络训练困难、梯度消失的问题？"
+    tags: ["CNN网络框架", "ResNet", "模型结构设计"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "解释残差块结构（x + F(x)）的核心公式及恒等映射的设计思想"
+      - "从数学链式求导层面说明：残差连接为反向传播提供了未经衰减的额外梯度旁路，直接缓解了梯度弥散"
+      - "提及通过残差结构使得深层网络极易退化为浅层网络，从而保证了网络深度的增加至少不会使性能比浅层网络更差"
+
+  - id: "CV-TQ-ZJ-007"
+    type: "technical"
+    question: "请对比分析Faster R-CNN、SSD和YOLO这三种目标检测算法的核心网络架构、核心思想及各自的优缺点。"
+    tags: ["目标检测", "网络对比", "YOLO/SSD"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "阐明双阶段检测器（Faster R-CNN的RPN网络）在精度、召回率上的优势以及速度上的劣势"
+      - "解释YOLO作为单阶段模型的核心思想（将检测视为回归问题），凸显其在推理速度上的统治地位"
+      - "指出SSD结合了YOLO的回归思想与Faster R-CNN的Anchor机制，同时利用多尺度特征图进行检测，实现了速度与精度的折中"
+
+  - id: "CV-TQ-ZJ-008"
+    type: "technical"
+    question: "请详细解释Focal Loss的提出背景是什么？它的核心公式包含了哪些部分，分别是如何解决正负样本不平衡以及难易样本不平衡问题的？"
+    tags: ["损失函数", "类别不平衡", "目标检测"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "指出Focal loss源自RetinaNet，旨在解决单阶段检测器中背景与前景类别极度不均衡的问题"
+      - "解释参数 α 用于显式地控制并平衡正负类别在总体Loss中的权重比例"
+      - "解释调制因子 (1 - pt)^γ 降低了高置信度（易分）样本的权重，迫使网络训练的重心转移到难以分类的稀疏样本上"
+
+  - id: "CV-TQ-ZJ-009"
+    type: "technical"
+    question: "给定一个能等概率生成 1 到 7 的函数 Rand7()，请利用它编写代码实现一个等概率生成 1 到 10 的函数 Rand10()。"
+    tags: ["算法编码", "概率与统计", "拒绝采样"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "深刻理解并应用拒绝采样（Rejection Sampling）的核心思想"
+      - "构造二维扩展公式 `(Rand7() - 1) * 7 + Rand7()`，能够等概率生成 1 到 49 的离散均匀分布"
+      - "截断并拒绝掉 41 到 49，对剩余的 1 到 40 进行取模并加一（`% 10 + 1`），最终安全输出1到10"
+
+  - id: "CV-TQ-ZJ-010"
+    type: "technical"
+    question: "请分别使用递归和迭代（非递归栈模拟）两种方法，实现并写出二叉树的中序遍历代码。"
+    tags: ["数据结构", "二叉树", "算法编码"]
+    difficulty: "easy"
+    source: "字节跳动"
+    key_points:
+      - "正确写出并解释左-中-右顺序的递归调用过程，逻辑清晰不越界"
+      - "准确利用栈（Stack）的LIFO特性，将根节点到最左下角的路径压栈处理，实现出栈打印的迭代解法"
+      - "正确分析并说出两种方法的时间复杂度均为O(n)，最坏空间复杂度也为O(n)"
+
+  - id: "CV-TQ-ZJ-011"
+    type: "technical"
+    question: "算法题：有一个包含1到n的数组，现在去掉了一个数，剩下n-1个数。要求在不改变原数组且空间复杂度为O(1)的情况下，求出被去掉的数。如果是去掉了2个数呢？"
+    tags: ["算法", "数学", "位运算"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "去1个数：使用求和公式 (1+n)*n/2 减去数组实际和，或使用异或（XOR）运算"
+      - "去2个数：通过求和公式得到两数之和，再通过平方和公式或异或运算分组找到这两个数"
+
+  - id: "CV-TQ-ZJ-012"
+    type: "technical"
+    question: "算法题：在一个m*n的矩阵中，从左上角走到右下角，每次只能向右或向下走，如何求出路径上的数字之和的最大值？"
+    tags: ["算法", "动态规划", "矩阵"]
+    difficulty: "easy"
+    source: "字节跳动"
+    key_points:
+      - "明确状态定义：dp[i][j] 表示到达点 (i, j) 时的最大路径和"
+      - "状态转移方程：dp[i][j] = max(dp[i-1][j], dp[i][j-1]) + grid[i][j]"
+      - "注意边界条件的初始化（第一行和第一列）"
+
+  - id: "CV-TQ-ZJ-013"
+    type: "technical"
+    question: "概率题：一副扑克牌54张，平均分发给3个人，请问把大小王发到了同一个人的概率是多少？"
+    tags: ["数学", "概率论", "智力题"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "考虑大王的位置，它必定在某个人手里（假设为A，手里有18张牌）"
+      - "小王需要在剩下的53个位置中抽取，其中有17个位置属于A"
+      - "计算概率得出：17 / 53"
+
+  - id: "CV-TQ-ZJ-014"
+    type: "technical"
+    question: "概率题：有一枚均匀的硬币，抛掷n次，请问正面次数大于反面次数的概率是多少？（要求分奇数偶数讨论）"
+    tags: ["数学", "概率论"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "奇数次抛掷：不可能出现平局，由于对称性，正面>反面的概率为 1/2"
+      - "偶数次抛掷：设平局（正面=反面=n/2）概率为 P_tie = C(n, n/2) * (1/2)^n，则所求概率为 (1 - P_tie) / 2"
+
+  - id: "CV-TQ-ZJ-015"
+    type: "technical"
+    question: "请详细讲透Batch Normalization (BN) 的原理：训练期和推理期用的统计量有何不同？相比LN、GN有什么区别，分别在什么场景下使用？"
+    tags: ["深度学习", "归一化", "模型基础"]
+    difficulty: "hard"
+    source: "通用"
+    key_points:
+      - "原理：在Batch维度上减去均值除以方差，并引入可学习参数缩放平移，缓解内部协变量偏移"
+      - "训练期计算当前batch的均值和方差，推理期使用全局滑动平均值（EMA）"
+      - "BN依赖Batch大小（小batch效果差），适用于CV；LN在特征维度归一化，适合NLP/RNN；GN分组归一化，适合Batch较小的高分辨率CV任务"
+
+  - id: "CV-TQ-ZJ-016"
+    type: "technical"
+    question: "在Transformer模型中，Scaled Dot‑Product Attention 为什么要除以根号dk（维度的大小）？如果不除会出现什么训练问题？"
+    tags: ["Transformer", "Attention", "底层原理"]
+    difficulty: "medium"
+    source: "通用"
+    key_points:
+      - "维度dk增加会导致点积结果的方差变大，使Softmax的输入处于绝对值极大的区域"
+      - "不缩放会导致Softmax梯度极度消失（趋向于one-hot分布），模型难以更新收敛"
+
+  - id: "CV-TQ-ZJ-017"
+    type: "technical"
+    question: "对于目标检测算法，One-stage方法为了解决正负样本不均衡，除了Focal Loss之外，你还知道哪些方法？"
+    tags: ["目标检测", "损失函数", "正负样本"]
+    difficulty: "medium"
+    source: "通用"
+    key_points:
+      - "OHEM (Online Hard Example Mining) 在线困难样本挖掘"
+      - "GHM (Gradient Harmonizing Mechanism) 梯度调和机制"
+      - "ATSS (Adaptive Training Sample Selection) 自适应正负样本分配"
+
+  - id: "CV-TQ-ZJ-018"
+    type: "technical"
+    question: "在C++中，std::unique_ptr 的实现原理是什么？为什么它的大小通常和裸指针一样大？"
+    tags: ["C++", "智能指针", "内存管理"]
+    difficulty: "medium"
+    source: "通用"
+    key_points:
+      - "利用RAII机制管理内存，禁用了拷贝构造和拷贝赋值，仅允许移动语义"
+      - "大小同裸指针是因为它默认没有额外负担（无控制块），若使用了自定义的空对象(empty class)删除器，由于空基类优化(EBO)，大小依然不变"
+
+  - id: "CV-TQ-ZJ-019"
+    type: "technical"
+    question: "操作系统：进程间通信（IPC）有哪些方式？为什么说共享内存是最快的方式？"
+    tags: ["操作系统", "进程间通信", "底层原理"]
+    difficulty: "medium"
+    source: "通用"
+    key_points:
+      - "常见方式：管道、消息队列、信号量、共享内存、Socket、信号"
+      - "共享内存最快是因为它直接将同一块物理内存映射到多个进程的虚拟地址空间，避免了内核态与用户态之间的数据拷贝"
+
+  - id: "CV-TQ-ZJ-020"
+    type: "technical"
+    question: "深度学习模型优化：请介绍一下Dropout和BN的区别，它们各自是如何防止过拟合或加速收敛的？"
+    tags: ["模型优化", "Dropout", "Batch Normalization"]
+    difficulty: "easy"
+    source: "字节跳动"
+    key_points:
+      - "Dropout通过随机失活神经元，相当于训练多个子模型集成，减少神经元之间的协同适应，主要防止过拟合"
+      - "BN通过平滑优化空间、允许更大步长来加速收敛，同时也具有轻微的正则化效果（由于batch引入的随机噪声）"
+
+  - id: "CV-TQ-ZJ-021"
+    type: "technical"
+    question: "Transformer模型为什么会出现？它重点解决了之前RNN/LSTM等模型的什么痛点？请详细介绍一下注意力机制（Attention）的核心原理。"
+    tags: ["Transformer", "Attention", "深度学习基础"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "解决痛点：打破了RNN无法并行计算的瓶颈，且更好地解决了长距离依赖问题。"
+      - "Attention原理：核心公式 Attention(Q,K,V) = softmax(QK^T / sqrt(d_k)) V。"
+      - "阐明Q（查询）、K（键）、V（值）的映射关系及自注意力的物理意义。"
+
+  - id: "CV-TQ-ZJ-022"
+    type: "technical"
+    question: "请详细说明C++中如何实现一个线程池？在工程中使用线程池的优点和好处分别是什么？"
+    tags: ["C++", "并发编程", "系统设计"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "实现要素：任务队列、工作线程数组、互斥锁（mutex）和条件变量（condition_variable）。"
+      - "原理解析：线程不断从队列取任务执行，无任务时通过条件变量休眠，避免CPU空转。"
+      - "优点：降低线程频繁创建和销毁的开销，提高响应速度，便于统一管理和资源控制。"
+
+  - id: "CV-TQ-ZJ-023"
+    type: "technical"
+    question: "请说明基础的U-Net模型在图像分割中存在哪些缺点？你是否了解它最新的改进版本（如U-Net++）及其主要的改进思路？"
+    tags: ["CV", "图像分割", "U-Net"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "U-Net缺点：深层与浅层特征直接拼接，存在较大的语义鸿沟；固定网络深度可能并非最优。"
+      - "U-Net++改进：引入嵌套和密集的跳跃连接（Dense Skip Connections），缓解语义鸿沟。"
+      - "U-Net++改进：支持深度监督（Deep Supervision），可以通过剪枝实现灵活的模型深度配置。"
+
+  - id: "CV-TQ-ZJ-024"
+    type: "technical"
+    question: "常用的目标检测算法有哪些？请详细阐述One-stage和Two-stage目标检测算法的核心区别与优劣。"
+    tags: ["CV", "目标检测", "模型架构"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "Two-stage代表（Faster R-CNN等）：先生成候选区域（RPN），再对候选区进行分类和回归。精度高但速度慢。"
+      - "One-stage代表（YOLO、SSD等）：直接在特征图上密集预测类别和边界框。速度快但对小目标和密集目标检测精度相对较弱。"
+      - "核心区别：是否包含显式的Region Proposal过程。"
+
+  - id: "CV-TQ-ZJ-025"
+    type: "technical"
+    question: "请解释一下C++11内存模型中的happens-before关系是什么？它在多线程编程中起到了什么作用？"
+    tags: ["C++", "内存模型", "多线程"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "定义：happens-before是定义跨线程内存可见性的规则，若A happens-before B，则A的内存操作对B可见。"
+      - "作用：防止编译器和CPU对指令进行激进重排导致的多线程数据不一致竞争状态。"
+      - "结合std::atomic、内存序（memory_order）进行解释。"
+
+  - id: "CV-TQ-ZJ-026"
+    type: "technical"
+    question: "请解释一下并发编程中的ABA问题是如何产生的？有哪些常见的解决思路？"
+    tags: ["并发编程", "CAS", "锁机制"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "问题产生：线程1读取变量值为A，期间线程2将其改为B又改回A，线程1使用CAS操作时误以为其从未被修改而执行成功。"
+      - "影响场景：常见于无锁数据结构（如无锁链表、栈）中，可能导致野指针或状态错误。"
+      - "解决方案：引入版本号（Version）或时间戳机制，CAS时同时校验值和版本号（如Java中的AtomicStampedReference）。"
+
+  - id: "CV-TQ-ZJ-027"
+    type: "technical"
+    question: "请详细讲解一下Linux的虚拟内存机制，以及一个运行中进程的地址空间是如何自底向上布局的？"
+    tags: ["操作系统", "Linux", "内存管理"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "虚拟内存机制：通过MMU和页表实现虚拟地址到物理地址的映射，提供隔离性、扩展性和内存保护。"
+      - "地址空间布局（自低向高）：代码段（Text）、数据段（Data）、BSS段、堆（Heap，向上增长）、内存映射段（mmap）、栈（Stack，向下增长）、内核空间。"
+
+  - id: "CV-TQ-ZJ-028"
+    type: "technical"
+    question: "请解释B+树的结构特性。为什么关系型数据库索引（如MySQL）通常选择使用B+树而不是红黑树或二叉树？"
+    tags: ["数据结构", "数据库", "索引"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "B+树特性：非叶子节点只存索引，所有数据行均存在叶子节点且叶子节点通过双向链表相连。"
+      - "树的高度：B+树是多路平衡树，树高远低于红黑树，极大减少了磁盘I/O次数。"
+      - "范围查询：叶子节点形成有序链表，天然支持高效的范围扫描查询，而红黑树范围查询效率低。"
+
+  - id: "CV-TQ-ZJ-029"
+    type: "technical"
+    question: "请阐述C++11中Move语义和完美转发（Perfect Forwarding）的区别，以及它们各自的解决的应用场景。"
+    tags: ["C++", "语言特性", "底层机制"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "Move语义：通过std::move将左值强转为右值，触发移动构造/赋值，转移资源所有权，避免深拷贝开销。"
+      - "完美转发：通过std::forward结合万能引用（T&&），在模板传递中保持参数原有的左右值属性。"
+      - "场景区别：Move用于提高对象传递效率；完美转发用于编写通用的包装器或工厂函数（如std::make_shared）。"
+
+  - id: "CV-TQ-ZJ-030"
+    type: "technical"
+    question: "Linux系统中进程间通信（IPC）有哪些常见方式？为什么共享内存被认为是最快的通信方式？"
+    tags: ["操作系统", "进程通信", "底层原理"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "常见方式：管道（匿名/命名）、消息队列、信号量、共享内存、Socket通信。"
+      - "共享内存最快原因：直接将同一块物理内存映射到多个进程的虚拟地址空间，避免了内核态与用户态之间的数据拷贝。"
+      - "附带说明：使用共享内存时必须配合信号量或互斥锁来控制同步与并发读写。"
+
+  - id: "CV-TQ-ZJ-031"
+    type: "technical"
+    question: "在Transformer模型中，绝对位置编码、相对位置编码和RoPE（旋转位置编码）各自的设计思路、优势与局限是什么？"
+    tags: ["Transformer", "大语言模型", "位置编码"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "绝对PE：直接将位置信息加到输入上（如正弦波或可学习参数），缺点是对外推性（长文本）支持极差。"
+      - "相对PE：在Attention计算时加入相对距离偏置，提升了平移不变性，但推理时不易利用KV Cache。"
+      - "RoPE：通过复数旋转矩阵在绝对位置的基础上实现相对位置的注入，兼顾两者的优点，且外推性强，是当前大模型标配。"
+
+  - id: "CV-TQ-ZJ-032"
+    type: "technical"
+    question: "请详细讲解Batch Normalization (BN) 的原理。它在训练期和推理期使用的统计量有何不同？与LN（LayerNorm）、GN相比各自的适用场景是什么？"
+    tags: ["深度学习基础", "模型优化", "归一化"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "原理：在Batch维度上对特征进行归一化，缓解内部协变量偏移，加速收敛并提供一定正则化。"
+      - "阶段差异：训练期使用当前Mini-batch的均值和方差；推理期使用训练时维护的全局滑动平均统计量（EMA）。"
+      - "对比：BN强依赖Batch Size，适用于CV；LN作用于单个样本的Feature维度，不依赖Batch，适用于NLP/Transformer；GN将通道分组归一化，适用于小Batch Size下的CV任务（如目标检测）。"
+
+  - id: "CV-TQ-ZJ-033"
+    type: "technical"
+    question: "监督微调（SFT）和对齐算法（如RLHF、DPO等）在原理上有什么核心差异？"
+    tags: ["大模型微调", "RLHF", "DPO"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "SFT：基于极大似然估计（MLE）的自回归目标，让模型模仿人类的Demonstration数据，容易产生模型幻觉或陷入分布偏差。"
+      - "对齐算法：旨在引入人类偏好奖励（Preferences），优化非可导目标。RLHF通过奖励模型和PPO算法进行强化学习；DPO则直接通过对比损失在偏好对数据上优化，省去了显式的奖励模型拟合。"
+
+  - id: "CV-TQ-ZJ-034"
+    type: "technical"
+    question: "请解释L1和L2正则化在机器学习中的区别？它们各自的数学效果是什么，在工程应用中你是如何权衡使用的？"
+    tags: ["机器学习基础", "正则化", "模型优化"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "数学效果：L1正则化对应拉普拉斯先验，倾向于产生稀疏的权重矩阵；L2正则化对应高斯先验，倾向于让权重均匀变小但非零。"
+      - "业务权衡：如果是高维稀疏特征场景（如推荐系统）需要做特征选择，倾向于L1；如果重点在于防止过拟合和提高模型泛化能力，倾向于L2。"
+
+  - id: "CV-TQ-ZJ-035"
+    type: "technical"
+    question: "在Transformer的Scaled Dot-Product Attention公式中，为什么要在点积之后除以 sqrt(d_k) （即特征维度的平方根）？如果不除会出现什么问题？"
+    tags: ["Transformer", "Attention机制", "数值稳定性"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "理论基础：假设Q和K的元素独立且服从均值为0、方差为1的分布，其点积结果的方差会随着维度d_k的增大而线性放大。"
+      - "不良后果：方差过大会导致点积结果的值域非常大，经过Softmax函数后，梯度趋近于0（进入Softmax饱和区），引发梯度消失现象。"
+      - "缩放作用：除以 sqrt(d_k) 将点积结果的方差强行缩放回1，保证梯度的平稳传播。"
+
+  - id: "CV-TQ-KS-001"
+    type: "technical"
+    question: "请手写一道动态规划题：给定一个 m*n 的矩阵，要求从左上角走到右下角，求路径和最大的走法。"
+    tags: ["动态规划", "算法", "矩阵遍历"]
+    difficulty: "medium"
+    source: "旷视科技"
+    key_points:
+      - "定义清晰的状态转移方程，通常为 dp[i][j] = max(dp[i-1][j], dp[i][j-1]) + matrix[i][j]"
+      - "正确处理矩阵边界的初始化条件（第一行和第一列）"
+      - "代码能够正确运行，且空间复杂度可以优化到 O(n)"
+
+  - id: "CV-TQ-KS-002"
+    type: "technical"
+    question: "请简述你平时常用的一些编程语法知识以及深度学习的基础知识。"
+    tags: ["深度学习", "编程语言", "基础知识"]
+    difficulty: "easy"
+    source: "旷视科技"
+    key_points:
+      - "熟练掌握 Python 或 C++ 的常用语法及面向对象思想"
+      - "准确阐述深度学习基础概念，如前向传播、反向传播、常见损失函数、激活函数等"
+      - "能结合常用的框架（如 PyTorch）解释一些基础算子的作用"
+
+  - id: "CV-TQ-KS-003"
+    type: "technical"
+    question: "对于目标检测的前沿算法，你都有过哪些了解？"
+    tags: ["目标检测", "前沿算法", "CV模型"]
+    difficulty: "hard"
+    source: "旷视科技"
+    key_points:
+      - "能列举出目前主流的目标检测算法，如 YOLO 系列最新版本、DETR 系列等"
+      - "准确说出不同算法的核心创新点（如 Anchor-free 机制、Transformer 在检测中的应用等）"
+      - "对检测领域的最新瓶颈及解决思路有自己的理解"
+
+  - id: "CV-TQ-KS-004"
+    type: "technical"
+    question: "在目标检测算法的 one-stage 方法中，为了解决正负样本不均衡的问题，除了 Focal Loss，还有哪些常用的方法？"
+    tags: ["目标检测", "One-stage", "样本不均衡", "Focal Loss"]
+    difficulty: "medium"
+    source: "旷视科技"
+    key_points:
+      - "提到了 OHEM (Online Hard Example Mining) 在线困难样本挖掘"
+      - "提到了正负样本的采样策略、Label Smoothing（标签平滑）"
+      - "提及 GHMC (Gradient Harmonizing Mechanism) 或各类 IoU-based Loss 的改进"
+
+  - id: "CV-TQ-KS-005"
+    type: "technical"
+    question: "请手写代码实现求根算法（例如使用牛顿迭代法推导迭代公式），并谈谈还有哪些其他的实现思路？"
+    tags: ["算法", "牛顿迭代法", "数学推导"]
+    difficulty: "medium"
+    source: "旷视科技"
+    key_points:
+      - "正确推导并写出牛顿迭代公式: x_{n+1} = x_n - f(x_n)/f'(x_n)"
+      - "代码能处理精度判断退出循环的条件"
+      - "能够提出替代方案，如二分查找法，并对比两者的收敛速度与优缺点"
+
+  - id: "CV-TQ-KS-006"
+    type: "technical"
+    question: "给定一个包含 1 到 n 的数组，现在从中去掉了一个数，剩下 n-1 个数。在不改变原数组且空间复杂度为 O(1) 的条件下，求去掉的数是哪个？延伸问题：如果去掉了2个数呢？"
+    tags: ["算法", "数组", "数学推导", "位运算"]
+    difficulty: "medium"
+    source: "旷视科技"
+    key_points:
+      - "去掉1个数时：使用求和公式计算 1~n 的总和，减去现数组元素的和，差值即为丢失的数；或者使用异或操作全部元素解出"
+      - "去掉2个数时：结合求和公式以及平方和公式解二元一次方程组"
+      - "去掉2个数时：或者通过异或所有元素得到 x^y，找到二进制为1的位对原数组和1~n进行分组，转化为两个去1个数的问题"
+
+  - id: "CV-TQ-KS-007"
+    type: "technical"
+    question: "给定一个数组和一个目标值 s。判断该数组里是否存在连续子数组，其和等于 s？如果存在，共有几个这样的子数组？要求时间复杂度为 O(N)。"
+    tags: ["算法", "前缀和", "哈希表", "子数组"]
+    difficulty: "medium"
+    source: "旷视科技"
+    key_points:
+      - "能够使用前缀和 + 哈希表的思想来解决该问题，将时间复杂度降至 O(N)"
+      - "哈希表用于记录此前出现过的前缀和及其出现次数"
+      - "代码需正确处理前缀和恰好为 s 的边界情况（如初始哈希表置入 {0: 1}）"
+
+  - id: "CV-TQ-KS-008"
+    type: "technical"
+    question: "抛一枚硬币 n 次（n 为常数），求正面次数大于反面次数的概率是多少？请分别对 n 为奇数和偶数的情况进行讨论，并写出偶数时的概率公式。"
+    tags: ["概率论", "数学推导", "古典概型"]
+    difficulty: "medium"
+    source: "旷视科技"
+    key_points:
+      - "n 为奇数时：由于不存在正面数与反面数相等的情况，由对称性可知，正面大于反面和反面大于正面的概率相等，故为 1/2"
+      - "n 为偶数时：存在正反面次数相等的概率 P(相等) = C(n, n/2) * (1/2)^n"
+      - "n 为偶数时正面大于反面的概率 = (1 - P(相等)) / 2"
+
+  - id: "CV-TQ-KS-009"
+    type: "technical"
+    question: "一副54张的扑克牌，给3个人发牌，每人18张，请问大小王被发到同一个人手中的概率是多少？"
+    tags: ["概率论", "组合数学", "古典概型"]
+    difficulty: "medium"
+    source: "旷视科技"
+    key_points:
+      - "方法一（全排列）：大王在54个位置任选，小王必须在同一个人的另外17个位置中，概率为 17/53"
+      - "方法二（组合法）：三个人拥有大小王的概率分别为 C(18, 2) / C(54, 2)，有三个人所以乘以3，得出结果为 17/53"
+      - "推导逻辑严密，计算结果准确"
+
+  - id: "CV-TQ-KS-010"
+    type: "technical"
+    question: "已知矩阵高 h，宽 w，请编写代码打印输出对应的蛇形矩阵。延伸问题：给定矩阵内一点 (y, x)，如何在 O(1) 时间内给出该点的值？"
+    tags: ["算法", "矩阵遍历", "数学规律"]
+    difficulty: "hard"
+    source: "旷视科技"
+    key_points:
+      - "打印矩阵需理清边界碰撞和方向反转的逻辑（上、右、下、左循环或对角线方向）"
+      - "O(1) 解法需要发现矩阵的层数或对角线数量规律，利用等差数列求和公式直接算出该点前面已有多少个数字"
+      - "能考虑到矩阵为长方形而非正方形时规律的变化"
+
+  - id: "CV-TQ-KS-011"
+    type: "technical"
+    question: "你是否阅读过一些主流深度学习框架（如 PyTorch、TensorFlow）的源码？如果有，请简要谈谈你的理解和收获。"
+    tags: ["深度学习框架", "源码阅读", "底层逻辑"]
+    difficulty: "hard"
+    source: "旷视科技"
+    key_points:
+      - "能说明具体看过哪部分的源码（如 Autograd 机制、算子的 C++/CUDA 实现、DataLoader 等）"
+      - "理解计算图的构建机制和反向传播的底层计算逻辑"
+      - "能够结合自己读源码的经验，说明这对日常 debug 或模型优化的帮助"
+
+  - id: "CV-TQ-KS-012"
+    type: "technical"
+    question: "在图像分类模型中，ResNet101 相比于 ResNet50，额外的 residual block 具体添加在网络结构的哪个部分（哪一个 stage）？为什么要以这种方式添加？"
+    tags: ["ResNet", "图像分类", "网络结构"]
+    difficulty: "medium"
+    source: "旷视科技"
+    key_points:
+      - "准确指出增加的 block 主要集中在 layer3（即 conv4_x 阶段，特征图大小为 14x14 的阶段）"
+      - "ResNet50 的各 stage block 数为 [3, 4, 6, 3]，而 ResNet101 为 [3, 4, 23, 3]"
+      - "解释原因：该尺度的特征具有较好的感受野和丰富的语义信息，增加层数能最有效地提升模型的表达能力与分类准确率"
+
+  - id: "CV-TQ-KS-013"
+    type: "technical"
+    question: "你对传统的图像处理算法有多少了解？请举例说明并简述其原理。"
+    tags: ["传统图像处理", "OpenCV", "滤波器"]
+    difficulty: "easy"
+    source: "旷视科技"
+    key_points:
+      - "能列举常见的传统算法，如边缘检测（Canny, Sobel）、角点检测（Harris）"
+      - "能讲出形态学操作（腐蚀、膨胀）、各种滤波器（高斯、均值、中值滤波）的作用场景"
+      - "能够对比传统算法与深度学习算法的优劣势"
+
+  - id: "CV-TQ-KS-014"
+    type: "technical"
+    question: "请解释 OpenPose 模型中 PAFs（Part Affinity Fields）是如何生成的？生成 PAFs 之后通常还需要进行哪些操作来输出最终姿态？"
+    tags: ["姿态估计", "OpenPose", "PAFs"]
+    difficulty: "hard"
+    source: "旷视科技"
+    key_points:
+      - "明确 PAFs 是用来表示肢体方向和位置的2D向量场，解决的是多人关键点匹配的二分图匹配问题"
+      - "生成原理：通过网络输出 PAFs 热图，向量方向沿着骨骼由一个关键点指向另一个关键点"
+      - "后续操作：根据预测的关键点（Heatmap）和 PAFs，通过计算两点之间线段在 PAFs 上的线积分作为连接权重，最后使用匈牙利算法或贪心算法进行二分图最大权匹配"
+
+  - id: "CV-TQ-KS-015"
+    type: "technical"
+    question: "在 FPN（Feature Pyramid Networks）多尺度层中，proposal box 是如何决定在哪个尺度进行 ROI Pooling（或 ROI Align）操作的？"
+    tags: ["目标检测", "FPN", "ROI Pooling"]
+    difficulty: "medium"
+    source: "旷视科技"
+    key_points:
+      - "能够给出分配尺度的计算公式：k = floor(k0 + log2(sqrt(w * h) / 224))"
+      - "解释公式含义：根据 proposal box 的宽 w 和高 h 的面积大小，将其映射到特征金字塔的不同层级"
+      - "说明大尺度的 ROI 被分配到低分辨率特征图（高层语义层），小尺度的 ROI 被分配到高分辨率特征图（浅层细节层）"
+
+  - id: "CV-TQ-KS-016"
+    type: "technical"
+    question: "在人体姿态估计算法中，Top-down（自顶向下）方法与 One-stage/Bottom-up（自底向上）方法有什么本质不同？为什么 Top-down 方法的准确率通常更高？"
+    tags: ["姿态估计", "Top-down", "Bottom-up"]
+    difficulty: "medium"
+    source: "旷视科技"
+    key_points:
+      - "定义区别：Top-down 是先进行目标检测框出人体，再在每个框内进行单人姿态估计；Bottom-up 是先检测全图所有关键点，再进行人物组装"
+      - "准确率高原因1：Top-down 通过检测框排除了背景干扰，将多人问题转化为单人问题，网络只需专注局部细节"
+      - "准确率高原因2：框出人体后，人体在输入网络前被 crop 和 resize 到统一大尺度，分辨率更高，特征提取更充分"
+
+  - id: "CV-TQ-KS-017"
+    type: "technical"
+    question: "手撕算法：求解一个数的平方根（可使用牛顿迭代法），除了牛顿法还有哪些其他做法？"
+    tags: ["算法", "数学", "牛顿迭代", "二分查找"]
+    difficulty: "medium"
+    source: "旷视科技"
+    key_points:
+      - "正确推导并实现牛顿迭代法公式：x_{n+1} = (x_n + a / x_n) / 2"
+      - "正确实现二分查找法求平方根，并注意边界条件与精度控制"
+      - "对比两种方法的时间复杂度和收敛速度（牛顿法具有平方收敛速度更优）"
+
+  - id: "CV-TQ-KS-018"
+    type: "technical"
+    question: "算法题：给定一个包含1到n的无序数组，其中缺失了1个数字（剩下n-1个），如何在不改变原数组且空间复杂度为O(1)的情况下找到它？如果缺失了2个数字呢？"
+    tags: ["算法", "数组", "数学", "位运算"]
+    difficulty: "hard"
+    source: "旷视科技"
+    key_points:
+      - "缺失1个数字：利用求和公式 n(n+1)/2 减去数组实际总和，或者使用全部异或(XOR)运算"
+      - "缺失2个数字：利用异或的性质，将问题转化为寻找两个出现一次的数字（通过lowbit分组），或者结合和与平方和建立方程组"
+
+  - id: "CV-TQ-KS-019"
+    type: "technical"
+    question: "算法题：给定一个 m*n 的矩阵，每个格子有对应的权重，求从左上角走到右下角路径和最大的走法及最大和（只能向右或向下移动）。"
+    tags: ["算法", "动态规划", "矩阵"]
+    difficulty: "medium"
+    source: "旷视科技"
+    key_points:
+      - "定义清晰的DP状态：dp[i][j] 表示走到 (i,j) 时的最大路径和"
+      - "状态转移方程：dp[i][j] = max(dp[i-1][j], dp[i][j-1]) + matrix[i][j]"
+      - "正确处理第一行和第一列的边界初始化，并可利用滚动数组将空间复杂度降至 O(N)"
+
+  - id: "CV-TQ-KS-020"
+    type: "technical"
+    question: "概率题：一副完整的扑克牌（54张），平均发给3个人，求大小王被发到同一个人手里的概率是多少？"
+    tags: ["数学", "概率论", "智力题"]
+    difficulty: "medium"
+    source: "旷视科技"
+    key_points:
+      - "理解发牌过程，先发大王，无论大王在哪个人手里，该人手里还有17个空位"
+      - "剩下53个位置中，小王必须落在同一个人的剩下17个位置里"
+      - "得出最终概率计算：17/53"
+
+  - id: "CV-TQ-KS-021"
+    type: "technical"
+    question: "概率题：一枚均匀硬币，抛掷 n 次，求正面朝上次数大于反面朝上次数的概率。请分类讨论 n 为奇数和偶数的情况，偶数时请写出具体的概率表达式。"
+    tags: ["数学", "概率论", "二项分布"]
+    difficulty: "hard"
+    source: "旷视科技"
+    key_points:
+      - "奇数次抛掷时，由于不存在平局，正面大于反面和反面大于正面的概率绝对对称，所以为 1/2"
+      - "偶数次抛掷时，设 n=2k，平局的概率为 C(2k, k) * (1/2)^(2k)"
+      - "偶数次时，正反面对称，正面大于反面的概率为 (1 - 平局概率) / 2"
+
+  - id: "CV-TQ-KS-022"
+    type: "technical"
+    question: "算法题：给定一个数组和一个目标值 s，判断数组中是否存在连续子数组的和等于 s？如果存在，共有多少个？要求时间复杂度为 O(N)。"
+    tags: ["算法", "前缀和", "哈希表"]
+    difficulty: "medium"
+    source: "旷视科技"
+    key_points:
+      - "利用前缀和思想，将子数组和问题转化为两个前缀和的差值问题"
+      - "使用哈希表记录已经遍历过的各个前缀和及其出现次数"
+      - "在遍历过程中检查 `当前前缀和 - s` 是否在哈希表中存在，并累加其出现次数"
+
+  - id: "CV-TQ-KS-023"
+    type: "technical"
+    question: "算法题：给定矩阵的高度 h 和宽度 w，编写代码按螺旋/蛇形顺序填充并输出该矩阵。进阶问题：给定矩阵内的一点坐标 (x, y)，如何做到在 O(1) 的时间复杂度内计算并给出该点的值？"
+    tags: ["算法", "矩阵", "模拟", "数学"]
+    difficulty: "hard"
+    source: "旷视科技"
+    key_points:
+      - "第一问：通过设定上下左右四个边界边界进行模拟填充，注意越界与指针收缩逻辑"
+      - "第二问：通过 min(x, y, h-1-x, w-1-y) 找出所在的圈数"
+      - "第二问：利用等差数列求出当前所在圈的外围所有圈包含的元素总数，再加上当前圈走到 (x,y) 的偏移步长"
+
+  - id: "CV-TQ-KS-024"
+    type: "technical"
+    question: "请讲解一下 OpenPose 模型的核心原理，特别是部分亲和字段（PAFs，Part Affinity Fields）是如何生成的？生成 PAFs 之后又需要进行哪些后处理操作来进行多人姿态匹配？"
+    tags: ["计算机视觉", "姿态估计", "OpenPose", "PAFs"]
+    difficulty: "medium"
+    source: "旷视科技"
+    key_points:
+      - "描述OpenPose的双分支网络结构：分别预测关键点热力图（Confidence Maps）和骨骼PAF场"
+      - "解释PAFs的生成逻辑：其通过2D向量场表示关节点之间的连接位置和方向，计算骨架连线周围像素点的向量"
+      - "说明后处理中的二分图匹配（Bipartite Matching），通过在线段上进行积分/采样计算得分来组装人体"
+
+  - id: "CV-TQ-KS-025"
+    type: "technical"
+    question: "你对当前目标检测领域的前沿算法有哪些了解？能否分享一两个你觉得比较有突破性的改进点？"
+    tags: ["计算机视觉", "目标检测", "YOLO", "Transformer"]
+    difficulty: "medium"
+    source: "旷视科技"
+    key_points:
+      - "能说出近年来主流的检测模型，如YOLO最新系列（v8/v10等）、DETR及其变体（Deformable DETR等）"
+      - "理解无锚框（Anchor-free）和端到端（无需NMS）的发展趋势"
+      - "能清晰阐述某一个算法的具体创新点（如动态标签分配策略、新型的特征融合范式等）"
+
+  - id: "CV-TQ-KS-026"
+    type: "technical"
+    question: "在目标检测的 one-stage 算法中，为了解决正负样本极度不均衡的问题，除了 Focal Loss 之外，还有哪些常见或有效的方法？"
+    tags: ["计算机视觉", "目标检测", "样本不均衡", "损失函数"]
+    difficulty: "hard"
+    source: "旷视科技"
+    key_points:
+      - "OHEM（在线困难样本挖掘，Online Hard Example Mining），按loss大小强行筛选出最难分辨的负样本回传梯度"
+      - "使用正负样本采样比例限制（如在RPN中保持1:3的比例）"
+      - "标签分配（Label Assignment）策略的优化，如 ATSS、SimOTA 等自适应匹配方案"
+      - "GHM（Gradient Harmonizing Mechanism），通过统一不同难度样本的梯度分布来缓解不平衡"
+
+  - id: "CV-TQ-KS-027"
+    type: "technical"
+    question: "在特征金字塔网络（FPN）中，由于存在多尺度的特征层，具体是如何为每个生成的候选框（Proposal）分配特征层并进行 ROI Pooling 或 ROI Align 的？"
+    tags: ["计算机视觉", "目标检测", "FPN", "ROI Pooling"]
+    difficulty: "medium"
+    source: "旷视科技"
+    key_points:
+      - "说明层级分配依赖于候选框的面积大小，计算公式常为 k = floor(k0 + log2(sqrt(w*h)/224))"
+      - "大尺度的 Proposal 会被分配到分辨率低、感受野大的高层特征图"
+      - "小尺度的 Proposal 会被分配到分辨率高、细节丰富的底层特征图上提取特征"
+
+  - id: "CV-TQ-KS-028"
+    type: "technical"
+    question: "请问在图像分类经典模型中，ResNet-101 相比于 ResNet-50，其增加的 Residual Block 具体是添加在网络架构的哪一个阶段（stage）中的？为什么要这么设计？"
+    tags: ["计算机视觉", "图像分类", "ResNet", "CNN网络架构"]
+    difficulty: "medium"
+    source: "旷视科技"
+    key_points:
+      - "明确指出增加的 block 主要集中在 stage 3（即 conv4_x 所在的特征层）"
+      - "该层对应的下采样步长为 16，特征图尺寸适中（通常为 14x14）"
+      - "解释该设计的原因：这个尺度对于提取高级语义特征最有效，既保证了丰富的感受野，又平衡了空间与计算成本"
+
+  - id: "CV-TQ-KS-029"
+    type: "technical"
+    question: "在深度学习流行之前，你是否了解传统的图像处理算法？它们相比于深度学习各有什么优缺点？"
+    tags: ["计算机视觉", "传统图像处理", "特征提取"]
+    difficulty: "medium"
+    source: "旷视科技"
+    key_points:
+      - "列举出经典的传统算法：SIFT、HOG、Canny边缘检测、Sobel算子或形态学操作"
+      - "传统算法优点：可解释性极强、无需大量标注数据训练、对硬件及算力要求较低"
+      - "传统算法缺点：手工设计的特征往往泛化能力差、鲁棒性弱，应对光照、遮挡、形变等复杂环境表现不及深度学习"
+
+  - id: "CV-TQ-KS-030"
+    type: "technical"
+    question: "请比较人体姿态估计算法中 Top-down（自上而下）和 One-stage/Bottom-up（自下而上/单阶段）方法的不同点？为什么通常 Top-down 方法的准确率会更高？"
+    tags: ["计算机视觉", "姿态估计", "Top-down", "Bottom-up"]
+    difficulty: "hard"
+    source: "旷视科技"
+    key_points:
+      - "Top-down：先通过目标检测器框出所有人，再对每个框内的单人进行关键点回归"
+      - "Bottom-up：先检测出图中所有的散落关节点，再通过拼接/聚类算法将它们组装成不同的人体"
+      - "准确率高的原因：Top-down 将目标进行了中心化归一化处理，大大降低了尺度变化和背景的干扰，让网络可以专注在一小块区域内找点；但其受限于检测框的准确率且整体推理速度慢于 Bottom-up。"
+    
+  - id: "CV-TQ-KS-031"
+    type: "technical"
+    question: "给定一个m*n的矩阵，从左上角走到右下角，每次只能向右或向下移动。矩阵每个格子有不同的权重，请用动态规划求解使得路径权重和最大的解法及时间复杂度。"
+    tags: ["动态规划", "算法", "LeetCode"]
+    difficulty: "easy"
+    source: "旷视科技"
+    key_points:
+      - "明确状态转移方程：dp[i][j] = max(dp[i-1][j], dp[i][j-1]) + matrix[i][j]"
+      - "正确处理首行和首列的边界初始化条件"
+      - "时间复杂度 O(m*n)，并能提出使用一维数组将空间复杂度优化为 O(n) 的方案"
+
+  - id: "CV-TQ-KS-032"
+    type: "technical"
+    question: "在目标检测的One-Stage方法中，为了解决正负样本严重不均衡的问题，除了Focal Loss之外，你还了解哪些常用的解决方法？"
+    tags: ["目标检测", "样本不均衡", "Loss优化"]
+    difficulty: "medium"
+    source: "旷视科技"
+    key_points:
+      - "数据采样层面：OHEM（在线困难样本挖掘）"
+      - "标签分配层面：ATSS、SimOTA 等动态正负样本分配策略"
+      - "其他损失函数：GHM (Gradient Harmonized Mechanism) 或采用 Label Smoothing"
+
+  - id: "CV-TQ-KS-033"
+    type: "technical"
+    question: "请详细描述Cascade R-CNN的网络结构。为什么采用级联的结构能够有效提高目标检测的最终表现？"
+    tags: ["目标检测", "Two-Stage", "Cascade R-CNN"]
+    difficulty: "hard"
+    source: "旷视科技"
+    key_points:
+      - "描述结构：由一系列不同IoU阈值（如0.5, 0.6, 0.7）的检测头串联组成，前一个阶段的输出作为后一个阶段的输入"
+      - "解决的问题：缓解了单一IoU阈值训练时，低阈值带来大量噪声、高阈值导致正样本过少引发过拟合的悖论"
+      - "提高表现原因：随着级联加深，Proposals的质量越来越高，特征与高阈值的匹配度更高，从而实现了更高精度的检测"
+
+  - id: "CV-TQ-KS-034"
+    type: "technical"
+    question: "对于图像分类模型，ResNet-101相比于ResNet-50，其增加的Residual Block主要添加在了哪个Stage？为什么要选择在这个位置添加？"
+    tags: ["骨干网络", "ResNet", "深度学习基础"]
+    difficulty: "medium"
+    source: "旷视科技"
+    key_points:
+      - "主要增加在 Stage 3（或者说 conv4_x 这一层阶段）"
+      - "解释原因：该阶段输出的感受野大小和特征丰富度最适合捕捉物体的核心语义特征"
+      - "后续更深层的 Stage (如Stage4) 降采样后特征图过小，堆叠太多层性价比低且容易丢失空间信息"
+
+  - id: "CV-TQ-KS-035"
+    type: "technical"
+    question: "请阐述YOLO系列算法中Anchor的设计原理，K-means聚类在其中的作用是什么？Anchor的距离是如何度量的？有什么改进方案？"
+    tags: ["YOLO", "Anchor机制", "K-means"]
+    difficulty: "medium"
+    source: "旷视科技"
+    key_points:
+      - "利用K-means对训练集Ground Truth框的宽高进行聚类，得到符合数据集分布的先验框大小，加速网络收敛"
+      - "距离度量并非使用欧式距离，而是使用 `1 - IoU(box, cluster_center)` 作为距离度量，避免大框导致误差偏大的问题"
+      - "改进方案：引入Anchor-Free机制（如YOLOX），或者进化算法自适应计算Anchor大小"
+
+  - id: "CV-TQ-KS-036"
+    type: "technical"
+    question: "在人体姿态估计算法中，Top-down方法与One-stage(Bottom-up)方法有何根本区别？Top-down方法通常准确率更高的原因是什么？"
+    tags: ["姿态估计", "Top-down", "Bottom-up"]
+    difficulty: "medium"
+    source: "旷视科技"
+    key_points:
+      - "根本区别：Top-down先检测出人体框，再在框内进行单人关键点检测；Bottom-up先检测全图所有关键点，再进行人物实例的拼接聚类"
+      - "高准确率原因：Top-down天然不受图像中人体尺度变化和背景杂波的干扰（由检测框抠出并统一缩放），模型只需专注于局部人体特征"
+      - "代价分析：Top-down的计算耗时随画面中人数线性增加，而Bottom-up更适合拥挤场景实时推理"
+
+  - id: "CV-TQ-KS-037"
+    type: "technical"
+    question: "在C++开发中，请比较STL中 `vector`、`list` 和 `deque` 的底层实现机制、主要区别以及各自的适用场景。"
+    tags: ["C++基础", "数据结构", "STL"]
+    difficulty: "medium"
+    source: "旷视科技"
+    key_points:
+      - "vector底层是连续动态数组，支持O(1)随机访问，但在尾部以外插入删除为O(n)，适合大量读取少修改"
+      - "list底层是双向链表，不支持随机访问（O(n)），但任意位置插入删除为O(1)，适合频繁插入删除场景"
+      - "deque底层是分段连续的数组块构成的映射表，支持两端O(1)级别的快速插入删除，且支持随机访问，适合实现队列"
+
+  - id: "CV-TQ-KS-038"
+    type: "technical"
+    question: "给定一个包含正负整数的数组和一个目标值s，请判断该数组中是否存在连续子数组，使其元素之和等于s。如果存在，共有多少个？要求时间复杂度尽可能低。"
+    tags: ["前缀和", "哈希表", "算法"]
+    difficulty: "medium"
+    source: "旷视科技"
+    key_points:
+      - "必须使用前缀和思想，因为数组包含正负数，不能使用滑动窗口"
+      - "引入 Hash 表记录历史上各个前缀和出现的次数（key为前缀和，value为出现次数）"
+      - "遍历数组时，检查 `当前前缀和 - s` 是否在Hash表中，若存在则累加其value。整体时间复杂度优化至 O(N)"
+
+  - id: "CV-TQ-KS-039"
+    type: "technical"
+    question: "在传统图像处理中，去除椒盐噪声通常使用什么滤波方法？如果图像中椒盐噪声的占比极高（超过50%），该滤波方法还能生效吗？应如何改进？"
+    tags: ["传统图像处理", "图像滤波", "噪声处理"]
+    difficulty: "medium"
+    source: "旷视科技"
+    key_points:
+      - "传统上去除椒盐噪声首选是中值滤波（Median Filter）"
+      - "当噪声占比超过50%时，窗口内的中值极有可能也是噪声像素（0或255），导致标准中值滤波失效"
+      - "改进方案：使用自适应中值滤波（Adaptive Median Filter），动态增大滤波窗口，或在计算中值前剔除极值（0和255）"
+
+  - id: "CV-TQ-KS-040"
+    type: "technical"
+    question: "在模型部署环节，TensorRT能够实现深度网络推理加速的核心原理是什么？请列举其常用的关键优化技术。"
+    tags: ["模型部署", "TensorRT", "推理加速"]
+    difficulty: "hard"
+    source: "旷视科技"
+    key_points:
+      - "算子融合（Layer/Tensor Fusion）：将卷积、BN、激活函数（如ReLU）垂直和水平融合成一个计算节点，减少显存读写瓶颈（Memory Bandwidth）"
+      - "动态显存分配：复用张量内存，降低内存占用和申请开销"
+      - "精度量化（Quantization）：支持将FP32转化为FP16或INT8推理，成倍提高吞吐量"
+      - "内核自动调优（Kernel Auto-Tuning）：针对特定的GPU架构自动选择最优的CUDA Kernel计算实现方式"
+
+  - id: "CV-TQ-ST-001"
+    type: "technical"
+    question: "Batch Normalization的具体过程及其作用是什么？为什么要设置两个可学习参数？"
+    tags: ["深度学习基础", "Batch Normalization", "模型优化"]
+    difficulty: "medium"
+    source: "商汤科技"
+    key_points:
+      - "阐述BN的前向传播过程（计算均值、方差、归一化、平移缩放）"
+      - "说明BN解决内部协变量偏移（Internal Covariate Shift）的作用，加速模型收敛并缓解梯度消失"
+      - "解释可学习参数 gamma 和 beta 的作用：为了恢复数据原本的表达能力，防止网络表达能力下降"
+
+  - id: "CV-TQ-ST-002"
+    type: "technical"
+    question: "请详细说明 Anchor-based 和 Anchor-free 目标检测网络的区别，并列举常见的 Anchor-free 算法？"
+    tags: ["目标检测", "Anchor-free", "YOLO", "FCOS"]
+    difficulty: "medium"
+    source: "商汤科技"
+    key_points:
+      - "Anchor-based依赖预设的先验框（Anchor），计算量大，超参数多，对正负样本不平衡敏感"
+      - "Anchor-free直接回归目标的边界或关键点，网络结构更简洁，省去了复杂的IoU计算"
+      - "常见算法列举：FCOS, CenterNet, CornerNet, YOLOX 等"
+
+  - id: "CV-TQ-ST-003"
+    type: "technical"
+    question: "目标检测领域常见的 Loss 有哪些？请分别写出 Smooth L1 Loss 和 Focal Loss 的核心思想及表达式。"
+    tags: ["目标检测", "损失函数", "Focal Loss", "Smooth L1"]
+    difficulty: "medium"
+    source: "商汤科技"
+    key_points:
+      - "分类Loss（如交叉熵, Focal Loss），回归Loss（如L1, L2, Smooth L1, IoU Loss族）"
+      - "Focal Loss：在交叉熵基础上增加了调制系数，解决正负样本极度不平衡问题，降低易分样本权重"
+      - "Smooth L1 Loss：结合L1和L2的优点，对离群点更加鲁棒，同时在原点附近平滑，易于收敛"
+
+  - id: "CV-TQ-ST-004"
+    type: "technical"
+    question: "请讲讲你了解的常用激活函数（如ReLU, Swish等）以及它们的优缺点？MobileNetV3中的 h-swish 比普通的 swish 好在哪里？"
+    tags: ["深度学习基础", "激活函数", "MobileNet"]
+    difficulty: "medium"
+    source: "商汤科技"
+    key_points:
+      - "ReLU：计算简单，有效缓解梯度消失，但存在特征输出非零中心及 Dead ReLU 问题"
+      - "Sigmoid/Tanh：容易出现梯度消失，且指数计算量大"
+      - "Swish/h-swish：平滑非单调，能提升网络精度。h-swish(Hard Swish)使用ReLU6替代了Sigmoid，极大减少了移动端的计算量，对量化友好"
+
+  - id: "CV-TQ-ST-005"
+    type: "technical"
+    question: "FPN 和 U-Net 中的上采样分别是怎么做的？它们的特征融合方式有什么区别？"
+    tags: ["图像分割", "特征提取", "FPN", "U-Net"]
+    difficulty: "medium"
+    source: "商汤科技"
+    key_points:
+      - "常见的上采样方法：最近邻插值、双线性插值或反卷积（转置卷积）"
+      - "FPN 特征融合：通常使用插值放大后，与主干网络对应层的特征进行元素级别相加（Add）"
+      - "U-Net 特征融合：通常通过反卷积放大后，与编码器对应层的特征在通道维度上进行拼接（Concat）"
+
+  - id: "CV-TQ-ST-006"
+    type: "technical"
+    question: "对于一个维度为 NCHW 的特征图，如果经过一个 3x3 的深度可分离卷积（Depthwise Separable Convolution），其计算量和参数量应该怎么算？"
+    tags: ["模型轻量化", "卷积计算", "计算复杂度"]
+    difficulty: "hard"
+    source: "商汤科技"
+    key_points:
+      - "说明深度可分离卷积由 Depthwise Conv 和 Pointwise Conv (1x1) 两步组成"
+      - "参数量计算：3×3×C + 1×1×C×C' (假设输出通道为C')"
+      - "计算量(FLOPs)计算：(3×3×C + 1×1×C×C') × H × W (假设步长为1，输出特征图尺寸不变)"
+
+  - id: "CV-TQ-ST-007"
+    type: "technical"
+    question: "在目标检测或分类任务中，遇到样本极度不平衡的情况，有哪些常见的解决办法？"
+    tags: ["数据处理", "样本不平衡", "深度学习实践"]
+    difficulty: "medium"
+    source: "商汤科技"
+    key_points:
+      - "数据层面：重采样（过采样少数类、欠采样多数类），离线/在线数据增强（如MixUp, Mosaic, Borderline SMOTE等）"
+      - "算法/Loss层面：使用Focal Loss降低易分样本权重，或采用OHEM（在线难例挖掘）"
+      - "评估层面：采用mAP, F1-Score, ROC-AUC等综合指标，避免单一准确率带来的误导"
+
+  - id: "CV-TQ-ST-008"
+    type: "technical"
+    question: "算法题：给定一个序列S，需要找一个尽可能长的子串，使得子串的最大值与最小值的差不超过m，请输出子串的长度。请说一下解题思路与时间复杂度。"
+    tags: ["滑动窗口", "单调队列", "算法与数据结构"]
+    difficulty: "hard"
+    source: "商汤科技"
+    key_points:
+      - "指出使用滑动窗口算法作为整体框架"
+      - "使用两个单调队列分别维护当前窗口内的最大值和最小值"
+      - "正确分析时间复杂度为 O(N)，空间复杂度为 O(N)"
+
+  - id: "CV-TQ-ST-009"
+    type: "technical"
+    question: "算法设计题：一个游戏的副本中有一排需要打败的怪物，初始每个怪物1点血。怪物分为0型和1型，0型击杀正常，1型击杀后会给排在它后面的0型怪物+1血。希望从左到右击杀这些怪物，请问应该如何计算总击杀伤害？"
+    tags: ["动态规划", "贪心算法", "模拟"]
+    difficulty: "medium"
+    source: "商汤科技"
+    key_points:
+      - "识别出这道题的传递效应：每次击杀1型怪物，会导致后续所有0型怪物血量增加"
+      - "可以通过维护一个累加器来记录当前1型怪物死亡的次数，遇到0型怪物时其血量即为 1 + 累加器值"
+      - "推导出算法只需一次线性遍历 O(N) 即可完成总伤害计算"
+
+  - id: "CV-TQ-ST-010"
+    type: "technical"
+    question: "请详细解释一下大模型为什么会出现“幻觉”现象（Hallucination），以及在工程上有哪些常见的缓解方法？"
+    tags: ["大语言模型", "幻觉", "RAG", "NLP"]
+    difficulty: "medium"
+    source: "商汤科技"
+    key_points:
+      - "指出幻觉产生的原因（如训练数据存在噪声偏差、自回归模型的内在概率生成特性、上下文丢失等）"
+      - "提出数据侧缓解方法（提升高质量指令微调数据、强化学习 RLHF 引导）"
+      - "提出工程架构侧缓解方法（结合 RAG 检索增强、知识图谱校验、引入外部搜索引擎或工具调用）"
+
+  - id: "CV-TQ-ST-011"
+    type: "technical"
+    question: "如果想从事AI Agent的开发，你认为应该学习和掌握哪些核心技术栈？"
+    tags: ["AI Agent", "大模型应用", "系统工程"]
+    difficulty: "medium"
+    source: "商汤科技"
+    key_points:
+      - "熟悉主流LLM调用与Prompt Engineering（如ReAct、CoT机制）"
+      - "掌握外部工具调用（Tool Calling / Function Calling）及相关API集成"
+      - "掌握记忆机制（短期上下文管理、长期向量数据库存储）与主流开发框架（如LangChain, AutoGen）"
+
+  - id: "CV-TQ-ST-012"
+    type: "technical"
+    question: "在使用K-Means聚类算法时，如何选择合适的K值？请结合聚类数和损失之间的关系（如手肘法）进行解释。"
+    tags: ["K-Means", "机器学习", "无监督学习"]
+    difficulty: "easy"
+    source: "商汤科技"
+    key_points:
+      - "说明K值的选择通常依靠业务先验知识或手肘法（Elbow Method）"
+      - "解释手肘法原理：计算不同K值下的误差平方和（SSE），随着K增大SSE会减小"
+      - "指出在SSE曲线下降斜率突然变缓（即形成“手肘”的拐点）的地方，通常是较优的K值"
+
+  - id: "CV-TQ-ST-013"
+    type: "technical"
+    question: "请从数学或算法角度严格解释一下，K-Means算法为什么一定能够收敛并最终终止？"
+    tags: ["K-Means", "机器学习", "收敛性", "EM算法"]
+    difficulty: "hard"
+    source: "商汤科技"
+    key_points:
+      - "说明K-Means本质是一个坐标下降优化过程（或EM算法的特例）"
+      - "指出每次迭代更新分配（E步）或更新聚类中心（M步）都在使得目标损失函数（SSE）单调递减"
+      - "解释样本点分配的状态总数是有限的（有限的组合数），由于目标函数单调递减且有下界，因此必然在有限步内收敛终止"
+
+  - id: "CV-TQ-ST-014"
+    type: "technical"
+    question: "请解释一下矩阵特征值和特征向量的物理或几何意义是什么？"
+    tags: ["线性代数", "数学基础", "特征提取"]
+    difficulty: "medium"
+    source: "商汤科技"
+    key_points:
+      - "几何意义：矩阵代表对空间的线性变换。特征向量是变换后方向保持不变的向量"
+      - "物理意义：特征值表示特征向量在变换中的缩放比例（拉伸或压缩量），特征值越大说明数据在该特征向量方向上方差或能量越大"
+      - "结合应用：在主成分分析（PCA）中，最大特征值对应的特征向量即为数据降维后的主成分方向"
+
+  - id: "CV-TQ-ST-015"
+    type: "technical"
+    question: "请分析并说明K-Means算法的时间复杂度和空间复杂度。"
+    tags: ["时间复杂度", "算法分析", "K-Means"]
+    difficulty: "medium"
+    source: "商汤科技"
+    key_points:
+      - "时间复杂度：O(T * K * N * D)，其中T为迭代次数，K为聚类中心数，N为样本数，D为特征维度"
+      - "空间复杂度：O(N * D + K * D)，用于存储全量数据点以及K个聚类中心"
+      - "理解在大规模数据下K-Means面临的计算瓶颈，并知晓Mini-Batch K-Means等优化手段"
+
+  - id: "CV-TQ-ST-016"
+    type: "technical"
+    question: "请谈谈你对SLAM（同步定位与建图）技术的理解，是否有KinectFusion或ElasticFusion等相关算法的实践经验？"
+    tags: ["SLAM", "三维视觉", "KinectFusion"]
+    difficulty: "hard"
+    source: "商汤科技"
+    key_points:
+      - "准确解释SLAM的概念，涵盖前端视觉里程计与后端优化（回环检测等）"
+      - "理解 KinectFusion 的核心原理（基于RGB-D相机，使用TSDF体素网格进行三维重建和ICP算法位姿估计）"
+      - "能对比说明ElasticFusion在处理非刚性形变或较大场景优化中的改进"
+
+  - id: "CV-TQ-ST-017"
+    type: "technical"
+    question: "请谈谈你在Linux系统下，使用CMake进行C++工程化构建的经验，以及如何使用VCPKG管理库依赖？"
+    tags: ["C++", "CMake", "工程化建设", "Linux"]
+    difficulty: "medium"
+    source: "商汤科技"
+    key_points:
+      - "掌握 CMakeLists.txt 的核心指令（add_executable, target_link_libraries, include_directories）"
+      - "能够解释如何通过CMake构建多模块目录结构和设置交叉编译"
+      - "了解 vcpkg 的工作流及其与CMake工具链的无缝集成方法（toolchain file）"
+
+  - id: "CV-TQ-ST-018"
+    type: "technical"
+    question: "在医学图像分割与分析场景中，你通常如何结合传统图像处理方法和深度学习技术？"
+    tags: ["医学图像处理", "计算机视觉", "深度学习"]
+    difficulty: "medium"
+    source: "商汤科技"
+    key_points:
+      - "传统方法（如形态学操作、自适应阈值、超像素）用于数据预处理，以增强病灶对比度或去噪"
+      - "深度学习（如 U-Net 等架构）承担核心的特征提取和像素级语义分割"
+      - "传统算法也可在深度学习输出后进行后处理（Post-processing），如连通域分析去除孤立噪点，平滑分割边缘"
+
+  - id: "CV-TQ-ST-019"
+    type: "technical"
+    question: "在医学病理图像分析中，由于往往缺乏精细的病灶定位标注（仅有图像级标签），模型应当如何学习和定位这些病灶特征？"
+    tags: ["弱监督学习", "多实例学习", "计算机视觉"]
+    difficulty: "hard"
+    source: "商汤科技"
+    key_points:
+      - "引出多实例学习（MIL）框架，将整张病理切片视为一个包（Bag），将裁剪出的Patch视为实例（Instance）"
+      - "提到注意力机制（Attention MIL），模型可通过分配给每个Patch的权重得分来反向定位高风险病灶区域"
+      - "或使用弱监督/类激活图（CAM, Grad-CAM）技术实现从图像级分类标签到像素级区域的定位"
+
+  - id: "CV-TQ-ST-020"
+    type: "technical"
+    question: "请详细对比分析ShuffleNet v1和v2的核心优点，以及它们各自提出的Motivation（动机）是什么？"
+    tags: ["轻量级网络", "ShuffleNet", "模型压缩"]
+    difficulty: "medium"
+    source: "商汤科技"
+    key_points:
+      - "v1的Motivation是解决组卷积（Group Conv）带来的通道信息隔离问题，故引入Channel Shuffle操作"
+      - "v2的Motivation指出FLOPs不能完全反映真实硬件推理速度（受内存访问成本MAC影响），提出了高效网络的四个实用设计准则"
+      - "v2取消了v1中过多的密集碎片化操作（如过多Group Conv），在保持精度的前提下极大提高了实际硬件部署效率"
+
+  - id: "CV-TQ-ST-021"
+    type: "technical"
+    question: "在目标检测的边界框回归任务中，Smooth L1 Loss的设计初衷是什么？相比于标准的L1 Loss和L2 Loss，它有哪些独特的优势？"
+    tags: ["损失函数", "目标检测", "回归问题"]
+    difficulty: "medium"
+    source: "商汤科技"
+    key_points:
+      - "L2 Loss对异常值（Outliers）极度敏感，早期误差过大容易产生巨大梯度导致梯度爆炸"
+      - "L1 Loss在误差接近零点处不可导，且在接近目标区域时梯度恒定，难以平滑收敛到极小值"
+      - "Smooth L1 Loss是分段函数，完美结合两者：误差大时采用L1（梯度恒定防爆炸），误差小时采用L2（平滑稳定收敛）"
+
+  - id: "CV-TQ-ST-022"
+    type: "technical"
+    question: "在MobileNet v2等轻量级网络的Inverted Residual（倒残差）块设计中，为什么要采用“先升维再降维”的策略？"
+    tags: ["轻量级网络", "MobileNet", "网络结构"]
+    difficulty: "hard"
+    source: "商汤科技"
+    key_points:
+      - "Depthwise Conv（深度可分离卷积）自身提取跨通道特征的能力有限，升维可以在高维空间中进行，以保留更多的特征表达容量"
+      - "低维特征经过ReLU等非线性激活函数极易造成信息坍塌（丢失），在高维做非线性变换后再线性降维（Linear Bottleneck）能最大限度保留有效信息"
+
+  - id: "CV-TQ-ST-023"
+    type: "technical"
+    question: "在目标检测的后处理阶段，非极大值抑制（NMS）在对候选框进行排序与剔除时，除了单纯参考分类的Score，还可以结合哪些因素来优化结果？"
+    tags: ["NMS", "后处理", "目标检测"]
+    difficulty: "hard"
+    source: "商汤科技"
+    key_points:
+      - "结合IoU衰减机制（如Soft-NMS），避免直接将重叠框强行剔除，利于密集拥挤物体的召回"
+      - "结合定位置信度（如IoU-Aware机制），将模型预测的IoU质量分数与分类Score相乘进行综合评价排序"
+      - "结合中心点距离罚项（如DIoU-NMS），对存在重叠遮挡但不共中心的场景具有更强的区分与鲁棒性"
+
+  - id: "CV-TQ-ST-024"
+    type: "technical"
+    question: "主成分分析（PCA）是如何利用奇异值分解（SVD）来进行降维的？这种做法相比于传统计算方法有什么核心优势？"
+    tags: ["机器学习", "降维算法", "数学基础"]
+    difficulty: "medium"
+    source: "商汤科技"
+    key_points:
+      - "PCA的核心是求解数据协方差矩阵的特征值分解。但计算高维数据的协方差矩阵（$X^T X$）计算量极大且易致数值溢出"
+      - "利用SVD直接对中心化后的数据矩阵 $X$ 进行分解：$X = U \\Sigma V^T$，其右奇异矩阵 $V$ 的列向量即为协方差矩阵的特征向量"
+      - "核心优势：规避了协方差矩阵的平方级运算开销，大幅降低计算复杂度，且保证了求解过程的数值稳定性"
+
+  - id: "CV-TQ-ST-025"
+    type: "technical"
+    question: "请详细推导Batch Normalization的计算过程，并说明其可学习参数（γ 和 β）的必要性？"
+    tags: ["BN", "深度学习基础", "模型优化"]
+    difficulty: "medium"
+    source: "商汤科技"
+    key_points:
+      - "计算过程包含四步：求Batch内的均值 -> 求方差 -> 数据标准化（减均值除标准差） -> 仿射变换（缩放和平移）"
+      - "主要作用：缓解内部协变量偏移（ICS），平滑损失地形，允许使用更大学习率，自带隐式正则化效果"
+      - "可学习参数必要性：强制将数据拉回正态分布可能会抹杀网络前面层学习到的特征分布，γ和β的存在使网络具备恢复原本非线性表达能力（恒等映射）的空间"

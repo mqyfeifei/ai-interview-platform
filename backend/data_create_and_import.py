@@ -2,6 +2,7 @@ import os
 import sys
 import yaml
 import subprocess
+import re
 from sentence_transformers import SentenceTransformer
 
 # 确保能正确导入 app (根据你的项目结构可能需要调整路径)
@@ -79,6 +80,19 @@ JOB_PS = {
         'temperature': 0.7
     }
 }
+
+def normalize_question_source(raw_source):
+    """
+    题目来源标准化：
+    - 仅保留中文公司名
+    - 其余值统一归为“通用”
+    """
+    source = str(raw_source or '').strip()
+    if not source:
+        return '通用'
+    if re.fullmatch(r'[\u4e00-\u9fff·（）()、\s]+', source):
+        return source
+    return '通用'
 
 
 def create_prompts():
@@ -471,7 +485,7 @@ def import_knowledge_base():
                     ki_type = item.get('type', 'technical')
                     difficulty = item.get('difficulty', 'medium')
                     key_points = item.get('key_points', [])
-                    source = item.get('source', '')
+                    source = normalize_question_source(item.get('source', ''))
                     status = item.get('status', 'draft')
 
                     # 组合用于向量化的文本
@@ -489,22 +503,44 @@ def import_knowledge_base():
                         status=status,               # 映射新增字段
                         embedding=embedding
                     )
+                    db.session.add(q)
                     
                     # 通过多对多关系关联岗位
                     job = db.session.get(Job, job_id)
                     if job:
                         q.jobs.append(job)
 
-                    # --- 自动语义匹配并绑定知识点 ---
-                    # 利用 pgvector 的 cosine_distance 寻找最接近的 1 个或 2 个知识点
-                    # 距离越小越相似 (要求 pgvector 安装正确且支持此语法)
-                    similar_tags = KnowledgeTag.query.order_by(
-                        KnowledgeTag.embedding.cosine_distance(embedding)
-                    ).limit(1).all()
-                    for stag in similar_tags:
-                        q.knowledge_tags.append(stag)
+                    # --- 优先按 YAML tags 直接绑定知识点，提升 question_tags 覆盖 ---
+                    matched_tag_ids = set()
+                    for raw_tag in tags:
+                        tag_name = str(raw_tag or '').strip()
+                        if not tag_name:
+                            continue
 
-                    db.session.add(q)
+                        exact_tag = KnowledgeTag.query.filter(
+                            KnowledgeTag.name.ilike(tag_name)
+                        ).first()
+                        fuzzy_tag = None
+                        if not exact_tag:
+                            fuzzy_tag = KnowledgeTag.query.filter(
+                                KnowledgeTag.name.ilike(f"%{tag_name}%")
+                            ).first()
+
+                        target_tag = exact_tag or fuzzy_tag
+                        if target_tag and target_tag.id not in matched_tag_ids:
+                            q.knowledge_tags.append(target_tag)
+                            matched_tag_ids.add(target_tag.id)
+
+                    # --- 若 tags 没命中，则回退到语义匹配 ---
+                    if not matched_tag_ids:
+                        similar_tags = KnowledgeTag.query.order_by(
+                            KnowledgeTag.embedding.cosine_distance(embedding)
+                        ).limit(1).all()
+                        for stag in similar_tags:
+                            if stag.id not in matched_tag_ids:
+                                q.knowledge_tags.append(stag)
+                                matched_tag_ids.add(stag.id)
+
                 db.session.commit()
 
             # =====================================================================

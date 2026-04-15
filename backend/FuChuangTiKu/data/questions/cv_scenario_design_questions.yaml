@@ -1,14 +1,17 @@
 type: "cv_scenario_design_questions"
 source:
-  - "技术博客"
+  - "Tech_Blog"
+  - "Personal_Notes"
+  - "字节跳动"
+  - "旷视科技"
+  - "商汤科技"
 items:
   - id: "CV-SQ-001"
     type: "scenario_design"
     question: "设计一个工业流水线上的缺陷检测系统，缺陷样本极度稀缺且种类繁多，你会如何设计算法方案？"
     tags: ["场景设计", "工业质检", "小样本学习"]
     difficulty: "hard"
-    source: "技术博客"
-    status: "draft"
+    source: "Tech_Blog" 
     key_points:
       - "抛弃单纯依赖大量数据的监督学习思路，转向无监督异常检测（如基于重构的AutoEncoder、归一化流）"
       - "利用预训练模型提取特征，使用核心集（Coreset）或K-NN算法比对正常样本距离（如PatchCore算法）"
@@ -18,8 +21,7 @@ items:
     question: "设计一个高并发的视频流违规内容（如暴恐、色情）实时审核引擎，如何兼顾准确率与服务器成本？"
     tags: ["视频分析", "架构设计", "工程落地"]
     difficulty: "medium"
-    source: "技术博客"
-    status: "draft"
+    source: "Tech_Blog" 
     key_points:
       - "抽帧策略优化：关键帧提取（感知哈希、镜头边界检测）代替逐帧推理"
       - "大小模型级联：先用极轻量的分类模型（如MobileNet）做海量粗筛，高置信度嫌疑帧再送入大模型（如ViT）精准判别"
@@ -29,8 +31,7 @@ items:
     question: "设计一个智慧零售超市的无感支付系统（基于多摄像头多目标跟踪与重识别 Re-ID）。"
     tags: ["系统设计", "Re-ID", "多目标跟踪"]
     difficulty: "hard"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "跨镜头追踪（MTMC）：如何处理视角盲区和光照剧变下的行人特征匹配"
       - "结合姿态估计（Pose Estimation）与动作识别判断“拿取/放回”商品的行为"
@@ -40,8 +41,7 @@ items:
     question: "设计一个复杂版面（包含印章遮挡、手写体、多栏排版）的医疗发票 OCR 提取系统。"
     tags: ["OCR", "文档分析"]
     difficulty: "medium"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "文本检测层：采用 DBNet 等能处理任意形状弯曲文本的检测器"
       - "文本识别层：采用 CRNN 或 SVTR 处理手写与印刷体混合"
@@ -51,8 +51,7 @@ items:
     question: "设计一个基于计算机视觉的智能垃圾分类系统，如何处理垃圾种类繁多且外观相似的挑战？"
     tags: ["垃圾分类", "细粒度识别"]
     difficulty: "medium"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "细粒度分类：引入注意力机制（如SE模块）聚焦于区分性特征，提升相似类别的辨识度"
       - "多模态融合：结合重量传感器等非视觉信息辅助分类决策"
@@ -62,8 +61,7 @@ items:
     question: "设计一个基于计算机视觉的智能停车场系统，如何实现车牌识别、空位检测与车辆跟踪的高效协同？"
     tags: ["车牌识别", "空位检测", "多目标跟踪"]
     difficulty: "medium"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "车牌识别：采用轻量级CNN+LSTM结构实现端到端车牌定位与字符识别"
       - "空位检测：利用语义分割模型（如DeepLab）实时分析停车位占用状态"
@@ -73,8 +71,7 @@ items:
     question: "设计一个基于计算机视觉的智能农业监测系统，如何实现作物生长状态评估与病虫害检测？"
     tags: ["农业监测", "病虫害检测"]
     difficulty: "medium"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "作物生长评估：利用多光谱图像分析植被指数（如NDVI）监测作物健康状况"
       - "病虫害检测：采用目标检测模型（如YOLOv5）识别叶片上的病斑或虫害特征"
@@ -84,8 +81,7 @@ items:
     question: "设计一个基于计算机视觉的智能健身镜系统，如何实现动作识别、姿态纠正与个性化训练建议？"
     tags: ["动作识别", "姿态估计", "个性化推荐"]
     difficulty: "medium"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "动作识别：采用3D卷积网络（如C3D）或时空图卷积网络（ST-GCN）分析用户动作序列"
       - "姿态纠正：利用OpenPose等姿态估计模型实时反馈用户关节角度偏差并提供纠正建议"
@@ -95,8 +91,7 @@ items:
     question: "设计一个基于计算机视觉的智能安防系统，如何实现异常行为检测与实时报警？"
     tags: ["安防", "异常检测"]
     difficulty: "medium"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "异常行为定义：通过分析正常行为模式（如行走、停留）建立基线，利用孤立森林等无监督算法检测偏离基线的异常行为（如奔跑、打斗）"
       - "多摄像头协同：结合多视角数据进行跨镜头跟踪与行为分析，提升检测准确率"
@@ -106,9 +101,232 @@ items:
     question: "设计一个基于计算机视觉的智能餐厅点餐系统，如何实现菜品识别与个性化推荐？"
     tags: ["餐厅点餐", "菜品识别", "个性化推荐"]
     difficulty: "medium"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "菜品识别：采用卷积神经网络（如ResNet）结合注意力机制实现高准确率的菜品分类"
       - "个性化推荐：基于用户历史点餐数据与口味偏好，利用协同过滤或深度学习模型推荐菜品"
       - "用户交互设计：通过触摸屏或语音交互提供便捷的点餐体验，并结合视觉反馈提升用户满意度"
+
+  - id: "CV-SQ-ZJ-001"
+    type: "scenario_design"
+    question: "如果要从零搭建一个大模型RAG（检索增强生成）系统，你会怎么设计整个链路？请详细说明文档切分、索引构建、召回/重排、压缩/融合以及兜底策略是如何串联的。"
+    tags: ["大模型应用", "RAG", "系统架构设计"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "合理的文档分块（Chunking）策略与高效的向量化索引机制"
+      - "设计多路召回（稀疏+稠密）与精准重排（Rerank）机制以提升信息相关性"
+      - "阐述完善的系统鲁棒性保障机制（如无检索结果时的兜底话术生成或降级策略）"
+
+  - id: "CV-SQ-ZJ-002"
+    type: "scenario_design"
+    question: "面对大语言模型长上下文（Long Context）场景的需求，你的工程实战方案是什么？请结合RoPE缩放、位置插值、KV Cache管理、检索增强以及滑动窗口注意力等技术谈谈你的设计。"
+    tags: ["LLM优化", "长上下文", "系统设计"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "清晰解释RoPE外推/插值原理，及其在解决长序列注意力衰减问题上的作用"
+      - "熟悉KV Cache优化的主流底层框架方案（如PagedAttention、vLLM）"
+      - "具备全局视野，能合理组合RAG工程架构与长上下文模型的优势边界"
+
+  - id: "CV-SQ-ZJ-003"
+    type: "scenario_design"
+    question: "在不同的业务场景和计算资源受限情况下，PEFT 方案（如LoRA、QLoRA、Prefix-Tuning、Adapter等）你会如何进行技术选型？请谈谈你保证模型稳定训练的经验。"
+    tags: ["模型微调", "PEFT", "资源调优"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "能准确对比主流微调方案在参数量、显存开销、推理性损耗上的核心优劣"
+      - "根据具体的业务需求（分类、生成、对话对齐）给出合理的选型逻辑"
+      - "分享防灾经验（如合理设置学习率、应对损失突刺、防止灾难性遗忘的策略）"
+
+  - id: "CV-SQ-ZJ-004"
+    type: "scenario_design"
+    question: "如果要从零设计一个RAG（检索增强生成）系统，你会怎么做？请说明切分、索引、召回/重排、压缩/融合到兜底策略的完整串联逻辑。"
+    tags: ["RAG", "系统架构", "大模型应用"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "数据切分（Chunking）：基于语义或固定长度，考虑Overlap"
+      - "索引与召回：向量数据库选型，双路召回（BM25+Dense）机制"
+      - "重排（Rerank）：使用Cross-encoder模型提升Top-K相关性"
+      - "生成与兜底：Prompt构建策略，以及在无检索结果时的拒答或回退机制"
+
+  - id: "CV-SQ-ZJ-005"
+    type: "scenario_design"
+    question: "面对大模型的长上下文（Long Context）需求，你会如何设计落地方案？请结合Rope scaling、KV Cache管理或检索增强等技术给出实战策略。"
+    tags: ["长文本", "大模型优化", "KV Cache"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "模型层外推：Rope Scaling（线性或NTK-aware插值）技术"
+      - "推理优化：PagedAttention管理KV Cache内存碎片"
+      - "架构补充：采用RAG作为长文本处理的外部补充手段，权衡性能与成本"
+
+  - id: "CV-SQ-ZJ-006"
+    type: "scenario_design"
+    question: "开放性问题：在直播业务场景下，你会如何设计一套算法方案来自动给主播打标签？"
+    tags: ["多模态", "标签体系", "业务场景"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "多模态特征提取：视觉特征（人脸、背景）、语音特征、文本特征（弹幕、直播标题）"
+      - "行为数据分析：基于用户的观看、打赏、互动行为构建主播-用户图谱"
+      - "标签分类模型：设计多标签分类器（Multi-label Classification）并建立标签更新机制"
+
+  - id: "CV-SQ-ZJ-007"
+    type: "scenario_design"
+    question: "假设有N个相同的球（N为一个未知且不断输入的大流），需要从中随机抽取M个（M<N），请设计一个算法保证每个球被抽取的概率一致。"
+    tags: ["算法设计", "蓄水池抽样", "概率论"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "准确指出这属于蓄水池抽样算法（Reservoir Sampling）的应用场景。"
+      - "算法逻辑：前M个直接放入蓄水池；第K个（K>M）以 M/K 的概率替换池中任意一个球。"
+      - "能够通过数学归纳法推导出任意球最终留在池中的概率均为 M/N。"
+
+  - id: "CV-SQ-ZJ-008"
+    type: "scenario_design"
+    question: "如果让你从零设计一个工业级RAG（检索增强生成）系统，你会如何设计？请详细描述文档切分、向量索引、召回、重排以及兜底策略的串联流程。"
+    tags: ["RAG", "系统架构", "NLP"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "切分策略：讨论按语义切分、滑窗重叠等方法的优劣。"
+      - "召回策略：双路召回架构（Dense Vector检索 + 稀疏BM25检索）。"
+      - "重排与兜底：引入Cross-encoder做精排，结合意图识别做无结果拒答或兜底回复。"
+
+  - id: "CV-SQ-ZJ-009"
+    type: "scenario_design"
+    question: "针对大模型的长上下文推理场景，你会如何设计优化方案来解决显存溢出和计算延迟？请结合RoPE Scaling、KV Cache管理谈谈你的实战设计。"
+    tags: ["长文本", "大模型推理", "性能优化"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "位置编码扩展：说明如何利用线性插值（PI）或NTK-Aware等RoPE外推技术。"
+      - "KV Cache优化：设计PagedAttention机制以解决显存碎片化问题（如vLLM）。"
+      - "稀疏化注意力：提及Window Attention、StreamingLLM等降低复杂度的方法。"
+
+  - id: "CV-SQ-ZJ-010"
+    type: "scenario_design"
+    question: "智力场景题：现有25匹马和5条赛道，每次最多只能让5匹马比赛，且没有秒表记录时间。请问最少需要进行多少场比赛，才能找出跑得最快的3匹马？"
+    tags: ["智力题", "统筹优化", "算法逻辑"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "前5场：分为5组，每组5匹跑一次，淘汰各组的第4、第5名。"
+      - "第6场：将5个组的第一名拉出来跑一次，确定总第一名，并淘汰掉第4、5名所在组的所有马匹。"
+      - "第7场：锁定潜在的前三名（A组第2、3名，B组第1、2名，C组第1名，共5匹）进行最后一次比赛，决出总第2和第3名。答案为7场。"
+
+  - id: "CV-SQ-KS-001"
+    type: "scenario_design"
+    question: "设计一个场景算法：如何高精度地检测智能零售柜子中的商品？假如某些商品之间存在关联搭配或互斥现象，你将如何利用这些先验信息进行建模？"
+    tags: ["场景设计", "目标检测", "先验知识融合"]
+    difficulty: "hard"
+    source: "旷视科技"
+    key_points:
+      - "给出完整的商品检测Pipeline（如使用两阶段或一阶段目标检测器，考虑密集排布和遮挡）"
+      - "合理引入图神经网络（GNN）或条件随机场（CRF）来建立商品间的共生/互斥关系图"
+      - "或者通过后处理逻辑，利用商品关联矩阵对分类置信度进行重新加权惩罚/奖励"
+
+  - id: "CV-SQ-KS-002"
+    type: "scenario_design"
+    question: "要求从n个数字中均匀采样出k个数字且无重复，请给出算法并证明其均匀性。进一步地，如果n是未知的流式数据（Data Stream），该如何实现？"
+    tags: ["蓄水池抽样", "数学证明", "随机算法"]
+    difficulty: "hard"
+    source: "旷视科技"
+    key_points:
+      - "已知n时可采用洗牌算法（Fisher-Yates Shuffle）取前k个"
+      - "未知n时采用蓄水池抽样（Reservoir Sampling）算法"
+      - "能严格推导出第i个元素最终留在蓄水池中的概率恰好为 k/n"
+
+  - id: "CV-SQ-KS-003"
+    type: "scenario_design"
+    question: "有10只小白鼠和986瓶水，其中仅有一瓶是毒药。请问如何利用这10只小白鼠，通过一次实验准确找出哪一瓶是毒药？"
+    tags: ["智力题", "二进制思维", "位运算"]
+    difficulty: "medium"
+    source: "旷视科技"
+    key_points:
+      - "识别出这是一道考察二进制编码思维的经典题"
+      - "因为 2^10 = 1024 > 986，因此10只老鼠可以代表10个二进制位"
+      - "将水瓶从1到986编号并转为二进制，对应的位为1则给对应编号的老鼠喝，最后看哪几只老鼠死亡，将死亡老鼠编号还原为二进制数即为毒药瓶号"
+
+  - id: "CV-SQ-ST-001"
+    type: "scenario_design"
+    question: "假设现在有一个新的目标检测小任务，数据集已经准备好了，接下来你打算从头到尾怎么推进和落地这个任务？"
+    tags: ["工程落地", "业务场景", "目标检测"]
+    difficulty: "medium"
+    source: "商汤科技"
+    key_points:
+      - "第一步数据预处理与EDA：分析标签分布、长宽比、目标尺寸大小，并清洗异常数据"
+      - "第二步选择Baseline模型：根据端侧或云端算力需求，选择如 YOLOv8 或 Faster R-CNN，并进行迁移学习"
+      - "第三步超参数调优与训练：设置合理的Anchor，选择合适的优化器策略和数据增强方法"
+      - "第四步模型评估与迭代：通过Bad Case分析找到短板，针对性优化（如修改Loss、增广特定类别数据）"
+
+  - id: "CV-SQ-ST-002"
+    type: "scenario_design"
+    question: "如果实际业务给到的图像分割数据集标注标签比较粗糙（不够精细），有什么办法可以训练出边缘精细的分割结果？"
+    tags: ["图像分割", "弱监督学习", "场景设计"]
+    difficulty: "hard"
+    source: "商汤科技"
+    key_points:
+      - "引入弱监督/半监督学习方法或 Teacher-Student 架构进行伪标签的迭代清洗"
+      - "损失函数优化：设计容忍噪声的Loss函数，或加入边缘约束 Loss（Edge Loss）"
+      - "后处理：使用 Dense CRF（条件随机场）或 Matting 相关的算法细化目标的边缘边界"
+
+  - id: "CV-SQ-ST-003"
+    type: "scenario_design"
+    question: "如果让你从零设计一个保险领域的知识问答系统，你会如何进行架构设计和技术选型？（提示：需注重保险场景的“依据”和“边界”）"
+    tags: ["系统设计", "RAG", "知识图谱", "大模型"]
+    difficulty: "hard"
+    source: "商汤科技"
+    key_points:
+      - "提出 RAG（检索增强生成）或外挂知识图谱的整体方案，以缓解大模型幻觉"
+      - "设计知识库构建流程（保险条款解析、向量化、分块策略）与多路召回策略"
+      - "针对“边界”问题设计意图识别和兜底逻辑（如敏感及免责条款的强制人工干预或拒答机制）"
+
+  - id: "CV-SQ-ST-004"
+    type: "scenario_design"
+    question: "假设现有一个全新的目标检测业务任务，场景较复杂，但初步的数据集已经采集完毕，请阐述你从零开始推进并完成这个算法任务的全流程方案？"
+    tags: ["全栈流程", "目标检测", "工程落地"]
+    difficulty: "medium"
+    source: "商汤科技"
+    key_points:
+      - "数据环节：进行深入的EDA分析、清洗脏数据、标注质量把控及格式转换"
+      - "开发环节：合理选择高鲁棒性Baseline模型（如YOLO系列），快速跑通全链路"
+      - "迭代环节：针对业务痛点（如长尾分布、遮挡、小目标）进行针对性的模型结构优化和数据增强"
+      - "部署环节：推理端算子对齐、模型量化及端侧性能评估"
+
+  - id: "CV-SQ-ST-005"
+    type: "scenario_design"
+    question: "在实际工业场景中，如果需要实现『无类别的多前景（Class-Agnostic）提取分割』，你会如何设计算法方案？"
+    tags: ["语义分割", "前景提取", "零样本学习"]
+    difficulty: "hard"
+    source: "商汤科技"
+    key_points:
+      - "可结合视觉大模型（如SAM）的Prompt机制设计交互或自动前背景分离"
+      - "采用显著性目标检测（SOD）网络结构直接回归前背景"
+      - "如果基于弱监督，可利用特征空间的对比学习或聚类提取类别无关的通用特征表达"
+
+  - id: "CV-SQ-ST-006"
+    type: "scenario_design"
+    question: "现有数以十万计的两个图片文件夹，已知其中一个完全包含另一个，请设计一个执行最快的方案，找出这两个文件夹的差集图片？"
+    tags: ["海量数据处理", "哈希算法", "文件I/O"]
+    difficulty: "medium"
+    source: "商汤科技"
+    key_points:
+      - "极力避免直接进行耗时极大的像素级比对"
+      - "利用多线程/协程计算文件哈希值（如MD5）或初步对比文件元数据（Size、创建时间）进行粗筛"
+      - "将较小文件夹的数据构建为哈希表（Set或Dict），利用O(1)复杂度完成差异查找"
+
+  - id: "CV-SQ-ST-007"
+    type: "scenario_design"
+    question: "在语义分割任务中，如果业务提供的标注标签比较粗糙（如仅为多边形包围框或存在较多边缘噪点），有什么办法可以训练出精细的边缘分割网络？"
+    tags: ["弱监督学习", "边缘细化", "语义分割"]
+    difficulty: "hard"
+    source: "商汤科技"
+    key_points:
+      - "数据预处理端：结合传统图像处理（如DenseCRF，GrabCut）对粗糙标签进行先验细化伪标签生成"
+      - "模型设计端：采用基于Box-to-Mask的弱监督/半监督学习范式"
+      - "损失函数端：在网络Loss中增加对边缘噪声不敏感的平滑正则化，或引入专门的边缘感知损失（Edge-aware Loss）"
+  

@@ -1,15 +1,24 @@
 type: "frontend_technical_interview_questions"
 source:
-  - "牛客网"
-  - "掘金"
+  - "Juejin"
+  - "Nowcoder"
+  - "LeetCode CN"
+  - "JavaGuide"
+  - "Personal_Notes"
+  - "Interview_Bank" 
+  - "RAG知识库重构" 
+  - " Juejin"
+  - "阿里巴巴"
+  - "腾讯"
+  - "网易"
+  - "字节跳动"
 items:
   - id: "FE-TQ-001"
     type: "technical"
     question: "解释一下浏览器的事件循环（Event Loop）机制，宏任务与微任务的区别是什么？"
     tags: ["JavaScript", "浏览器原理", "异步编程"]
     difficulty: "medium"
-    source: "掘金"
-    status: "draft"
+    source: " Juejin" 
     key_points:
       - "主线程跑完同步代码发派异步流"
       - "微任务(Promise/MutationObserver)优先级永远压制宏任务(setTimeout等)"
@@ -19,8 +28,7 @@ items:
     question: "Vue3 中响应式原理 Proxy 与 Vue2 中 Object.defineProperty 有什么区别和优势？"
     tags: ["Vue", "响应式原理"]
     difficulty: "medium"
-    source: "牛客网"
-    status: "draft"
+    source: "Nowcoder" 
     key_points:
       - "Proxy天然加持整个对象和新增删除的侦测以及原生感知数组索引增减"
       - "defineProperty陷于遍历深陷缺乏全量观察视角的盲区且难响应数组及新生属性变数"
@@ -30,8 +38,7 @@ items:
     question: "React Fiber 架构解决了什么问题？它的工作原理是怎样的？"
     tags: ["React", "架构", "性能优化"]
     difficulty: "hard"
-    source: "掘金"
-    status: "draft"
+    source: " Juejin" 
     key_points:
       - "直击超庞大DOM树递归阻塞主进程引起页面僵死及动画卡顿的顽疾"
       - "任务切片化(Fiber片层结构)，化整为零留出空档给更高优级用户交互输入"
@@ -41,8 +48,7 @@ items:
     question: "详细说一下 BFC (Block Formatting Context) 以及它的应用场景。"
     tags: ["CSS", "布局"]
     difficulty: "medium"
-    source: "牛客网"
-    status: "draft"
+    source: "Nowcoder" 
     key_points:
       - "建立无依赖干扰的自留地沙盒格式化空间"
       - "秒解边距内卷坍塌的视觉顽症"
@@ -52,8 +58,7 @@ items:
     question: "闭包（Closure）是什么？有哪些真实应用场景？会带来什么问题？"
     tags: ["JavaScript", "闭包"]
     difficulty: "medium"
-    source: "掘金"
-    status: "draft"
+    source: " Juejin" 
     key_points:
       - "函数与包容自身声明周遭的隐秘时空组成的捆绑生态"
       - "成就私有状态封锁的利器与造就防抖防爆等高阶函数的灵魂基石"
@@ -63,8 +68,7 @@ items:
     question: "Webpack 的构建流程是怎样的？Loader 和 Plugin 有什么区别？"
     tags: ["工程化", "Webpack"]
     difficulty: "medium"
-    source: "牛客网"
-    status: "draft"
+    source: "Nowcoder" 
     key_points:
       - "入口生发至AST树图状摸底建立模块牵引网络"
       - "Loader如同编译漏斗强力榨取翻译异构档案为标准JS"
@@ -74,8 +78,7 @@ items:
     question: "浏览器首屏优化有哪些常见方案？（SSR、预加载、拆包等）"
     tags: ["性能优化", "首屏优化"]
     difficulty: "hard"
-    source: "掘金"
-    status: "draft"
+    source: " Juejin" 
     key_points:
       - "工程压缩极限分包（Tree-shaking及模块分离懒加载流）"
       - "强力突围SSR服务端生成快出流或者静态预烘焙消除首屏白脸尴尬"
@@ -85,8 +88,7 @@ items:
     question: "跨域问题是如何产生的？有哪些常见的解决方式（CORS、JSONP、Nginx代理）？"
     tags: ["网络", "跨域"]
     difficulty: "easy"
-    source: "牛客网"
-    status: "draft"
+    source: "Nowcoder" 
     key_points:
       - "安防机制同源铁律导致三元素（域口协）必一造就排异围栏"
       - "单薄不争的古董JSONP仅且单GET的苍白与淘汰定局"
@@ -96,8 +98,7 @@ items:
     question: "Vite 为什么比 Webpack 在开发环境下快那么多？"
     tags: ["工程化", "Vite"]
     difficulty: "medium"
-    source: "掘金"
-    status: "draft"
+    source: " Juejin" 
     key_points:
       - "弃用Webpack全量依赖抓取编译捆绑后上服务器的臃肿传统包袱"
       - "极度吃透原生ESM浏览器底层模块特使实现纯粹懒汉按需抛投模块源"
@@ -107,8 +108,7 @@ items:
     question: "ES6 模块（import/export）与 CommonJS 模块有什么本质区别？"
     tags: ["JavaScript", "模块化"]
     difficulty: "medium"
-    source: "牛客网"
-    status: "draft"
+    source: "Nowcoder" 
     key_points:
       - "ESM主打静态远征探针与树摇无死角排查，所牵输出全为活性原身同脉链接"
       - "CommonJs走随走随看的运行态读取拉取，输出深复制绝情抛投"
@@ -118,8 +118,7 @@ items:
     question: "你在项目中有没有遇到过性能瓶颈？你是如何定位和解决的？"
     tags: ["性能优化", "排障"]
     difficulty: "hard"
-    source: "面经库"
-    status: "draft"
+    source: "Interview_Bank" 
     key_points:
       - "利用浏览器开发者工具进行性能分析，识别瓶颈所在（如长任务、内存泄漏等）"
       - "针对具体问题采取相应优化措施，如代码分割、懒加载、减少重绘重排等"
@@ -129,207 +128,2762 @@ items:
     question: "你在项目中有没有遇到过安全问题？你是如何发现和解决的？"
     tags: ["安全", "排障"]
     difficulty: "hard"
-    source: "面经库"
-    status: "draft"
+    source: "Interview_Bank" 
     key_points:
       - "通过代码审查、依赖扫描等方式发现潜在安全漏洞（如XSS、CSRF等）"
       - "采取相应的安全措施，如输入验证、使用安全库、设置Content Security Policy等"
       - "分享成功解决安全问题的案例，以及从中学到的经验教训"
   - id: "FE-TQ-013"
     type: "technical"
-    question: "你在项目中有没有遇到过技术挑战？你是如何迎接它的？"
-    tags: ["技术挑战", "挑战应对"]
+    question: "你是如何处理遗留代码（Legacy Code）重构的技术挑战的？"
+    tags: ["技术挑战", "代码重构", "工程化"]
     difficulty: "hard"
-    source: "面经库"
-    status: "draft"
+    source: "RAG知识库重构" 
     key_points:
-      - "识别技术挑战的能力，如性能瓶颈、安全问题、架构限制等"
-      - "展现创新和解决问题的能力，通过引入新技术、优化算法、重构架构等方式迎接挑战"
-      - "分享成功迎接技术挑战的案例，以及从中学到的经验教训"
+      - "评估风险并梳理现有业务逻辑边界，编写或补全关键链路的单元测试以提供安全网"
+      - "采用绞杀者模式（Strangler Fig）逐步替换模块，避免一次性重写带来的断崖式风险"
+      - "引入 TypeScript、ESLint 等静态检查工具固化类型边界，并提炼共用组件或方法库"
   - id: "FE-TQ-014"
     type: "technical"
-    question: "你在项目中有没有遇到过技术创新？你是如何推动它的？"
-    tags: ["技术创新", "创新推动"]
+    question: "微前端架构（如 qiankun 或 Module Federation）解决了什么问题？其核心沙箱机制是怎样的？"
+    tags: ["架构", "微前端", "隔离机制"]
     difficulty: "hard"
-    source: "面经库"
-    status: "draft"
+    source: "RAG知识库重构" 
     key_points:
-      - "识别技术创新的能力，如新技术的应用、架构优化等"
-      - "展现推动创新的能力，通过积极学习、团队协作、寻求支持等方式推动创新落地"
-      - "分享成功推动技术创新的案例，以及从中学到的经验教训"
+      - "解决巨石应用（Monolith）难以维护、技术栈固化及多团队协同开发部署的痛点"
+      - "JS 沙箱主要通过 Proxy 拦截 window 对象读写实现全局变量隔离（如 ProxySandbox）"
+      - "CSS 样式隔离通过 Scoped CSS、Shadow DOM 或动态添加/移除样式标签来防止样式污染"
   - id: "FE-TQ-015"
     type: "technical"
-    question: "你在项目中有没有遇到过技术迷茫期？你是如何走出它的？"
-    tags: ["技术迷茫", "自我驱动"]
+    question: "前端监控体系通常包含哪些维度？如何实现无侵入式的错误埋点与性能监控？"
+    tags: ["前端监控", "埋点", "性能收集"]
     difficulty: "hard"
-    source: "面经库"
-    status: "draft"
+    source: "RAG知识库重构" 
     key_points:
-      - "识别技术迷茫的能力，如对技术选型、架构设计等缺乏清晰方向感"
-      - "展现自我驱动和学习能力，通过阅读文档、咨询专家、进行小规模实验等方式寻找解决方案"
-      - "分享成功走出技术迷茫期的案例，以及从中学到的经验教训"
+      - "监控维度涵盖页面性能（Web Vitals）、运行时异常（JS 错误、Promise 拒绝）、接口监控及用户行为打点"
+      - "利用 window.onerror、unhandledrejection 及拦截 XHR/Fetch 请求实现全局错误捕获"
+      - "通过 PerformanceObserver API 实时监控 LCP、FID、CLS 等核心 Web 性能指标"
   - id: "FE-TQ-016"
     type: "technical"
-    question: "你在项目中有没有遇到过技术瓶颈？你是如何突破它的？"
-    tags: ["技术瓶颈", "创新"]
-    difficulty: "hard"
-    source: "面经库"
-    status: "draft"
+    question: "浏览器强缓存与协商缓存的判断逻辑及优先级是怎样的？"
+    tags: ["网络", "浏览器缓存", "HTTP"]
+    difficulty: "medium"
+    source: "RAG知识库重构" 
     key_points:
-      - "识别技术瓶颈的能力，如性能问题、架构限制等"
-      - "展现创新和解决问题的能力，通过引入新技术、优化算法、重构架构等方式突破瓶颈"
-      - "分享成功突破技术瓶颈的案例，以及从中学到的经验教训"
+      - "优先检查强缓存（Cache-Control max-age 和 Expires），命中则直接返回 200 (from memory/disk cache)"
+      - "强缓存失效时发起请求，服务器利用 ETag/If-None-Match 和 Last-Modified/If-Modified-Since 进行协商缓存校验"
+      - "如果资源未变更，服务器返回 304 Not Modified 通知客户端继续使用本地缓存，否则返回 200 及新数据"
   - id: "FE-TQ-017"
     type: "technical"
-    question: "你在项目中有没有遇到过技术挑战？你是如何迎接它的？"
-    tags: ["技术挑战", "挑战应对"]
-    difficulty: "hard"
-    source: "面经库"
-    status: "draft"
+    question: "React Hooks 中的“闭包陷阱”是如何产生的？应如何避免？"
+    tags: ["React", "Hooks", "闭包"]
+    difficulty: "medium"
+    source: "RAG知识库重构" 
     key_points:
-      - "识别技术挑战的能力，如新技术的学习曲线、复杂问题的解决等"
-      - "展现迎接挑战的能力，通过积极学习、团队协作、寻求帮助等方式应对挑战"
-      - "分享成功迎接技术挑战的案例，以及从中学到的经验教训"
+      - "因 useEffect 等 Hook 的依赖数组（deps）配置不完整，导致其内部回调函数捕获了旧的 state 或 props 快照"
+      - "解决方案一是利用 ESLint 插件（eslint-plugin-react-hooks）严格补全依赖项"
+      - "解决方案二是通过 useRef 缓存最新的变量值或函数句柄，打破依赖收集域实现最新值访问"
   - id: "FE-TQ-018"
     type: "technical"
-    question: "你在项目中有没有遇到过技术创新？你是如何推动它的？"
-    tags: ["技术创新", "推动创新"]
+    question: "简述 V8 引擎的垃圾回收（GC）机制，新生代与老生代分别采用了什么算法？"
+    tags: ["JavaScript", "V8", "垃圾回收"]
     difficulty: "hard"
-    source: "面经库"
-    status: "draft"
+    source: "RAG知识库重构" 
     key_points:
-      - "识别技术创新的能力，如新技术的潜力、创新机会等"
-      - "展现推动创新的能力，通过提出新想法、进行实验验证、推动团队采纳等方式推动创新"
-      - "分享成功推动技术创新的案例，以及从中学到的经验教训"
+      - "基于分代回收思想，将内存划分为新生代（存活时间短）与老生代（存活时间长或体积大）"
+      - "新生代采用 Scavenge 算法（Cheney 复制），将内存分为 From/To 空间，通过对象的复制迁移进行清理，速度极快"
+      - "老生代采用 Mark-Sweep（标记清除）释放空间，并结合 Mark-Compact（标记整理）解决内存碎片化问题"
   - id: "FE-TQ-019"
     type: "technical"
-    question: "你在项目中有没有遇到过技术突破？你是如何实现它的？"
-    tags: ["技术突破", "实现突破"]
-    difficulty: "hard"
-    source: "面经库"
-    status: "draft"
+    question: "什么是 JWT (JSON Web Token)？如何在前、后端配合下实现 Token 的无感刷新？"
+    tags: ["安全", "认证", "JWT"]
+    difficulty: "medium"
+    source: "RAG知识库重构" 
     key_points:
-      - "识别技术突破的能力，如性能飞跃、架构革新等"
-      - "展现实现突破的能力，通过引入前沿技术、优化算法、重构架构等方式实现技术飞跃"
-      - "分享成功实现技术突破的案例，以及从中学到的经验教训"
+      - "JWT 是无状态且防篡改的紧凑型身份认证凭证，分为 Header、Payload 与 Signature 三部分"
+      - "采用双 Token 策略：短效 Access Token 用于常规接口请求，长效 Refresh Token 用于更新 Access Token"
+      - "在前端 Axios 响应拦截器中捕获 401 状态码，挂起并发请求，利用 Refresh Token 自动换取新 Token 后重试失败请求"
   - id: "FE-TQ-020"
     type: "technical"
-    question: "你在项目中有没有遇到过技术迷茫期？你是如何走出它的？"
-    tags: ["技术迷茫", "自我驱动"]
-    difficulty: "hard"
-    source: "面经库"
-    status: "draft"
+    question: "前端路由的 Hash 模式和 History 模式的核心实现原理有何不同？"
+    tags: ["前端路由", "SPA", "BOM API"]
+    difficulty: "medium"
+    source: "RAG知识库重构" 
     key_points:
-      - "识别技术迷茫的能力，如对技术选型、架构设计等缺乏清晰方向感"
-      - "展现自我驱动和学习能力，通过阅读文档、咨询专家、进行小规模实验等方式寻找解决方案"
-      - "分享成功走出技术迷茫期的案例，以及从中学到的经验教训"
+      - "Hash 模式依靠 URL 的 `#` 片段变化（hashchange 事件）驱动视图更新，无需服务器配合，兼容性极佳"
+      - "History 模式基于 HTML5 的 pushState 和 replaceState API 修改 URL，配合 popstate 事件监听历史记录切换"
+      - "History 模式需要后端 Nginx 等服务器配置 Fallback 路由（如 try_files 指向 index.html），否则刷新会导致 404 错误"
   - id: "FE-TQ-021"
     type: "technical"
-    question: "你在项目中有没有遇到过技术瓶颈？你是如何突破它的？"
-    tags: ["技术瓶颈", "创新"]
+    question: "简述 HTTPS 的握手过程及 TLS 加密原理。"
+    tags: ["网络", "HTTPS", "加密"]
     difficulty: "hard"
-    source: "面经库"
-    status: "draft"
+    source: "RAG知识库重构" 
     key_points:
-      - "识别技术瓶颈的能力，如性能问题、架构限制等"
-      - "展现创新和解决问题的能力，通过引入新技术、优化算法、重构架构等方式突破瓶颈"
-      - "分享成功突破技术瓶颈的案例，以及从中学到的经验教训"
+      - "采用混合加密机制：握手阶段使用非对称加密交换会话密钥，通信阶段使用对称加密传输数据以保障性能"
+      - "客户端验证服务器发送的数字证书链（CA证书）以防止中间人攻击，并提取服务器公钥"
+      - "双方通过 Client Hello / Server Hello 交换随机数，结合预主密钥（Pre-Master Secret）生成最终的对称会话密钥"
   - id: "FE-TQ-022"
     type: "technical"
-    question: "你在项目中有没有遇到过技术挑战？你是如何迎接它的？"
-    tags: ["技术挑战", "挑战应对"]
-    difficulty: "hard"
-    source: "面经库"
-    status: "draft"
+    question: "虚拟 DOM（Virtual DOM）的设计哲学是什么？它真的比直接操作真实 DOM 快吗？"
+    tags: ["前端框架", "Virtual DOM", "性能"]
+    difficulty: "medium"
+    source: "RAG知识库重构" 
     key_points:
-      - "识别技术挑战的能力，如新技术的学习曲线、复杂问题的解决等"
-      - "展现迎接挑战的能力，通过积极学习、团队协作、寻求帮助等方式应对挑战"
-      - "分享成功迎接技术挑战的案例，以及从中学到的经验教训"
+      - "用轻量级的 JS 对象描述真实 DOM 结构，隔离了繁重的浏览器原生 DOM API 调用"
+      - "核心价值在于跨平台能力（如 React Native）和提供声明式的 UI 编程范式，而非单纯的性能绝对领先"
+      - "在大量零散更新时，通过 Diff 算法批量计算并合并补丁（Patch），能有效减少重排/重绘，但在极简场景下不如直接操作 DOM 高效"
   - id: "FE-TQ-023"
     type: "technical"
-    question: "你在项目中有没有遇到过技术创新？你是如何推动它的？"
-    tags: ["技术创新", "推动创新"]
-    difficulty: "hard"
-    source: "面经库"
-    status: "draft"
+    question: "事件委托（Event Delegation）的原理是什么？它有哪些优缺点？"
+    tags: ["JavaScript", "DOM事件", "性能优化"]
+    difficulty: "easy"
+    source: "RAG知识库重构" 
     key_points:
-      - "识别技术创新的能力，如新技术的潜力、创新机会等"
-      - "展现推动创新的能力，通过提出新想法、进行实验验证、推动团队采纳等方式推动创新"
-      - "分享成功推动技术创新的案例，以及从中学到的经验教训"
+      - "基于 DOM 事件流的冒泡机制（Bubbling），将子元素的事件监听器绑定到共同的父级祖先元素上"
+      - "优势：大幅减少内存消耗与事件绑定开销，且能天然支持动态添加的新子元素，无需重新绑定"
+      - "缺点：不适合不支持冒泡的事件（如 blur/focus），且嵌套过深、层级结构复杂的 DOM 在处理 event.target 判别时可能增加负担"
   - id: "FE-TQ-024"
     type: "technical"
-    question: "你在项目中有没有遇到过技术突破？你是如何实现它的？"
-    tags: ["技术突破", "实现突破"]
-    difficulty: "hard"
-    source: "面经库"
-    status: "draft"
+    question: "在前端状态管理选型中，Redux、MobX 和 Zustand 各自的设计理念和适用场景是什么？"
+    tags: ["状态管理", "React", "架构"]
+    difficulty: "medium"
+    source: "RAG知识库重构" 
     key_points:
-      - "识别技术突破的能力，如性能飞跃、架构革新等"
-      - "展现实现突破的能力，通过引入前沿技术、优化算法、重构架构等方式实现技术飞跃"
-      - "分享成功实现技术突破的案例，以及从中学到的经验教训"
+      - "Redux 遵循单一数据源和不可变数据（Immutable），数据流清晰可追溯，适合大型复杂项目，但样板代码多"
+      - "MobX 基于响应式原理（Observable），允许直接修改可变状态，心智负担低、性能粒度细，适合面向对象范式的项目"
+      - "Zustand 极简且基于 Hooks 构建，避免了 Context 的额外渲染性能问题，API 轻量，是当下中小型项目的首选替代方案"
   - id: "FE-TQ-025"
     type: "technical"
-    question: "你在项目中有没有遇到过技术迷茫期？你是如何走出它的？"
-    tags: ["技术迷茫", "自我驱动"]
-    difficulty: "hard"
-    source: "面经库"
-    status: "draft"
+    question: "什么是 PWA (Progressive Web App)？其核心技术 Service Worker 具备哪些能力？"
+    tags: ["PWA", "Service Worker", "离线缓存"]
+    difficulty: "medium"
+    source: "RAG知识库重构" 
     key_points:
-      - "识别技术迷茫的能力，如对技术选型、架构设计等缺乏清晰方向感"
-      - "展现自我驱动和学习能力，通过阅读文档、咨询专家、进行小规模实验等方式寻找解决方案"
-      - "分享成功走出技术迷茫期的案例，以及从中学到的经验教训"
+      - "PWA 旨在通过现代 Web 能力提供类原生 App 的体验（包含离线访问、桌面安装、后台通知等）"
+      - "Service Worker 充当浏览器与网络的独立代理线程，可拦截请求（fetch）并调度 Cache Storage 实现离线资源缓存"
+      - "它运行在主线程之外，不阻塞 UI，且必须在 HTTPS 环境下工作以确保安全性，支持后台同步与推送通知"
   - id: "FE-TQ-026"
     type: "technical"
-    question: "你在项目中有没有遇到过技术瓶颈？你是如何突破它的？"
-    tags: ["技术瓶颈", "创新"]
+    question: "WebAssembly (Wasm) 的出现解决了前端的什么痛点？主要适用哪些场景？"
+    tags: ["WebAssembly", "底层技术", "性能"]
     difficulty: "hard"
-    source: "面经库"
-    status: "draft"
+    source: "RAG知识库重构" 
     key_points:
-      - "识别技术瓶颈的能力，如性能问题、架构限制等"
-      - "展现创新和解决问题的能力，通过引入新技术、优化算法、重构架构等方式突破瓶颈"
-      - "分享成功突破技术瓶颈的案例，以及从中学到的经验教训"
+      - "打破了 JavaScript 作为浏览器唯一执行语言的性能瓶颈，提供接近原生的底层二进制执行效率"
+      - "允许开发者使用 C++、Rust、Go 等静态语言编写代码并编译至浏览器运行，实现旧生态的平滑复用"
+      - "典型应用场景涵盖：浏览器端音视频处理、复杂3D渲染（游戏引擎）、CAD 制图以及密集型数据计算等领域"
   - id: "FE-TQ-027"
     type: "technical"
-    question: "你在项目中有没有遇到过技术挑战？你是如何迎接它的？"
-    tags: ["技术挑战", "挑战应对"]
-    difficulty: "hard"
-    source: "面经库"
-    status: "draft"
+    question: "CSS 预处理器（如 Sass/Less）与原生 CSS 变量（CSS Variables / Custom Properties）的核心差异在哪？"
+    tags: ["CSS", "样式方案"]
+    difficulty: "easy"
+    source: "RAG知识库重构" 
     key_points:
-      - "识别技术挑战的能力，如新技术的学习曲线、复杂问题的解决等"
-      - "展现迎接挑战的能力，通过积极学习、团队协作、寻求帮助等方式应对挑战"
-      - "分享成功迎接技术挑战的案例，以及从中学到的经验教训"
+      - "Sass/Less 的变量在编译构建时会被解析为静态值，无法在浏览器运行时动态修改"
+      - "原生 CSS 变量存在于 DOM 树中（可被继承），可通过 JavaScript 运行时即时读取和修改（setProperty），是实现动态主题切换的最佳实践"
+      - "预处理器目前更多用于提供 Mixin、嵌套规则和复杂工程化计算功能，而基础变量管理正逐步向原生能力迁移"
   - id: "FE-TQ-028"
     type: "technical"
-    question: "你在项目中有没有遇到过技术创新？你是如何推动它的？"
-    tags: ["技术创新", "推动创新"]
-    difficulty: "hard"
-    source: "面经库"
-    status: "draft"
+    question: "简述 XSS（跨站脚本攻击）与 CSRF（跨站请求伪造）的原理及其主流防御手段。"
+    tags: ["安全", "XSS", "CSRF"]
+    difficulty: "medium"
+    source: "RAG知识库重构" 
     key_points:
-      - "识别技术创新的能力，如新技术的潜力、创新机会等"
-      - "展现推动创新的能力，通过提出新想法、进行实验验证、推动团队采纳等方式推动创新"
-      - "分享成功推动技术创新的案例，以及从中学到的经验教训"
+      - "XSS 是通过注入恶意脚本盗取信息。防御：转义用户输入（HTML 实体）、开启 CSP（内容安全策略）以及设置 Cookie 的 HttpOnly 属性。"
+      - "CSRF 是利用用户已登录的凭证，诱导发起恶意请求。防御：采用 SameSite Cookie 策略、验证 Referer/Origin 头，以及使用单次有效的 Anti-CSRF Token。"
+      - "两者根本区别：XSS 侧重于利用网站本身的信任漏洞执行代码；CSRF 侧重于利用浏览器的自动携带 Cookie 机制伪造身份操作。"
   - id: "FE-TQ-029"
     type: "technical"
-    question: "你在项目中有没有遇到过技术突破？你是如何实现它的？"
-    tags: ["技术突破", "实现突破"]
-    difficulty: "hard"
-    source: "面经库"
-    status: "draft"
+    question: "TCP 的三次握手与四次挥手过程是怎样的？为什么挥手需要四次？"
+    tags: ["网络", "TCP协议"]
+    difficulty: "medium"
+    source: "RAG知识库重构" 
     key_points:
-      - "识别技术突破的能力，如性能飞跃、架构革新等"
-      - "展现实现突破的能力，通过引入前沿技术、优化算法、重构架构等方式实现技术飞跃"
-      - "分享成功实现技术突破的案例，以及从中学到的经验教训"
+      - "三次握手（SYN -> SYN-ACK -> ACK）确立双方收发能力的双向对等并同步序列号，防止失效的连接请求突然到达"
+      - "四次挥手（FIN -> ACK ... FIN -> ACK）实现全双工连接的优雅关闭"
+      - "挥手多一次是因为被动关闭方在回复 ACK 确认收到关闭请求后，可能还有残余数据需要发送完毕，之后才能发送属于自己的 FIN 结束报文"
   - id: "FE-TQ-030"
     type: "technical"
-    question: "你在项目中有没有遇到过技术迷茫期？你是如何走出它的？"
-    tags: ["技术迷茫", "自我驱动"]
-    difficulty: "hard"
-    source: "面经库"
-    status: "draft"
+    question: "在处理大型数组或耗时计算时，如何避免阻塞主线程导致页面卡顿（掉帧）？"
+    tags: ["性能优化", "JavaScript", "卡顿排查"]
+    difficulty: "medium"
+    source: "RAG知识库重构" 
     key_points:
-      - "识别技术迷茫的能力，如对技术选型、架构设计等缺乏清晰方向感"
-      - "展现自我驱动和学习能力，通过阅读文档、咨询专家、进行小规模实验等方式寻找解决方案"
-      - "分享成功走出技术迷茫期的案例，以及从中学到的经验教训"
+      - "使用 Web Worker 开启独立线程处理密集型计算任务（如大文件哈希、加密解码），通过 postMessage 交换结果"
+      - "采用时间分片（Time Slicing）策略，如 requestAnimationFrame 或 requestIdleCallback 将大任务切分成多个微小批次在空闲帧执行"
+      - "对于 DOM 渲染类大数据，引入虚拟列表（Virtual List / Windowing）技术，仅渲染可视区域内的节点以节省渲染开销"
+  - id: "FE-TQ-031"
+    type: "technical"
+    question: "请简述Web端实现实时消息推送的常用方案有哪些？（如WebSocket、SSE等）"
+    tags: ["WebSocket", "实时通信", "网络协议", "frontend"]
+    difficulty: "medium"
+    source: "JavaGuide"
+    key_points:
+      - "说明轮询（短轮询/长轮询）的原理与缺点（资源消耗大、延迟）"
+      - "阐述Server-Sent Events (SSE) 的单向通信机制及其适用场景"
+      - "深入讲解WebSocket的全双工通信原理及其在建立连接时的握手过程"
+  - id: "FE-TQ-032"
+    type: "technical"
+    question: "请实现两数之和（Two Sum）算法。给定一个整数数组和一个目标值，如何快速找出和为目标值的两个整数？请分析你的时间与空间复杂度。"
+    tags: ["数据结构", "数组", "哈希表", "算法"]
+    difficulty: "easy"
+    source: "LeetCode CN"
+    key_points:
+      - "指出暴力枚举法的时间复杂度为O(N^2)"
+      - "能使用哈希表（Map）进行空间换时间优化，达到O(N)的时间复杂度"
+      - "正确处理哈希表中的键值对应关系（数组值作为键，下标作为值），并注意防范使用同一下标元素的问题"
+  - id: "FE-TQ-033"
+    type: "technical"
+    question: "如果要求你计算一个字符串中“无重复字符的最长子串”的长度，你会采用什么算法思路？"
+    tags: ["数据结构", "哈希表", "字符串", "滑动窗口"]
+    difficulty: "medium"
+    source: "LeetCode CN"
+    key_points:
+      - "明确指出使用滑动窗口（双指针）算法进行求解"
+      - "利用哈希表（或Set/数组）记录窗口内字符的状态或最近出现的位置"
+      - "当遇到重复字符时，能正确且高效地移动窗口的左边界并更新最大长度记录"
+  - id: "FE-TQ-034"
+    type: "technical"
+    question: "给定两个正序（从小到大排序）数组，请解释如何寻找这两个正序数组的中位数，并要求算法的时间复杂度为 O(log(m+n))。"
+    tags: ["数据结构", "数组", "二分查找", "分治"]
+    difficulty: "hard"
+    source: "LeetCode CN"
+    key_points:
+      - "理解题意并指出需要利用二分查找以满足 O(log(m+n)) 的时间复杂度要求"
+      - "能将求中位数转化为求两个有序数组中第 k 小的数的问题"
+      - "正确处理划分数组的边界条件、奇偶长度判断以及数组越界的情况"
+  - id: "FE-TQ-035"
+    type: "technical"
+    question: "给定一个字符串，如何找到其中最长的回文子串？请对比几种不同的解决思路及其复杂度。"
+    tags: ["数据结构", "双指针", "字符串", "动态规划"]
+    difficulty: "medium"
+    source: "LeetCode CN"
+    key_points:
+      - "能够清晰表达中心扩展法的原理，并指出其时间复杂度为O(N^2)，空间为O(1)"
+      - "能够写出动态规划的状态转移方程 (dp[i][j] = dp[i+1][j-1] && s[i]==s[j]) 及初始边界条件"
+      - "（加分项）提及或了解Manacher算法（马拉车算法）及其O(N)的时间复杂度"
+  - id: "FE-TQ-036"
+    type: "technical"
+    question: "请说明“盛最多水的容器”问题的求解思路。给你一个数组代表垂线的高度，如何通过双指针有效降低复杂度找到最大装水量？"
+    tags: ["数据结构", "贪心", "数组", "双指针"]
+    difficulty: "medium"
+    source: "LeetCode CN"
+    key_points:
+      - "理解木桶效应，即容器的容量由左右两边中最短的一块板决定"
+      - "提出使用双指针从数组两端向中间收敛的思路"
+      - "明确指针移动规则：每次移动高度较小的那个指针，因为移动较高的指针不可能增加总容量"
+  - id: "FE-TQ-037"
+    type: "technical"
+    question: "如何在一个数组中找出所有和为 0 且不重复的三元组（三数之和）？"
+    tags: ["数据结构", "数组", "双指针", "排序"]
+    difficulty: "medium"
+    source: "LeetCode CN"
+    key_points:
+      - "指出必须先对数组进行排序，以方便后续的去重逻辑和使用双指针收敛"
+      - "采用固定一个数（遍历），然后使用双指针寻找另外两个数的策略，降维至O(N^2)"
+      - "正确且无遗漏地处理所有去重逻辑（包括固定数字的去重和双指针移动时的去重）"
+  - id: "FE-TQ-038"
+    type: "technical"
+    question: "请简述如何判断一个包含各种括号（如 ()、[]、{}）的字符串是否有效闭合？"
+    tags: ["数据结构", "栈", "字符串"]
+    difficulty: "easy"
+    source: "LeetCode CN"
+    key_points:
+      - "明确指出使用栈（Stack）这一数据结构来解决符号匹配问题"
+      - "清晰表述入栈和出栈逻辑：遇到左括号入栈，遇到右括号出栈并检查是否与当前右括号配对"
+      - "全面考虑边界情况（如遍历结束栈内仍有元素、一开始就是右括号等导致的不匹配）"
+  - id: "FE-TQ-039"
+    type: "technical"
+    question: "请说明如何合并两个已经按升序排序的链表，使其合并后依然保持有序？"
+    tags: ["数据结构", "递归", "链表"]
+    difficulty: "easy"
+    source: "LeetCode CN"
+    key_points:
+      - "提出使用哑节点（Dummy Node）来简化新链表头节点的处理逻辑"
+      - "使用双指针分别遍历两个链表，比较节点值大小后接入新链表"
+      - "正确处理其中一个链表先遍历结束的善后拼接情况（直接连接剩余非空链表）"
+      - "（可选/进阶）能够使用递归法实现合并操作"
+  - id: "FE-TQ-040"
+    type: "technical"
+    question: "假设你正在爬楼梯，需要 n 阶才能到达楼顶。每次你可以爬 1 或 2 个台阶。请问有多少种不同的方法可以爬到楼顶？"
+    tags: ["数据结构", "记忆化", "数学", "动态规划"]
+    difficulty: "easy"
+    source: "LeetCode CN"
+    key_points:
+      - "准确识别出这本质上是一个斐波那契数列问题"
+      - "能写出正确的动态规划状态转移方程：dp[i] = dp[i-1] + dp[i-2]"
+      - "能够给出空间优化的方案（如使用滚动数组或三个变量）将空间复杂度优化至 O(1)"
+  - id: "BE-TQ-041"
+    type: "technical"
+    question: "请详细讲一下Redis的持久化机制有哪些，以及各自的优缺点？"
+    tags: ["Redis", "持久化", "高可用"]
+    difficulty: "medium"
+    source: "Personal_Notes"
+    key_points:
+      - "RDB持久化：生成全量快照。恢复速度快，适合灾备；但可能会丢失最后一次快照后的增量数据。"
+      - "AOF持久化：记录每次写操作指令。数据安全性高；但AOF文件体积较大，数据恢复速度相对较慢。"
+      - "混合持久化（Redis 4.0+）：结合RDB和AOF的优点，RDB做全量，AOF做增量，兼顾性能和数据安全。"
+  - id: "BE-TQ-042"
+    type: "technical"
+    question: "请谈谈Java语言有哪些核心特点？"
+    tags: ["Java基础", "面向对象", "JVM"]
+    difficulty: "easy"
+    source: "Personal_Notes"
+    key_points:
+      - "纯面向对象（支持封装、继承、多态）。"
+      - "平台无关性（依靠JVM实现一次编写，到处运行）。"
+      - "内置多线程并发支持与强大的网络编程能力。"
+      - "具备自动内存管理（垃圾回收机制GC），减少内存泄漏风险。"
+  - id: "BE-TQ-043"
+    type: "technical"
+    question: "请详细讲一下重载（Overload）和重写（Override）的区别是什么？"
+    tags: ["Java基础", "面向对象", "多态"]
+    difficulty: "easy"
+    source: "Personal_Notes"
+    key_points:
+      - "重载发生在同一个类中，方法名必须相同，参数列表必须不同（类型、个数、顺序），与返回值类型无关（编译时多态）。"
+      - "重写发生在父子类中，方法名和参数列表必须相同，返回值类型和抛出的异常范围必须小于等于父类（运行时多态）。"
+      - "重载是编译时行为，重写是运行时行为；重载通过方法签名区分，重写通过动态绑定实现。"
+
+  - id: "BE-TQ-044"
+    type: "technical"
+    question: "如何实现两个链表表示的非负整数相加（Add Two Numbers）？每个节点包含一个数字，逆序存储。"
+    tags: ["链表", "数学", "递归"]
+    difficulty: "medium"
+    source: "LeetCode CN"
+    key_points:
+      - "链表同步遍历逻辑与进位（carry）的处理"
+      - "处理两个链表长度不一致的情况（补0操作）"
+      - "边界条件：最高位产生进位时需额外创建节点"
+
+  - id: "BE-TQ-045"
+    type: "technical"
+    question: "请详细说明 N 字形变换（Zigzag Conversion）的实现思路，如何将字符串按给定行数排列并读取？"
+    tags: ["字符串", "模拟"]
+    difficulty: "medium"
+    source: "LeetCode CN"
+    key_points:
+      - "利用方向变量（flag）控制当前行数的增减"
+      - "使用行索引列表模拟字符分配过程"
+      - "对行数为1或字符串长度小于行数的边界处理"
+
+  - id: "BE-TQ-046"
+    type: "technical"
+    question: "如何实现整数反转（Reverse Integer）？需要注意哪些溢出检查？"
+    tags: ["数学", "数值处理"]
+    difficulty: "medium"
+    source: "LeetCode CN"
+    key_points:
+      - "使用模运算（%）和整除运算（/）逐位提取数字"
+      - "在计算过程中提前判断 `res * 10 + pop` 是否超出 32 位有符号整数范围"
+      - "不依赖 64 位整数进行溢出判断的技巧"
+
+  - id: "BE-TQ-047"
+    type: "technical"
+    question: "请实现字符串转换整数（atoi）函数。需要考虑哪些前导空格、符号位及非数字字符的处理？"
+    tags: ["字符串", "数值处理"]
+    difficulty: "medium"
+    source: "LeetCode CN"
+    key_points:
+      - "前导空格的丢弃与首个非空字符的判断"
+      - "符号位（+ / -）的识别逻辑"
+      - "遇到非数字字符时的截断机制及大数溢出（INT_MAX/INT_MIN）的饱和处理"
+
+  - id: "BE-TQ-048"
+    type: "technical"
+    question: "如何判断一个整数是否为回文数？能否在不将其转换为字符串的情况下解决？"
+    tags: ["数学", "双指针"]
+    difficulty: "easy"
+    source: "LeetCode CN"
+    key_points:
+      - "负数直接判定为非回文"
+      - "反转整数的一半：通过比较原数与反转后的数是否相等（或相等/10）来判断"
+      - "处理以0结尾但非0的特殊数字"
+
+  - id: "BE-TQ-049"
+    type: "technical"
+    question: "请详细讲解正则表达式匹配（Regular Expression Matching）的实现，如何支持 '.' 和 '*'？"
+    tags: ["递归", "字符串", "动态规划"]
+    difficulty: "hard"
+    source: "LeetCode CN"
+    key_points:
+      - "定义状态 dp[i][j] 表示 s 的前 i 个字符与 p 的前 j 个字符是否匹配"
+      - "处理 '*' 的两种情况：匹配0次（丢弃 p[j-2]）或匹配多次（s[i] 与 p[j-2] 匹配）"
+      - "递归回溯法的优化与记忆化搜索"
+
+  - id: "BE-TQ-050"
+    type: "technical"
+    question: "给定一个整数，如何将其转换为罗马数字？请说明贪心算法在此处的应用。"
+    tags: ["哈希表", "数学", "字符串"]
+    difficulty: "medium"
+    source: "LeetCode CN"
+    key_points:
+      - "建立数值与罗马字符的映射表（按降序排列）"
+      - "利用贪心思想，每次减去当前能匹配的最大数值"
+      - "处理特殊情况（如 4, 9, 40, 90 等减法规则符号）"
+
+  - id: "BE-TQ-051"
+    type: "technical"
+    question: "如何将罗马数字转换为整数？请解释“右侧数字大于左侧则减”的逻辑。"
+    tags: ["哈希表", "数学", "字符串"]
+    difficulty: "easy"
+    source: "LeetCode CN"
+    key_points:
+      - "遍历字符串，比较当前位与下一位的大小"
+      - "若 s[i] < s[i+1]，结果减去 s[i]；否则加上 s[i]"
+      - "哈希表快速查找罗马字符对应的数值"
+
+  - id: "BE-TQ-052"
+    type: "technical"
+    question: "如何查找一组字符串中的最长公共前缀（Longest Common Prefix）？"
+    tags: ["字典树", "数组", "字符串"]
+    difficulty: "easy"
+    source: "LeetCode CN"
+    key_points:
+      - "横向扫描（两两比较）与纵向扫描（逐位比较所有字符）的效率差异"
+      - "分治法或二分查找在超大规模字符串集中的应用"
+      - "空数组或包含空字符串的边界防御"
+
+  - id: "BE-TQ-053"
+    type: "technical"
+    question: "请说明“最接近的三数之和”问题的求解思路。如何利用排序和双指针降低复杂度？"
+    tags: ["数组", "双指针", "排序"]
+    difficulty: "medium"
+    source: "LeetCode CN"
+    key_points:
+      - "先排序，固定一个数后使用双指针收敛"
+      - "维护一个全局 diff 变量记录与 target 的最小差距"
+      - "根据 sum 与 target 的大小关系决定指针（left/right）的移动方向"
+
+  - id: "BE-TQ-054"
+    type: "technical"
+    question: "如何实现电话号码的字母组合？请描述回溯算法的路径探索过程。"
+    tags: ["哈希表", "字符串", "回溯"]
+    difficulty: "medium"
+    source: "LeetCode CN"
+    key_points:
+      - "数字到字符串数组的映射建立"
+      - "回溯函数中 index（当前处理数字位）与 path（已形成字符串）的管理"
+      - "递归终止条件：path 长度等于输入数字串长度"
+
+  - id: "BE-TQ-055"
+    type: "technical"
+    question: "给定一个包含 n 个整数的数组，如何找出所有不重复的四元组，使其和等于 target？"
+    tags: ["数组", "双指针", "排序"]
+    difficulty: "medium"
+    source: "LeetCode CN"
+    key_points:
+      - "双重循环固定前两个数 + 双指针寻找后两个数"
+      - "在每一层嵌套循环中进行去重判断（if num[i] == num[i-1] continue）"
+      - "利用排序后的特性进行剪枝（如当前最小值已大于 target 则退出）"
+
+  - id: "BE-TQ-056"
+    type: "technical"
+    question: "如何删除链表的倒数第 N 个结点？要求只能遍历一次链表。"
+    tags: ["链表", "双指针"]
+    difficulty: "medium"
+    source: "LeetCode CN"
+    key_points:
+      - "使用快慢指针（Fast/Slow），快指针先走 N 步"
+      - "当快指针到达末尾时，慢指针正好指向待删除节点的前驱"
+      - "引入 Dummy Node 处理删除头节点的特殊情况"
+
+  - id: "BE-TQ-057"
+    type: "technical"
+    question: "请描述如何生成 n 对有效的括号组合。为什么回溯法比暴力枚举更优？"
+    tags: ["字符串", "动态规划", "回溯"]
+    difficulty: "medium"
+    source: "LeetCode CN"
+    key_points:
+      - "维护左右括号的剩余可用数量（left/right）"
+      - "核心剪枝条件：只要左括号还有剩余就可以加左括号；只有右括号剩余多于左括号时才能加右括号"
+      - "递归过程中生成合法的括号前缀，避免无效计算"
+
+  - id: "BE-TQ-058"
+    type: "technical"
+    question: "如何合并 K 个升序链表？请对比“两两合并”与“优先队列”两种方案的复杂度。"
+    tags: ["链表", "分治", "堆（优先队列）", "归并排序"]
+    difficulty: "hard"
+    source: "LeetCode CN"
+    key_points:
+      - "最小堆方案：维护 K 个链表的当前头节点，时间复杂度 O(N log K)"
+      - "分治方案：类似于归并排序的合并过程"
+      - "空间复杂度分析（堆的空间开销 vs 分治的递归栈空间）"
+
+  - id: "BE-TQ-059"
+    type: "technical"
+    question: "如何两两交换链表中的节点？（如 1->2->3->4 变为 2->1->4->3）"
+    tags: ["递归", "链表"]
+    difficulty: "medium"
+    source: "LeetCode CN"
+    key_points:
+      - "递归解法：定义交换逻辑并返回交换后的子链表头"
+      - "迭代解法：使用三个指针（prev, cur, next）管理节点指向的变换"
+      - "对奇数长度链表末尾节点的处理"
+
+  - id: "BE-TQ-060"
+    type: "technical"
+    question: "请讲解 K 个一组翻转链表。如果最后一组长度不足 K，该如何处理？"
+    tags: ["递归", "链表"]
+    difficulty: "hard"
+    source: "LeetCode CN"
+    key_points:
+      - "分段处理：先检查当前剩余长度是否满足 K"
+      - "实现单段链表的局部翻转函数"
+      - "正确连接翻转后的子链表（递归调用处理下一段）"
+
+  - id: "BE-TQ-061"
+    type: "technical"
+    question: "如何实现在 O(1) 额外空间下移除排序数组中的重复项？"
+    tags: ["数组", "双指针"]
+    difficulty: "easy"
+    source: "LeetCode CN"
+    key_points:
+      - "快慢指针：快指针遍历，慢指针记录唯一元素的存放位置"
+      - "判断 `nums[fast] != nums[slow]` 时更新慢指针"
+      - "返回慢指针索引 + 1 作为新长度"
+
+  - id: "BE-TQ-062"
+    type: "technical"
+    question: "给定一个数组和一个值，如何原地移除所有数值等于该值的元素？"
+    tags: ["数组", "双指针"]
+    difficulty: "easy"
+    source: "LeetCode CN"
+    key_points:
+      - "利用双指针将不等于目标值的元素覆盖到数组前端"
+      - "当移除元素较少时，采用首尾指针交换的优化策略以减少复制次数"
+
+  - id: "BE-TQ-063"
+    type: "technical"
+    question: "实现 `strStr()`：如何在主串中找到模式串第一次出现的位置？（KMP 算法思想）"
+    tags: ["双指针", "字符串", "字符串匹配"]
+    difficulty: "easy"
+    source: "LeetCode CN"
+    key_points:
+      - "暴力匹配的时间复杂度分析 O(m*n)"
+      - "（加分）简述 KMP 算法中 next 数组（前缀函数）的作用：避免无效回溯"
+      - "处理 needle 为空字符串的特殊情况"
+
+  - id: "BE-TQ-064"
+    type: "technical"
+    question: "如何实现两数相除而不使用乘法、除法和取模运算符？"
+    tags: ["位运算", "数学"]
+    difficulty: "medium"
+    source: "LeetCode CN"
+    key_points:
+      - "利用位移运算（<<）实现倍增尝试，类似二分查找的思想"
+      - "处理溢出极值：如 INT_MIN / -1"
+      - "通过异或判断商的正负号"
+
+  - id: "BE-TQ-065"
+    type: "technical"
+    question: "请描述如何在串联所有单词的子串中找到所有起始索引？"
+    tags: ["哈希表", "字符串", "滑动窗口"]
+    difficulty: "hard"
+    source: "LeetCode CN"
+    key_points:
+      - "利用两个 HashMap 分别记录目标单词频率和当前窗口内单词频率"
+      - "滑动窗口步长应设为单词长度（word_len）"
+      - "窗口有效性的快速判断与重置逻辑"
+
+  - id: "BE-TQ-066"
+    type: "technical"
+    question: "如何找到数组的下一个排列（Next Permutation）？请描述其字典序查找算法。"
+    tags: ["数组", "双指针"]
+    difficulty: "medium"
+    source: "LeetCode CN"
+    key_points:
+      - "从后向前寻找第一个降序点（i）"
+      - "在 [i+1, end] 中寻找最小的且大于 nums[i] 的数进行交换"
+      - "将 [i+1, end] 范围内的元素进行升序排列（即反转）"
+
+  - id: "BE-TQ-067"
+    type: "technical"
+    question: "如何求解字符串中最长的有效括号长度？"
+    tags: ["栈", "字符串", "动态规划"]
+    difficulty: "hard"
+    source: "LeetCode CN"
+    key_points:
+      - "栈解法：栈底预置 -1，遇到左括号下标入栈，遇到右括号出栈并计算长度"
+      - "DP 解法：dp[i] 表示以 i 结尾的最长有效括号长度"
+      - "双向遍历优化：通过计数 left 和 right 括号实现 O(1) 空间复杂度"
+
+  - id: "BE-TQ-068"
+    type: "technical"
+    question: "如何在旋转排序数组中搜索目标值？（要求 O(log n) 时间复杂度）"
+    tags: ["数组", "二分查找"]
+    difficulty: "medium"
+    source: "LeetCode CN"
+    key_points:
+      - "修改版二分查找：判断 mid 落在哪一段有序区间（左半段或右半段）"
+      - "利用有序区间的范围判断 target 是否在该区间内"
+      - "根据判断结果调整 low 或 high 指针"
+
+  - id: "BE-TQ-069"
+    type: "technical"
+    question: "给定一个升序数组，如何找到目标值的起始和终止位置？"
+    tags: ["数组", "二分查找"]
+    difficulty: "medium"
+    source: "LeetCode CN"
+    key_points:
+      - "执行两次二分查找：分别查找第一个 >= target 的位置和第一个 > target 的位置"
+      - "正确处理数组中不存在 target 的返回值情况"
+      - "二分查找边界条件的控制（left <= right 与 left < right 的区别）"
+
+  - id: "BE-TQ-070"
+    type: "technical"
+    question: "如何在排序数组中找到插入位置？（Search Insert Position）"
+    tags: ["数组", "二分查找"]
+    difficulty: "easy"
+    source: "LeetCode CN"
+    key_points:
+      - "标准二分查找实现"
+      - "理解返回值：当循环结束未找到时，left 指针的位置即为插入位置"
+
+  - id: "BE-TQ-071"
+    type: "technical"
+    question: "请解释有效数独（Valid Sudoku）的验证规则。如何高效检查行、列及 3x3 宫格？"
+    tags: ["数组", "哈希表", "矩阵"]
+    difficulty: "medium"
+    source: "LeetCode CN"
+    key_points:
+      - "使用三个二维数组或 HashMap 分别记录行、列、宫格中数字出现的频次"
+      - "宫格索引的计算公式：`index = (row / 3) * 3 + (col / 3)`"
+      - "单次遍历矩阵即可完成所有验证"
+
+  - id: "BE-TQ-072"
+    type: "technical"
+    question: "如何实现数独解题器（Sudoku Solver）？请描述其回溯搜索过程。"
+    tags: ["数组", "哈希表", "回溯", "矩阵"]
+    difficulty: "hard"
+    source: "LeetCode CN"
+    key_points:
+      - "递归尝试填入数字 1-9，并验证合法性"
+      - "遇到冲突时回溯（撤销填入并返回 false）"
+      - "优化技巧：位运算记录状态或优先填入可选数最少的格子"
+
+  - id: "BE-TQ-073"
+    type: "technical"
+    question: "请说明“外观数列”（Count and Say）的生成逻辑。如何通过描述前一项来得到后一项？"
+    tags: ["字符串"]
+    difficulty: "medium"
+    source: "LeetCode CN"
+    key_points:
+      - "使用双指针统计当前字符的连续重复次数"
+      - "将“次数 + 字符值”拼接到新字符串"
+      - "递归或循环迭代生成第 n 项"
+
+  - id: "BE-TQ-074"
+    type: "technical"
+    question: "给定一组候选数和一个目标数，如何找出所有可以使数字和为目标数的唯一组合？（数字可重复使用）"
+    tags: ["数组", "回溯"]
+    difficulty: "medium"
+    source: "LeetCode CN"
+    key_points:
+      - "定义回溯函数 `backtrack(remain, path, start)`"
+      - "通过 `start` 索引控制搜索范围，避免产生重复组合"
+      - "剪枝优化：先对 candidates 排序，若当前数值大于 remain 则直接跳过"
+
+  - id: "BE-TQ-075"
+    type: "technical"
+    question: "在组合总和 II 问题中，每个候选数字只能使用一次。该如何处理包含重复数字的输入以去重？"
+    tags: ["数组", "回溯"]
+    difficulty: "medium"
+    source: "LeetCode CN"
+    key_points:
+      - "排序输入数组"
+      - "同层去重逻辑：`if (i > start && candidates[i] == candidates[i-1]) continue;`"
+      - "正确管理递归深度（i+1）"
+
+  - id: "BE-TQ-076"
+    type: "technical"
+    question: "如何找到缺失的第一个正数（First Missing Positive）？要求时间 O(N) 且空间 O(1)。"
+    tags: ["数组", "哈希表"]
+    difficulty: "hard"
+    source: "LeetCode CN"
+    key_points:
+      - "原地哈希思想：将数字 x 放入数组下标为 x-1 的位置"
+      - "通过 `swap` 将符合范围的数重置到正确位置"
+      - "再次遍历数组，找到第一个 `nums[i] != i + 1` 的位置"
+
+  - id: "BE-TQ-077"
+    type: "technical"
+    question: "如何计算“接雨水”（Trapping Rain Water）的总量？请说明双指针法或单调栈法的原理。"
+    tags: ["栈", "数组", "双指针", "动态规划", "单调栈"]
+    difficulty: "hard"
+    source: "LeetCode CN"
+    key_points:
+      - "双指针法：维护 left_max 和 right_max，从两端向中间移动并计算当前柱子的存水量"
+      - "单调栈法：寻找当前柱子左右两侧第一个比它高的柱子，形成“凹槽”计算面积"
+      - "理解各方法的时间与空间复杂度平衡"
+
+  - id: "BE-TQ-078"
+    type: "technical"
+    question: "如何实现两个大数字符串相乘？（不能使用 BigInteger）"
+    tags: ["数学", "字符串", "模拟"]
+    difficulty: "medium"
+    source: "LeetCode CN"
+    key_points:
+      - "初始化长度为 `m + n` 的数组存储结果"
+      - "执行双重循环，将 `num1[i] * num2[j]` 的结果加到 `res[i + j + 1]` 位上"
+      - "处理数组内部进位并将结果转回字符串，注意处理前导零"
+
+  - id: "BE-TQ-079"
+    type: "technical"
+    question: "请描述通配符匹配（Wildcard Matching）中 '?' 和 '*' 的处理方式。"
+    tags: ["贪心", "递归", "字符串", "动态规划"]
+    difficulty: "hard"
+    source: "LeetCode CN"
+    key_points:
+      - "DP 状态定义：dp[i][j] 表示 s[0:i] 是否匹配 p[0:j]"
+      - "当 p[j] 为 '*' 时，它可以匹配空（dp[i][j-1]）或匹配当前字符（dp[i-1][j]）"
+      - "（进阶）贪心双指针法优化复杂度"
+
+  - id: "BE-TQ-080"
+    type: "technical"
+    question: "在跳跃游戏 II 中，如何求出到达终点的最小跳跃次数？"
+    tags: ["贪心", "数组", "动态规划"]
+    difficulty: "medium"
+    source: "LeetCode CN"
+    key_points:
+      - "贪心策略：维护当前能跳到的最远位置（maxPos）和当前步数能覆盖的边界（end）"
+      - "每到达一次 boundary（end），跳跃次数加 1，并更新 boundary 为 maxPos"
+
+  - id: "BE-TQ-081"
+    type: "technical"
+    question: "如何生成一组数字的全排列？（无重复数字）"
+    tags: ["数组", "回溯"]
+    difficulty: "medium"
+    source: "LeetCode CN"
+    key_points:
+      - "利用布尔数组（used）标记已使用的数字"
+      - "递归探索每一层的所有可能选择"
+      - "回溯状态：在递归返回后，将 path 弹出并将 used 重新设为 false"
+
+  - id: "BE-TQ-082"
+    type: "technical"
+    question: "全排列 II 问题中包含重复数字，该如何进行剪枝以避免重复的全排列？"
+    tags: ["数组", "回溯", "排序"]
+    difficulty: "medium"
+    source: "LeetCode CN"
+    key_points:
+      - "对数组进行排序"
+      - "剪枝条件：`if (i > 0 && nums[i] == nums[i-1] && !used[i-1]) continue;`（确保同层级不重复使用相同数值）"
+
+  - id: "BE-TQ-083"
+    type: "technical"
+    question: "如何原地旋转图像（矩阵） 90 度？（不占用额外空间）"
+    tags: ["数组", "数学", "矩阵"]
+    difficulty: "medium"
+    source: "LeetCode CN"
+    key_points:
+      - "转置加翻转：先将矩阵按主对角线转置，再逐行水平翻转"
+      - "坐标变换法：直接计算四个对称点的位置并循环替换"
+
+  - id: "BE-TQ-084"
+    type: "technical"
+    question: "给定一个字符串数组，如何将字母异位词组合在一起？"
+    tags: ["数组", "哈希表", "字符串", "排序"]
+    difficulty: "medium"
+    source: "LeetCode CN"
+    key_points:
+      - "将每个字符串排序后作为 HashMap 的 Key"
+      - "使用计数法（26个字母频率）作为 Key 的优化方案（降低排序开销）"
+
+  - id: "BE-TQ-085"
+    type: "technical"
+    question: "如何实现 `pow(x, n)`？请解释快速幂（Binary Exponentiation）的原理。"
+    tags: ["递归", "数学"]
+    difficulty: "medium"
+    source: "LeetCode CN"
+    key_points:
+      - "分治法：x^n = (x^(n/2))^2"
+      - "处理 n 为负数的情况（1/x 且 n 转为正数）"
+      - "注意 n 为 INT_MIN 时的溢出预防"
+
+  - id: "BE-TQ-086"
+    type: "technical"
+    question: "请描述 N 皇后问题的解法。如何利用位运算或回溯法检查皇后的冲突状态？"
+    tags: ["数组", "回溯"]
+    difficulty: "hard"
+    source: "LeetCode CN"
+    key_points:
+      - "利用三个集合（Set）记录已占用的列、主对角线（row-col）、副对角线（row+col）"
+      - "回溯函数按行遍历，逐列尝试放置"
+      - "（加分）位运算优化状态存储，显著提升效率"
+
+  - id: "BE-TQ-087"
+    type: "technical"
+    question: "如何求解最大子数组和问题？请说明动态规划的状态转移方程。"
+    tags: ["数组", "分治", "动态规划"]
+    difficulty: "medium"
+    source: "LeetCode CN"
+    key_points:
+      - "状态定义：dp[i] 表示以第 i 个元素结尾的最大连续子数组和"
+      - "方程：dp[i] = max(nums[i], dp[i-1] + nums[i])"
+      - "空间优化：使用单个变量（curSum）维护状态"
+
+  - id: "BE-TQ-088"
+    type: "technical"
+    question: "请说明螺旋矩阵（Spiral Matrix）的遍历顺序。如何通过定义边界坐标（top, bottom, left, right）实现？"
+    tags: ["数组", "矩阵", "模拟"]
+    difficulty: "medium"
+    source: "LeetCode CN"
+    key_points:
+      - "设定上下左右四个边界，并循环缩小范围"
+      - "每走完一行/一列后检查边界是否重叠以决定是否继续遍历"
+      - "正确处理非方阵的遍历逻辑"
+
+  - id: "BE-TQ-089"
+    type: "technical"
+    question: "请解释跳跃游戏（Jump Game）的贪心解法。如何判断能否到达数组的最后一个下标？"
+    tags: ["贪心", "数组", "动态规划"]
+    difficulty: "medium"
+    source: "LeetCode CN"
+    key_points:
+      - "贪心策略：维护一个当前能够到达的最远下标（max_reach）"
+      - "遍历数组时，如果当前下标在 max_reach 范围内，则更新 max_reach 为当前下标加上该位置的跳跃步数"
+      - "若遍历过程中 max_reach 大于等于数组最后一个下标，则返回 true；若当前下标超过 max_reach 则返回 false"
+
+  - id: "BE-TQ-090"
+    type: "technical"
+    question: "如何合并区间（Merge Intervals）？请描述对重叠区间的排序与合并策略。"
+    tags: ["数组", "排序"]
+    difficulty: "medium"
+    source: "LeetCode CN"
+    key_points:
+      - "必须先将所有区间按照左端点进行升序排序"
+      - "遍历排序后的区间，若当前区间的左端点小于等于结果集中最后一个区间的右端点，则发生重叠"
+      - "重叠时，更新结果集中最后一个区间的右端点为两者右端点的最大值"
+
+  - id: "BE-TQ-091"
+    type: "technical"
+    question: "在一个由无重叠区间组成的升序数组中插入一个新的区间（Insert Interval），该如何高效处理？"
+    tags: ["数组"]
+    difficulty: "medium"
+    source: "LeetCode CN"
+    key_points:
+      - "利用数组已经按左端点排序的特性，可分为三个阶段处理：插入前、重叠合并、插入后"
+      - "对于重叠部分，不断更新新区间的 [起始位置, 结束位置] 为包络范围（取 min 和 max）"
+      - "时间复杂度要求达到 O(N)，只需一次遍历即可完成"
+
+  - id: "BE-TQ-092"
+    type: "technical"
+    question: "如何求字符串中最后一个单词的长度？需要考虑哪些尾部边界问题？"
+    tags: ["字符串"]
+    difficulty: "easy"
+    source: "LeetCode CN"
+    key_points:
+      - "从字符串末尾开始逆序遍历，跳过末尾的所有空格"
+      - "找到第一个非空格字符后开始计数，直到再次遇到空格或到达字符串起始位置"
+      - "不依赖额外空间（如 split 数组）以达到 O(1) 空间复杂度"
+
+  - id: "BE-TQ-093"
+    type: "technical"
+    question: "请描述生成螺旋矩阵 II（按顺时针顺序用 1 到 n^2 填入矩阵）的模拟过程。"
+    tags: ["数组", "矩阵", "模拟"]
+    difficulty: "medium"
+    source: "LeetCode CN"
+    key_points:
+      - "定义上下左右（top, bottom, left, right）四个边界"
+      - "按左至右、上至下、右至左、下至上的顺序循环填充数字"
+      - "每次走完一条边后，收缩对应的边界，直到数值填满 n*n"
+
+  - id: "BE-TQ-094"
+    type: "technical"
+    question: "如何求出集合 [1..n] 的所有全排列中第 k 个排列（Permutation Sequence）？能否不生成所有排列直接求解？"
+    tags: ["递归", "数学"]
+    difficulty: "hard"
+    source: "LeetCode CN"
+    key_points:
+      - "利用阶乘数（Factorial Number System）直接确定每个位置上的数字"
+      - "第 i 位的数字取决于 (k-1) / (n-i)! 的商，以此作为可用数字列表的索引"
+      - "每次确定一位后，更新 k 值为 k % (n-i)!，并在候选集中移除已用数字"
+
+  - id: "BE-TQ-095"
+    type: "technical"
+    question: "如何将链表每个节点向右移动 k 个位置（Rotate List）？"
+    tags: ["链表", "双指针"]
+    difficulty: "medium"
+    source: "LeetCode CN"
+    key_points:
+      - "先遍历一遍链表，求出链表总长度 length，并将链表首尾相连形成环"
+      - "计算实际需要移动的步数（k % length），找到新的尾节点位置（length - k % length）"
+      - "在新的尾节点处断开环，并将其下一个节点作为新的头节点返回"
+
+  - id: "BE-TQ-096"
+    type: "technical"
+    question: "一个机器人位于 m x n 网格的左上角，每次只能向下或向右移动一步。如何计算到达右下角的唯一路径总数？"
+    tags: ["数学", "动态规划", "组合数学"]
+    difficulty: "medium"
+    source: "LeetCode CN"
+    key_points:
+      - "动态规划方程：dp[i][j] = dp[i-1][j] + dp[i][j-1]"
+      - "边界条件初始化：第一行和第一列的路径数均为 1"
+      - "（加分）指出可以通过组合数学公式 C(m+n-2, m-1) 直接在 O(m) 时间内求解"
+
+  - id: "BE-TQ-097"
+    type: "technical"
+    question: "如果网格中存在障碍物（Unique Paths II），应如何修改动态规划的状态转移？"
+    tags: ["数组", "动态规划", "矩阵"]
+    difficulty: "medium"
+    source: "LeetCode CN"
+    key_points:
+      - "遇到障碍物（grid[i][j] == 1）时，直接将该位置的 dp 值设为 0"
+      - "起始点若为障碍物，则直接返回 0"
+      - "可使用一维滚动数组进行空间复杂度优化"
+
+  - id: "BE-TQ-098"
+    type: "technical"
+    question: "给定一个包含非负整数的 m x n 网格，如何找到一条从左上角到右下角的路径，使得路径上的数字总和最小？"
+    tags: ["数组", "动态规划", "矩阵"]
+    difficulty: "medium"
+    source: "LeetCode CN"
+    key_points:
+      - "状态转移方程：dp[i][j] = grid[i][j] + min(dp[i-1][j], dp[i][j-1])"
+      - "直接在原网格 grid 数组上进行状态更新（原地修改）以实现 O(1) 额外空间"
+
+  - id: "BE-TQ-099"
+    type: "technical"
+    question: "如何验证一个字符串是否为有效的数字（Valid Number）？请提及状态机的应用。"
+    tags: ["字符串"]
+    difficulty: "hard"
+    source: "LeetCode CN"
+    key_points:
+      - "可以利用确定有限状态自动机（DFA）定义起始、符号、整数、小数点、指数等状态的转移"
+      - "处理科学计数法（'e' 或 'E'）前必须有数字，且其后也必须跟整数"
+      - "正确识别和排除多余的符号、空格或非法字符带来的干扰"
+
+  - id: "BE-TQ-100"
+    type: "technical"
+    question: "给定一个由整数数组表示的大整数，如何实现加一（Plus One）操作？"
+    tags: ["数组", "数学"]
+    difficulty: "easy"
+    source: "LeetCode CN"
+    key_points:
+      - "从数组末尾向前遍历，处理进位逻辑"
+      - "遇到非 9 数字直接加 1 并返回结果"
+      - "处理诸如 999 变为 1000 的极特殊情况（需在数组最前方插入新位 1）"
+
+  - id: "BE-TQ-101"
+    type: "technical"
+    question: "如何实现两个二进制字符串的相加（Add Binary）？"
+    tags: ["位运算", "数学", "字符串", "模拟"]
+    difficulty: "easy"
+    source: "LeetCode CN"
+    key_points:
+      - "双指针分别指向两个字符串的末尾，逐位相加并带上进位（carry）"
+      - "利用 sum % 2 得到当前位，sum / 2 得到下一次计算的进位"
+      - "最后不要忘记反转生成的字符串结果"
+
+  - id: "BE-TQ-102"
+    type: "technical"
+    question: "请讲解文本左右对齐（Text Justification）的排版算法。如何处理多余空格的均匀分配？"
+    tags: ["数组", "字符串", "模拟"]
+    difficulty: "hard"
+    source: "LeetCode CN"
+    key_points:
+      - "按行贪心放置单词，确定每一行能放入的最多单词数"
+      - "计算当前行的多余空格，并计算基础空格与额外需要分配的空格数"
+      - "处理最后一行的特殊左对齐规则，以及一行只有一个单词的情况"
+
+  - id: "BE-TQ-103"
+    type: "technical"
+    question: "在不使用内置库函数的情况下，如何求解 x 的平方根（整数部分）？"
+    tags: ["数学", "二分查找"]
+    difficulty: "easy"
+    source: "LeetCode CN"
+    key_points:
+      - "二分查找法：在 [0, x] 范围内查找满足 mid * mid <= x 的最大 mid"
+      - "（加分）牛顿迭代法：使用公式 xi = (xi + x/xi) / 2 进行快速收敛求近似解"
+      - "防范乘法过程中的整型溢出风险"
+
+  - id: "BE-TQ-104"
+    type: "technical"
+    question: "如何将一个 Unix 风格的绝对路径简化？（Simplify Path）"
+    tags: ["栈", "字符串"]
+    difficulty: "medium"
+    source: "LeetCode CN"
+    key_points:
+      - "按照 '/' 分割字符串，利用栈结构处理目录层级"
+      - "遇到 '.' 或空字符跳过，遇到 '..' 出栈（若栈非空）"
+      - "最终将栈内元素用 '/' 拼接，且头部需要保留一个 '/' "
+
+  - id: "BE-TQ-105"
+    type: "technical"
+    question: "什么是编辑距离（Edit Distance）？如何用动态规划计算将 word1 转换成 word2 所使用的最少操作数？"
+    tags: ["字符串", "动态规划"]
+    difficulty: "medium"
+    source: "LeetCode CN"
+    key_points:
+      - "定义 dp[i][j] 为 word1 前 i 个字符转换为 word2 前 j 个字符的最少步数"
+      - "状态转移：相等则 dp[i][j] = dp[i-1][j-1]，否则取 1 + min(插入, 删除, 替换)"
+      - "处理二维 DP 的边界条件（即空字符串变为目标字符串的操作数）"
+
+  - id: "BE-TQ-106"
+    type: "technical"
+    question: "给定一个矩阵，如果某个元素为 0，如何原地将其所在行和列全部清零？（Set Matrix Zeroes）"
+    tags: ["数组", "哈希表", "矩阵"]
+    difficulty: "medium"
+    source: "LeetCode CN"
+    key_points:
+      - "利用矩阵的第一行和第一列来记录当前行/列是否需要清零，以实现 O(1) 空间"
+      - "使用额外的两个布尔变量记录原本第一行和第一列中是否含有 0"
+      - "最后再根据标记更新内部元素，然后还原第一行和第一列"
+
+  - id: "BE-TQ-107"
+    type: "technical"
+    question: "如何在一个每行严格递增、且每行第一个整数大于前一行最后一个整数的二维矩阵中进行搜索？"
+    tags: ["数组", "二分查找", "矩阵"]
+    difficulty: "medium"
+    source: "LeetCode CN"
+    key_points:
+      - "由于矩阵全局有序，可将其视为一个长度为 m*n 的一维数组"
+      - "使用一维坐标向二维坐标的映射公式：row = mid / n, col = mid % n"
+      - "直接应用标准二分查找，时间复杂度 O(log(mn))"
+
+  - id: "BE-TQ-108"
+    type: "technical"
+    question: "著名的荷兰国旗问题：如何原地对包含红、白、蓝三种颜色的数组进行排序？（Sort Colors）"
+    tags: ["数组", "双指针", "排序"]
+    difficulty: "medium"
+    source: "LeetCode CN"
+    key_points:
+      - "使用双指针（p0 和 p2），p0 指向 0 的右边界，p2 指向 2 的左边界"
+      - "单次遍历数组（指针 i），遇到 0 交换到头部（p0++），遇到 2 交换到尾部（p2--）"
+      - "注意遇到 2 交换回来的数可能还是 2，此时 i 不能前进，需要再次判断"
+
+  - id: "BE-TQ-109"
+    type: "technical"
+    question: "如何寻找字符串中涵盖目标字符串所有字符的最小子串？（Minimum Window Substring）"
+    tags: ["哈希表", "字符串", "滑动窗口"]
+    difficulty: "hard"
+    source: "LeetCode CN"
+    key_points:
+      - "使用滑动窗口法（快慢指针）和 HashMap/数组 记录字符词频"
+      - "当窗口内包含了目标串的所有字符时，尝试右移左指针缩小窗口"
+      - "维护一个 valid 变量统计已匹配的字符种类数，判断窗口是否合法"
+
+  - id: "BE-TQ-110"
+    type: "technical"
+    question: "如何返回范围 [1, n] 中所有可能的 k 个数的组合？（Combinations）"
+    tags: ["回溯"]
+    difficulty: "medium"
+    source: "LeetCode CN"
+    key_points:
+      - "经典回溯算法架构，递归中传递 start 参数防止组合重复生成"
+      - "核心剪枝：若当前 path 长度加上剩余可选元素少于 k，直接返回（剪除无效枝干）"
+
+  - id: "BE-TQ-111"
+    type: "technical"
+    question: "如何求解一个整数数组（元素互不相同）的所有可能子集（幂集）？"
+    tags: ["位运算", "数组", "回溯"]
+    difficulty: "medium"
+    source: "LeetCode CN"
+    key_points:
+      - "回溯解法：每次递归有两个选择（选或不选当前元素）"
+      - "每次进入递归函数即收集当前 path（将每个节点视为一个子集）"
+      - "（加分）位运算解法：利用 0 到 2^n - 1 的二进制位掩码生成子集"
+
+  - id: "BE-TQ-112"
+    type: "technical"
+    question: "在二维网格中，如何搜索是否存在目标单词路径？（Word Search）"
+    tags: ["深度优先搜索", "数组", "字符串", "回溯", "矩阵"]
+    difficulty: "medium"
+    source: "LeetCode CN"
+    key_points:
+      - "双重循环遍历网格找到单词的首字母作为 DFS 的起点"
+      - "DFS 内部搜索上下左右四个方向，递归检查下一个字母"
+      - "状态重置与回溯：访问过的格子暂时标记为特殊字符（如 '#'），结束当前搜索路径后需复原"
+
+  - id: "BE-TQ-113"
+    type: "technical"
+    question: "给定有序数组，如何原地删除重复元素，使得每个元素最多出现两次？"
+    tags: ["数组", "双指针"]
+    difficulty: "medium"
+    source: "LeetCode CN"
+    key_points:
+      - "使用快慢指针，慢指针维护有效数组的长度"
+      - "因为允许最多重复两次，判断条件变为 `nums[fast] != nums[slow - 2]`"
+      - "符合条件时将 nums[fast] 的值赋给 nums[slow]，并双指针前移"
+
+  - id: "BE-TQ-114"
+    type: "technical"
+    question: "如果在旋转排序数组中允许有重复元素，该如何搜索目标值？时间复杂度有何变化？"
+    tags: ["数组", "二分查找"]
+    difficulty: "medium"
+    source: "LeetCode CN"
+    key_points:
+      - "当 `nums[left] == nums[mid] == nums[right]` 时，无法判断哪边是有序的"
+      - "此时采取策略 `left++` 和 `right--` 以缩小搜索范围"
+      - "最坏情况下的时间复杂度将退化为 O(N)"
+
+  - id: "BE-TQ-115"
+    type: "technical"
+    question: "如何删除排序链表中的所有重复节点，只留下原链表中没有重复出现过的数字？"
+    tags: ["链表", "双指针"]
+    difficulty: "medium"
+    source: "LeetCode CN"
+    key_points:
+      - "引入 Dummy Node，应对头部节点就需要被删除的情况"
+      - "判断 `cur.next` 和 `cur.next.next` 的值是否相等"
+      - "若相等，用内部循环跳过所有值相同的节点，并将 `cur.next` 指向新的非重复节点"
+
+  - id: "BE-TQ-116"
+    type: "technical"
+    question: "如何删除排序链表中的重复元素，使得每个元素仅出现一次？"
+    tags: ["链表"]
+    difficulty: "easy"
+    source: "LeetCode CN"
+    key_points:
+      - "从头节点开始遍历，比较当前节点与下一个节点的值"
+      - "若值相同，则直接修改 `cur.next = cur.next.next` 跳过重复项"
+      - "若不同，当前指针前移"
+
+  - id: "BE-TQ-117"
+    type: "technical"
+    question: "给定直方图的高度数组，如何求出直方图中最大的矩形面积？"
+    tags: ["栈", "数组", "单调栈"]
+    difficulty: "hard"
+    source: "LeetCode CN"
+    key_points:
+      - "利用单调递增栈记录元素的下标，寻找每个柱子左右两侧首个低于它的位置"
+      - "当遇到比栈顶元素低的柱子时，触发计算：弹出栈顶元素作为高，计算其可延伸的最大宽度"
+      - "数组首尾添加高度 0 的“哨兵”，简化边界处理逻辑"
+
+  - id: "BE-TQ-118"
+    type: "technical"
+    question: "给定一个只包含 0 和 1 的二维矩阵，如何找出只包含 1 的最大矩形面积？"
+    tags: ["栈", "数组", "动态规划", "矩阵", "单调栈"]
+    difficulty: "hard"
+    source: "LeetCode CN"
+    key_points:
+      - "此问题可转化为“柱状图中最大的矩形”问题"
+      - "以矩阵的每一行为底，更新从上向下的连续 1 的高度（直方图）"
+      - "对每一层生成的高度数组应用单调栈算法计算该层最大面积并维护全局最大值"
+
+  - id: "BE-TQ-119"
+    type: "technical"
+    question: "如何对链表进行分隔（Partition List），使得所有小于 x 的节点都排在大于或等于 x 的节点之前，且相对顺序不变？"
+    tags: ["链表", "双指针"]
+    difficulty: "medium"
+    source: "LeetCode CN"
+    key_points:
+      - "创建两个 Dummy Node，分别作为“小链表”和“大链表”的头"
+      - "遍历原链表，按值将节点追加到对应的新链表中"
+      - "遍历结束后，将小链表的尾连接到大链表的头，并切断大链表尾部的引用（避免环）"
+
+  - id: "BE-TQ-120"
+    type: "technical"
+    question: "请解释扰乱字符串（Scramble String）的判定方法。如何判断 s1 是否是 s2 的扰乱字符串？"
+    tags: ["字符串", "动态规划"]
+    difficulty: "hard"
+    source: "LeetCode CN"
+    key_points:
+      - "采用记忆化搜索或三维动态规划解题"
+      - "状态定义 dp[i][j][len]：s1 从 i 开始，s2 从 j 开始，长度为 len 的子串是否互为扰乱串"
+      - "剪枝优化：如果两个子串中的字符频次不一致，直接判定为 false"
+
+  - id: "BE-TQ-121"
+    type: "technical"
+    question: "如何原地合并两个有序数组（Merge Sorted Array），其中 nums1 有足够的空间保存 nums2 的元素？"
+    tags: ["数组", "双指针", "排序"]
+    difficulty: "easy"
+    source: "LeetCode CN"
+    key_points:
+      - "采用逆向双指针法，从 nums1 数组的末尾（m+n-1）开始向头部填充"
+      - "比较 nums1[m-1] 和 nums2[n-1]，较大的数放入末尾并移动对应指针"
+      - "单独处理 nums2 中剩余元素尚未复制完的边界情况"
+
+  - id: "BE-TQ-122"
+    type: "technical"
+    question: "如何生成 n 位的格雷编码序列（Gray Code）？要求相邻两个数二进制仅有一位不同。"
+    tags: ["位运算", "数学", "回溯"]
+    difficulty: "medium"
+    source: "LeetCode CN"
+    key_points:
+      - "递推公式法：n 位的格雷码由 n-1 位格雷码加上 n-1 位格雷码的逆序首位补 1 生成"
+      - "位运算直接生成法：利用公式 G(i) = i ^ (i >> 1) 获得第 i 个格雷码"
+
+  - id: "BE-TQ-123"
+    type: "technical"
+    question: "当集合中包含重复元素时，如何求出其所有可能的不重复子集（Subsets II）？"
+    tags: ["位运算", "数组", "回溯"]
+    difficulty: "medium"
+    source: "LeetCode CN"
+    key_points:
+      - "首先对原始数组进行排序以将相同的数字放在一起"
+      - "在回溯过程中加入去重剪枝：`if (i > start && nums[i] == nums[i-1]) continue;`"
+      - "确保同一层级不进行重复的选择，但允许在不同层级选入相同的数"
+
+  - id: "BE-TQ-124"
+    type: "technical"
+    question: "包含数字的字符串可以通过字母的 1-26 映射进行解码。如何计算一条消息的总解码方法数？"
+    tags: ["字符串", "动态规划"]
+    difficulty: "medium"
+    source: "LeetCode CN"
+    key_points:
+      - "动态规划方程：如果当前位可以单独解码，则加上 dp[i-1]；如果与前一位结合可以解码（范围在 10-26），加上 dp[i-2]"
+      - "前导零（'0'）的特殊处理：若首字符为 '0' 直接返回 0"
+      - "状态转移可以优化为常量级空间（只需记录前两个状态）"
+
+  - id: "BE-TQ-125"
+    type: "technical"
+    question: "如何反转链表中指定区间 [left, right] 的节点？（要求只遍历一次）"
+    tags: ["链表"]
+    difficulty: "medium"
+    source: "LeetCode CN"
+    key_points:
+      - "使用 Dummy Node 应对从第一个节点就开始反转的情况"
+      - "寻找反转区间前驱节点 pre，使用头插法将区间内的节点依次前置"
+      - "或者利用三个指针边遍历边反转指针域，最后重新连接首尾部分"
+
+  - id: "BE-TQ-126"
+    type: "technical"
+    question: "给定一个只包含数字的字符串，如何复原它所有可能的合法 IP 地址？"
+    tags: ["字符串", "回溯"]
+    difficulty: "medium"
+    source: "LeetCode CN"
+    key_points:
+      - "经典回溯算法，深度固定为 4（IP 地址的 4 个段）"
+      - "验证截取的数字合法性：不能含有前导 0，且数字范围在 0-255 之间"
+      - "剪枝：如果剩余字符串长度已经无法满足剩余段数的要求（每段最长3个字符），则提前回溯"
+
+  - id: "BE-TQ-127"
+    type: "technical"
+    question: "请说明二叉树中序遍历（Inorder Traversal）的递归与迭代（非递归）实现方式。"
+    tags: ["栈", "树", "深度优先搜索", "二叉树"]
+    difficulty: "easy"
+    source: "LeetCode CN"
+    key_points:
+      - "递归法：依次遍历左子树 -> 访问根节点 -> 遍历右子树"
+      - "迭代法：维护一个栈，先将所有左子节点持续压栈，直到为空"
+      - "弹出栈顶节点并访问它，然后将指针移向其右子节点，重复此过程"
+
+  - id: "BE-TQ-128"
+    type: "technical"
+    question: "如何生成所有由 1 到 n 组成的不同的二叉搜索树（BST）？"
+    tags: ["树", "二叉搜索树", "动态规划", "回溯", "二叉树"]
+    difficulty: "medium"
+    source: "LeetCode CN"
+    key_points:
+      - "以 i 为根节点划分左右子树，左子树的数字在 [1, i-1]，右子树在 [i+1, n]"
+      - "递归调用求解左右子树的集合，并使用双重循环进行全排列组合构建当前子树"
+      - "对返回结果可增加记忆化搜索优化，避免重复计算相同范围的子树集合"
+
+  - id: "BE-TQ-129"
+    type: "technical"
+    question: "不要求生成具体的树，仅计算 1 到 n 节点可以构成多少种不同的二叉搜索树？"
+    tags: ["树", "二叉搜索树", "数学", "动态规划", "二叉树"]
+    difficulty: "medium"
+    source: "LeetCode CN"
+    key_points:
+      - "利用动态规划或卡特兰数（Catalan Number）求解"
+      - "状态转移方程：G(n) = Σ (G(i-1) * G(n-i))，其中 1 <= i <= n"
+      - "明确边界条件 G(0) = 1, G(1) = 1"
+
+  - id: "BE-TQ-130"
+    type: "technical"
+    question: "如何判断字符串 s3 是否由 s1 和 s2 交错组成？（Interleaving String）"
+    tags: ["字符串", "动态规划"]
+    difficulty: "medium"
+    source: "LeetCode CN"
+    key_points:
+      - "长度校验：若 len(s1) + len(s2) != len(s3) 则直接返回 false"
+      - "二维 DP：dp[i][j] 表示 s1 的前 i 个字符和 s2 的前 j 个字符能否构成 s3 的前 i+j 个字符"
+      - "状态转移取决于：(dp[i-1][j] && s1[i] == s3[i+j]) 或者 (dp[i][j-1] && s2[j] == s3[i+j])"
+
+  - id: "BE-TQ-131"
+    type: "technical"
+    question: "如何验证一棵二叉树是否是有效的二叉搜索树（BST）？"
+    tags: ["树", "深度优先搜索", "二叉搜索树", "二叉树"]
+    difficulty: "medium"
+    source: "LeetCode CN"
+    key_points:
+      - "不能单纯只比较左右孩子，需要保证左子树所有节点都小于根，右子树所有节点都大于根"
+      - "DFS 区间递归法：向下传递开区间的上下界 (min, max) 并进行有效性校验"
+      - "中序遍历法：利用 BST 的中序遍历序列必定是严格递增的特性进行判定"
+
+  - id: "BE-TQ-132"
+    type: "technical"
+    question: "如果二叉搜索树中有两个节点的位置被错误交换了，如何在 O(1) 空间下恢复这棵树？"
+    tags: ["树", "深度优先搜索", "二叉搜索树", "二叉树"]
+    difficulty: "medium"
+    source: "LeetCode CN"
+    key_points:
+      - "利用 BST 中序遍历应为递增序列的特点，查找“降序对”"
+      - "第一对降序：较大的数是错误的节点之一；最后一对降序：较小的数是错误的节点之二"
+      - "要达到真正的 O(1) 额外空间，需使用 Morris 遍历算法实现中序遍历"
+
+  - id: "BE-TQ-133"
+    type: "technical"
+    question: "如何判断两棵二叉树是否结构相同且节点值均一致？（Same Tree）"
+    tags: ["树", "深度优先搜索", "广度优先搜索", "二叉树"]
+    difficulty: "easy"
+    source: "LeetCode CN"
+    key_points:
+      - "同时递归遍历两棵树，对比当前节点值以及左右子节点树"
+      - "终止条件：都为空返回 true；其中一个为空或者值不相等返回 false"
+      - "利用 DFS 或 BFS 进行同步校验均可"
+
+  - id: "FE-TQ-AL-001"
+    type: "technical"
+    question: "给定一系列三维的点和三维的线段，请计算每个点到这些线段的最短距离。如果数据量很大，你会如何进行优化？（如使用降采样等算法）"
+    tags:
+      - "算法"
+      - "计算几何"
+      - "性能优化"
+    difficulty: "hard"
+    source: "阿里巴巴"
+    key_points:
+      - "正确给出三维空间中点到线段的最短距离计算几何方法或公式"
+      - "能够分析暴力求解算法的时间复杂度（O(M*N)）"
+      - "提出合理的优化策略，如空间划分（八叉树、KD树）以减少不必要的计算，或在允许精度损失的情况下说明降采样的思路"
+
+  - id: "FE-TQ-AL-002"
+    type: "technical"
+    question: "请手写代码实现求一个数的三次方根，要求使用牛顿迭代法，并保证特定的计算精度。"
+    tags:
+      - "算法"
+      - "数学原理"
+      - "代码实现"
+    difficulty: "medium"
+    source: "阿里巴巴"
+    key_points:
+      - "正确写出求三次方根的牛顿迭代法状态转移方程：x_{n+1} = x_n - (x_n^3 - a) / (3 * x_n^2)"
+      - "正确设置浮点数精度限制作为循环终止条件（如 abs(x^3 - a) < 1e-7）"
+      - "处理好边界条件，如负数输入、0以及区间(0, 1)内的数值"
+
+  - id: "FE-TQ-AL-003"
+    type: "technical"
+    question: "请说一下 map 和 unordered_map 的底层数据结构和主要区别是什么？另外，请介绍一下智能指针的作用和常见分类。"
+    tags:
+      - "数据结构"
+      - "底层原理"
+      - "内存管理"
+    difficulty: "medium"
+    source: "阿里巴巴"
+    key_points:
+      - "指出 map 基于红黑树实现，元素有序，增删改查时间复杂度为 O(logN)"
+      - "指出 unordered_map 基于哈希表实现，元素无序，增删改查平均时间复杂度为 O(1)"
+      - "解释智能指针用于自动管理堆内存，防止内存泄漏。并列举 shared_ptr（引用计数）、unique_ptr（独占所有权）和 weak_ptr（解决循环引用）等常见类型"
+
+  - id: "FE-TQ-AL-004"
+    type: "technical"
+    question: "给定一系列 double 类型的浮点数，如何在一个 O(n) 的时间复杂度内对其进行求和，并尽可能减少精度损失（即大数吃小数问题）？请解释 Kahan 求和算法的原理。"
+    tags:
+      - "算法"
+      - "浮点数精度"
+      - "Kahan求和"
+    difficulty: "hard"
+    source: "阿里巴巴"
+    key_points:
+      - "分析直接相加会导致的精度丢失问题（大数加小数时产生的浮点数截断效应）"
+      - "解释 Kahan 求和算法的核心原理：引入一个专门的变量（补偿变量）来累积并记录低位丢失的舍入误差"
+      - "说明在后续计算中如何将保存的误差重新加回，从而实现 O(n) 复杂度下的高精度求和"
+
+  - id: "FE-TQ-AL-005"
+    type: "technical"
+    question: "请手写代码实现括号匹配功能。"
+    tags: ["算法", "栈", "手撕代码"]
+    difficulty: "easy"
+    source: "阿里巴巴"
+    key_points:
+      - "使用栈（Stack）数据结构"
+      - "遇到左括号入栈，遇到右括号检查栈顶是否匹配"
+      - "最终栈需为空，同时处理非法字符或非对称边界条件"
+
+  - id: "FE-TQ-AL-006"
+    type: "technical"
+    question: "请介绍一下 TCP 协议的三次握手和四次挥手过程，为什么断开连接需要进行四次挥手？"
+    tags: ["计算机网络", "TCP"]
+    difficulty: "medium"
+    source: "阿里巴巴"
+    key_points:
+      - "准确描述三次握手（SYN, SYN-ACK, ACK）建立连接的步骤"
+      - "准确描述四次挥手（FIN, ACK, FIN, ACK）断开连接的步骤"
+      - "四次挥手是因为 TCP 是全双工通信，服务端收到 FIN 仅代表客户端不再发送数据，但服务端可能仍有数据需要发送，故需要分两次关闭"
+
+  - id: "FE-TQ-AL-007"
+    type: "technical"
+    question: "TCP 协议在完成四次挥手后是直接断开连接吗？如果不是，需要等待多久才断开，为什么？"
+    tags: ["计算机网络", "TCP", "TIME_WAIT"]
+    difficulty: "medium"
+    source: "阿里巴巴"
+    key_points:
+      - "不是直接断开，主动断开方需进入 TIME_WAIT 状态"
+      - "等待时间为 2MSL（Maximum Segment Lifetime，最大报文段生存时间）"
+      - "原因：保证最后一个 ACK 报文能到达对方；防止旧连接的迟到报文段被新连接接收"
+
+  - id: "FE-TQ-AL-008"
+    type: "technical"
+    question: "有一个包含 n+1 个整数的数组，数字范围在 1 到 n 之间，已知其中只有一个重复的数字。如何在 O(n) 时间复杂度和 O(1) 空间复杂度内找出这个重复的数字？"
+    tags: ["算法", "快慢指针", "链表成环"]
+    difficulty: "hard"
+    source: "阿里巴巴"
+    key_points:
+      - "不能修改原数组则不能用原地哈希交换法"
+      - "最优解是将其转化为链表找环入口问题（Floyd 判圈算法），利用快慢指针找环的起点"
+
+  - id: "FE-TQ-AL-009"
+    type: "technical"
+    question: "给定一支股票 n 天的价格序列，根据 T+1 交易规则，最多进行两次买卖（卖出当天不能买入），如何求得最大盈利？"
+    tags: ["算法", "动态规划"]
+    difficulty: "hard"
+    source: "阿里巴巴"
+    key_points:
+      - "定义四个状态变量：第一次买入后利润、第一次卖出后利润、第二次买入后利润、第二次卖出后利润"
+      - "清晰推导状态转移方程并维护最大值"
+
+  - id: "FE-TQ-AL-010"
+    type: "technical"
+    question: "请介绍一下计算机网络的七层 OSI 模型，以及为什么要进行网络分层？"
+    tags: ["计算机网络", "OSI模型"]
+    difficulty: "easy"
+    source: "阿里巴巴"
+    key_points:
+      - "从下至上列举：物理层、数据链路层、网络层、传输层、会话层、表示层、应用层"
+      - "分层目的：降低系统复杂度、各层解耦易于维护和标准化、促进厂商间的兼容性"
+
+  - id: "FE-TQ-AL-011"
+    type: "technical"
+    question: "给定一个整数序列，如何求其最长上升子序列（LIS）的长度并输出该子序列？"
+    tags: ["算法", "动态规划", "二分查找"]
+    difficulty: "hard"
+    source: "阿里巴巴"
+    key_points:
+      - "掌握 O(n^2) 的动态规划解法和 O(n log n) 的贪心+二分解法"
+      - "输出具体子序列需额外维护一个前驱节点数组或在二分覆盖时记录路径"
+
+  - id: "FE-TQ-AL-012"
+    type: "technical"
+    question: "请简述一下操作系统中进程间通信（IPC）的常见方式有哪些？"
+    tags: ["操作系统", "进程间通信"]
+    difficulty: "medium"
+    source: "阿里巴巴"
+    key_points:
+      - "列举常见方式：管道（匿名/命名）、消息队列、共享内存、信号量、信号、Socket"
+      - "能说出共享内存是最快的IPC方式，并知晓需要配合信号量解决同步问题"
+
+  - id: "FE-TQ-AL-013"
+    type: "technical"
+    question: "请简述一下锁机制的底层实现原理是什么？"
+    tags: ["操作系统", "并发编程", "底层原理"]
+    difficulty: "hard"
+    source: "阿里巴巴"
+    key_points:
+      - "依赖底层硬件提供的原子指令（如 CAS - Compare And Swap, Test-And-Set）"
+      - "操作系统层面的互斥量（Mutex）与自旋锁（Spinlock）的实现差异"
+
+  - id: "FE-TQ-AL-014"
+    type: "technical"
+    question: "如果你计划从事 Agent 相关的开发工作，你认为需要掌握哪些核心技术？"
+    tags: ["AI Agent", "技术栈", "大模型"]
+    difficulty: "medium"
+    source: "阿里巴巴"
+    key_points:
+      - "LLM基础交互（Prompt Engineering, OpenAI API 接入等）"
+      - "检索增强生成（RAG）、向量数据库（如 Milvus, Pinecone）"
+      - "工具调用与规划编排框架（如 LangChain, Semantic Kernel, AutoGPT）"
+
+  - id: "FE-TQ-AL-015"
+    type: "technical"
+    question: "请解释为什么 Redis 比其他传统关系型数据库快？为什么将数据加载到内存中的读写速度远高于硬盘？"
+    tags: ["Redis", "性能优化", "存储介质"]
+    difficulty: "medium"
+    source: "阿里巴巴"
+    key_points:
+      - "Redis 纯内存操作，单线程配合多路复用 I/O 模型避免了上下文切换开销，数据结构经过高度优化"
+      - "内存访问是电信号传输，速度在纳秒级；磁盘访问（尤其是机械硬盘）涉及寻道和旋转的机械运动，通常在毫秒级，两者存在数量级差距"
+
+  - id: "FE-TQ-AL-016"
+    type: "technical"
+    question: "请详细解释一下什么是操作系统的上下文切换，它的具体作用和过程是怎样的？"
+    tags: ["操作系统", "上下文切换", "进程调度"]
+    difficulty: "medium"
+    source: "阿里巴巴"
+    key_points:
+      - "定义：CPU 从执行一个进程/线程切换到执行另一个进程/线程的过程"
+      - "过程：保存当前任务的状态（寄存器、程序计数器、内存映射表等）到 PCB/TCB，然后加载下一个任务的上下文，恢复执行"
+      - "作用与开销：实现并发/多任务处理，但切换过程会消耗 CPU 资源"
+
+  - id: "FE-TQ-AL-017"
+    type: "technical"
+    question: "请手写实现一个 LRU 缓存，并增加一个特性：缓存项在 X 秒后能够自动过期。"
+    tags: ["数据结构", "LRU", "手撕代码"]
+    difficulty: "hard"
+    source: "阿里巴巴"
+    key_points:
+      - "基础 LRU 结构：哈希表 + 双向链表保证 O(1) 操作"
+      - "过期机制处理：在 Node 中记录过期时间戳，读取时判断（惰性删除），或辅以定时器/后台清理逻辑"
+
+  - id: "FE-TQ-AL-018"
+    type: "technical"
+    question: "请解释一下 Redisson 的看门狗（Watch Dog）机制的原理及其在分布式锁中的作用。"
+    tags: ["分布式锁", "Redis", "Redisson"]
+    difficulty: "medium"
+    source: "阿里巴巴"
+    key_points:
+      - "解决业务未执行完但锁已经超时的风险"
+      - "加锁成功后开启一个后台线程（Watch Dog），每隔一段时间（默认10秒）检查并给锁自动续期"
+
+  - id: "FE-TQ-AL-019"
+    type: "technical"
+    question: "在并发环境下，分析代码中有哪些部分是线程不安全的，并给出解决或优化方案。"
+    tags: ["并发编程", "线程安全", "代码分析"]
+    difficulty: "medium"
+    source: "阿里巴巴"
+    key_points:
+      - "识别出全局变量的非原子性读写操作（如 i++）"
+      - "提出解决方案：加锁（Synchronized/ReentrantLock）、使用原子类（AtomicInteger）、或改用 ThreadLocal 隔离"
+
+  - id: "FE-TQ-AL-020"
+    type: "technical"
+    question: "在日常开发中，你是如何结合 AI Coding 工具（如 GitHub Copilot、ChatGPT）来提升工作效率的？"
+    tags: ["AI工具", "研发效能"]
+    difficulty: "easy"
+    source: "阿里巴巴"
+    key_points:
+      - "自动生成基础代码模板、样板代码或注释"
+      - "利用 AI 解释复杂正则、补全单元测试，或辅助排查疑难报错日志"
+
+  - id: "FE-TQ-AL-021"
+    type: "technical"
+    question: "请简述你了解的 AI Agent 中的 Tool Calling（工具调用）机制是怎样运作的？"
+    tags: ["AI Agent", "Tool Calling", "大模型"]
+    difficulty: "medium"
+    source: "阿里巴巴"
+    key_points:
+      - "通过 Prompt 将可用工具的描述（JSON Schema）和参数规范告知 LLM"
+      - "LLM 决定是否需要调用工具，并生成特定格式的参数输出"
+      - "业务系统解析参数，执行本地函数/API，再将执行结果送回 LLM 进行最终的自然语言总结"
+
+  - id: "FE-TQ-AL-022"
+    type: "technical"
+    question: "请详细说明 HTTPS 的工作原理，以及它与 HTTP 的主要区别是什么？"
+    tags: ["计算机网络", "HTTPS", "网络安全"]
+    difficulty: "medium"
+    source: "阿里巴巴"
+    key_points:
+      - "主要区别：HTTP明文传输不安全，HTTPS在TCP和HTTP层之间加入了SSL/TLS协议对数据加密"
+      - "工作原理：非对称加密协商对称加密密钥（握手阶段），之后使用对称加密传输数据；涉及CA证书校验服务端身份"
+
+  - id: "FE-TQ-AL-023"
+    type: "technical"
+    question: "一个完整的 AI Agent 智能体架构通常包含哪些核心组成部分？"
+    tags: ["AI Agent", "架构设计", "大模型"]
+    difficulty: "medium"
+    source: "阿里巴巴"
+    key_points:
+      - "大脑（Brain）：大模型基座，负责理解和决策"
+      - "规划（Planning）：任务拆解、反思和演进能力"
+      - "记忆（Memory）：短期和长期上下文状态"
+      - "工具（Tools）：连接物理/数字世界的执行抓手"
+
+  - id: "FE-TQ-AL-024"
+    type: "technical"
+    question: "在数据库中，什么是覆盖索引（索引覆盖）？它有什么性能优势？"
+    tags: ["数据库", "MySQL", "索引优化"]
+    difficulty: "medium"
+    source: "阿里巴巴"
+    key_points:
+      - "概念：查询所需的所有字段都能在非聚簇索引树（辅助索引树）上直接获取到，无需回表查询聚簇索引数据"
+      - "优势：极大地减少了磁盘 I/O 操作，提升查询速度"
+
+  - id: "FE-TQ-AL-025"
+    type: "technical"
+    question: "请手写实现或描述如何解决链表两数相加的问题。"
+    tags: ["算法", "链表", "大数相加"]
+    difficulty: "easy"
+    source: "阿里巴巴"
+    key_points:
+      - "同时遍历两个链表，处理对应位数值相加及进位逻辑"
+      - "处理边界条件：其中一个链表较长，或最后还有进位的情况（需额外生成新节点）"
+
+  - id: "FE-TQ-AL-026"
+    type: "technical"
+    question: "请阐述一下 Agent 和 LLM（大型语言模型）之间的本质区别和联系是什么？"
+    tags: ["AI Agent", "大模型概念", "对比分析"]
+    difficulty: "medium"
+    source: "阿里巴巴"
+    key_points:
+      - "LLM是基于统计和自回归的文本生成引擎，属于被动回答问题的大脑"
+      - "Agent 是以 LLM 为核心，具有自主规划、外部环境感知与交互执行能力的智能体系统，它包裹了记忆和工具链"
+
+  - id: "FE-TQ-AL-027"
+    type: "technical"
+    question: "请列举并解释 MySQL 中的四种事务隔离级别，以及它们分别解决了哪些并发问题？"
+    tags: ["数据库", "MySQL", "事务"]
+    difficulty: "medium"
+    source: "阿里巴巴"
+    key_points:
+      - "读未提交（RU）：有脏读、不可重复读、幻读问题"
+      - "读已提交（RC）：解决脏读，仍有不可重复读问题"
+      - "可重复读（RR）：MySQL默认级别，通过 MVCC 解决不可重复读，部分解决幻读"
+      - "串行化（Serializable）：解决所有问题，但性能最差"
+
+  - id: "FE-TQ-AL-028"
+    type: "technical"
+    question: "在搜索引擎或 RAG 系统中，向量检索（Vector Search）和传统的关键词检索有何本质区别？"
+    tags: ["向量检索", "大模型", "检索技术"]
+    difficulty: "medium"
+    source: "阿里巴巴"
+    key_points:
+      - "传统检索：基于 BM25 或倒排索引的字面精确匹配，无法理解语义"
+      - "向量检索：通过 Embedding 将文本映射为多维空间向量，通过计算相似度（如余弦相似度）进行泛化和模糊语义匹配"
+
+  - id: "FE-TQ-AL-029"
+    type: "technical"
+    question: "请解释什么是协程（Coroutine）？它与线程（Thread）的主要区别和优势在哪里？"
+    tags: ["操作系统", "并发模型", "协程"]
+    difficulty: "medium"
+    source: "阿里巴巴"
+    key_points:
+      - "协程是用户态的轻量级线程，调度由开发者在代码层面控制（而非操作系统内核）"
+      - "区别/优势：极低的上下文切换开销，占用内存极小，无需复杂的锁机制即可处理高并发 I/O 密集型任务"
+
+  - id: "FE-TQ-AL-030"
+    type: "technical"
+    question: "请简述操作系统中进程和线程的区别。在实际开发中，什么场景下应该使用多进程，什么场景下应该使用多线程？"
+    tags: ["操作系统", "进程与线程"]
+    difficulty: "medium"
+    source: "阿里巴巴"
+    key_points:
+      - "进程是资源分配的最小单位（相互隔离），线程是CPU调度的最小单位（共享进程资源）"
+      - "多进程：适合高稳定性、隔离度要求高或 CPU 密集型任务"
+      - "多线程：适合 I/O 密集型、且需频繁共享数据通信的场景"
+
+  - id: "FE-TQ-AL-031"
+    type: "technical"
+    question: "什么是死锁？产生死锁的四个必要条件分别是什么？"
+    tags: ["操作系统", "死锁", "并发控制"]
+    difficulty: "easy"
+    source: "阿里巴巴"
+    key_points:
+      - "死锁是两个或多个进程因争夺资源而造成互相等待的僵局"
+      - "四条件：互斥条件、请求与保持条件、不剥夺条件、环路等待条件"
+
+  - id: "FE-TQ-AL-032"
+    type: "technical"
+    question: "如果两个进程之间相互访问共享资源，可能会出现哪些问题？该如何避免？"
+    tags: ["操作系统", "竞态条件", "同步机制"]
+    difficulty: "medium"
+    source: "阿里巴巴"
+    key_points:
+      - "出现问题：竞态条件（Race Condition）、数据不一致、死锁"
+      - "避免方法：引入同步互斥机制（如信号量、互斥锁），确保对共享资源的访问是原子的"
+
+  - id: "FE-TQ-AL-033"
+    type: "technical"
+    question: "请实现求字符串的无重复字符的最长子串长度，并详细解释你所使用算法的原理（例如滑动窗口）。"
+    tags: ["算法", "滑动窗口", "字符串"]
+    difficulty: "medium"
+    source: "阿里巴巴"
+    key_points:
+      - "使用滑动窗口算法维护一个无重复字符的区间"
+      - "结合哈希表（或数组）记录字符出现的位置，当遇到重复字符时，快速跳跃更新左窗口指针位置"
+
+  - id: "FE-TQ-AL-034"
+    type: "technical"
+    question: "请简述垃圾回收机制。在带自动内存管理（如 Java/V8）的环境中，是否还会出现内存泄漏？什么情况下会发生？"
+    tags: ["JavaScript", "垃圾回收", "内存泄露"]
+    difficulty: "medium"
+    source: "阿里巴巴"
+    key_points:
+      - "垃圾回收核心是标记清除（可达性分析）算法，回收失去引用的对象"
+      - "仍会出现泄漏：例如闭包持有未释放资源、未清理的定时器/事件监听器、被全局变量长久引用的对象"
+
+  - id: "FE-TQ-AL-035"
+    type: "technical"
+    question: "请简述直接偏好优化（DPO, Direct Preference Optimization）的原理，并写出其核心损失函数公式。"
+    tags: ["大模型", "DPO", "对齐技术"]
+    difficulty: "hard"
+    source: "阿里巴巴"
+    key_points:
+      - "原理：绕过传统的 RLHF 奖励模型训练，直接通过隐式奖励优化语言模型，使其偏好人类选择的数据"
+      - "了解损失函数是基于成对偏好数据构建的交叉熵损失"
+
+  - id: "FE-TQ-AL-036"
+    type: "technical"
+    question: "在你的项目中，为什么会选择在重排（Rerank）阶段引入生成式模型（Generative Model）？"
+    tags: ["推荐系统", "重排", "模型架构"]
+    difficulty: "hard"
+    source: "阿里巴巴"
+    key_points:
+      - "传统判别式模型难以捕捉复杂的长序列或全局交叉特征"
+      - "生成式模型能够通过自注意力机制更好地进行上下文建模，生成更优的列表排列"
+
+  - id: "FE-TQ-AL-037"
+    type: "technical"
+    question: "请手写实现 Transformer 的核心结构（如 Multi-Head Attention），并计算其计算量（FLOPs）和内存开销。"
+    tags: ["深度学习", "Transformer", "模型算力"]
+    difficulty: "hard"
+    source: "阿里巴巴"
+    key_points:
+      - "正确实现 Q, K, V 的线性映射，Scaled Dot-Product 计算及 Softmax"
+      - "清楚 Attention 计算复杂度 O(N^2 * d) 和内存占用情况"
+
+  - id: "FE-TQ-AL-038"
+    type: "technical"
+    question: "请详细解释一下 Beam Search 算法的原理及其在序列生成任务中的执行过程。"
+    tags: ["算法", "大模型", "Beam Search"]
+    difficulty: "medium"
+    source: "阿里巴巴"
+    key_points:
+      - "Beam Search 是一种启发式图搜索算法，是对贪心搜索的改进"
+      - "每一步保留概率最高的 top-k（Beam Size）个局部最优序列进行扩展，最终选择概率乘积最高的一条路径"
+
+  - id: "FE-TQ-AL-039"
+    type: "technical"
+    question: "请谈谈你对当前大模型前沿技术的了解程度，以及你在强化学习领域的知识积累。"
+    tags: ["大模型前沿", "强化学习", "技术广度"]
+    difficulty: "medium"
+    source: "阿里巴巴"
+    key_points:
+      - "能提及主流模型架构、长文本处理（如 RoPE 扩展）、MoE 等前沿技术"
+      - "熟悉强化学习基础概念（Actor-Critic, 奖励函数等）"
+
+  - id: "FE-TQ-AL-040"
+    type: "technical"
+    question: "请问你了解 GRPO（Group Relative Policy Optimization）吗？它主要解决什么问题？"
+    tags: ["大模型", "强化学习算法", "前沿技术"]
+    difficulty: "hard"
+    source: "阿里巴巴"
+    key_points:
+      - "GRPO 是一种无需额外奖励模型或更节省显存的强化学习优化方法"
+      - "通过计算同组内生成的多个序列的相对奖励来进行策略优化"
+
+  - id: "FE-TQ-AL-041"
+    type: "technical"
+    question: "在 JavaScript 中，如何准确判断数据类型？请解释 typeof、instanceof 以及 Object.prototype.toString.call() 的底层原理和各自的局限性。"
+    tags: ["JavaScript", "类型判断", "底层原理"]
+    difficulty: "medium"
+    source: "阿里巴巴"
+    key_points:
+      - "typeof: 底层按机器码前几位判断，null 的机器码全为0故误判为 object，主要用于基本类型判断"
+      - "instanceof: 基于原型链查找判断引用类型，跨 iframe 环境会失效"
+      - "Object.prototype.toString.call(): 最准确的方法，通过获取引擎内部对象的 [[Class]] 属性进行判断"
+
+  - id: "FE-TQ-AL-042"
+    type: "technical"
+    question: "请列举 Vue 3 中的组件间通信方式。详细说明 props 和 emit 的使用场景，以及 Pinia 在状态管理中的优势。"
+    tags: ["Vue", "组件通信", "Pinia"]
+    difficulty: "medium"
+    source: "阿里巴巴"
+    key_points:
+      - "通信方式：props/emit, provide/inject, 状态管理(Pinia/Vuex), 甚至 ref 拿实例"
+      - "Pinia优势：废弃了 mutations 简化操作，全面拥抱 TypeScript 类型推断，体积更轻量"
+
+  - id: "FE-TQ-AL-043"
+    type: "technical"
+    question: "请总结一下 JavaScript 中 this 的指向绑定规则（如默认绑定、隐式绑定、显式绑定、new 绑定和箭头函数），并说明在不同场景下的表现。"
+    tags: ["JavaScript", "this机制", "前端基础"]
+    difficulty: "medium"
+    source: "阿里巴巴"
+    key_points:
+      - "明确优先级：new绑定 > 显式绑定(call/apply/bind) > 隐式绑定(obj.func()) > 默认绑定(严格模式下undefined)"
+      - "箭头函数的 this 是静态词法作用域，在定义时外层上下文的 this 就确定了，不可修改"
+
+  - id: "FE-TQ-AL-044"
+    type: "technical"
+    question: "请详细对比 Cookie、LocalStorage 和 SessionStorage 之间的区别，包括它们的生命周期、作用域以及存储容量大小限制。"
+    tags: ["前端工程化", "浏览器存储", "网络协议"]
+    difficulty: "easy"
+    source: "阿里巴巴"
+    key_points:
+      - "容量：Cookie 约 4KB，WebStorage 通常为 5MB"
+      - "生命周期：Cookie 由 Expires/Max-Age 决定；Local 永久有效直至手动清除；Session 在当前会话标签页关闭后失效"
+      - "与服务端的交互：Cookie 会被自动带入请求头，影响性能且有 CSRF 风险，WebStorage 仅保存在客户端"
+
+  - id: "FE-TQ-AL-045"
+    type: "technical"
+    question: "什么是事件委托（Event Delegation）？它的底层实现原理是什么，使用事件委托有哪些好处？"
+    tags: ["JavaScript", "DOM事件", "前端优化"]
+    difficulty: "medium"
+    source: "阿里巴巴"
+    key_points:
+      - "原理：利用浏览器的事件冒泡机制，将子元素的事件监听绑定到父容器上，通过 e.target 判断触发源"
+      - "优势：极大地减少了内存消耗（无需给每个子节点绑事件），同时方便动态增删子节点而无需重新绑定事件"
+
+  - id: "FE-TQ-AL-046"
+    type: "technical"
+    question: "请深入讲解一下 Vue 3 响应式系统中 Proxy 的实现原理，并详细说明 track（依赖收集）、trigger（派发更新）和 effect 的工作机制。"
+    tags: ["Vue3原理", "响应式", "前端源码"]
+    difficulty: "hard"
+    source: "阿里巴巴"
+    key_points:
+      - "利用 ES6 Proxy 拦截对象的 getter/setter，并利用 Reflect 保证 this 指向正确"
+      - "在 getter 中调用 track 收集当前 activeEffect，建立 target -> key -> dep(Set) 的依赖图谱"
+      - "在 setter 中调用 trigger 取出 dep 中对应的 effects 执行更新"
+
+  - id: "FE-TQ-AL-047"
+    type: "technical"
+    question: "日常学习中，是否有阅读开源项目源码的习惯（如前沿AI工具源码、前端核心框架源码等）？你从中学习到了哪些架构思想或优秀的代码规范？"
+    tags: 
+      - "源码阅读"
+      - "技术视野"
+      - "工程化"
+    difficulty: "hard"
+    source: "通用"
+    key_points:
+      - "能清晰列举分析过的开源项目，并理解其核心解决的技术痛点"
+      - "能提炼其中的优秀设计模式、模块拆分思路或性能优化细节"
+      - "能够结合自身的业务项目，说明这些源码思想的实际落地场景和借鉴意义"
+
+  - id: "FE-TQ-TX-001"
+    type: "technical"
+    question: "为什么Vue不需要类似React Fiber的架构设计？"
+    tags: ["Vue", "React", "Fiber", "框架底层"]
+    difficulty: "hard"
+    source: "腾讯"
+    key_points:
+      - "理解React Fiber是为了解决全量Diff阻塞主线程的问题，通过时间切片实现可中断更新"
+      - "说明Vue具有响应式依赖收集机制，能精准定位到组件级别的更新，无需全量对比DOM树"
+      - "指出Vue的组件级更新粒度足够小，使得主线程阻塞的几率大幅降低，因此不需要复杂的Fiber调度"
+
+  - id: "FE-TQ-TX-002"
+    type: "technical"
+    question: "请讲一下React中useLayoutEffect和useEffect有什么核心区别？"
+    tags: ["React", "Hooks", "渲染生命周期"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "执行时机不同：useEffect在DOM绘制完成后异步执行；useLayoutEffect在DOM变更后、浏览器重绘前同步执行"
+      - "阻塞渲染：useLayoutEffect会阻塞页面的重绘，如果执行时间长会导致卡顿"
+      - "使用场景：需读取DOM尺寸并在绘制前修改布局防闪烁时使用useLayoutEffect，常规数据请求用useEffect"
+
+  - id: "FE-TQ-TX-003"
+    type: "technical"
+    question: "HTTP 1.0、2.0、3.0 各个版本的协议有哪些核心区别？"
+    tags: ["计算机网络", "HTTP协议", "QUIC"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "HTTP/1.x：文本协议，1.1引入长连接和管线化，但存在队头阻塞问题"
+      - "HTTP/2.0：二进制分帧，多路复用，头部压缩（HPACK），服务端推送，解决了HTTP层队头阻塞"
+      - "HTTP/3.0：基于UDP的QUIC协议，解决了TCP层的队头阻塞，实现更快的0-RTT握手连接"
+
+  - id: "FE-TQ-TX-004"
+    type: "technical"
+    question: "浏览器中JS事件循环机制（宏任务、微任务）是怎样的？"
+    tags: ["JavaScript", "EventLoop", "异步编程"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "解释主线程执行栈清空后，优先执行微任务队列（Microtask）"
+      - "说明常见的微任务（Promise.then, MutationObserver）和宏任务（setTimeout, requestAnimationFrame等）"
+      - "清晰表述每一轮EventLoop（Tick）中微任务与宏任务的交替执行顺序及DOM渲染时机"
+
+  - id: "FE-TQ-TX-005"
+    type: "technical"
+    question: "请讲一下JS的垃圾回收机制，引用计数法有什么缺点？如何解决循环依赖问题？"
+    tags: ["JavaScript", "内存管理", "V8引擎"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "说明主要的回收策略：标记清除（Mark-Sweep）和引用计数"
+      - "指出引用计数的致命缺点：无法回收互相引用的对象（循环依赖），导致内存泄露"
+      - "解释现代浏览器（如V8）采用基于可达性的标记清除算法及分代回收（新生代/老生代）来解决此问题"
+
+  - id: "FE-TQ-TX-006"
+    type: "technical"
+    question: "在长连接（如SSE/WebSocket）中，前端如何判断服务端已经断开连接？"
+    tags: ["WebSocket", "SSE", "心跳机制"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "监听协议内置的关闭事件（如WebSocket的onclose / onerror）"
+      - "主动的心跳保活机制（Ping-Pong）：前端定时发送心跳包，超时未响应判定为断开"
+      - "网络状态监听：结合 navigator.onLine 辅助判断网络层断开"
+
+  - id: "FE-TQ-TX-007"
+    type: "technical"
+    question: "请谈谈Vite与Webpack的区别，为什么Vite的编译速度更快？"
+    tags: ["构建工具", "Vite", "Webpack"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "底层原理不同：Webpack需要全量打包生成Bundle，Vite利用浏览器原生ESM加载，仅在按需请求时编译"
+      - "语言差异：Vite依赖基于Go语言编写的esbuild进行预构建，比JS编写的Webpack快几个数量级"
+      - "热更新（HMR）效率：Vite的热更新不随模块增多而变慢，只更新失效的模块边界"
+
+  - id: "FE-TQ-TX-008"
+    type: "technical"
+    question: "Proxy与Object.defineProperty在实现响应式时有什么区别？"
+    tags: ["Vue3", "JavaScript", "响应式原理"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "监听范围：defineProperty只能劫持对象已有的属性（需深度遍历），Proxy代理整个对象"
+      - "数组监听：defineProperty对数组变异方法支持差，Proxy可无缝拦截数组索引和长度变化"
+      - "性能与兼容：Proxy性能更好且拦截操作丰富（如deleteProperty），但不兼容IE，defineProperty兼容性较好"
+
+  - id: "FE-TQ-TX-009"
+    type: "technical"
+    question: "算法题：请实现一个LRU（最近最少使用）缓存机制。"
+    tags: ["数据结构", "手写代码", "LRU"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "需理解LRU的核心要求：O(1) 的查询和写入复杂度"
+      - "掌握数据结构组合：哈希表（Map/Object） + 双向链表"
+      - "能够正确编写get和put方法，处理节点提升到头部、超容时淘汰尾部节点的逻辑"
+
+  - id: "FE-TQ-TX-010"
+    type: "technical"
+    question: "算法题：求数组中的第K个最大元素。"
+    tags: ["算法", "排序", "TopK"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "暴力解法：全排序后取值（O(N log N)），非最优"
+      - "进阶解法：使用小顶堆实现，维护容量为K的堆（O(N log K)）"
+      - "最优解法：快速选择算法（Quickselect），平均时间复杂度 O(N)"
+
+  - id: "FE-TQ-TX-011"
+    type: "technical"
+    question: "在React中，如果没有Fiber架构，进行Diff的过程会怎样？会带来哪些性能瓶颈？"
+    tags: ["React", "Fiber", "Diff算法", "性能优化"]
+    difficulty: "hard"
+    source: "腾讯"
+    key_points:
+      - "没有Fiber时（React 15及以前），Diff是一个同步的递归过程，不可中断"
+      - "当组件树层级过深时，同步执行会长时间阻塞主线程（Long Task）"
+      - "导致的后果是浏览器无法及时响应用户交互（如点击、输入）和执行动画渲染，造成页面卡顿和掉帧"
+
+  - id: "FE-TQ-TX-012"
+    type: "technical"
+    question: "请详细解释JS闭包的概念、底层原理及其在实际开发中的应用场景，以及可能带来的内存泄露问题。"
+    tags: ["JavaScript", "闭包", "内存泄漏", "底层原理"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "概念：函数与其词法环境的组合，使得内部函数可以访问外部函数作用域中的变量"
+      - "原理：由于内部函数保持对外部变量的引用，导致外部变量对应的活动对象（AO）无法被垃圾回收机制回收"
+      - "应用：防抖节流、模块化封装私有变量、柯里化等"
+      - "缺点及解决：容易造成内存泄漏，需在不使用时手动将引用置为null"
+
+  - id: "FE-TQ-TX-013"
+    type: "technical"
+    question: "请简述JS中箭头函数的this指向规则。如果由于this指向引发代码报错，你会如何排查？"
+    tags: ["JavaScript", "箭头函数", "this机制"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "箭头函数没有自己的this，其this继承自声明时所在的上下文（词法作用域）"
+      - "无法通过call/apply/bind改变箭头函数的this指向"
+      - "排查思路：检查是否在对象方法、Vue/React的生命周期或DOM事件回调中误用了箭头函数导致this指向了Window或undefined"
+
+  - id: "FE-TQ-TX-014"
+    type: "technical"
+    question: "在前端性能优化中，虚拟滚动的实现原理是什么？在处理用户快速滚动时，底层是如何监听更新并保证页面流畅度、不掉帧的？"
+    tags: ["性能优化", "虚拟列表", "渲染机制"]
+    difficulty: "hard"
+    source: "腾讯"
+    key_points:
+      - "核心原理：只渲染可视区域及其前后缓冲区的DOM节点，用绝对定位计算并维持滚动条的高度"
+      - "监听机制：通过监听onScroll事件，结合滚动高度（scrollTop）动态计算可视区域的起始索引（startIndex）和结束索引（endIndex）"
+      - "防掉帧策略：使用 requestAnimationFrame 替代 scroll 事件节流处理更新；预留上下缓冲区避免快速滚动出现白屏"
+
+  - id: "FE-TQ-TX-015"
+    type: "technical"
+    question: "请解释什么是Polyfill？它在前端工程化中扮演什么角色？"
+    tags: ["前端工程化", "Polyfill", "Babel"]
+    difficulty: "easy"
+    source: "腾讯"
+    key_points:
+      - "概念：用于在旧版浏览器中实现新标准（如ES6+API）的代码补丁垫片"
+      - "作用机制：检查当前环境是否支持某特性，若不支持则注入原生JS实现的替代方案（如Promise, Array.includes）"
+      - "工程化结合：通常配合 Babel（如 @babel/preset-env 和 core-js）实现按需引入，减小打包体积"
+
+  - id: "FE-TQ-TX-016"
+    type: "technical"
+    question: "Webpack的HMR（热更新）原理是什么？它是如何实现代码修改后局部更新而不刷新整个页面的？"
+    tags: ["Webpack", "工程化", "HMR"]
+    difficulty: "hard"
+    source: "腾讯"
+    key_points:
+      - "Webpack-dev-server 建立与浏览器的 WebSocket 长连接"
+      - "文件修改触发 Webpack 重新编译，向浏览器推送更新的 hash 和 chunk 列表"
+      - "浏览器端 HMR runtime 请求热更新的补丁代码（JSON/JS）"
+      - "结合各个 Loader（如 vue-loader, style-loader）内置的热更新逻辑替换旧模块，实现无刷新状态保留更新"
+
+  - id: "FE-TQ-TX-017"
+    type: "technical"
+    question: "请讲述 HTTP 1.0、1.1、2.0、3.0 各个版本的核心区别与演进过程。"
+    tags: ["计算机网络", "HTTP协议", "性能优化"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "HTTP 1.1 引入长连接（Keep-Alive）、管线化和更多缓存控制头部"
+      - "HTTP 2.0 引入多路复用（解决队头阻塞）、二进制分帧、头部压缩（HPACK）和服务器推送"
+      - "HTTP 3.0 弃用TCP，底层采用基于UDP的QUIC协议，彻底解决TCP层面的队头阻塞，实现0-RTT连接建立"
+
+  - id: "FE-TQ-TX-018"
+    type: "technical"
+    question: "在使用SSE（Server-Sent Events）时，你们是如何实现断线重连的？前端如何准确判断服务端已经断开连接？"
+    tags: ["网络通信", "SSE", "长连接"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "SSE自身机制：浏览器原生EventSource具备自动重连机制，通过 Last-Event-ID 请求头进行断点续传"
+      - "断开判断：监听 onerror 事件或者通过网络心跳检测"
+      - "自定义重连：若业务要求更高灵活性，可捕获错误后清除旧实例，使用指数退避算法重新实例化 EventSource"
+
+  - id: "FE-TQ-TX-019"
+    type: "technical"
+    question: "假如生产环境用户反馈页面白屏或者功能报错了，你第一时间会怎么排查？"
+    tags: ["错误排查", "前端监控", "性能优化"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "复现与信息收集：确认用户的网络环境、设备机型、版本号及复现路径"
+      - "日志系统监控：查看前端异常监控平台（如Sentry、Arms）是否有JS报错日志、资源加载失败或接口请求超时"
+      - "根因分析定位：区分是打包白屏（如CDN资源挂了、Chunk加载失败）、数据白屏（接口异常未兜底处理）还是渲染白屏（React/Vue生命周期报错导致整个组件树崩溃）"
+
+  - id: "FE-TQ-TX-020"
+    type: "technical"
+    question: "对于AI对话系统中的流式渲染（Streaming Rendering），前端通常采用哪些实现方式？"
+    tags: ["AI应用", "流式渲染", "SSE"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "方式一：SSE（Server-Sent Events），轻量级单向通信，最适合AI打字机效果"
+      - "方式二：WebSocket，支持双向通信，适合复杂的对话与多模态交互"
+      - "方式三：Fetch API 结合 ReadableStream，直接读取按块返回的HTTP响应流"
+
+  - id: "FE-TQ-TX-021"
+    type: "technical"
+    question: "在App的Webview中，如果不使用离线包直接打开一个HTTP线上地址，页面可能会出现哪些问题？离线包解决了什么问题？"
+    tags: ["混合开发", "Webview", "性能优化", "离线包"]
+    difficulty: "hard"
+    source: "腾讯"
+    key_points:
+      - "线上地址痛点：受制于弱网环境可能导致长时间白屏；页面资源需要多次网络请求，消耗流量且首屏加载极慢"
+      - "离线包优势：将HTML/CSS/JS等静态资源打包提前下发到App本地，Webview直接拦截请求并读取本地文件"
+      - "效果：实现秒开体验（0网络耗时），提升页面可用性，并支持版本热更新"
+
+  - id: "FE-TQ-TX-022"
+    type: "technical"
+    question: "请解释一下I/O多路复用中的select、poll和epoll的区别与原理。"
+    tags: ["操作系统", "网络编程", "I/O模型"]
+    difficulty: "hard"
+    source: "腾讯"
+    key_points:
+      - "Select：采用数组存储文件描述符，有最大连接数限制（通常1024），轮询遍历效率低"
+      - "Poll：改用链表存储文件描述符，打破了最大连接数限制，但仍然是全量轮询，效率随着连接数增加而下降"
+      - "Epoll：采用红黑树存储，基于事件就绪通知机制（回调），只有活跃的FD才会触发操作，效率极高，是高并发场景的首选"
+
+  - id: "FE-TQ-TX-023"
+    type: "technical"
+    question: "请详细讲一下浏览器的 JavaScript 事件循环（Event Loop）机制，宏任务与微任务的执行顺序是怎样的？"
+    tags: ["事件循环", "JavaScript", "异步编程"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "准确区分宏任务（setTimeout, I/O 等）与微任务（Promise.then, MutationObserver 等）"
+      - "解释同步代码执行完毕后，优先清空当前微任务队列，再取出一个宏任务执行的循环逻辑"
+      - "能够结合具体代码片段正确推导输出结果"
+
+  - id: "FE-TQ-TX-024"
+    type: "technical"
+    question: "JavaScript 的垃圾回收机制是如何工作的？早期的引用计数法有什么致命缺点？V8 引擎是如何解决循环引用导致的问题的？"
+    tags: ["垃圾回收", "内存管理", "V8引擎"]
+    difficulty: "hard"
+    source: "腾讯"
+    key_points:
+      - "解释标记-清除算法（Mark-and-Sweep）的核心流程（从根节点遍历打标记）"
+      - "指明引用计数法无法回收相互引用（循环依赖）对象的缺陷"
+      - "简述 V8 引擎的分代式垃圾回收机制（新生代 Scavenge 算法与老生代标记清除/整理）"
+
+  - id: "FE-TQ-TX-025"
+    type: "technical"
+    question: "请对比分析一下 Cookie、Session 和 JWT 这三种鉴权方式的原理、优缺点以及各自的最佳适用场景。"
+    tags: ["网络安全", "身份鉴权", "HTTP协议"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "Session 基于服务端内存存储，有状态，不适合分布式/微服务架构扩展"
+      - "JWT 是无状态的，易于跨域和分布式部署，但注销和续签较为复杂"
+      - "Cookie 容易遭受 CSRF 攻击，需要配合 SameSite 属性及 Token 机制进行防范"
+
+  - id: "FE-TQ-TX-026"
+    type: "technical"
+    question: "如果没有 React Fiber 架构，React 在进行 DOM Diff 时会产生什么问题？Fiber 主要是为了解决什么样的性能瓶颈？"
+    tags: ["React", "Fiber", "底层原理"]
+    difficulty: "hard"
+    source: "腾讯"
+    key_points:
+      - "传统的 React 15 采用同步递归遍历 Virtual DOM，当组件树庞大时会长期阻塞主线程，导致掉帧卡顿"
+      - "Fiber 引入了链表数据结构，使得渲染过程可以被中断和恢复（时间切片）"
+      - "解释双缓冲树（Current Tree 与 WorkInProgress Tree）的概念及优先级调度"
+
+  - id: "FE-TQ-TX-027"
+    type: "technical"
+    question: "Vite 与 Webpack 的核心设计理念有什么区别？为什么 Vite 的冷启动和热更新（HMR）速度比 Webpack 快得多？"
+    tags: ["工程化", "Vite", "Webpack"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "Webpack 会对整个项目进行递归依赖分析和全量打包，项目越大启动越慢"
+      - "Vite 利用浏览器原生的 ES Module 支持，采用按需编译（No-Bundle 理念）"
+      - "Vite 的底层使用了基于 Go 语言编写的 esbuild 进行预构建，效率远超基于 JS 的工具"
+
+  - id: "FE-TQ-TX-028"
+    type: "technical"
+    question: "请解释一下 JavaScript 中闭包的概念、底层原理以及在实际开发中的常见应用场景，同时说说闭包可能带来什么负面影响？"
+    tags: ["闭包", "作用域", "JavaScript"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "闭包是指那些能够访问自由变量的函数（即内部函数保留了对外部函数作用域的引用）"
+      - "应用场景包括：模块化私有变量封装、防抖节流函数、柯里化等"
+      - "负面影响主要是可能导致内存泄漏，需要合理释放不需要的引用"
+
+  - id: "FE-TQ-TX-029"
+    type: "technical"
+    question: "在 Vue3 中，相较于 Vue2，在系统架构、响应式原理和编译层面做了哪些核心优化？"
+    tags: ["Vue3", "源码解析", "响应式"]
+    difficulty: "hard"
+    source: "腾讯"
+    key_points:
+      - "响应式原理从 Object.defineProperty 替换为 ES6 的 Proxy，解决了无法监听数组索引和对象属性新增/删除的问题"
+      - "架构层面引入 Composition API，逻辑复用更加优雅，且对 TypeScript 支持更友好"
+      - "编译层面增加了静态提升（Static Hoisting）、PatchFlag 和缓存事件处理程序，大幅提升 Diff 性能"
+
+  - id: "FE-TQ-WY-001"
+    type: "technical"
+    question: "请详细说明 Vue3 中 script 标签和 style 标签是如何被底层打包工具解析成 JS 和 CSS 的？"
+    tags: ["Vue3", "编译原理", "SFC"]
+    difficulty: "hard"
+    source: "网易"
+    key_points:
+      - "依赖 @vue/compiler-sfc 将单文件组件(SFC)解析为 AST 树，分离出 template、script 和 style 块"
+      - "script 块经过 Babel/TypeScript 等加载器编译为普通 JS 模块"
+      - "style 块通过 css-loader 等处理，如带有 scoped 属性则会自动添加哈希属性选择器以实现样式隔离"
+  - id: "FE-TQ-WY-002"
+    type: "technical"
+    question: "请简述微信小程序的底层架构。为什么小程序没有提供直接操作 DOM 的 API？"
+    tags: ["微信小程序", "双线程模型", "架构"]
+    difficulty: "medium"
+    source: "网易"
+    key_points:
+      - "双线程架构：逻辑层（AppService，运行在JSCore）和渲染层（WebView）分离"
+      - "为了安全和性能管控，防止逻辑层通过操作DOM引发不可控的渲染卡顿，也阻止恶意脚本注入（封闭环境）"
+      - "两者通信依靠微信客户端（Native）进行中转和数据拦截"
+  - id: "FE-TQ-WY-003"
+    type: "technical"
+    question: "浏览器是如何缓存请求资源的？请详细阐述强缓存和协商缓存的原理及相关头部字段。"
+    tags: ["网络协议", "浏览器缓存", "HTTP"]
+    difficulty: "medium"
+    source: "网易"
+    key_points:
+      - "强缓存：不会向服务器发送请求，依靠 Expires（HTTP 1.0）或 Cache-Control（HTTP 1.1，优先级更高）判断缓存是否过期"
+      - "协商缓存：强缓存失效后发送请求，服务器根据 ETag/If-None-Match（文件哈希）或 Last-Modified/If-Modified-Since（修改时间）判断资源是否更新"
+      - "状态码区别：命中强缓存返回200 (from cache)，命中协商缓存返回304 Not Modified"
+  - id: "FE-TQ-WY-004"
+    type: "technical"
+    question: "CSS中 Flex 布局的 flex: 1 实际上是由哪几个 flex 属性组成的？请解释它们的默认值及具体含义。"
+    tags: ["CSS", "Flex布局", "样式基础"]
+    difficulty: "medium"
+    source: "网易"
+    key_points:
+      - "flex: 1 是 flex-grow: 1, flex-shrink: 1, flex-basis: 0% 的简写"
+      - "flex-grow 控制项目放大比例（默认0，不放大）"
+      - "flex-shrink 控制项目缩小比例（默认1，空间不足时等比缩小）"
+      - "flex-basis 设置项目在主轴上占据的基础空间"
+  - id: "FE-TQ-WY-005"
+    type: "technical"
+    question: "CommonJS 和 ES Module 有什么本质区别？"
+    tags: ["JavaScript", "模块化", "NodeJS"]
+    difficulty: "medium"
+    source: "网易"
+    key_points:
+      - "CommonJS 输出的是一个值的拷贝，ESM 输出的是值的只读引用"
+      - "CommonJS 是运行时加载（动态），ESM 是编译时输出接口（静态解析）"
+      - "在构建工具中，静态解析特性使得 ESM 可以更好地支持 Tree-Shaking 优化"
+  - id: "FE-TQ-WY-006"
+    type: "technical"
+    question: "请阐述 Vue 的双向绑定原理（或依赖追踪机制）。数据发生变化时，框架是如何知道并最终更新到 DOM 上的？"
+    tags: ["Vue框架", "响应式原理", "源码解析"]
+    difficulty: "hard"
+    source: "网易"
+    key_points:
+      - "通过 Object.defineProperty (Vue2) 或 Proxy (Vue3) 劫持数据的 getter 和 setter"
+      - "getter 时通过 Dep 对象收集依赖（Watcher）"
+      - "setter 时触发 Dep 通知所有 Watcher 调用 update 方法"
+      - "结合虚拟 DOM 树进行 Diff 算法比对，最终将差异更新到真实 DOM 上"
+  - id: "FE-TQ-WY-007"
+    type: "technical"
+    question: "请介绍一下 JavaScript 的垃圾回收机制。如果出现循环引用，通常是如何解决的？"
+    tags: ["JavaScript", "V8引擎", "垃圾回收"]
+    difficulty: "hard"
+    source: "网易"
+    key_points:
+      - "核心算法：早期使用引用计数（易导致循环引用内存泄漏），现代浏览器主要使用标记-清除（Mark-Sweep）算法"
+      - "V8优化：分代回收机制（新生代 Scavenge 算法，老生代标记清除与标记整理）"
+      - "解决循环引用：现代标记-清除算法从根对象(Root)出发不可达即可被回收，天然解决了一般对象的循环引用；使用 WeakMap/WeakSet 也可构建弱引用"
+  - id: "FE-TQ-WY-008"
+    type: "technical"
+    question: "TCP 和 UDP 各自的主要特点是什么？在视频通话等场景下，为什么会优先选择 UDP？"
+    tags: ["计算机网络", "TCP/UDP", "协议栈"]
+    difficulty: "medium"
+    source: "网易"
+    key_points:
+      - "TCP 面向连接、可靠传输、有流量控制和拥塞控制，但头部开销大、延迟较高"
+      - "UDP 面向无连接、不可靠传输、尽最大努力交付、无拥塞控制，但传输速度快、开销小"
+      - "视频通话更注重实时性，偶尔的丢包导致的轻微画面马赛克可接受，而 TCP 丢包重传会导致严重的卡顿延迟"
+  - id: "FE-TQ-WY-009"
+    type: "technical"
+    question: "HTTPS 的握手流程是怎样的？为什么采用“先用非对称加密交换密钥，再用对称加密传输数据”的混合加密机制？"
+    tags: ["网络安全", "HTTPS", "加密算法"]
+    difficulty: "hard"
+    source: "网易"
+    key_points:
+      - "流程：客户端发送ClientHello -> 服务端返回证书和公钥 -> 客户端验证证书，生成随机对称密钥并用公钥加密发送 -> 双方使用该对称密钥进行数据通信"
+      - "非对称加密极为耗费性能，仅适合交换少量核心数据（即对称密钥）"
+      - "对称加密性能高，适合对后续海量的业务请求报文进行加解密"
+  - id: "FE-TQ-WY-010"
+    type: "technical"
+    question: "在 React 的生命周期中调用 setState 会发生什么？会造成死循环吗？"
+    tags: ["React", "生命周期", "状态机制"]
+    difficulty: "medium"
+    source: "网易"
+    key_points:
+      - "调用 setState 会将状态更新加入队列，并触发组件的重新渲染(re-render)"
+      - "如果在 render 函数或 componentDidUpdate 等更新阶段的生命周期中不带条件地调用 setState，会无限触发重渲染从而导致死循环"
+      - "如果在 componentDidMount 等挂载阶段调用，则会在首次渲染后触发一次额外渲染，不会死循环"
+  - id: "FE-TQ-WY-011"
+    type: "technical"
+    question: "请解释一下前端路由 vue-router 的底层原理。hash 和 history 模式分别改变的是 URL 的哪一部分？"
+    tags: ["Vue-router", "前端路由", "浏览器API"]
+    difficulty: "medium"
+    source: "网易"
+    key_points:
+      - "本质：监听 URL 变化，然后根据路由映射表匹配并渲染对应的组件，不刷新页面"
+      - "Hash模式：改变 URL 后的 `#` 及后续部分，监听 `hashchange` 事件"
+      - "History模式：利用 HTML5 的 `pushState` 和 `replaceState` 改变 URL（不带#），通过监听 `popstate` 事件响应浏览器的前进后退"
+  - id: "FE-TQ-WY-012"
+    type: "technical"
+    question: "除了 Promise，你还了解哪些 JavaScript 异步编程方案？请详细说明 async/await 的原理。"
+    tags: ["异步编程", "ES6", "async/await"]
+    difficulty: "medium"
+    source: "网易"
+    key_points:
+      - "其他方案：回调函数(Callback)、事件监听、发布/订阅模式、Generator 函数"
+      - "async/await 原理：它是 Generator 函数和 Promise 的语法糖，内置了自动执行器"
+      - "能够以编写同步代码的直观方式来书写异步流程，改善了 Promise 链式调用的嵌套问题"
+
+  - id: "FE-TQ-WY-013"
+    type: "technical"
+    question: "Promise 有哪些状态？状态流转规则是什么？如何解决回调地狱？then 和 catch 方法分别对应什么处理？"
+    tags: ["Promise", "异步编程", "ES6"]
+    difficulty: "easy"
+    source: "网易"
+    key_points:
+      - "三种状态：Pending（进行中）、Fulfilled（已成功）、Rejected（已失败）"
+      - "状态不可逆：只能从 Pending 变为 Fulfilled，或从 Pending 变为 Rejected"
+      - "通过链式调用（then 穿透）解决回调地狱"
+
+  - id: "FE-TQ-WY-014"
+    type: "technical"
+    question: "请谈谈对 SSR（服务端渲染）和 CSR（客户端渲染）的区别和理解？Next.js 推送数据时如何防止 XSS 攻击？"
+    tags: ["SSR", "CSR", "Next.js", "安全"]
+    difficulty: "medium"
+    source: "网易"
+    key_points:
+      - "SSR 首屏加载快，利于 SEO，但服务器压力大；CSR 交互体验好，但首屏白屏时间较长"
+      - "理解 Next.js / Nuxt.js 的同构渲染原理"
+      - "防 XSS：对动态注入的 HTML 内容进行转义，React/Next.js 默认会对插值进行过滤，慎用 dangerouslySetInnerHTML"
+
+  - id: "FE-TQ-WY-015"
+    type: "technical"
+    question: "请解释防抖（Debounce）和节流（Throttle）的原理、区别以及对应的业务使用场景，并口述如何实现？"
+    tags: ["防抖节流", "性能优化", "手写代码"]
+    difficulty: "medium"
+    source: "网易"
+    key_points:
+      - "防抖：事件在触发n秒后才执行，如果n秒内又被触发，则重新计时（适用：搜索框联想、窗口resize）"
+      - "节流：持续触发事件，但在一定时间内只执行一次（适用：滚动条监听、高频点击按钮）"
+      - "能准确说出定时器和时间戳两种手写实现方式的核心区别"
+
+  - id: "FE-TQ-WY-016"
+    type: "technical"
+    question: "React 中的组件通信方式有哪些？当父子组件嵌套很深时（如跨多层级），如何优雅地处理通信？"
+    tags: ["React", "组件通信", "状态管理"]
+    difficulty: "medium"
+    source: "网易"
+    key_points:
+      - "基础：父子组件通过 Props 与回调函数通信，兄弟组件通过状态提升通信"
+      - "跨层级：利用 React Context API"
+      - "全局：引入状态管理库（如 Redux, Zustand, MobX），理解 Redux 单向数据流的原理"
+
+  - id: "FE-TQ-WY-017"
+    type: "technical"
+    question: "请说明 var、let 和 const 的区别？const 声明的对象是否可以修改其属性？为什么？"
+    tags: ["JavaScript基础", "作用域", "ES6"]
+    difficulty: "easy"
+    source: "网易"
+    key_points:
+      - "var 存在变量提升、无块级作用域；let/const 有块级作用域，存在暂时性死区"
+      - "const 声明的对象可以修改内部属性，因为 const 保证的是栈内存中的指针（引用地址）不变，而对象的内容存放在堆内存中"
+
+  - id: "FE-TQ-WY-018"
+    type: "technical"
+    question: "跨端的前端页面布局适配通常是如何做的？rem、vw/vh、em 的区别分别是什么？"
+    tags: ["CSS", "移动端适配", "响应式布局"]
+    difficulty: "medium"
+    source: "网易"
+    key_points:
+      - "em 相对于父元素的字体大小；rem 相对于根元素(html)的字体大小"
+      - "vw/vh 相对于视口宽度/高度（1vw = 视口宽度的1%）"
+      - "理解主流的适配方案（如 PostCSS-pxtorem 配合 lib-flexible，或者纯 vw 方案）"
+
+  - id: "FE-TQ-WY-019"
+    type: "technical"
+    question: "Vue3 中的 Reactive 和 ref 有什么区别？Proxy 是如何代理响应式数据的？"
+    tags: ["Vue3", "响应式原理", "Proxy"]
+    difficulty: "medium"
+    source: "网易"
+    key_points:
+      - "ref 适用于基本数据类型，底层通过 getter/setter 实现；reactive 适用于对象类型，底层使用 Proxy 实现"
+      - "对比 Vue2 的 Object.defineProperty，说明 Proxy 能够监听对象属性的增删和数组的索引变化"
+      - "明确 template 模板中 ref 自动解包，无需写 `.value`"
+
+  - id: "FE-TQ-WY-020"
+    type: "technical"
+    question: "前端打包工具 Webpack 和 Rollup 的区别与核心使用场景分别是什么？为什么 Rollup 打包体积通常更小？"
+    tags: ["前端工程化", "Webpack", "Rollup"]
+    difficulty: "medium"
+    source: "网易"
+    key_points:
+      - "Webpack 大而全，适合业务应用的打包（强拆包、热更新）；Rollup 小而美，适合类库（Library/SDK）的打包"
+      - "Rollup 原生支持且更早实现 ESModule 的 Tree-Shaking 机制，输出代码纯净，没有多余的包裹代码"
+
+  - id: "FE-TQ-WY-021"
+    type: "technical"
+    question: "常见的 HTTP 状态码有哪些？请具体讲讲 200, 304, 401, 403, 404, 500 的含义？304 涉及到了哪些浏览器缓存机制？"
+    tags: ["HTTP", "计算机网络", "浏览器缓存"]
+    difficulty: "medium"
+    source: "网易"
+    key_points:
+      - "清晰区分 1xx~5xx 各大类状态码含义"
+      - "深入解释 304 Not Modified，并引出协商缓存的概念（Etag/If-None-Match 和 Last-Modified/If-Modified-Since）"
+      - "区别 401（未授权，缺Token）和 403（被拒绝，无权限）"
+
+  - id: "FE-TQ-WY-022"
+    type: "technical"
+    question: "HTTPS 的加密过程是怎样的？为什么不一直用非对称加密或者一直用对称加密？"
+    tags: ["HTTPS", "网络安全", "加密算法"]
+    difficulty: "hard"
+    source: "网易"
+    key_points:
+      - "非对称加密性能差/速度慢；对称加密的密钥在传输中容易被拦截窃取"
+      - "HTTPS 采用混合加密：在建立连接（握手阶段）使用非对称加密协商出一个共享的对称密钥，后续数据通信使用对称加密"
+      - "理解数字证书（CA）的作用，防止中间人拦截伪造公钥"
+
+  - id: "FE-TQ-WY-023"
+    type: "technical"
+    question: "TCP 的三次握手和四次挥手过程是怎样的？TCP 的可靠传输以及流量控制是如何实现的？"
+    tags: ["TCP/IP", "计算机网络", "底层通信"]
+    difficulty: "hard"
+    source: "网易"
+    key_points:
+      - "准确叙述三次握手（SYN, SYN+ACK, ACK）和四次挥手过程"
+      - "理解四次挥手中 TIME_WAIT 状态的作用"
+      - "说明可靠传输机制：序列号与确认应答、超时重传；说明流量控制：滑动窗口机制"
+
+  - id: "FE-TQ-WY-024"
+    type: "technical"
+    question: "什么是事件循环（Event Loop）？宏任务和微任务分别有哪些？requestAnimationFrame 属于什么机制？"
+    tags: ["Event Loop", "JavaScript底层", "异步机制"]
+    difficulty: "hard"
+    source: "网易"
+    key_points:
+      - "解释主线程执行栈、微任务队列、宏任务队列的处理顺序（同步代码 -> 清空微任务队列 -> 渲染 -> 下一个宏任务）"
+      - "列举常见微任务（Promise.then, MutationObserver）和宏任务（setTimeout, I/O）"
+      - "指出 rAF 的执行时机在重绘之前，不属于严格意义的宏任务或微任务"
+
+  - id: "FE-TQ-WY-025"
+    type: "technical"
+    question: "深拷贝和浅拷贝的区别是什么？如何实现一个完善的深拷贝（包括处理循环引用、Date、RegExp、函数等）？"
+    tags: ["深浅拷贝", "JavaScript基础", "内存机制"]
+    difficulty: "hard"
+    source: "网易"
+    key_points:
+      - "浅拷贝只拷贝第一层属性引用；深拷贝完全拷贝堆内存中的所有层级对象"
+      - "分析 JSON.parse(JSON.stringify()) 的缺陷（丢失函数、正则、处理循环引用报错等）"
+      - "描述手写深拷贝逻辑：递归遍历，使用 WeakMap 记录已拷贝对象以解决循环引用问题"
+
+  - id: "FE-TQ-WY-026"
+    type: "technical"
+    question: "相比传统的 H5，微信小程序有什么优缺点？"
+    tags: ["跨端开发", "小程序", "架构对比"]
+    difficulty: "medium"
+    source: "网易"
+    key_points:
+      - "优点：双线程架构（逻辑层与渲染层分离）防止阻塞渲染，内置丰富原生 API 调用体验更好"
+      - "缺点：封闭生态不支持灵活的 DOM 操作，包体积受限，必须通过审核发布"
+
+  - id: "FE-TQ-WY-027"
+    type: "technical"
+    question: "什么是闭包？请简述闭包的优缺点及其在实际开发中的典型应用场景。"
+    tags: ["JavaScript基础", "闭包", "作用域"]
+    difficulty: "medium"
+    source: "网易"
+    key_points:
+      - "概念：函数与其词法环境的引用捆绑在一起形成的实体"
+      - "应用：数据私有化、柯里化、函数防抖节流的内部状态保留"
+      - "缺点：易造成内存泄漏，需要在使用完毕后手动解除引用（置为 null）"
+
+  - id: "FE-TQ-WY-028"
+    type: "technical"
+    question: "Vue3 中的 scoped 样式隔离底层是如何实现的？"
+    tags: ["Vue3", "CSS", "编译原理"]
+    difficulty: "medium"
+    source: "网易"
+    key_points:
+      - "依赖于 Vue-loader 或 Vite 的编译插件机制"
+      - "编译时为组件的 DOM 节点打上唯一标识自定义属性（如 data-v-xxx）"
+      - "结合 CSS 的属性选择器实现样式的私有化隔离"
+
+  - id: "FE-TQ-WY-029"
+    type: "technical"
+    question: "在 React 中，useRef 和 useState 的底层原理分别是什么？useRef 的数据更新会触发组件重新渲染吗？"
+    tags: ["React", "Hooks", "状态管理"]
+    difficulty: "medium"
+    source: "网易"
+    key_points:
+      - "useState 触发 Dispatch Action，引起 Fiber 节点标记并进入调度渲染阶段"
+      - "useRef 只是在 Fiber 节点上挂载一个可突变的对象，修改它不会触发任何渲染生命周期"
+      - "理解两者在缓存状态和触发视图更新机制上的根本差异"
+
+  - id: "FE-TQ-WY-030"
+    type: "technical"
+    question: "微前端架构中，Qiankun 底层是如何实现 JS 沙箱隔离和 CSS 样式的各种隔离的？"
+    tags: ["微前端", "Qiankun", "沙箱隔离"]
+    difficulty: "hard"
+    source: "网易"
+    key_points:
+      - "JS 隔离：Proxy Sandbox（多实例）和 Snapshot Sandbox（单实例）底层原理"
+      - "CSS 隔离：基于 Shadow DOM 的 StrictStyleIsolation，或是作用域前缀 ExperimentalStyleIsolation"
+      
+  - id: "FE-TQ-WY-031"
+    type: "technical"
+    question: "TCP 的可靠传输机制以及流量控制是如何实现的？"
+    tags: ["计算机网络", "TCP协议", "底层机制"]
+    difficulty: "hard"
+    source: "网易"
+    key_points:
+      - "可靠传输依赖序列号、确认应答（ACK）、超时重传及校验和"
+      - "流量控制依靠滑动窗口机制，接收方通过报文通知发送方自身的可用缓存大小"
+
+  - id: "FE-TQ-WY-032"
+    type: "technical"
+    question: "浏览器从输入 URL 到页面最终呈现出来的整个过程是怎样的？"
+    tags: ["浏览器原理", "渲染流程", "网络请求"]
+    difficulty: "medium"
+    source: "网易"
+    key_points:
+      - "域名 DNS 解析、建立 TCP 三次握手、发起 HTTP 请求"
+      - "处理 HTTP 缓存（强缓存/协商缓存）及服务器响应"
+      - "浏览器解析 HTML 构建 DOM 树，解析 CSS 构建 CSSOM 树"
+      - "结合两者生成 Render 树，经过 Layout (回流) 和 Paint (重绘)，最终通过 GPU 渲染绘制"
+
+  - id: "FE-TQ-WY-033"
+    type: "technical"
+    question: "Promise 的状态不可变特性在底层是如何通过代码逻辑保障的？"
+    tags: ["JavaScript基础", "Promise原理", "异步"]
+    difficulty: "hard"
+    source: "网易"
+    key_points:
+      - "内部维护一个不可逆转的 status 变量（pending、fulfilled、rejected）"
+      - "在 resolve 或 reject 函数被调用时，通过条件判断 if (status === 'pending') 才允许变更状态，从而屏蔽后续的更改"
+
+  - id: "FE-TQ-WY-034"
+    type: "technical"
+    question: "JavaScript 中深拷贝和浅拷贝的区别是什么？你能手写一个能够处理循环引用的深拷贝函数吗？"
+    tags: ["手写代码", "深浅拷贝", "内存引用"]
+    difficulty: "medium"
+    source: "网易"
+    key_points:
+      - "区分基础数据类型拷贝与引用地址拷贝"
+      - "利用递归遍历所有对象属性，判断并正确处理 Date、RegExp 等特殊对象"
+      - "使用 WeakMap 来追踪已拷贝的对象，以此破解循环引用带来的死循环溢出问题"
+
+  - id: "FE-TQ-ZJ-001"
+    type: "technical"
+    question: "请详细说明一下，如何实现类似 ChatGPT 的对话气泡自动滚动到底部，同时如何优雅地处理用户手动向上滚动浏览历史记录时的系统冲突？"
+    tags: ["DOM操作", "事件监听", "滚动交互"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "利用 MutationObserver 或 ResizeObserver 监听内容变化并触发 scrollTo"
+      - "监听 wheel 或 touchmove 事件，通过标记位(isUserScrolling)中止自动滚动行为"
+  - id: "FE-TQ-ZJ-002"
+    type: "technical"
+    question: "请解释一下 Token 的概念，在纯前端层面，你是如何估算用户输入的 Prompt 所占用的 Token 长度的？"
+    tags: ["大模型交互", "文本编码", "算法估算"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "清晰说明Token是模型处理文本的最小原子单位，区别于字或词"
+      - "说明在前端可使用类似 tiktoken 的 WASM 库，或依据中英文字符串按经验公式进行长度估算"
+  - id: "FE-TQ-ZJ-003"
+    type: "technical"
+    question: "在 React 的渲染机制中，如果遇到 AI 聊天机器人这种每秒频繁流式更新 State 的场景，会导致页面严重卡顿。你会如何进行性能优化？"
+    tags: ["React 性能优化", "流式渲染", "节流防抖"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "将频繁更新的流式文本拆分为独立子组件并结合 React.memo 避免全局渲染"
+      - "利用 requestAnimationFrame 或节流(Throttle)机制合并多次 setState 渲染批次"
+  - id: "FE-TQ-ZJ-004"
+    type: "technical"
+    question: "在前端实现 RAG（检索增强生成）流程中，前端通常需要承担哪些具体职责？"
+    tags: ["RAG架构", "业务逻辑拆解", "前后端协同"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "负责本地文档的初步解析、切片(Chunking)预处理与向量库接入"
+      - "负责检索结果的引用标记(Citation)展示与溯源交互"
+  - id: "FE-TQ-ZJ-005"
+    type: "technical"
+    question: "请简述一下 Promise 的工作机制，以及它与 async/await 之间的本质关联。"
+    tags: ["JavaScript 异步编程", "Promise", "事件循环"]
+    difficulty: "easy"
+    source: "字节跳动"
+    key_points:
+      - "说明 Promise 的三种状态流转（Pending, Fulfilled, Rejected）及微任务机制"
+      - "点出 async/await 是基于 Promise 和 Generator 封装的语法糖"
+  - id: "FE-TQ-ZJ-006"
+    type: "technical"
+    question: "请说一下 Vue3 中 Proxy 的响应式原理，并详细解释 track（依赖收集）、trigger（触发更新）以及 effect 的运行流程。"
+    tags: ["Vue3 源码", "响应式原理", "Proxy"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "对比 Vue2 的 Object.defineProperty，说明 Proxy 拦截深层属性及新增属性的优势"
+      - "准确描述 effect 副作用函数的挂载，以及在 get 触发 track，在 set 触发 trigger 的完整闭环"
+  - id: "FE-TQ-ZJ-007"
+    type: "technical"
+    question: "Git 中的 merge 和 rebase 的核心区别是什么？为什么通常说在多人协作的公共分支上使用 rebase 是危险的？"
+    tags: ["版本控制", "Git", "工程化"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "说明 merge 产生交叉合并节点，而 rebase 提供线性的历史提交树"
+      - "指出在公共分支 rebase 会重写已有 commit 的哈希值，导致协作方拉取代码时产生严重树冲突"
+  - id: "FE-TQ-ZJ-008"
+    type: "technical"
+    question: "【手写题】请实现一个带有并发控制的请求函数（例如最大并发数为3），并保证所有任务完成后返回按原序排列的结果数组。"
+    tags: ["算法与手写", "并发控制", "Promise 进阶"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "使用递归或循环池结构管理执行队列"
+      - "保证竞态条件下的正确顺序收集以及错误态(catch)的兼容处理"
+
+  - id: "FE-TQ-ZJ-009"
+    type: "technical"
+    question: "请手写代码实现括号匹配算法，并分析其时间复杂度和空间复杂度。如果要求不能使用额外的数据结构（栈），你有什么优化思路？"
+    tags: ["算法", "栈操作", "括号匹配"]
+    difficulty: "easy"
+    source: "字节跳动"
+    key_points:
+      - "能熟练使用栈（Stack）结构完成标准的匹配入栈出栈操作"
+      - "正确处理边界条件（如空字符串、只有左/右括号的情况）"
+      - "时间复杂度和空间复杂度分析准确（O(N)）"
+
+  - id: "FE-TQ-ZJ-010"
+    type: "technical"
+    question: "请详细说明如何判断JavaScript中的数据类型？typeof、instanceof 和 Object.prototype.toString.call 的区别及底层原理分别是什么？"
+    tags: ["JavaScript", "数据类型", "底层原理"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "typeof 只能准确判断基本数据类型，对null和引用类型判断有局限（底层按机器码低位识别）"
+      - "instanceof 依靠原型链向上查找来判断对象类型"
+      - "Object.prototype.toString.call 能够获取对象的内部 [[Class]] 属性，是最准确的判断方式"
+
+  - id: "FE-TQ-ZJ-011"
+    type: "technical"
+    question: "简述Vue的组件通信方式。在Vue3中，props和emit分别用来传递什么样的数据与事件？Pinia的核心原理是什么？"
+    tags: ["Vue3", "组件通信", "Pinia"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "全面列举通信方式（Provide/Inject, Vuex/Pinia, EventBus等）"
+      - "明确 props 用于单向数据下发，emit 用于子向父触发事件并携带数据"
+      - "阐明 Pinia 废弃 Mutations 的设计，基于响应式 API 建立 Store，以及其更好的 TS 类型推导支持"
+
+  - id: "FE-TQ-ZJ-012"
+    type: "technical"
+    question: "请解释JavaScript中 `this` 的绑定规则。默认绑定、隐式绑定、显式绑定和new绑定有什么优先级差异？箭头函数的 `this` 又有什么特殊性？"
+    tags: ["JavaScript", "this指向", "作用域"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "准确说出四种绑定规则：默认（全局/undefined）、隐式（调用者）、显式（call/apply/bind）、new操作符"
+      - "优先级顺序：new > 显式绑定 > 隐式绑定 > 默认绑定"
+      - "指出箭头函数不绑定自身的this，而是捕获其所在词法作用域的this且无法被修改"
+
+  - id: "FE-TQ-ZJ-013"
+    type: "technical"
+    question: "简述Cookie、LocalStorage和SessionStorage的区别。它们的生命周期、大小限制以及各自适用的业务场景是什么？"
+    tags: ["浏览器存储", "Cookie", "安全机制"]
+    difficulty: "easy"
+    source: "字节跳动"
+    key_points:
+      - "大小限制对比：Cookie通常4KB，WebStorage通常5MB左右"
+      - "生命周期差异：Cookie可设置过期时间，LocalStorage持久保存，SessionStorage随窗口关闭清除"
+      - "网络传输：Cookie随HTTP请求携带（需注意CSRF），而Storage仅在客户端保存"
+
+  - id: "FE-TQ-ZJ-014"
+    type: "technical"
+    question: "请详细说明Vue3中Proxy的响应式原理，并解释 track、trigger 和 effect 函数的执行流转过程。"
+    tags: ["Vue3", "响应式原理", "Proxy"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "指出Proxy相较于Object.defineProperty的优势（代理整个对象、支持数组方法等）"
+      - "解释在 getter 中触发 track 收集依赖（将 target, key, effect 存入 WeakMap）"
+      - "解释在 setter 中触发 trigger 派发更新（取出对应 effect 并执行重新渲染操作）"
+
+  - id: "FE-TQ-ZJ-015"
+    type: "technical"
+    question: "在浏览器网络请求中，强缓存和协商缓存的行为差异是什么？协商缓存相关的关键HTTP头部字段及状态码有哪些？"
+    tags: ["浏览器缓存", "HTTP协议", "性能优化"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "强缓存命中时直接读取本地资源，不向服务器发送请求，状态码为200 (from cache)"
+      - "协商缓存命中时向服务器验证，若资源未变返回304 Not Modified"
+      - "准确说出相关头字段：强缓存(Expires, Cache-Control)，协商缓存(Last-Modified/If-Modified-Since, ETag/If-None-Match)"
+
+  - id: "FE-TQ-ZJ-016"
+    type: "technical"
+    question: "简述Vite和Webpack的构建流程，它们在核心原理和冷启动性能上有什么主要区别？"
+    tags: ["前端工程化", "构建工具", "Vite"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "Webpack是全量打包，冷启动时需要构建完整的依赖图谱并打包输出"
+      - "Vite在开发环境下基于浏览器原生ESM按需提供代码，冷启动极快"
+      - "提到Vite在生产环境使用Rollup进行打包以确保兼容性及优化"
+
+  - id: "FE-TQ-ZJ-017"
+    type: "technical"
+    question: "在项目权限认证中，为什么要使用双Token（Access Token + Refresh Token）机制去生成JWT，而不是使用单Token？"
+    tags: ["前端安全", "JWT", "身份认证"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "解决安全性与用户体验的矛盾：Access Token寿命短防止泄露被盗用，Refresh Token寿命长保证免密登录体验"
+      - "说明Token无状态性导致服务端难以直接吊销，双Token可以配合黑名单/重新颁发机制实现动态风控"
+      - "熟悉双Token刷新的无感拦截器设计（拦截401 -> 暂停请求 -> 刷新Token -> 携带新Token重发）"
+
+
+  - id: "FE-TQ-ZJ-018"
+    type: "technical"
+    question: "说一下 Vue3 中 Proxy 响应式的原理，并详细解释 track 和 trigger 的执行过程。"
+    tags: ["Vue3原理", "Proxy", "响应式"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "Proxy拦截对象的get/set操作，Reflect保证this指向和规范行为"
+      - "track（依赖收集）：在get阶段，将当前活动的副作用函数（activeEffect）存入全局WeakMap -> Map -> Set结构中"
+      - "trigger（派发更新）：在set阶段，根据对象和属性键找到对应的副作用函数集合并执行"
+  - id: "FE-TQ-ZJ-019"
+    type: "technical"
+    question: "前端如何准确判断数据类型？请解释 typeof、instanceof 以及 Object.prototype.toString.call 的原理与区别。"
+    tags: ["数据类型", "原型链", "JS基础"]
+    difficulty: "easy"
+    source: "字节跳动"
+    key_points:
+      - "typeof: 判断基础类型，但在判断null、数组时会返回object"
+      - "instanceof: 顺着原型链查找，判断构造函数的prototype是否在实例的原型链上"
+      - "Object.prototype.toString.call: 最准确，能返回内部的[[Class]]标签（如[object Array]）"
+  - id: "FE-TQ-ZJ-020"
+    type: "technical"
+    question: "请简述浏览器的事件机制与事件委托的实现原理，它解决了什么实际问题？"
+    tags: ["DOM事件", "事件委托", "性能优化"]
+    difficulty: "easy"
+    source: "字节跳动"
+    key_points:
+      - "事件流包含三个阶段：捕获阶段、目标阶段、冒泡阶段"
+      - "事件委托利用事件冒泡机制，将子元素的事件监听绑定到父元素上"
+      - "解决的问题：减少DOM内存占用，并且对动态新增的子节点依然生效"
+  - id: "FE-TQ-ZJ-021"
+    type: "technical"
+    question: "手撕代码：给定 n+1 个范围在 1 到 n 之间的数字，找出其中唯一重复的数字（要求 O(n) 时间复杂度，O(1) 空间复杂度）。"
+    tags: ["算法", "双指针", "快慢指针"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "不能修改原数组、不能使用额外Map/Set空间"
+      - "将数组的数值视为链表指针，问题转化为寻找链表环的入口节点（类似LeetCode 287）"
+      - "使用快慢指针，相遇后将快指针重置回起点，步长改为1，再次相遇即为重复数字"
+  - id: "FE-TQ-ZJ-022"
+    type: "technical"
+    question: "JavaScript 中的 this 绑定规则有哪些？请结合不同调用场景说明。"
+    tags: ["JS基础", "this指向", "闭包"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "默认绑定（全局/严格模式下为undefined）"
+      - "隐式绑定（对象方法调用）"
+      - "显式绑定（call, apply, bind）"
+      - "new 绑定（指向实例对象）"
+      - "箭头函数（词法作用域捕获外层this）"
+  - id: "FE-TQ-ZJ-023"
+    type: "technical"
+    question: "介绍 TCP 协议的连接和断开过程，为什么断开连接需要 4 次挥手？"
+    tags: ["计算机网络", "TCP协议", "网络基础"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "清晰描述三次握手建立连接的过程"
+      - "描述四次挥手断开连接的FIN/ACK交互逻辑"
+      - "由于TCP是全双工通信，Server端收到FIN只代表Client不再发送数据，但Server可能还有数据未发送完，因此ACK和自身的FIN需要分两次发送"
+  - id: "FE-TQ-ZJ-024"
+    type: "technical"
+    question: "手撕代码：实现一个具有并发控制的异步任务请求调度器（Scheduler），要求支持限制最大并发数并保证FIFO（先进先出）。"
+    tags: ["并发控制", "异步编程", "Promise"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "维护一个任务执行队列和一个当前正在执行的任务计数"
+      - "添加任务时返回一个Promise，并在内部控制其resolve的时机"
+      - "一个任务执行完毕后（finally），递归或循环触发队列中下一个任务的执行"
+  - id: "FE-TQ-ZJ-025"
+    type: "technical"
+    question: "什么是 JavaScript 的事件循环机制（Event Loop）？宏任务和微任务的执行顺序是怎样的？"
+    tags: ["事件循环", "V8引擎", "异步执行"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "JS单线程与调用栈、任务队列的设计机制"
+      - "每次执行完一个宏任务（如setTimeout）后，清空当前所有的微任务队列（如Promise.then、MutationObserver）"
+      - "浏览器渲染通常发生在微任务队列清空之后"
+  - id: "FE-TQ-ZJ-026"
+    type: "technical"
+    question: "调用 React 的 setState 之后，React 内部具体是如何处理状态更新和触发重渲染的？"
+    tags: ["React原理", "渲染机制", "Fiber"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "状态更新会被放入更新队列（Update Queue）"
+      - "进入协调（Reconciliation）阶段，React 构建新的 Fiber 树并与旧树进行 Diff 对比"
+      - "找出副作用（Effect）后，在提交（Commit）阶段一次性将变更应用到真实DOM上"
+  - id: "FE-TQ-ZJ-027"
+    type: "technical"
+    question: "Git 中 merge 和 rebase 的主要区别是什么？为什么说在团队公共分支上使用 rebase 可能是危险的？"
+    tags: ["Git", "版本控制", "工程化"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "merge会产生一个新的合并节点，保留完整的历史脉络"
+      - "rebase会改写提交历史，将分支上的提交“重放”到目标分支顶部，历史线更线性"
+      - "在公共分支rebase会改变已共享的commit hash，导致其他协作者拉取和推送时发生严重冲突"

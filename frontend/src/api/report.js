@@ -33,6 +33,12 @@ export const getReplyAnalysis = async (reportId) => {
   }
 }
 
+export const requestExcellentAnswer = async (reportId, index) => {
+  return request.post(`/reports/${reportId}/reply-analysis/${index}/excellent-answer`, {}, {
+    timeout: 90000
+  })
+}
+
 
 /**
  * 获取历史面试列表

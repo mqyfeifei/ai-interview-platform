@@ -1,15 +1,17 @@
 type: "qa_technical_interview_questions"
 source:
-  - "牛客网"
-  - "测试社区"
+  - "Nowcoder"
+  - "Personal_Notes"
+  - "Community"
+  - "美团"
+  - "字节跳动"
 items:
   - id: "QA-TQ-001"
     type: "technical"
     question: "请详细解释一下白盒测试与黑盒测试的核心区别，并列举常用的设计用例方法。"
     tags: ["测试基础", "用例设计"]
     difficulty: "easy"
-    source: "牛客网"
-    status: "draft"
+    source: "Nowcoder" 
     key_points:
       - "白盒关注内部逻辑结构（语句覆盖、分支覆盖等）"
       - "黑盒关注外部功能与输入输出（等价类、边界值、正交表等）"
@@ -18,8 +20,7 @@ items:
     question: "在微服务架构下，你们是如何开展单元测试和集成测试的？两者如何配合？"
     tags: ["单元测试", "集成测试", "微服务"]
     difficulty: "medium"
-    source: "测试社区"
-    status: "draft"
+    source: "Community" 
     key_points:
       - "单元测试重在单个类/方法的逻辑验证，通常需要Mock掉外部依赖"
       - "集成测试重在验证模块间的接口交互和数据流转"
@@ -29,8 +30,7 @@ items:
     question: "开展接口测试时，你通常会关注哪些核心点？如果下游接口未开发完如何测试？"
     tags: ["接口测试", "Mock"]
     difficulty: "medium"
-    source: "测试社区"
-    status: "draft"
+    source: "Community" 
     key_points:
       - "关注点：入参出参校验、状态码、异常逻辑处理、幂等性验证、安全性"
       - "未开发完应对：利用契约测试理念，基于Swagger或API文档使用Mock Server（如WireMock）模拟返回结果阻断依赖"
@@ -39,8 +39,7 @@ items:
     question: "性能测试中，TPS和QPS有什么区别？如何判断系统达到了性能瓶颈？"
     tags: ["性能测试", "监控"]
     difficulty: "hard"
-    source: "牛客网"
-    status: "draft"
+    source: "Nowcoder" 
     key_points:
       - "TPS(每秒事务数)侧重完整业务流，QPS(每秒查询率)侧重单一接口请求"
       - "瓶颈判断：响应时间(RT)拐点急剧上升、TPS无法随并发数线性增长甚至下降、CPU/内存/IO负载打满或出现大量Error"
@@ -49,8 +48,7 @@ items:
     question: "在排查服务端日志时，你常用哪些 Linux 命令？如何在一份数百 MB 的日志中快速定位某个特定订单号的异常堆栈？"
     tags: ["Linux", "日志分析"]
     difficulty: "easy"
-    source: "牛客网"
-    status: "draft"
+    source: "Nowcoder" 
     key_points:
       - "基础命令掌握：grep, tail, less, awk, sed"
       - "定位技巧：使用 `grep -n \"订单号\" error.log` 查行号，再结合 `-A` (After) 和 `-B` (Before) 打印上下文的异常堆栈"
@@ -59,8 +57,7 @@ items:
     question: "请写出 SQL 验证某用户（user_id=123）在订单表（orders）中支付状态为成功（status=1）的总金额。如果多表联查呢？"
     tags: ["数据库", "SQL实战"]
     difficulty: "medium"
-    source: "牛客网"
-    status: "draft"
+    source: "Nowcoder" 
     key_points:
       - "单表聚合：SELECT SUM(amount) FROM orders WHERE user_id = 123 AND status = 1;"
       - "多表考察：掌握 INNER JOIN / LEFT JOIN 与 GROUP BY 的结合使用，验证后端统计接口数据的准确性"
@@ -69,8 +66,7 @@ items:
     question: "在 UI 自动化中，遇到动态加载的元素（如需等待 3-5 秒才出现）或难以定位的元素，你如何处理？"
     tags: ["UI自动化", "Selenium/Playwright"]
     difficulty: "medium"
-    source: "测试社区"
-    status: "draft"
+    source: "Community" 
     key_points:
       - "杜绝使用硬等待（Thread.sleep），推荐使用显式等待（Explicit Wait / WebDriverWait），按需智能等待元素可见或可点击"
       - "定位策略优化：优先使用唯一的 ID、Name，其次是 CSS Selector，尽量避免编写过于脆弱的长路径 XPath"
@@ -79,8 +75,7 @@ items:
     question: "在使用 Pytest 等自动化框架时，什么是 Fixture？它解决了什么痛点？"
     tags: ["自动化框架", "Pytest"]
     difficulty: "medium"
-    source: "测试社区"
-    status: "draft"
+    source: "Community" 
     key_points:
       - "Fixture 替代了传统的 Setup/Teardown，提供更灵活的测试前置准备和后置清理机制"
       - "痛点解决：支持不同作用域（function, class, module, session），实现资源复用（如全局只建立一次数据库连接）；结合 yield 优雅处理销毁逻辑"
@@ -89,8 +84,7 @@ items:
     question: "请解释 Cookie、Session 和 Token 的区别，以及在接口自动化中如何提取和传递 Token？"
     tags: ["接口自动化", "网络协议"]
     difficulty: "easy"
-    source: "牛客网"
-    status: "draft"
+    source: "Nowcoder" 
     key_points:
       - "原理区分：Cookie存客户端，Session存服务端，Token是无状态的加密签名凭证（如JWT）"
       - "自动化传递：通过登录接口响应头或 Body 提取 Token，存入全局变量，在后续请求中添加到 Header（如 Authorization: Bearer {token}）"
@@ -99,8 +93,7 @@ items:
     question: "敏捷测试中常说的“测试金字塔”理念是什么？相比之下“测试奖杯（Testing Trophy）”有什么不同？"
     tags: ["测试理论", "架构"]
     difficulty: "medium"
-    source: "技术博客"
-    status: "draft"
+    source: "Tech_Blog" 
     key_points:
       - "测试金字塔：底层大量单测（快、稳、成本低），中间接口层，顶层少量 UI 测试（慢、脆弱）"
       - "测试奖杯：前端或微服务中流行，强调“集成测试”作为奖杯的主体（收益最大），底层是静态检查和单测，顶层是E2E测试"
@@ -109,8 +102,7 @@ items:
     question: "你在测试项目中有没有遇到过“技术债务”？你是如何识别和管理它的？"
     tags: ["技术债务", "项目管理"]
     difficulty: "hard"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "识别技术债务的能力：如测试用例覆盖不足、自动化程度低、缺乏文档等"
       - "展现主动沟通和说服能力，向团队和管理层说明技术债务的风险和长期成本"
@@ -120,8 +112,7 @@ items:
     question: "你在测试项目中有没有遇到过“技术孤岛”？你是如何打破它的？"
     tags: ["技术孤岛", "跨部门协作"]
     difficulty: "hard"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "识别技术孤岛的能力：如某个测试模块或工具只有特定人员理解和维护，缺乏文档和知识共享"
       - "展现主动沟通和协作能力，推动团队内部的知识分享和交叉培训"
@@ -131,8 +122,7 @@ items:
     question: "你在测试项目中有没有遇到过“技术迷茫期”？你是如何走出它的？"
     tags: ["技术迷茫", "自我驱动"]
     difficulty: "hard"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "识别技术迷茫的能力：如对测试工具选型、测试架构设计等缺乏清晰方向感"
       - "展现自我驱动和学习能力，通过阅读文档、咨询专家、进行小规模实验等方式寻找解决方案"
@@ -142,8 +132,7 @@ items:
     question: "你在测试项目中有没有遇到过“技术瓶颈”？你是如何突破它的？"
     tags: ["技术瓶颈", "创新"]
     difficulty: "hard"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "识别技术瓶颈的能力：如性能问题、架构限制等"
       - "展现创新和解决问题的能力，通过引入新技术、优化算法、重构架构等方式突破瓶颈"
@@ -153,8 +142,7 @@ items:
     question: "你在测试项目中有没有遇到过“技术挑战”？你是如何迎接它的？"
     tags: ["技术挑战", "挑战应对"]
     difficulty: "hard"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "识别技术挑战的能力：如新技术的学习曲线、复杂问题的解决等"
       - "展现迎接挑战的能力，通过积极学习、团队协作、寻求帮助等方式应对挑战"
@@ -164,8 +152,7 @@ items:
     question: "你在测试项目中有没有遇到过“技术创新”？你是如何推动它的？"
     tags: ["技术创新", "创新推动"]
     difficulty: "hard"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "识别技术创新的能力：如新测试工具的应用、测试流程优化等"
       - "展现推动创新的能力，通过积极学习、团队协作、寻求支持等方式推动创新落地"
@@ -175,8 +162,7 @@ items:
     question: "你在测试项目中有没有遇到过“技术突破”？你是如何实现它的？"
     tags: ["技术突破", "实现突破"]
     difficulty: "hard"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "识别技术突破的能力：如性能提升、安全加固等"
       - "展现实现突破的能力，通过引入新技术、优化架构、重构代码等方式实现技术飞跃"
@@ -186,8 +172,7 @@ items:
     question: "你在测试项目中有没有遇到过“技术创新”？你是如何推动它的？"
     tags: ["技术创新", "创新推动"]
     difficulty: "hard"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "识别技术创新的能力：如新测试工具的应用、测试流程优化等"
       - "展现推动创新的能力，通过积极学习、团队协作、寻求支持等方式推动创新落地"
@@ -197,8 +182,7 @@ items:
     question: "你在测试项目中有没有遇到过“技术突破”？你是如何实现它的？"
     tags: ["技术突破", "实现突破"]
     difficulty: "hard"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "识别技术突破的能力：如性能提升、安全加固等"
       - "展现实现突破的能力，通过引入新技术、优化架构、重构代码等方式实现技术飞跃"
@@ -208,8 +192,7 @@ items:
     question: "你在测试项目中有没有遇到过“技术迷茫期”？你是如何走出它的？"
     tags: ["技术迷茫", "自我驱动"]
     difficulty: "hard"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "识别技术迷茫的能力：如对测试工具选型、测试架构设计等缺乏清晰方向感"
       - "展现自我驱动和学习能力，通过阅读文档、咨询专家、进行小规模实验等方式寻找解决方案"
@@ -219,8 +202,7 @@ items:
     question: "你在测试项目中有没有遇到过“技术瓶颈”？你是如何突破它的？"
     tags: ["技术瓶颈", "创新"]
     difficulty: "hard"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "识别技术瓶颈的能力：如性能问题、架构限制等"
       - "展现创新和解决问题的能力，通过引入新技术、优化算法、重构架构等方式突破瓶颈"
@@ -230,8 +212,7 @@ items:
     question: "你在测试项目中有没有遇到过“技术挑战”？你是如何迎接它的？"
     tags: ["技术挑战", "挑战应对"]
     difficulty: "hard"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "识别技术挑战的能力：如新技术的学习曲线、复杂问题的解决等"
       - "展现迎接挑战的能力，通过积极学习、团队协作、寻求帮助等方式应对挑战"
@@ -241,8 +222,7 @@ items:
     question: "你在测试项目中有没有遇到过“技术创新”？你是如何推动它的？"
     tags: ["技术创新", "创新推动"]
     difficulty: "hard"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "识别技术创新的能力：如新测试工具的应用、测试流程优化等"
       - "展现推动创新的能力，通过积极学习、团队协作、寻求支持等方式推动创新落地"
@@ -252,8 +232,7 @@ items:
     question: "你在测试项目中有没有遇到过“技术突破”？你是如何实现它的？"
     tags: ["技术突破", "实现突破"]
     difficulty: "hard"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "识别技术突破的能力：如性能提升、安全加固等"
       - "展现实现突破的能力，通过引入新技术、优化架构、重构代码等方式实现技术飞跃"
@@ -263,8 +242,7 @@ items:
     question: "你在测试项目中有没有遇到过“技术创新”？你是如何推动它的？"
     tags: ["技术创新", "创新推动"]
     difficulty: "hard"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "识别技术创新的能力：如新测试工具的应用、测试流程优化等"
       - "展现推动创新的能力，通过积极学习、团队协作、寻求支持等方式推动创新落地"
@@ -274,8 +252,7 @@ items:
     question: "你在测试项目中有没有遇到过“技术突破”？你是如何实现它的？"
     tags: ["技术突破", "实现突破"]
     difficulty: "hard"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "识别技术突破的能力：如性能提升、安全加固等"
       - "展现实现突破的能力，通过引入新技术、优化架构、重构代码等方式实现技术飞跃"
@@ -285,8 +262,7 @@ items:
     question: "你在测试项目中有没有遇到过“技术迷茫期”？你是如何走出它的？"
     tags: ["技术迷茫", "自我驱动"]
     difficulty: "hard"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "识别技术迷茫的能力：如对测试工具选型、测试架构设计等缺乏清晰方向感"
       - "展现自我驱动和学习能力，通过阅读文档、咨询专家、进行小规模实验等方式寻找解决方案"
@@ -296,8 +272,7 @@ items:
     question: "你在测试项目中有没有遇到过“技术瓶颈”？你是如何突破它的？"
     tags: ["技术瓶颈", "创新"]
     difficulty: "hard"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "识别技术瓶颈的能力：如性能问题、架构限制等"
       - "展现创新和解决问题的能力，通过引入新技术、优化算法、重构架构等方式突破瓶颈"
@@ -307,8 +282,7 @@ items:
     question: "你在测试项目中有没有遇到过“技术挑战”？你是如何迎接它的？"
     tags: ["技术挑战", "挑战应对"]
     difficulty: "hard"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "识别技术挑战的能力：如新技术的学习曲线、复杂问题的解决等"
       - "展现迎接挑战的能力，通过积极学习、团队协作、寻求帮助等方式应对挑战"
@@ -318,9 +292,762 @@ items:
     question: "你在测试项目中有没有遇到过“技术创新”？你是如何推动它的？"
     tags: ["技术创新", "创新推动"]
     difficulty: "hard"
-    source: "自己整理"
-    status: "draft"
+    source: "Personal_Notes" 
     key_points:
       - "识别技术创新的能力：如新测试工具的应用、测试流程优化等"
       - "展现推动创新的能力，通过积极学习、团队协作、寻求支持等方式推动创新落地"
       - "分享成功推动技术创新的案例，以及从中学到的经验教训"
+
+  - id: "QA-TQ-031"
+    type: "technical"
+    question: "在测试开发岗位中，你认为通常需要掌握哪些核心算法？请举例说明这些算法在自动化测试框架设计或测试工具开发中的实际应用场景。"
+    tags: ["算法基础", "测试开发", "工具开发"]
+    difficulty: "medium"
+    source: "Personal_Notes"
+    key_points:
+      - "能够列举常见数据结构（如哈希表、树结构）和基础算法。"
+      - "能结合实际测试场景说明应用（如利用图算法解析微服务依赖链路、利用字符串匹配进行海量日志监控去重）。"
+      - "理解算法在提升自动化执行效率和平台性能中的核心作用。"
+
+  - id: "QA-TQ-032"
+    type: "technical"
+    question: "在搭建UI或接口自动化测试框架时，你是如何处理测试数据的隔离、多环境依赖以及用例之间的数据传递问题的？"
+    tags: ["自动化测试", "测试数据管理", "环境解耦"]
+    difficulty: "medium"
+    source: "Personal_Notes"
+    key_points:
+      - "说明采用数据驱动机制（DDT）将代码与数据分离的实践方案。"
+      - "通过Fixture、前置/后置钩子实现数据的动态生成与物理隔离清理。"
+      - "使用Mock技术解除对不稳定第三方服务的依赖，确保用例执行的原子性。"
+
+  - id: "QA-TQ-033"
+    type: "technical"
+    question: "在搭建UI或接口自动化测试框架时，你是如何处理测试数据的隔离、多环境依赖以及用例之间的数据传递问题的？"
+    tags: ["自动化测试", "测试数据管理", "环境解耦"]
+    difficulty: "medium"
+    source: "Personal_Notes"
+    key_points:
+      - "说明采用数据驱动机制（DDT）将代码与数据分离的实践方案。"
+      - "通过Fixture、前置/后置钩子实现数据的动态生成与物理隔离清理。"
+      - "使用Mock技术解除对不稳定第三方服务的依赖，确保用例执行的原子性。"
+
+  - id: "QA-TQ-MT-001"
+    type: "technical"
+    question: "请解释一下Redis的缓存击穿、缓存穿透和缓存雪崩，以及各自的解决方案。"
+    tags: ["Redis", "缓存策略", "高并发"]
+    difficulty: "medium"
+    source: "美团"
+    key_points:
+      - "缓存穿透：请求不存在的数据（布隆过滤器、缓存空对象）"
+      - "缓存击穿：热点Key突然失效引发高并发查DB（互斥锁、热点数据永不过期或逻辑过期）"
+      - "缓存雪崩：大量Key同时失效或Redis宕机（打散过期时间、集群高可用部署、限流降级）"
+
+  - id: "QA-TQ-MT-002"
+    type: "technical"
+    question: "Java中HashCode是怎么计算的？如果两个对象的HashCode相等，那么equals是否一定返回true？==和equals的区别是什么？"
+    tags: ["Java基础", "集合框架", "底层原理"]
+    difficulty: "easy"
+    source: "美团"
+    key_points:
+      - "HashCode相等不等价于equals返回true（存在哈希碰撞问题）"
+      - "重写equals必须重写HashCode，以保证在使用HashMap等哈希结构时逻辑正确"
+      - "==比较基本类型的值或引用类型的内存地址；equals默认比较地址，但通常会被重写用于比较内容"
+
+  - id: "QA-TQ-MT-003"
+    type: "technical"
+    question: "多头自注意力机制（Multi-Head Attention）是 Transformer 的核心组件之一，为什么要选择多头？它有什么好处？"
+    tags: ["大模型基础", "Transformer", "AI底层逻辑"]
+    difficulty: "hard"
+    source: "美团"
+    key_points:
+      - "允许模型在不同的表示子空间里学习到相关信息（如有的头关注语法，有的头关注语义关系）"
+      - "类似于卷积神经网络中的多个Channel，丰富了特征提取的多样性"
+      - "提升了模型在捕捉长距离依赖和复杂上下文时的泛化能力"
+
+  - id: "QA-TQ-MT-004"
+    type: "technical"
+    question: "TCP/IP协议分为哪几层？每一层都有什么常见的协议？"
+    tags: ["计算机网络", "网络协议", "基础八股"]
+    difficulty: "easy"
+    source: "美团"
+    key_points:
+      - "应用层：HTTP, HTTPS, FTP, DNS"
+      - "传输层：TCP, UDP"
+      - "网络层：IP, ICMP, ARP"
+      - "网络接口层（链路层/物理层）：Ethernet, MAC"
+
+  - id: "QA-TQ-MT-005"
+    type: "technical"
+    question: "请说一下pytest和unittest的区别。在pytest里怎么做测试用例的依赖管理（比如用例A执行完才能跑用例B）？"
+    tags: ["自动化框架", "Python", "Pytest"]
+    difficulty: "medium"
+    source: "美团"
+    key_points:
+      - "区别：pytest语法更简洁，断言直接用assert，支持丰富的插件生态和fixture；unittest是面向对象的标准库"
+      - "依赖管理方案：使用 `pytest-dependency` 插件，或通过 fixture 的作用域（scope）与 yield 结合来控制执行顺序"
+      - "强调测试用例最佳实践应尽量避免强依赖，确需依赖应下沉至数据准备层"
+
+  - id: "QA-TQ-MT-006"
+    type: "technical"
+    question: "大模型的RAG（检索增强生成）主要用来解决什么问题？它的基本工作流程是怎样的？"
+    tags: ["大模型应用", "RAG", "AI评测"]
+    difficulty: "medium"
+    source: "美团"
+    key_points:
+      - "解决问题：大模型的幻觉问题、缺乏实时知识、以及企业私有数据隐私问题"
+      - "工作流程第一步：文档解析、切分（Chunking）并向量化（Embedding）存入向量数据库"
+      - "工作流程第二步：用户提问时，将问题向量化去库中检索召回TopK段落，拼接成Prompt后交给LLM生成答案"
+
+  - id: "QA-TQ-MT-007"
+    type: "technical"
+    question: "单例模式有哪些常见的实现方式？请简述其优缺点（重点讲一下双重检查锁机制）。"
+    tags: ["设计模式", "Java基础", "并发编程"]
+    difficulty: "medium"
+    source: "美团"
+    key_points:
+      - "常见方式：饿汉式（线程安全但浪费资源）、懒汉式（资源节约但需处理并发）、静态内部类、枚举"
+      - "双重检查锁（DCL）：两次if判断对象是否为空，结合synchronized锁住类对象，兼顾性能与安全"
+      - "必须提到需要使用 `volatile` 关键字修饰实例变量，以防止JVM指令重排引发的空指针异常"
+
+  - id: "QA-TQ-MT-008"
+    type: "technical"
+    question: "HTTP接口测试中，返回404和502分别可能是什么原因导致的？"
+    tags: ["接口测试", "网络排查", "HTTP状态码"]
+    difficulty: "easy"
+    source: "美团"
+    key_points:
+      - "404 Not Found：请求URL拼写错误，接口未发布上线，或Nginx路由规则配置缺失"
+      - "502 Bad Gateway：后端服务宕机（如Tomcat挂掉），或者网关（如Nginx）无法与上游服务建立连接（超时或端口拒绝连接）"
+      - "展现排查链路意识：从抓包看请求，到看网关层日志，再查应用层状态"
+
+  - id: "QA-TQ-MT-009"
+    type: "technical"
+    question: "请解释一下HTTP和HTTPS的区别？HTTPS是如何保证传输安全的？"
+    tags: ["计算机网络", "HTTP协议", "网络安全"]
+    difficulty: "medium"
+    source: "美团"
+    key_points:
+      - "HTTP是明文传输，HTTPS在HTTP基础上加入了SSL/TLS层进行加密传输和身份认证"
+      - "HTTPS通过非对称加密协商对称加密的密钥，使用CA数字证书验证服务器身份，并通过哈希算法校验报文完整性"
+    
+  - id: "QA-TQ-MT-010"
+    type: "technical"
+    question: "在Java中，==和equals()有什么区别？如果两个对象的hashCode相等，那么equals()是否一定返回true？为什么？"
+    tags: ["Java基础", "面向对象", "集合框架"]
+    difficulty: "easy"
+    source: "美团"
+    key_points:
+      - "==比较基本数据类型的值或引用数据类型的内存地址；equals默认比较地址，但通常会被重写用于比较内容"
+      - "hashCode相等不等价于equals返回true（存在哈希碰撞问题）"
+      - "重写equals必须重写hashCode，以保证在使用HashMap等哈希结构时逻辑正确"
+
+  - id: "QA-TQ-MT-011"
+    type: "technical"
+    question: "谈谈你对自动化测试在整个测试流程中定位和作用的理解？它主要用来发现新Bug还是防止回归？"
+    tags: ["自动化测试理论", "测试体系", "质量保障"]
+    difficulty: "medium"
+    source: "美团"
+    key_points:
+      - "自动化测试的主要作用是构建防护网，核心价值在于防止功能回归（Regression Test）和提升回归效率"
+      - "新Bug通常依赖于探索性测试和手工测试的发现，因为自动化脚本是基于已知预期结果编写的"
+      - "自动化在CI/CD流水线中起到门禁的作用，帮助尽早发现集成阶段的基础问题"
+
+  - id: "QA-TQ-MT-012"
+    type: "technical"
+    question: "编写UI自动化用例时，你是如何处理动态元素（比如等待时间、元素定位不稳定）的？导致自动化用例不稳定的常见因素有哪些？"
+    tags: ["UI自动化", "Selenium", "元素定位"]
+    difficulty: "medium"
+    source: "美团"
+    key_points:
+      - "等待策略：摒弃强制等待（sleep），优先使用显式等待（Explicit Wait）监控特定元素的状态（如可见、可点击），辅以隐式等待"
+      - "定位策略：尽量使用稳定的属性（如id, name），对于动态ID，使用XPath/CSS中的相对定位、层级定位或包含匹配（contains）"
+      - "不稳定因素：网络延迟、页面渲染慢、第三方广告弹窗遮挡、A/B测试导致UI结构变化等"
+
+  - id: "QA-TQ-MT-013"
+    type: "technical"
+    question: "请讲一下Pytest和Unittest的区别？在Pytest里怎么做测试用例的依赖管理（例如用例A执行完才能跑用例B）？"
+    tags: ["Python", "Pytest", "测试框架"]
+    difficulty: "medium"
+    source: "美团"
+    key_points:
+      - "区别：Pytest语法更简洁（直接使用assert），支持丰富的插件生态（如allure, xdist），灵活的Fixture机制；Unittest是内置库，基于类实现，略显笨重"
+      - "依赖管理：可以使用第三方插件 `pytest-dependency`，在用例上标记 `@pytest.mark.dependency()` 实现有向无环图的执行顺序"
+      - "最佳实践建议：测试用例应尽量保持独立无状态。如果必须依赖，推荐将前置步骤封装入 Fixture 中，而非在用例间产生强耦合"
+
+  - id: "QA-TQ-MT-014"
+    type: "technical"
+    question: "详细讲一下HTTP和HTTPS的区别是什么？HTTPS是如何保证传输安全的？"
+    tags: ["计算机网络", "HTTP协议", "网络安全"]
+    difficulty: "medium"
+    source: "美团"
+    key_points:
+      - "区别：HTTP是明文传输，端口80；HTTPS在HTTP基础上加入了SSL/TLS层，进行加密传输和身份认证，端口443"
+      - "安全保证机制：采用非对称加密协商对称加密的密钥（保障性能与安全）"
+      - "通过CA数字证书验证服务器身份，防止中间人攻击"
+      - "使用哈希算法（如SHA）进行报文完整性校验，防止数据被篡改"
+
+  - id: "QA-TQ-MT-015"
+    type: "technical"
+    question: "在Java中，==和equals()有什么区别？如果两个对象的hashCode相等，那么equals()是否一定返回true？为什么？"
+    tags: ["Java基础", "面向对象", "集合框架"]
+    difficulty: "easy"
+    source: "美团"
+    key_points:
+      - "==比较：基本数据类型比较的是值，引用数据类型比较的是内存地址"
+      - "equals比较：默认比较内存地址，但通常会被重写（如String），用于比较对象的内容逻辑是否相等"
+      - "hashCode相等，equals不一定为true（即哈希冲突）；但equals为true，则hashCode必须相等"
+
+  - id: "QA-TQ-MT-016"
+    type: "technical"
+    question: "请详细说明Redis支持的数据类型有哪些？Redis的事务是如何执行的？"
+    tags: ["Redis", "中间件", "数据库"]
+    difficulty: "medium"
+    source: "美团"
+    key_points:
+      - "数据类型：String, Hash, List, Set, Sorted Set (Zset)，以及高级数据结构如 Bitmap, HyperLogLog, Geospatial"
+      - "事务机制：通过 MULTI 开启，命令入队，通过 EXEC 执行。Redis事务不支持强一致性的回滚（如果某条命令语法错误会全部拒绝，如果执行期错误则其他命令继续执行）"
+      - "通常配合 WATCH 命令实现乐观锁机制，监控键值变化"
+
+  - id: "QA-TQ-MT-017"
+    type: "technical"
+    question: "说一下MySQL的索引结构，B+树索引和Hash索引有什么区别及各自的适用场景？"
+    tags: ["MySQL", "索引原理", "数据结构"]
+    difficulty: "medium"
+    source: "美团"
+    key_points:
+      - "B+树：非叶子节点不存数据只存主键索引，数据全在叶子节点并形成有序双向链表。适合范围查询（>、<、between）、排序和精确匹配"
+      - "Hash索引：基于哈希表实现，等值查询极快（O(1)），但数据无序存放"
+      - "缺点对比：Hash索引不支持范围查询，不支持索引的最左前缀匹配规则，且存在哈希冲突的问题。InnoDB默认使用B+树，但内部有自适应哈希索引优化"
+
+  - id: "QA-TQ-MT-018"
+    type: "technical"
+    question: "请介绍一下SSE（Server-Sent Events）的工作原理和心跳保活机制，它相比WebSocket有什么优势？"
+    tags: ["网络协议", "前后端通信", "长连接"]
+    difficulty: "medium"
+    source: "美团"
+    key_points:
+      - "原理：基于HTTP协议，服务端单向向客户端推送文本流数据，Content-Type通常为 text/event-stream"
+      - "优势：实现简单，原生支持断线自动重连，支持自定义事件类型。相比WebSocket（全双工），SSE更轻量，适合单向数据流（如大模型流式打字输出、股票行情展示）"
+      - "心跳保活：服务端定期发送空注释行（如 `: \n\n`）来维持长连接，防止被网关或代理服务器（如Nginx）因超时而主动切断"
+
+  - id: "QA-TQ-MT-019"
+    type: "technical"
+    question: "算法题：请手写代码实现二分查找算法。"
+    tags: ["算法", "二分查找", "手撕代码"]
+    difficulty: "easy"
+    source: "美团"
+    key_points:
+      - "明确二分查找的前提：数组必须是有序的"
+      - "正确初始化左右边界（left=0, right=len-1 或 len）"
+      - "循环条件准确判定（while left <= right）"
+      - "中间值的计算防溢出（mid = left + (right - left) / 2）"
+
+  - id: "QA-TQ-MT-020"
+    type: "technical"
+    question: "算法题：给你一个文本，请编写程序统计文本中词频最高的词，并输出该高频词及其出现的次数。"
+    tags: ["算法", "哈希表", "字符串处理"]
+    difficulty: "medium"
+    source: "美团"
+    key_points:
+      - "数据清洗：考虑去除标点符号，统一大小写"
+      - "分词处理：根据空格或其他分隔符切割字符串"
+      - "频率统计：利用哈希表（Map/Dict）记录每个词出现的次数"
+      - "极值查找：遍历哈希表，找出Value最大值对应的Key（也可利用排序处理Top K问题）"
+
+  - id: "QA-TQ-ZJ-001"
+    type: "technical"
+    question: "大模型的性能测试和效果评测一般是怎么做的？与传统的软件测试有什么区别？"
+    tags: ["AI测试", "大模型", "评测体系"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "效果评测：基于客观数据集评测（BLEU、Rouge等指标）与人工对抗评测（幻觉、安全性、偏见评估）"
+      - "性能测试：关注首字响应延迟（TTFT）、吞吐量（Tokens per second）、显存占用率"
+      - "区别：传统测试结果确定性高，大模型测试属于概率性输出，重在验证鲁棒性和安全对齐"
+
+  - id: "QA-TQ-ZJ-002"
+    type: "technical"
+    question: "需求分析、技术文档评审、用例评审这三个节点，分别发生在测试流程的什么阶段？"
+    tags: ["测试理论", "流程规范", "质量保证"]
+    difficulty: "easy"
+    source: "字节跳动"
+    key_points:
+      - "需求分析：发生在项目启动后、开发编码前（左移阶段）"
+      - "技术文档评审：发生在需求确认后、开发产出技术方案时"
+      - "用例评审：发生在测试人员完成用例编写后、正式进入测试执行阶段前"
+
+  - id: "QA-TQ-ZJ-003"
+    type: "technical"
+    question: "如何判断一个Bug是P0/P1级别的？请举例说明。"
+    tags: ["缺陷管理", "严重等级", "质量度量"]
+    difficulty: "easy"
+    source: "字节跳动"
+    key_points:
+      - "P0（致命）：核心主干流程完全阻断、引发系统崩溃宕机、导致严重资损或数据泄露"
+      - "P1（严重）：重要功能模块不可用且无替代方案、大面积报错但非主干"
+      - "合理结合具体的业务场景进行举例说明（如电商系统的支付无法拉起为P0）"
+
+  - id: "QA-TQ-ZJ-004"
+    type: "technical"
+    question: "死锁产生的原因是什么？在实际开发或测试中如何有效地避免死锁？"
+    tags: ["操作系统", "并发编程", "死锁"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "四大必要条件：互斥、占有并等待、非抢占、循环等待"
+      - "避免策略：破坏循环等待（规定获取锁的顺序）、设置获取锁的超时时间、使用死锁检测算法（银行家算法）"
+
+  - id: "QA-TQ-ZJ-005"
+    type: "technical"
+    question: "乐观锁和悲观锁的区别是什么？各自的应用场景有哪些？"
+    tags: ["数据库", "并发控制", "锁机制"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "悲观锁：假定冲突一定会发生，操作数据前先加锁（如 SELECT ... FOR UPDATE），适合写多读少的场景"
+      - "乐观锁：假定冲突大概率不发生，通过版本号（Version）或时间戳机制在更新时校验，适合读多写少、追求高并发的场景"
+
+  - id: "QA-TQ-ZJ-006"
+    type: "technical"
+    question: "请详细解释一下缓存淘汰策略 LRU（最近最少使用）的底层实现原理。"
+    tags: ["数据结构", "缓存策略", "算法实现"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "核心思想：最近被访问的数据在未来被访问的概率更大"
+      - "数据结构：通常利用 哈希表（快速查找 O(1)） + 双向链表（快速调整顺序 O(1)）组合实现"
+      - "操作逻辑：命中时移动到链表头部；插入超限时淘汰链表尾部节点"
+
+  - id: "QA-TQ-ZJ-007"
+    type: "technical"
+    question: "在 Python 中，set、tuple 和 list 有什么区别？"
+    tags: ["Python", "数据结构", "语言基础"]
+    difficulty: "easy"
+    source: "字节跳动"
+    key_points:
+      - "list（列表）：可变序列，允许重复，有序存放"
+      - "tuple（元组）：不可变序列，一旦创建不可修改，用作常量或字典的键"
+      - "set（集合）：可变集合，不允许重复，无序存放，底层基于哈希表实现"
+
+  - id: "QA-TQ-ZJ-008"
+    type: "technical"
+    question: "请详细说明进程、线程和协程的区别与联系。"
+    tags: ["操作系统", "多线程", "底层原理"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "进程：操作系统资源分配的最小单位，进程间相互独立，开销大"
+      - "线程：CPU调度的最小单位，共享进程资源，切换开销较小"
+      - "协程：用户态的轻量级线程，由程序员（代码）控制切换，无上下文切换的内核开销，极高并发"
+
+  - id: "QA-TQ-ZJ-009"
+    type: "technical"
+    question: "请详细介绍一下 TCP 协议的三次握手过程，为什么不能是两次握手？"
+    tags: ["计算机网络", "TCP协议", "底层网络"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "第一次：客户端发SYN，服务端收SYN（确认客户端发、服务端收正常）"
+      - "第二次：服务端发SYN+ACK，客户端收（确认服务端收发正常）"
+      - "第三次：客户端发ACK，服务端收（确认客户端收正常，建立连接）"
+      - "不能两次的原因：防止已失效的连接请求报文段突然又传送到了服务端，产生资源浪费"
+
+  - id: "QA-TQ-ZJ-010"
+    type: "technical"
+    question: "算法题：找出字符串中的最长无重复字符的子串长度，请提供思路。"
+    tags: ["算法与数据结构", "字符串", "滑动窗口"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "核心算法思想：滑动窗口（双指针）"
+      - "使用哈希表或集合记录当前窗口内的字符"
+      - "当遇到重复字符时，左指针移动直到移出该重复字符，动态更新最大长度记录"
+
+  - id: "QA-TQ-ZJ-011"
+    type: "technical"
+    question: "请对比一下 Playwright 和 Selenium 这两个 UI 自动化框架的区别和优劣势。"
+    tags: ["UI自动化", "测试框架", "工具对比"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "底层通信：Selenium基于WebDriver HTTP通信，Playwright基于WebSocket CDP协议通信（速度更快）"
+      - "等待机制：Playwright原生自带强大的自动等待机制，而Selenium依赖显式/隐式等待配置"
+      - "并发执行与环境：Playwright支持多Browser Context（环境隔离轻量），并发执行效率远高于Selenium"
+
+  - id: "QA-TQ-ZJ-012"
+    type: "technical"
+    question: "请详细介绍一下 MySQL 的索引机制，包括 B+ 树结构、聚簇索引和非聚簇索引。"
+    tags: ["MySQL", "数据库索引", "存储引擎"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "B+树优势：非叶子节点不存数据只存主键，层级更低，叶子节点构成双向链表，极大地提升了范围查询效率"
+      - "聚簇索引（如InnoDB主键索引）：数据和索引存储在一起，叶子节点保存完整的数据行"
+      - "非聚簇索引（二级索引）：叶子节点只存储主键值，查询时需要通过主键值进行“回表”查询"
+
+  - id: "QA-TQ-ZJ-013"
+    type: "technical"
+    question: "在数据库中建立索引时，有哪些注意事项和最佳实践？"
+    tags: ["MySQL", "数据库优化", "性能调优"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "选择区分度高（基数大）的字段建立索引"
+      - "遵循最左前缀匹配原则，合理设计联合索引的顺序"
+      - "避免在索引列上使用函数或进行隐式类型转换，防止索引失效"
+      - "控制索引数量，因为索引会占用空间且降低更新/插入效率"
+
+  - id: "QA-TQ-ZJ-014"
+    type: "technical"
+    question: "请深入讲讲JVM的类加载机制和双亲委派模型。"
+    tags: ["Java", "JVM", "底层原理"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "类加载过程（加载、验证、准备、解析、初始化）"
+      - "双亲委派模型的定义及其工作流程"
+      - "说明其存在的原因（防止核心API被篡改，保证类唯一性）"
+
+  - id: "QA-TQ-ZJ-015"
+    type: "technical"
+    question: "请详述如何排查和解决线上的内存泄漏问题？"
+    tags: ["线上排查", "内存泄漏", "性能调优"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "使用监控工具（如Prometheus）发现内存持续上涨告警"
+      - "Dump内存快照（如使用jmap），利用MAT等工具分析大对象"
+      - "定位代码段，检查未关闭的流、长期存活的静态集合等根因"
+
+  - id: "QA-TQ-ZJ-016"
+    type: "technical"
+    question: "请讲讲Spring Boot的启动流程和自动配置原理。"
+    tags: ["Java", "Spring Boot", "框架原理"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "SpringApplication的run方法核心步骤"
+      - "@SpringBootApplication注解的三大核心注解"
+      - "分析spring.factories及@Conditional按需加载机制"
+
+  - id: "QA-TQ-ZJ-017"
+    type: "technical"
+    question: "请对比说明多进程和多线程的区别。"
+    tags: ["操作系统", "并发编程", "多线程"]
+    difficulty: "easy"
+    source: "字节跳动"
+    key_points:
+      - "资源分配：进程是资源分配的最小单位，线程是CPU调度的最小单位"
+      - "内存隔离：进程间相互独立，同进程内的线程共享内存"
+      - "开销对比：进程切换开销大，线程切换开销小"
+
+  - id: "QA-TQ-ZJ-018"
+    type: "technical"
+    question: "请列举常见的HTTP状态码及其具体含义。"
+    tags: ["计算机网络", "HTTP", "协议基础"]
+    difficulty: "easy"
+    source: "字节跳动"
+    key_points:
+      - "2xx系列（200 OK）"
+      - "3xx系列（301永久重定向，302临时重定向）"
+      - "4xx系列（400 Bad Request，403 Forbidden，404 Not Found）"
+      - "5xx系列（500 Internal Server Error，502 Bad Gateway）"
+
+  - id: "QA-TQ-ZJ-019"
+    type: "technical"
+    question: "请详细说明死锁产生的原因及四个必要条件。"
+    tags: ["操作系统", "并发", "死锁"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "互斥条件"
+      - "请求与保持条件"
+      - "不剥夺条件"
+      - "循环等待条件"
+
+  - id: "QA-TQ-ZJ-020"
+    type: "technical"
+    question: "请介绍一下TCP三次握手的详细过程及为什么需要三次。"
+    tags: ["计算机网络", "TCP", "三次握手"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "SYN -> SYN+ACK -> ACK 的完整交互"
+      - "说明序列号(seq)和确认号(ack)的演变"
+      - "防备历史重复连接初始化，保证双方都有收发能力"
+
+  - id: "QA-TQ-ZJ-021"
+    type: "technical"
+    question: "请详细描述一下从浏览器输入URL到页面完整展示出来的整个过程。"
+    tags: ["计算机网络", "前端基础", "综合题"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "DNS域名解析获取IP"
+      - "建立TCP连接（三次握手）及可能包含的TLS握手"
+      - "发送HTTP请求与服务器响应"
+      - "浏览器解析HTML/CSS，构建DOM树，执行JS，最终渲染页面"
+
+  - id: "QA-TQ-ZJ-022"
+    type: "technical"
+    question: "请解释Python中浅拷贝和深拷贝的区别。"
+    tags: ["Python", "基础语法", "内存管理"]
+    difficulty: "easy"
+    source: "字节跳动"
+    key_points:
+      - "浅拷贝（copy）只复制最外层对象，内部嵌套的元素依然是引用"
+      - "深拷贝（deepcopy）递归复制所有层级的对象，完全独立"
+      - "结合具体代码场景（如修改嵌套列表）说明表现差异"
+
+  - id: "QA-TQ-ZJ-023"
+    type: "technical"
+    question: "请讲讲TCP与UDP的核心区别。"
+    tags: ["计算机网络", "TCP", "UDP"]
+    difficulty: "easy"
+    source: "字节跳动"
+    key_points:
+      - "面向连接 vs 无连接"
+      - "可靠传输（拥塞控制、重传机制） vs 尽最大努力交付"
+      - "首部开销及适用场景（文件传输 vs 实时音视频直播）"
+
+  - id: "QA-TQ-ZJ-024"
+    type: "technical"
+    question: "请谈谈你在Prompt工程方面有哪些优化经验和具体策略？"
+    tags: ["AIGC", "Prompt工程", "大模型"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "角色设定与背景上下文的提供"
+      - "Few-Shot（少样本）提供参考样例"
+      - "CoT（思维链）引导模型分布推理"
+
+  - id: "QA-TQ-ZJ-025"
+    type: "technical"
+    question: "算法题：给定一个不含重复数字的数组，请手撕代码返回所有可能的全排列。"
+    tags: ["算法", "回溯算法", "手撕代码"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "识别题目本质为经典的回溯算法（Backtracking）"
+      - "正确设计递归函数的状态转移及终止条件"
+      - "完成路径节点的加入与撤销（剪枝操作）"
+
+  - id: "QA-TQ-ZJ-026"
+    type: "technical"
+    question: "请列举几种常用的软件设计模式，并讲讲它们的适用场景。"
+    tags: ["设计模式", "架构设计", "代码规范"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "单例模式（配置类、连接池）"
+      - "工厂模式（解耦对象创建逻辑）"
+      - "策略模式/观察者模式的具体业务应用"
+
+  - id: "QA-TQ-ZJ-027"
+    type: "technical"
+    question: "在Java等并发环境下，如何有效保证线程安全？有哪些同步机制？"
+    tags: ["Java", "并发编程", "线程安全"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "互斥锁（synchronized, ReentrantLock）"
+      - "无锁机制/原子类（CAS, AtomicInteger）"
+      - "并发集合（ConcurrentHashMap）及ThreadLocal"
+
+  - id: "QA-TQ-ZJ-028"
+    type: "technical"
+    question: "在UI自动化方面，除了Appium之外你还了解哪些框架？它们各自的优缺点和区别是什么？"
+    tags: ["UI自动化", "测试框架", "工具对比"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "提及Selenium（Web端标准）、Playwright（新一代、速度快、支持无头）"
+      - "提及Macaca、Airtest（图像识别优势）等"
+      - "对比底层通信协议的区别（如WebDriver vs CDP协议）"
+
+  - id: "QA-TQ-ZJ-029"
+    type: "technical"
+    question: "请解释乐观锁和悲观锁的区别，以及它们各自的应用场景是什么？"
+    tags: ["数据库", "锁机制", "并发控制"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "悲观锁：假定冲突概率高，操作前先加锁（如排他锁 for update），适用于写多读少"
+      - "乐观锁：假定冲突概率低，提交时基于版本号（Version）或CAS校验，适用于读多写少"
+
+  - id: "QA-TQ-ZJ-030"
+    type: "technical"
+    question: "请详细说明TCP协议是如何保证传输的安全可靠性的？"
+    tags: ["计算机网络", "TCP", "可靠性"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "数据包校验（Checksum）"
+      - "序列号与确认应答机制（ACK）"
+      - "超时重传、流量控制（滑动窗口）及拥塞控制"
+
+  - id: "QA-TQ-ZJ-031"
+    type: "technical"
+    question: "算法题：手撕代码，找出字符串中最长的无重复字符子串。"
+    tags: ["算法", "滑动窗口", "手撕代码"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "使用滑动窗口思想（双指针）"
+      - "结合哈希表/集合记录字符及其最新出现的位置"
+      - "正确更新最长长度状态"
+
+  - id: "QA-TQ-ZJ-032"
+    type: "technical"
+    question: "操作系统是如何保证多个进程的内存空间相互独立的？为什么要这样设计？"
+    tags: ["操作系统", "内存管理", "虚拟内存"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "引入虚拟内存机制，每个进程拥有独立的虚拟地址空间"
+      - "通过页表（MMU）映射到物理内存"
+      - "避免进程间互相干扰破坏数据，提升系统安全性与稳定性"
+
+  - id: "QA-TQ-ZJ-033"
+    type: "technical"
+    question: "请解释一下Cookie和Session的区别与联系，它们在实际应用中一般是配合使用的吗？"
+    tags: ["网络协议", "HTTP", "状态管理"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "存储位置：Cookie存客户端，Session存服务端"
+      - "安全性与容量差异"
+      - "配合机制：Session ID通常依托Cookie传递以关联客户端状态"
+
+  - id: "QA-TQ-ZJ-034"
+    type: "technical"
+    question: "请讲讲你对C++智能指针的了解，主要有哪几种，除了智能指针外还有什么方法避免内存泄漏？"
+    tags: ["C++", "内存管理", "智能指针"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "分类：unique_ptr, shared_ptr, weak_ptr的作用及防循环引用"
+      - "RAII（资源获取即初始化）机制"
+      - "静态代码分析工具检查及良好的编码规范"
+
+  - id: "QA-TQ-ZJ-035"
+    type: "technical"
+    question: "请讲解一下HTTP的请求报文和响应报文在结构上有什么区别？是否都有消息体？"
+    tags: ["计算机网络", "HTTP", "报文结构"]
+    difficulty: "easy"
+    source: "字节跳动"
+    key_points:
+      - "请求报文：请求行（方法/URL/版本）、请求头、空行、请求体"
+      - "响应报文：状态行（版本/状态码/描述）、响应头、空行、响应体"
+      - "指出并非所有请求（如GET）和响应（如204状态）都有消息体"
+
+  - id: "QA-TQ-ZJ-036"
+    type: "technical"
+    question: "请详细解释一下Redis的缓存穿透、缓存击穿、缓存雪崩现象，以及对应的解决方案。"
+    tags: ["Redis", "缓存架构", "高并发"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "穿透（查不存在的数据）：布隆过滤器、缓存空值"
+      - "击穿（热点Key集中过期）：互斥锁机制、逻辑过期"
+      - "雪崩（大量Key同时过期或宕机）：过期时间加随机值、高可用集群架构"
+
+  - id: "QA-TQ-ZJ-037"
+    type: "technical"
+    question: "在Linux系统中，如何排查某个端口是否被占用？如果被占用该如何关闭对应进程？"
+    tags: ["Linux", "常用命令", "排查"]
+    difficulty: "easy"
+    source: "字节跳动"
+    key_points:
+      - "使用 netstat -tunlp | grep 端口号 或 lsof -i:端口号"
+      - "获取对应的 PID"
+      - "使用 kill -9 PID 强制结束进程"
+
+  - id: "QA-TQ-ZJ-038"
+    type: "technical"
+    question: "请简述浏览器输入一个URL到页面完全展示的整个过程。"
+    tags: ["计算机网络", "HTTP", "前端渲染"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "DNS解析：将域名解析为服务器IP地址"
+      - "TCP连接建立：与服务器建立三次握手（如是HTTPS还有TLS四次握手）"
+      - "发送HTTP请求及服务器响应返回HTML"
+      - "浏览器解析渲染：解析HTML/CSS构建DOM树和渲染树，执行JS，最终绘制页面"
+
+  - id: "QA-TQ-ZJ-039"
+    type: "technical"
+    question: "TCP协议是如何保证传输的安全可靠性的？"
+    tags: ["计算机网络", "TCP", "可靠传输"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "数据包校验（校验和）与序列号机制（保证按序到达）"
+      - "确认应答机制（ACK）和超时重传机制"
+      - "流量控制（滑动窗口）与拥塞控制（慢启动、拥塞避免等）"
+
+  - id: "QA-TQ-ZJ-040"
+    type: "technical"
+    question: "多进程和多线程有什么区别？并发环境中如何保证线程安全？"
+    tags: ["操作系统", "并发编程", "多线程"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "进程是资源分配的最小单位，拥有独立内存空间；线程是CPU调度的最小单位，共享所属进程的内存空间"
+      - "多线程开销小、通信容易，但一个线程崩溃可能导致整个进程崩溃；多进程稳定性强但开销大"
+      - "保证线程安全的机制：使用互斥锁（Mutex/Lock）、信号量、原子操作，或使用线程安全的集合类"
+
+  - id: "QA-TQ-ZJ-041"
+    type: "technical"
+    question: "在数据库查询中，建立索引有哪些注意事项？什么情况下适合使用索引？"
+    tags: ["MySQL", "数据库索引", "性能优化"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "适合场景：数据量大、经常用于查询（WHERE、ORDER BY、GROUP BY）且区分度高（基数大）的字段"
+      - "注意事项：避免在频繁更新的字段上建索引（维护成本高）"
+      - "复合索引需遵循最左前缀匹配原则，避免索引失效（如对索引列做函数运算或隐式类型转换）"
+
+  - id: "QA-TQ-ZJ-042"
+    type: "technical"
+    question: "Redis的缓存穿透、缓存击穿、缓存雪崩分别是什么？应当如何解决？"
+    tags: ["Redis", "缓存架构", "高并发"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "穿透：查不存在的数据。解决：布隆过滤器、缓存空对象并设置短过期时间"
+      - "击穿：热点Key在失效瞬间被高并发访问。解决：互斥锁（SetNX）、热点数据永不过期"
+      - "雪崩：大量Key同时过期或Redis宕机。解决：过期时间加随机值、搭建高可用集群、限流降级"
+
+  - id: "QA-TQ-ZJ-043"
+    type: "technical"
+    question: "需求分析，技术文档评审，用例评审这三个节点分别发生在测试流程的什么阶段？分别有什么作用？"
+    tags: ["测试流程", "质量保障", "测试理论"]
+    difficulty: "easy"
+    source: "字节跳动"
+    key_points:
+      - "需求分析：发生在项目初期，用于明确业务诉求，发现需求逻辑漏洞，评估测试可行性"
+      - "技术文档评审：发生在开发设计阶段，确保技术实现合理性，帮助测试了解底层逻辑以便设计白盒/灰盒用例"
+      - "用例评审：发生在测试设计完成后、编码阶段结束前，与产研对齐测试覆盖度，查漏补缺"
+
+  - id: "QA-TQ-ZJ-044"
+    type: "technical"
+    question: "UI自动化测试中，Playwright框架和Selenium框架的区别是什么？"
+    tags: ["自动化框架", "Playwright", "Selenium"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "架构区别：Selenium基于WebDriver协议与浏览器通信，Playwright直接通过DevTools协议与浏览器内核交互，速度更快"
+      - "稳定性：Playwright内置自动等待（Auto-waiting）机制，减少Flaky tests，而Selenium常需手动编写显式等待"
+      - "多页面支持：Playwright对多Tab页签、IFrame及浏览器上下文（Browser Context）的支持更原生理性且开销极低"
+
+  - id: "QA-TQ-ZJ-045"
+    type: "technical"
+    question: "【算法手撕】请编写代码：找出字符串中的最长无重复字符子串的长度。"
+    tags: ["算法", "滑动窗口", "字符串"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "核心思想：使用滑动窗口（双指针）机制"
+      - "使用哈希表或数组记录字符最近出现的位置，动态更新窗口的左边界"
+      - "时间复杂度能够优化达到 O(N)"

@@ -1,347 +1,2064 @@
 type: backend_technical_interview_questions
 source:
-  - "牛客网"
+  - "Nowcoder"
   - "CSDN"
+  - "阿里巴巴"
+  - "腾讯"
+  - "华为"
+  - "京东"
+  - "美团"
+  - "拼多多"
+  - "字节跳动"
 items:
-  - id: BE-TQ-001
-    type: technical
+  - id: "BE-TQ-001"
+    type: "technical"
     question: "JVM 内存结构由哪些区域组成？各自作用是什么？"
     tags: ["JVM", "内存模型"]
-    difficulty: medium
-    source: "牛客网"
-    status: draft
+    difficulty: "medium"
+    source: "Nowcoder" 
     key_points:
       - "程序计数器(线程私有)"
       - "虚拟机栈/本地方法栈(线程私有)"
       - "堆(线程共享，对象分配)"
       - "方法区/元空间(线程共享，类信息/常量池)"
-  - id: BE-TQ-002
-    type: technical
+  - id: "BE-TQ-002"
+    type: "technical"
     question: "Java 对象在堆中的创建流程（类加载、分配、初始化、引用）是怎样的？"
     tags: ["JVM", "对象创建"]
-    difficulty: medium
-    source: "CSDN"
-    status: draft
+    difficulty: "medium"
+    source: "CSDN" 
     key_points:
       - "类加载检查"
       - "分配内存(指针碰撞/空闲列表)"
       - "初始化零值"
       - "设置对象头"
       - "执行<init>方法"
-  - id: BE-TQ-003
-    type: technical
+  - id: "BE-TQ-003"
+    type: "technical"
     question: "常见垃圾回收算法（标记清除、复制、标记整理）有什么区别？"
     tags: ["JVM", "GC"]
-    difficulty: medium
-    source: "牛客网"
-    status: draft
+    difficulty: "medium"
+    source: "Nowcoder" 
     key_points:
       - "标记清除(产生内存碎片)"
       - "复制(适合年轻代，浪费一半空间)"
       - "标记整理(适合老年代，无碎片但较慢)"
-  - id: BE-TQ-004
-    type: technical
+  - id: "BE-TQ-004"
+    type: "technical"
     question: "CMS 与 G1 的核心差异是什么？线上如何选择？"
     tags: ["JVM", "GC", "调优"]
-    difficulty: hard
-    source: "CSDN"
-    status: draft
+    difficulty: "hard"
+    source: "CSDN" 
     key_points:
       - "CMS注重低延迟和并发，使用标记清除算法"
       - "G1注重可预测停顿时间，将内存划分为Region，整体标记整理，局部复制"
-  - id: BE-TQ-005
-    type: technical
+  - id: "BE-TQ-005"
+    type: "technical"
     question: "类加载机制（双亲委派）为什么能保证安全性？"
     tags: ["JVM", "类加载"]
-    difficulty: medium
-    source: "牛客网"
-    status: draft
+    difficulty: "medium"
+    source: "Nowcoder" 
     key_points:
       - "保证沙箱安全机制"
       - "防止核心类(如java.lang.String)被恶意篡改"
       - "避免类的重复加载"
-  - id: BE-TQ-006
-    type: technical
+  - id: "BE-TQ-006"
+    type: "technical"
     question: "`volatile` 的可见性和有序性如何实现？为什么不保证原子性？"
     tags: ["并发", "JMM"]
-    difficulty: hard
-    source: "CSDN"
-    status: draft
+    difficulty: "hard"
+    source: "CSDN" 
     key_points:
       - "利用内存屏障保证可见性和有序性"
       - "禁止指令重排"
       - "无法保证复合操作的原子性(需加锁)"
-  - id: BE-TQ-007
-    type: technical
+  - id: "BE-TQ-007"
+    type: "technical"
     question: "`synchronized` 锁升级过程（偏向锁、轻量级锁、重量级锁）是什么？"
     tags: ["并发", "锁机制"]
-    difficulty: hard
-    source: "牛客网"
-    status: draft
+    difficulty: "hard"
+    source: "Nowcoder" 
     key_points:
       - "无锁"
       - "偏向锁(记录线程ID)"
       - "轻量级锁(CAS自旋)"
       - "重量级锁(依赖OS互斥量)"
-  - id: BE-TQ-008
-    type: technical
+  - id: "BE-TQ-008"
+    type: "technical"
     question: "`ReentrantLock` 相比 `synchronized` 的优势与适用场景？"
     tags: ["并发", "锁机制"]
-    difficulty: medium
-    source: "CSDN"
-    status: draft
+    difficulty: "medium"
+    source: "CSDN" 
     key_points:
       - "支持可中断获取锁"
       - "支持公平锁与非公平锁切换"
       - "可绑定多个Condition对象"
       - "底层基于AQS实现"
-  - id: BE-TQ-009
-    type: technical
+  - id: "BE-TQ-009"
+    type: "technical"
     question: "线程池参数（core、max、queue、reject）如何配置？"
     tags: ["并发", "线程池"]
-    difficulty: medium
-    source: "牛客网"
-    status: draft
+    difficulty: "medium"
+    source: "Nowcoder" 
     key_points:
       - "核心线程数(corePoolSize)"
       - "最大线程数(maximumPoolSize)"
       - "救急线程存活时间(keepAliveTime)"
       - "任务阻塞队列(workQueue)"
       - "拒绝策略(handler)"
-  - id: BE-TQ-010
-    type: technical
+  - id: "BE-TQ-010"
+    type: "technical"
     question: "线上出现线程池任务堆积时你会怎么排查？"
     tags: ["并发", "排障"]
-    difficulty: hard
-    source: "CSDN"
-    status: draft
+    difficulty: "hard"
+    source: "CSDN" 
     key_points:
       - "查看监控和日志确认为何堆积"
       - "利用jstack/arthas排查死锁或慢执行(如慢查询/外部接口超时)"
       - "检查队列长度与线程数配置是否合理"
       - "临时扩容或服务降级"
-  - id: BE-TQ-011
-    type: technical
+  - id: "BE-TQ-011"
+    type: "technical"
     question: "`HashMap` 在 JDK1.7 与 JDK1.8 的实现差异有哪些？"
     tags: ["集合", "HashMap"]
-    difficulty: medium
-    source: "牛客网"
-    status: draft
+    difficulty: "medium"
+    source: "Nowcoder" 
     key_points:
       - "1.8底层变为数组+链表+红黑树(提速查询)"
       - "头插法改为尾插法(杜绝多线程死链)"
       - "扩容时通过高低位重新散列，无须重新计算hash"
-  - id: BE-TQ-012
-    type: technical
+  - id: "BE-TQ-012"
+    type: "technical"
     question: "`ConcurrentHashMap` 如何保证并发安全与性能平衡？"
     tags: ["集合", "并发"]
-    difficulty: hard
-    source: "CSDN"
-    status: draft
+    difficulty: "hard"
+    source: "CSDN" 
     key_points:
       - "1.7使用分段锁(Segment)降低冲突"
       - "1.8使用Node数组+CAS+Synchronized，锁粒度细化到拉链头结点"
       - "大幅提升并发写性能"
-  - id: BE-TQ-013
-    type: technical
+  - id: "BE-TQ-013"
+    type: "technical"
     question: "为什么重写了 `equals` 必须重写 `hashCode`？"
     tags: ["Java基础", "集合"]
-    difficulty: easy
-    source: "牛客网"
-    status: draft
+    difficulty: "easy"
+    source: "Nowcoder" 
     key_points:
       - "为了保证对象放入基于Hash的集合(如HashMap/HashSet)时能正确定位"
       - "确保逻辑上相等的对象拥有相同的散列值以便及时覆盖或去重"
-  - id: BE-TQ-014
-    type: technical
+  - id: "BE-TQ-014"
+    type: "technical"
     question: "MySQL InnoDB 的聚簇索引和二级索引有什么区别？"
     tags: ["MySQL", "索引"]
-    difficulty: medium
-    source: "CSDN"
-    status: draft
+    difficulty: "medium"
+    source: "CSDN" 
     key_points:
       - "聚簇索引(主键索引)叶子节点存储完整的数据行"
       - "二级索引(非主键索引)叶子节点仅存储对应的主键值"
       - "二级索引查询可能需要进行回表操作(扫两次B+树)"
-  - id: BE-TQ-015
-    type: technical
+  - id: "BE-TQ-015"
+    type: "technical"
     question: "索引失效常见场景有哪些？如何规避？"
     tags: ["MySQL", "SQL优化"]
-    difficulty: medium
-    source: "牛客网"
-    status: draft
+    difficulty: "medium"
+    source: "Nowcoder" 
     key_points:
       - "最左前缀法则被打破"
       - "索引列发生隐式类型转换或使用了函数"
       - "LIKE使用了模糊的左前缀(如'%abc')"
       - "OR条件中包含非索引列"
-  - id: BE-TQ-016
-    type: technical
+  - id: "BE-TQ-016"
+    type: "technical"
     question: "事务隔离级别及其可能出现的并发问题（脏读、不可重复读、幻读）。"
     tags: ["MySQL", "事务"]
-    difficulty: medium
-    source: "CSDN"
-    status: draft
+    difficulty: "medium"
+    source: "CSDN" 
     key_points:
       - "读未提交(脏读)"
       - "读已提交(不可重复读)"
       - "可重复读(幻读，MySQL通过MVCC及间隙锁部分解决)"
       - "串行化(性能最差)"
-  - id: BE-TQ-017
-    type: technical
+  - id: "BE-TQ-017"
+    type: "technical"
     question: "MVCC 的实现原理（版本链、ReadView）是什么？"
     tags: ["MySQL", "MVCC"]
-    difficulty: hard
-    source: "牛客网"
-    status: draft
+    difficulty: "hard"
+    source: "Nowcoder" 
     key_points:
       - "记录隐藏列(trx_id, roll_pointer)"
       - "undo log形成的历史版本链"
       - "ReadView机制(活跃事务列表/可见性规则判断)"
-  - id: BE-TQ-018
-    type: technical
+  - id: "BE-TQ-018"
+    type: "technical"
     question: "MySQL 慢查询你一般如何定位与优化？"
     tags: ["MySQL", "性能优化"]
-    difficulty: medium
-    source: "CSDN"
-    status: draft
+    difficulty: "medium"
+    source: "CSDN" 
     key_points:
       - "开启慢查询日志抓取超长SQL"
       - "使用EXPLAIN分析执行计划(关注type, key, extra等字段)"
       - "检查是否发生全表扫描、未使用索引或文件排序现象"
       - "针对性加联合索引或重写SQL"
-  - id: BE-TQ-019
-    type: technical
+  - id: "BE-TQ-019"
+    type: "technical"
     question: "Redis 常见数据结构及典型业务场景是什么？"
     tags: ["Redis", "缓存"]
-    difficulty: easy
-    source: "牛客网"
-    status: draft
+    difficulty: "easy"
+    source: "Nowcoder" 
     key_points:
       - "String(缓存/计数/分布式锁)"
       - "Hash(对象存储/购物车)"
       - "List(消息队列/最新列表)"
       - "Set(去重/标签/交并补集)"
       - "ZSet(排行榜/延时队列)"
-  - id: BE-TQ-020
-    type: technical
+  - id: "BE-TQ-020"
+    type: "technical"
     question: "Redis 缓存击穿、穿透、雪崩分别如何解决？"
     tags: ["Redis", "高并发"]
-    difficulty: medium
-    source: "CSDN"
-    status: draft
+    difficulty: "medium"
+    source: "CSDN" 
     key_points:
       - "缓存击穿：热点Key失效导致穿透(方案：互斥锁或逻辑过期)"
       - "缓存穿透：查不存在的数据(方案：布隆过滤器或缓存空对象)"
       - "缓存雪崩：大面积失效(方案：TTL加随机值/集群高可用/限流降级)"
-  - id: BE-TQ-021
-    type: technical
+  - id: "BE-TQ-021"
+    type: "technical"
     question: "Redis 持久化 RDB 与 AOF 的区别与取舍？"
     tags: ["Redis", "持久化"]
-    difficulty: medium
-    source: "牛客网"
-    status: draft
+    difficulty: "medium"
+    source: "Nowcoder" 
     key_points:
       - "RDB生成快照体量小、恢复快，但会丢失最近数据"
       - "AOF记录命令完整性高，但文件大、重写开销大、恢复慢"
       - "推荐混合持久化架构结合两者优点"
-  - id: BE-TQ-022
-    type: technical
+  - id: "BE-TQ-022"
+    type: "technical"
     question: "Spring IOC 与 AOP 的核心实现机制分别是什么？"
     tags: ["Spring", "IOC", "AOP"]
-    difficulty: medium
-    source: "CSDN"
-    status: draft
+    difficulty: "medium"
+    source: "CSDN" 
     key_points:
       - "IOC通过反射和控制反转解耦，配合三级缓存解决循环依赖机制"
       - "AOP通过动态代理(JDK代理/CGLIB)实现非侵入式的切面增强"
-  - id: BE-TQ-023
-    type: technical
+  - id: "BE-TQ-023"
+    type: "technical"
     question: "Spring 事务传播行为有哪些？实际开发最常见坑是什么？"
     tags: ["Spring", "事务"]
-    difficulty: hard
-    source: "牛客网"
-    status: draft
+    difficulty: "hard"
+    source: "Nowcoder" 
     key_points:
       - "REQUIRED(默认,加入当前事务)"
       - "REQUIRES_NEW(挂起当前,新建独立事务)"
       - "常见坑：内部方法调用((this.调用))导致代理失效事务不生效"
       - "异常被catch吞掉未向外抛出"
-  - id: BE-TQ-024
-    type: technical
+  - id: "BE-TQ-024"
+    type: "technical"
     question: "Spring Boot 自动配置原理（`@EnableAutoConfiguration`）是什么？"
     tags: ["SpringBoot", "自动配置"]
-    difficulty: medium
-    source: "CSDN"
-    status: draft
+    difficulty: "medium"
+    source: "CSDN" 
     key_points:
       - "核心注解@EnableAutoConfiguration"
       - "通过@Import加载SPI机制定义的类"
       - "扫描META-INF/spring.factories或依赖加载按条件(@ConditionalOnClass等)装配"
-  - id: BE-TQ-025
-    type: technical
+  - id: "BE-TQ-025"
+    type: "technical"
     question: "你如何设计幂等接口，防止重复提交？"
     tags: ["系统设计", "幂等"]
-    difficulty: medium
-    source: "牛客网"
-    status: draft
+    difficulty: "medium"
+    source: "Nowcoder" 
     key_points:
       - "数据库建立唯一索引兜底"
       - "利用Redis的SETNX(互斥锁)检查防重"
       - "前端防抖及Token票据流机制(申请Token->带Token提交->服务端销毁票据)"
-  - id: BE-TQ-026
-    type: technical
+  - id: "BE-TQ-026"
+    type: "technical"
     question: "分布式锁常见实现（Redis、数据库、ZK）及优缺点？"
     tags: ["分布式", "锁"]
-    difficulty: hard
-    source: "CSDN"
-    status: draft
+    difficulty: "hard"
+    source: "CSDN" 
     key_points:
       - "Redis：性能极高，配合Redisson看门狗解决超时问题"
       - "ZK：基于临时顺序节点与Watch机制，可靠性高但有网络开销"
       - "数据库：实现简单(排他锁/唯一键)，并发性能差不易做高可用"
-  - id: BE-TQ-027
-    type: technical
+  - id: "BE-TQ-027"
+    type: "technical"
     question: "消息队列如何保证消息不丢失、不重复、顺序消费？"
     tags: ["MQ", "一致性"]
-    difficulty: hard
-    source: "牛客网"
-    status: draft
+    difficulty: "hard"
+    source: "Nowcoder" 
     key_points:
       - "不丢失：生产者确认机制(Confirm)、MQ持久化存储、消费者手动ACK验证"
       - "不重复：下游消费者业务端实现强幂等性防范"
       - "顺序：保证数据发往同一分区(Partition)及单线程顺序消费"
-  - id: BE-TQ-028
-    type: technical
+  - id: "BE-TQ-028" 
+    type: "technical"
     question: "微服务中如何实现服务注册发现与负载均衡？"
     tags: ["微服务", "服务治理"]
-    difficulty: medium
-    source: "CSDN"
-    status: draft
+    difficulty: "medium"
+    source: "CSDN" 
     key_points:
       - "服务注册发现：通过注册中心(Nacos/Eureka)及其心跳和健康检查机制"
       - "负载均衡：通过客户端(Ribbon/LoadBalancer)从服务列表获取后执行轮询/随机/一致性Hash策略选取"
-  - id: BE-TQ-029
-    type: technical
+  - id: "BE-TQ-029"
+    type: "technical"
     question: "API 网关在后端架构中的作用是什么？"
     tags: ["微服务", "网关"]
-    difficulty: easy
-    source: "牛客网"
-    status: draft
+    difficulty: "easy"
+    source: "Nowcoder" 
     key_points:
       - "统一请求入口及路由转发"
       - "统一鉴权(JWT/OAuth2)拦截"
       - "全局限流、熔断及参数校验控制"
       - "协议转换(如HTTP代理到内网RPC通讯)"
-  - id: BE-TQ-030
-    type: technical
+  - id: "BE-TQ-030"
+    type: "technical"
     question: "线上 Full GC 频繁时，你的排查和优化步骤是什么？"
     tags: ["JVM", "线上排障"]
-    difficulty: hard
-    source: "CSDN"
-    status: draft
+    difficulty: "hard"
+    source: "CSDN" 
     key_points:
       - "排查内存泄漏风险(ThreadLocal/静态集合没清理)"
       - "利用Arthas/jmap定位是否有大对象突发"
       - "MetaSpace元空间是否被打满"
       - "检查System.gc()现象或结合监控优化堆内外大小比"
+
+  - id: "BE-TQ-AL-001"
+    type: "technical"
+    question: "假设 Maven 引入了两个包，存在版本冲突问题。我们可以用哪些解决方案，使两个版本的包都能在工程中被使用？"
+    tags: ["Maven", "包冲突", "类加载机制"]
+    difficulty: "hard"
+    source: "阿里巴巴"
+    key_points:
+      - "常规排包：通过 <exclusions> 排除掉不兼容的低版本"
+      - "环境隔离：借助 OSGi 等模块化框架隔离类加载器"
+      - "重命名/阴影技术（Shading）：使用 Maven Shade Plugin 对其中一个包重新打包并修改包路径（如 com.google -> repackaged.com.google），从而实现双版本共存"
+
+  - id: "BE-TQ-AL-002"
+    type: "technical"
+    question: "什么是策略模式？它主要适用于哪些业务场景？"
+    tags: ["设计模式", "架构设计", "代码重构"]
+    difficulty: "medium"
+    source: "阿里巴巴"
+    key_points:
+      - "定义：将一系列算法分别封装起来，让它们之间可以互相替换，使算法的变化独立于使用算法的客户"
+      - "适用场景：代替复杂的 if-else 或 switch-case 逻辑（如不同的支付方式、不同的会员折扣计算）"
+      - "扩展：结合工厂模式或 Spring 依赖注入（@Autowired 注入 Map）进行策略路由配置"
+
+  - id: "BE-TQ-AL-003"
+    type: "technical"
+    question: "HashMap 在多线程场景下使用要注意什么？在只读并发场景下可以直接使用吗？"
+    tags: ["HashMap", "并发编程", "集合框架"]
+    difficulty: "medium"
+    source: "阿里巴巴"
+    key_points:
+      - "多线程更新问题：JDK7可能出现环形链表死循环，JDK8可能出现数据覆盖（丢失更新）和 Size 统计不准"
+      - "替代方案：并发更新必须使用 ConcurrentHashMap"
+      - "只读并发场景：如果 HashMap 在初始化完成后绝对不会再有 put/remove 操作，只读情况下是线程安全的，可以直接使用"
+
+  - id: "BE-TQ-AL-004"
+    type: "technical"
+    question: "创建数据库联合索引时需要注意什么？哪些情况下会导致索引失效？"
+    tags: ["MySQL", "数据库索引", "性能调优"]
+    difficulty: "medium"
+    source: "阿里巴巴"
+    key_points:
+      - "最左前缀法则：联合索引遵循最左匹配，跳过首列或中间列会导致后续索引失效"
+      - "列选择性：应将区分度高、查询频繁的列放在联合索引的前面"
+      - "失效场景：范围查询（>、<）其右侧列失效；对索引列使用函数或计算；LIKE 以 `%` 开头；隐式类型转换"
+
+  - id: "BE-TQ-AL-005"
+    type: "technical"
+    question: "Redis 怎样实现分布式锁？Redisson 实现分布式锁的底层原理是什么？"
+    tags: ["Redis", "分布式锁", "Redisson"]
+    difficulty: "medium"
+    source: "阿里巴巴"
+    key_points:
+      - "基础实现：SET resource_name my_random_value NX PX 30000 保证互斥性和防死锁，释放锁需用 Lua 脚本校验 Value 防止误删"
+      - "Redisson 原理：底层大量使用 Lua 脚本保证指令原子性"
+      - "Redisson 看门狗机制：后台开启定时任务（Watchdog），如果业务未执行完则自动为锁续期，防止锁提前超时释放"
+
+  - id: "BE-TQ-TX-001"
+    type: "technical"
+    question: "Redis的发布订阅（Pub/Sub）机制除了Redis还可以用什么技术替代？你当时为什么选择使用Redis做？"
+    tags: ["Redis", "消息队列", "技术选型"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "替代方案：Kafka, RabbitMQ, RocketMQ等专业消息中间件，或本地事件总线"
+      - "Redis优势：系统复杂度低，无需引入额外重型组件，轻量且延迟低"
+      - "Redis劣势：消息无法持久化，没有ACK机制，断线可能丢失消息"
+
+  - id: "BE-TQ-TX-002"
+    type: "technical"
+    question: "Redis有事务机制吗？它跟MySQL的事务有什么本质上的区别？"
+    tags: ["Redis", "MySQL", "事务"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "Redis通过MULTI, EXEC, DISCARD, WATCH实现事务，但不支持回滚机制"
+      - "区别于MySQL：MySQL满足严格的ACID特性，支持Undo Log回滚"
+      - "Redis事务执行中报错会继续执行后续命令（除非入队前存在语法错误）"
+
+  - id: "BE-TQ-TX-003"
+    type: "technical"
+    question: "Redis的线程模型是单线程的吗？为什么早期版本坚持使用单线程结构？"
+    tags: ["Redis", "线程模型", "高并发"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "Redis 6.0前核心工作线程（网络IO和键值对读写）是单线程的"
+      - "单线程优势：避免上下文切换开销，避免多线程锁竞争，简化数据结构设计"
+      - "Redis性能瓶颈通常在网络带宽和内存，而非CPU，通过IO多路复用已能满足高并发读写"
+
+  - id: "BE-TQ-TX-004"
+    type: "technical"
+    question: "在接口开发中，你是如何实现防重和幂等性设计的？"
+    tags: ["幂等性", "分布式系统", "接口设计"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "前端控制：防抖防重复点击"
+      - "数据库层：利用唯一索引防重，或悲观锁/乐观锁版本号控制"
+      - "Token防重机制：生成全局唯一业务ID（或Token）配合Redis SETNX实现分布式锁过滤重复请求"
+
+  - id: "BE-TQ-TX-005"
+    type: "technical"
+    question: "秒杀场景中为什么要使用Lua脚本操作Redis？如果不使用Lua脚本，还有别的替代方案吗？"
+    tags: ["Redis", "Lua", "秒杀系统"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "Lua脚本作用：保证多个Redis命令执行的原子性，减少网络交互次数"
+      - "替代方案：使用分布式锁（如Redisson）锁定资源再操作，但性能不如直接执行Lua脚本"
+
+  - id: "BE-TQ-TX-006"
+    type: "technical"
+    question: "Java 8 中的 Stream 流式操作有哪些常用方法？相比传统的集合遍历操作有什么优势？"
+    tags: ["Java", "Stream", "基础语法"]
+    difficulty: "easy"
+    source: "腾讯"
+    key_points:
+      - "常用方法：filter(), map(), reduce(), collect(), sorted() 等"
+      - "优势：代码更简洁、声明式编程易读性强"
+      - "进阶优势：支持 parallelStream() 利用多核CPU轻松实现并行处理"
+
+  - id: "BE-TQ-TX-007"
+    type: "technical"
+    question: "消息队列 RabbitMQ、RocketMQ、Kafka 有什么区别？实际业务中如何进行技术选型？"
+    tags: ["消息队列", "Kafka", "RocketMQ", "RabbitMQ"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "Kafka：吞吐量极高，适合大数据日志采集，但存在消息延迟（批量发送）"
+      - "RocketMQ：阿里开源，支持分布式事务、延迟消息，适合核心业务流转和金融场景"
+      - "RabbitMQ：轻量、时效性极高（微秒级），基于Erlang开发，适合中小型业务"
+
+  - id: "BE-TQ-TX-008"
+    type: "technical"
+    question: "请结合你的项目，讲一下Java线程池的核心参数有哪些，以及它们是如何协同工作的？"
+    tags: ["Java", "多线程", "并发编程"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "7大核心参数：corePoolSize, maxPoolSize, keepAliveTime, TimeUnit, workQueue, threadFactory, handler(拒绝策略)"
+      - "工作流程：核心线程 -> 阻塞队列 -> 最大线程 -> 拒绝策略"
+      - "项目结合：能否根据CPU密集型/IO密集型任务合理预估参数大小"
+
+  - id: "BE-TQ-TX-009"
+    type: "technical"
+    question: "操作系统的内存淘汰算法有哪些？其中随机淘汰算法有什么特殊的好处或应用场景？"
+    tags: ["操作系统", "内存管理", "淘汰策略"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "常见算法：FIFO（先进先出）、LRU（最近最少使用）、LFU（最不经常使用）"
+      - "随机淘汰好处：实现成本极低，开销极小。在某些数据访问极其随机、无规律热点的场景下，性能反而优于需要维护复杂链表的LRU"
+
+  - id: "BE-TQ-TX-010"
+    type: "technical"
+    question: "IO多路复用中 epoll 上层有哪些常见的封装？epoll 的 LT（水平触发）和 ET（边缘触发）模式有什么区别？"
+    tags: ["操作系统", "网络编程", "epoll"]
+    difficulty: "hard"
+    source: "腾讯"
+    key_points:
+      - "上层封装：如 Reactor 模型中的 libevent/libuv 库，Java的NIO，Nginx/Redis底层网络模型等"
+      - "LT（水平触发）：只要缓冲区有数据，就会一直通知应用程序读取"
+      - "ET（边缘触发）：只有状态发生变化时才通知一次，要求应用程序必须一次性将数据读完（通常配合非阻塞IO使用）"
+
+  - id: "BE-TQ-TX-011"
+    type: "technical"
+    question: "什么是 Reactor 模型？它的底层是如何实现高性能网络事件处理的？"
+    tags: ["网络编程", "Reactor", "架构模式"]
+    difficulty: "hard"
+    source: "腾讯"
+    key_points:
+      - "定义：基于事件驱动的设计模式，用于处理多个并发的请求连接（如 Dispatcher + Handler）"
+      - "底层实现：依靠操作系统的 IO 多路复用机制（select/poll/epoll），通过单线程或多线程（Main-Sub Reactor）将连接接收、读写就绪事件分发给具体的业务处理逻辑"
+
+  - id: "BE-TQ-TX-012"
+    type: "technical"
+    question: "在微服务负载均衡中，如何利用 Round Robin（轮询）算法实现带权重的任务分配（加权轮询）？"
+    tags: ["负载均衡", "分布式系统", "算法"]
+    difficulty: "hard"
+    source: "腾讯"
+    key_points:
+      - "简单实现：按权重比例展开节点列表（如 A权重3，B权重1，列表为AAAB），然后普通轮询，但会导致请求过于集中"
+      - "平滑加权轮询（Nginx算法）：引入 dynamic weight 动态计算，使得请求能够平滑地分散到不同节点，避免短时间内大流量冲击单个高权重节点"
+
+  - id: "BE-TQ-TX-013"
+    type: "technical"
+    question: "C++ 中 move 语义和完美转发（Perfect Forwarding）的区别是什么？"
+    tags: ["C++", "底层原理", "内存管理"]
+    difficulty: "hard"
+    source: "腾讯"
+    key_points:
+      - "move语义：通过 std::move 将左值强转为右值引用，触发移动构造，避免深拷贝。转移后原对象处于有效但未定义状态"
+      - "完美转发：通过 std::forward 在模板编程中保持参数原本的值类别（左值仍是左值，右值仍是右值），多用于泛型编程中的参数传递"
+
+  - id: "BE-TQ-TX-014"
+    type: "technical"
+    question: "面试官追问：TCP 为什么是可靠传输协议？它通过哪些机制来保证数据的可靠性？"
+    tags: ["计算机网络", "TCP"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "校验和、序列号与确认应答机制（ACK）"
+      - "超时重传：当发送方未收到ACK时自动重新发送"
+      - "滑动窗口控制流量，拥塞控制（慢启动、拥塞避免等）防止网络拥堵"
+  
+  - id: "BE-TQ-TX-015"
+    type: "technical"
+    question: "实现发布-订阅（Pub/Sub）模式，除了使用Redis之外还有哪些常用的中间件或技术方案？为什么在你的技术选型中最终选择了Redis？"
+    tags: ["Redis", "消息队列", "技术选型"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "替代方案：Kafka, RabbitMQ, RocketMQ等专业消息队列中间件"
+      - "Redis优势：系统架构轻量，部署维护成本低，延迟极低"
+      - "选型边界：Redis Pub/Sub不保证消息持久化（无ACK，消费者离线丢数据），适用于对可靠性要求不高且追求实时的简单通信场景"
+
+  - id: "BE-TQ-TX-016"
+    type: "technical"
+    question: "Redis支持事务吗？它的事务机制（MULTI/EXEC）与MySQL的事务（ACID）相比，在原理和特性上有什么本质的区别？"
+    tags: ["Redis", "MySQL", "事务"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "Redis支持弱事务，通过MULTI、EXEC、DISCARD、WATCH命令实现"
+      - "不保证原子性回滚：Redis事务在执行阶段如果某条命令出错，其它命令依然会执行，不支持Rollback"
+      - "不保证持久性：依赖于Redis整体的持久化配置，相比MySQL的Redo Log，更容易丢失数据"
+
+  - id: "BE-TQ-TX-017"
+    type: "technical"
+    question: "在进行系统接口或服务性能调优时，如果发现性能提升不符合预期，你会按照什么步骤和思路进行排查分析？"
+    tags: ["性能调优", "排障分析", "工程实践"]
+    difficulty: "hard"
+    source: "腾讯"
+    key_points:
+      - "全链路定位：区分是网络延迟、网关瓶颈、应用服务器耗时还是数据库/缓存耗时"
+      - "系统指标监控：排查CPU（高负载、死循环）、内存（GC频繁、OOM）、磁盘I/O、网络带宽等硬件资源"
+      - "代码级排查：利用火焰图、Arthas、JProfiler等工具分析慢SQL、锁竞争、线程阻塞等代码层瓶颈"
+
+  - id: "BE-TQ-TX-018"
+    type: "technical"
+    question: "Redis的核心工作线程是单线程模型吗？为什么它采用单线程模型还能保持极高的并发处理性能？"
+    tags: ["Redis", "并发编程", "多路复用"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "Redis 6.0前是完全单线程，6.0引入多线程处理网络I/O，但命令执行依然是单线程"
+      - "基于内存操作：数据读写直接在内存进行，不受磁盘I/O限制"
+      - "避免了多线程切换的上下文开销和锁竞争机制"
+      - "底层采用了基于epoll的高效IO多路复用机制，能够并发处理大量网络请求"
+
+  - id: "BE-TQ-TX-019"
+    type: "technical"
+    question: "在分布式架构中，如何实现接口的幂等性设计？常见的幂等性解决方案有哪些？"
+    tags: ["分布式系统", "接口设计", "幂等性"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "数据库层面：利用唯一索引（Unique Key）防止重复插入；利用乐观锁（版本号）防重复更新"
+      - "Token机制：客户端请求前先获取全局唯一Token，服务端处理时校验并消耗Token（防重放操作）"
+      - "状态机机制：严格限制业务订单的状态扭转流向"
+
+  - id: "BE-TQ-TX-020"
+    type: "technical"
+    question: "Redis支持哪些常用的数据结构？它们底层的内部实现原理分别是什么？"
+    tags: ["Redis", "数据结构", "底层原理"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "String：底层基于SDS（简单动态字符串），防止缓冲区溢出并常数时间获取长度"
+      - "List：旧版双向链表/压缩列表，新版统一采用quicklist"
+      - "Hash：底层由ziplist（压缩列表）或hashtable实现，数据量大时转为哈希表"
+      - "Zset：底层由ziplist或跳跃表（skiplist）结合哈希表实现，保证范围查询效率"
+
+  - id: "BE-TQ-TX-021"
+    type: "technical"
+    question: "在处理秒杀业务扣减库存时，为什么推荐使用Lua脚本来操作Redis？除了Lua脚本，还有哪些方案可以保证扣减库存的原子性？"
+    tags: ["Redis", "并发编程", "Lua"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "Lua脚本优势：将多次检查与扣减操作打包成一个整体发送给Redis，Redis单线程保证执行过程的原子性，避免竞态条件"
+      - "替代方案：使用Redis的WATCH命令结合MULTI/EXEC实现乐观锁机制"
+      - "替代方案：引入分布式锁（如Redisson）锁住库存主键，但性能低于Lua脚本"
+
+  - id: "BE-TQ-TX-022"
+    type: "technical"
+    question: "在前端或系统网络性能优化中，常见的优化执行顺序是：资源压缩 -> 图片优化 -> 渲染优化 -> 针对首屏优化。请分析为什么推荐按照这个顺序进行？"
+    tags: ["性能优化", "网络协议", "系统设计"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "资源压缩与图片优化属于网络传输层的优化，降低带宽占用，见效最快且代码改动最小"
+      - "渲染优化涉及DOM解析和浏览器重绘回流，依赖于静态资源的稳定加载"
+      - "针对首屏优化（如SSR、骨架屏、懒加载）往往涉及应用架构的调整，成本较高，作为最后的兜底极致优化"
+
+  - id: "BE-TQ-TX-023"
+    type: "technical"
+    question: "Java 8引入的Stream流式操作提供了哪些常用的API方法？与传统的基于for循环的集合操作相比，使用Stream具有哪些优势？"
+    tags: ["Java", "Stream", "JDK8"]
+    difficulty: "easy"
+    source: "腾讯"
+    key_points:
+      - "常用方法：filter, map, flatMap, reduce, collect, sorted等"
+      - "优势：声明式编程，代码更简洁、可读性更高，屏蔽了底层迭代器的繁琐实现"
+      - "优势：天然支持并行处理（parallelStream），能轻松利用多核CPU提升处理大数据集合的性能"
+
+  - id: "BE-TQ-TX-024"
+    type: "technical"
+    question: "常见的消息队列组件如 RabbitMQ、RocketMQ、Kafka 各自的架构特点和优缺点是什么？在不同的业务场景下，应该如何进行技术选型？"
+    tags: ["消息队列", "架构选型", "中间件"]
+    difficulty: "hard"
+    source: "腾讯"
+    key_points:
+      - "RabbitMQ：基于Erlang开发，延迟极低（微秒级），支持丰富的路由机制，但吞吐量相对较低，适合中小规模或对延迟敏感的业务"
+      - "RocketMQ：阿里开源基于Java，吞吐量高，支持延迟消息、事务消息等丰富电商特性，适合高并发金融电商交易链路"
+      - "Kafka：吞吐量极致高，依赖顺序写磁盘与Zero Copy，适合海量日志收集和大数据流式处理场景"
+
+  - id: "BE-TQ-TX-025"
+    type: "technical"
+    question: "在数据库索引优化中，什么是“覆盖索引”（Covering Index）？如何利用覆盖索引来优化复杂的查询或子查询？"
+    tags: ["MySQL", "索引", "查询优化"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "定义：查询的列可以直接从辅助索引树（B+树）的叶子节点中获取，无需通过主键回表查询聚簇索引数据"
+      - "优化体现：显著减少磁盘I/O操作，提升检索性能"
+      - "应用：在子查询或分页查询中，先通过覆盖索引过滤出主键ID，再将主键ID与原表进行JOIN关联提取其他字段"
+
+  - id: "BE-TQ-TX-026"
+    type: "technical"
+    question: "Java中创建线程有哪些常用的方式（例如继承Thread、实现Runnable/Callable等）？它们分别适用于哪些开发场景？"
+    tags: ["Java基础", "多线程", "并发编程"]
+    difficulty: "easy"
+    source: "腾讯"
+    key_points:
+      - "继承Thread类：局限性在于Java单继承，扩展性差"
+      - "实现Runnable接口：支持多实现，任务与线程执行分离，适合多个线程共享同一资源任务"
+      - "实现Callable接口结合Future：可以获取线程执行后的返回值，并能够向上抛出异常，适用于需要汇总子线程结果的场景"
+      - "线程池框架（ExecutorService）：复用线程，控制最大并发度，工程实践中最推荐"
+
+  - id: "BE-TQ-TX-027"
+    type: "technical"
+    question: "请详细列举Java线程池（ThreadPoolExecutor）的核心构造参数，并说明当有新任务提交时，线程池的工作和调度流程是怎样的？"
+    tags: ["Java", "线程池", "并发编程"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "核心参数：corePoolSize(核心线程数), maximumPoolSize(最大线程数), keepAliveTime(空闲存活时间), workQueue(阻塞队列), threadFactory(线程工厂), handler(拒绝策略)"
+      - "调度流程：判断核心线程池是否满 -> 没满则创建线程；满了判断阻塞队列是否满 -> 没满则放入队列等待"
+      - "调度流程（续）：队列满了且未达最大线程数 -> 创建非核心线程处理；达到最大线程数 -> 触发拒绝策略"
+
+  - id: "BE-TQ-TX-028"
+    type: "technical"
+    question: "请简述现代软件项目的CI/CD部署流程是怎样的？如何利用工具（如Jenkins、GitLab CI、Docker等）实现自动化构建与部署？"
+    tags: ["DevOps", "CI/CD", "自动化部署"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "持续集成（CI）：代码提交至Git仓库 -> 触发Webhook -> 编译打包（如Maven）-> 单元测试 -> 代码质量扫描"
+      - "容器化构建：基于Dockerfile将编译好的应用及其依赖打包成镜像，推送到镜像仓库（如Harbor）"
+      - "持续部署（CD）：目标服务器拉取最新镜像 -> 停止旧容器 -> 运行新容器并执行平滑重启/蓝绿发布"
+
+  - id: "BE-TQ-TX-029"
+    type: "technical"
+    question: "操作系统中常见的内存页面置换（淘汰）算法有哪些？其中，随机淘汰算法（Random）有什么特殊的好处或适用场景？"
+    tags: ["操作系统", "内存管理", "算法"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "常见算法：LRU（最近最少使用）、LFU（最不经常使用）、FIFO（先进先出）、OPT（最佳置换，理论模型）"
+      - "随机淘汰的好处：实现极其简单，开销极低，不需要维护复杂的数据结构（如链表或访问频率计数器）"
+      - "适用场景：当数据的访问分布非常均匀（即缺乏局部性规律），或者作为缓存雪崩时应急降级的兜底策略"
+
+  - id: "BE-TQ-TX-030"
+    type: "technical"
+    question: "在网络编程的IO多路复用技术中，epoll 在底层是如何实现的？它所支持的 LT（水平触发）和 ET（边缘触发）模式在原理上有什么核心区别？"
+    tags: ["网络编程", "epoll", "操作系统"]
+    difficulty: "hard"
+    source: "腾讯"
+    key_points:
+      - "epoll底层基于红黑树（维护监听的Socket）和双向链表（就绪事件队列）实现"
+      - "水平触发（LT）：只要缓冲区中有数据，内核就会不断触发通知，编程简单但会产生过多系统调用"
+      - "边缘触发（ET）：状态发生变化（如从无到有，或新数据到达）时只触发一次通知，要求程序必须使用非阻塞IO一次性读完，性能更高"
+
+  - id: "BE-TQ-TX-031"
+    type: "technical"
+    question: "什么是网络编程中的 Reactor 模型？单线程Reactor、多线程Reactor以及主从多线程Reactor分别是怎么解决高并发网络请求的？"
+    tags: ["网络编程", "Reactor", "高并发"]
+    difficulty: "hard"
+    source: "腾讯"
+    key_points:
+      - "Reactor是一种基于事件驱动模式的IO分发模型，利用IO多路复用监听事件，并将不同事件分发给对应的Handler"
+      - "单线程模型：接收连接与业务处理都在同一线程（如Redis 6之前），不适合耗时业务"
+      - "多线程模型：主线程只负责接收连接与IO读写，业务处理交给线程池（解决CPU计算瓶颈）"
+      - "主从多线程：MainReactor只负责接收连接建立请求，SubReactor池负责已建立连接的IO读写，业务处理依然由线程池负责（如Netty标准架构）"
+
+  - id: "BE-TQ-TX-032"
+    type: "technical"
+    question: "在分布式系统的负载均衡策略中，如何利用轮询（Round Robin）算法来实现带权重的任务分配（Weighted Round Robin）？"
+    tags: ["负载均衡", "分布式系统", "算法"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "基础思路：根据服务器权重值展开请求序列。如节点A权重3，B权重1，分配序列为A-A-A-B"
+      - "平滑权重轮询算法（如Nginx实现）：引入动态的 current_weight 和固定的 effective_weight"
+      - "平滑轮询能够避免连续请求全部打向同一个高权重节点，使得请求分布更加均匀"
+
+  - id: "BE-TQ-TX-033"
+    type: "technical"
+    question: "C++11及以上版本中的协程（Coroutine）机制是如何实现用户态线程切换的？"
+    tags: ["C++", "协程", "底层原理"]
+    difficulty: "hard"
+    source: "腾讯"
+    key_points:
+      - "协程是在用户态保存和恢复执行上下文的轻量级调度机制，不需要陷入操作系统内核"
+      - "依靠编译器自动生成状态机来保存局部变量、寄存器状态和挂起/恢复点（Promise/Future抽象）"
+      - "减少了内核级线程上下文切换带来的开销，使得同步写法能实现异步的高并发"
+
+  - id: "BE-TQ-TX-034"
+    type: "technical"
+    question: "在C++的内存管理和模板编程中，move 语义（std::move）和完美转发（std::forward）的核心区别是什么？它们分别解决了什么问题？"
+    tags: ["C++", "语言特性", "内存管理"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "std::move：将左值强制转换为右值引用，触发移动语义以转移资源所有权，避免高昂的深拷贝"
+      - "std::forward：配合万能引用使用，不仅保留参数的左右值属性，还保留其const/volatile属性"
+      - "适用场景：move用于对象所有权转交，完美转发用于模板泛型编程中层层传递参数属性"
+
+  - id: "BE-TQ-TX-035"
+    type: "technical"
+    question: "在操作系统理论中，进程与线程的核心区别是什么？在资源分配、上下文切换和通信方式上有何不同？"
+    tags: ["操作系统", "进程管理", "多线程"]
+    difficulty: "easy"
+    source: "腾讯"
+    key_points:
+      - "资源分配：进程是资源分配的基本单位（拥有独立的内存地址空间），线程是CPU调度的基本单位（共享所属进程的内存和文件句柄）"
+      - "上下文切换：进程切换涉及虚拟地址空间的切换（如页表），开销巨大；同进程的线程切换只保存/恢复少量的寄存器和栈帧，开销较小"
+      - "通信方式：进程间通信（IPC）需要借助管道、消息队列、共享内存或Socket；线程间通信可以直接通过共享内存变量读写（需同步锁处理）"
+
+  - id: "BE-TQ-TX-036"
+    type: "technical"
+    question: "TCP协议是如何保证数据传输的可靠性的？请简述其包含的确认应答、超时重传、滑动窗口机制以及拥塞控制算法。"
+    tags: ["计算机网络", "TCP协议", "可靠传输"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "校验和、序列号与确认应答（ACK）：保证包的有序和完整到达"
+      - "超时重传：发送端在特定时间内未收到ACK，则重新发送数据包"
+      - "滑动窗口与流量控制：接收端通过TCP报头通告自身接收窗口大小，限制发送方速度以防缓冲区溢出"
+      - "拥塞控制：使用慢启动、拥塞避免、快速重传、快速恢复等算法探明网络状况，防止网络拥塞崩溃"
+
+  - id: "BE-TQ-TX-037"
+    type: "technical"
+    question: "请谈谈你对RESTful架构风格的理解。在设计API时，如何规范地选择HTTP方法（如GET、POST、PUT、DELETE），有哪些具体的指导原则？"
+    tags: ["网络协议", "API设计", "HTTP"]
+    difficulty: "easy"
+    source: "腾讯"
+    key_points:
+      - "RESTful将所有的业务实体看作资源，通过URI标识资源，通过HTTP动词表达对资源的操作"
+      - "GET用于幂等地获取资源；DELETE用于幂等地删除资源"
+      - "POST通常用于创建新资源（非幂等）；PUT通常用于更新资源的整体状态（具有幂等性）"
+
+  - id: "BE-TQ-TX-038"
+    type: "technical"
+    question: "请详细讲一下 Go 语言的协程机制、GMP 调度模型，以及 Go 协程泄漏一般会在什么情况下发生？"
+    tags: ["Golang", "协程", "GMP调度", "内存泄漏"]
+    difficulty: "hard"
+    source: "腾讯"
+    key_points:
+      - "G（Goroutine）表示协程，M（Machine）表示内核线程，P（Processor）代表调度上下文（本地队列）"
+      - "描述调度策略：Work Stealing（工作窃取机制）和 Hand Off（移交机制）"
+      - "协程泄漏原因：无缓冲Channel的发送/接收阻塞、有缓冲Channel满时的发送阻塞、死循环且无退出通知（context未取消）等"
+  - id: "BE-TQ-TX-039"
+    type: "technical"
+    question: "请介绍一下 Go 语言的内存模型，包括 mcache、mspan、mheap 的概念，以及为什么要进行分级内存分配？"
+    tags: ["Golang", "内存管理", "底层原理"]
+    difficulty: "hard"
+    source: "腾讯"
+    key_points:
+      - "mheap 是全局内存堆，负责向操作系统申请内存并管理大块内存"
+      - "mspan 是内存分配的基本单元，包含不同规格大小（size class）的内存块"
+      - "mcache 是与 P 绑定的本地缓存，分配小对象时无锁化，提升并发分配性能"
+      - "分级分配减少了内存碎片，提升了内存分配效率和系统并发能力"
+  - id: "BE-TQ-TX-040"
+    type: "technical"
+    question: "请解释一下 Redis 缓存穿透、缓存击穿和缓存雪崩的区别，以及对应的行业常见解决方案。"
+    tags: ["Redis", "缓存策略", "高可用"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "穿透（查询不存在的数据）：布隆过滤器拦截、缓存空值/默认值"
+      - "击穿（热点Key过期）：加分布式锁等待查询DB重构缓存、逻辑过期机制"
+      - "雪崩（大批Key同时失效或Redis宕机）：设置随机过期时间、高可用集群、熔断限流降级"
+  - id: "BE-TQ-TX-041"
+    type: "technical"
+    question: "请解释一下 MySQL 复合索引的最左前缀匹配原则，并列举一些会导致索引失效的常见业务场景。"
+    tags: ["MySQL", "索引原理", "性能调优"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "最左前缀原则：查询条件必须从联合索引的最左边列开始匹配，遇到范围查询（>,<,between,like）会停止匹配后续列"
+      - "索引失效场景1：在索引列上使用函数计算或类型隐式转换"
+      - "索引失效场景2：模糊查询时使用左模糊匹配（如 '%abc'）"
+      - "索引失效场景3：全表扫描比使用索引更快时（优化器成本评估机制）"
+  - id: "BE-TQ-TX-042"
+    type: "technical"
+    question: "请谈谈 MySQL 的事务特性（ACID）及底层实现原理，并详细解释 MVCC（多版本并发控制）机制是如何工作的？"
+    tags: ["MySQL", "事务", "MVCC", "ACID"]
+    difficulty: "hard"
+    source: "腾讯"
+    key_points:
+      - "A（原子性）由undo log保证，C（一致性）由其他三个共同保证，I（隔离性）由锁和MVCC保证，D（持久性）由redo log保证"
+      - "MVCC基于隐藏列（trx_id、roll_pointer）和undo log版本链实现历史快照"
+      - "Read View（读视图）生成时机决定了隔离级别（RC每次生成，RR第一次生成）"
+  - id: "BE-TQ-TX-043"
+    type: "technical"
+    question: "以 RocketMQ 为例，如何保证消息的可靠传输、不丢消息，以及在消费端如何保证消息消费的幂等性？"
+    tags: ["消息队列", "RocketMQ", "高可用", "幂等性"]
+    difficulty: "hard"
+    source: "腾讯"
+    key_points:
+      - "生产端不丢消息：同步发送+重试机制，或者利用RocketMQ的事务消息机制"
+      - "Broker端不丢消息：同步刷盘策略和主从同步复制机制"
+      - "消费端不丢消息：消费成功后再返回 ACK 进行位移提交"
+      - "幂等性保证：利用业务的唯一标识（如订单ID）结合数据库唯一索引或Redis去重表"
+  - id: "BE-TQ-TX-044"
+    type: "technical"
+    question: "请讲一下 Go 语言中 channel 的底层实现原理，有缓冲的 channel 和无缓冲的 channel 在使用和阻塞机制上有什么区别？"
+    tags: ["Golang", "channel", "并发编程"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "Channel 底层本质是一个由锁（mutex）、环形缓冲数组（buf）以及等待发送/接收队列构成的 hchan 结构体"
+      - "无缓冲Channel是同步的，发送和接收双方必须同时准备好，否则先执行的一方会阻塞"
+      - "有缓冲Channel是异步的，发送方在缓冲区未满时不阻塞，接收方在缓冲区非空时不阻塞"
+  - id: "BE-TQ-TX-045"
+    type: "technical"
+    question: "经典八股：从浏览器输入一个网址到页面渲染出来的全过程，背后经历了哪些网络层面的交互？"
+    tags: ["计算机网络", "HTTP协议", "DNS解析"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "DNS域名解析：浏览器缓存 -> 操作系统缓存 -> 路由缓存 -> ISP DNS服务器"
+      - "建立TCP连接：三次握手过程"
+      - "发送HTTP/HTTPS请求：如果是HTTPS还需要进行TLS握手协商加密算法"
+      - "服务器处理并返回响应数据，浏览器解析HTML/CSS并渲染DOM树，最后断开连接（四次挥手）"
+  - id: "BE-TQ-TX-046"
+    type: "technical"
+    question: "Redis 支持事务吗？它的事务机制（MULTI/EXEC）与 MySQL 的事务（ACID）相比有什么核心区别？"
+    tags: ["Redis", "MySQL", "事务"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "Redis支持弱事务，通过 MULTI、EXEC、DISCARD 和 WATCH 等命令实现"
+      - "区别1：Redis的事务没有真正的回滚（Rollback）机制，执行中某条命令报错（非语法错误），后续命令依然会执行"
+      - "区别2：MySQL的事务具有强原子性和持久性（基于redo/undo log），Redis事务更侧重于将多个命令打包顺序执行的原子性，但不支持A和D的严格语义"
+  - id: "BE-TQ-TX-047"
+    type: "technical"
+    question: "请详述 TCP 三次握手过程，如果最后一次 ACK 丢失会发生什么？服务器端没收到第二个 ACK 客户端就发数据会怎样？"
+    tags: ["计算机网络", "TCP协议", "网络通信"]
+    difficulty: "hard"
+    source: "腾讯"
+    key_points:
+      - "明确 SYN、SYN+ACK、ACK 的过程及客户端、服务端的对应状态转换（LISTEN -> SYN_SENT/SYN_RCVD -> ESTABLISHED）"
+      - "如果最后一次ACK丢失，服务端会在超时后重传 SYN+ACK；如果重传达上限，服务端会断开连接"
+      - "若客户端发送了ACK并立刻发送数据，数据包到达服务端时，服务端如果尚未超时，可直接根据数据包头部的ACK确认建立连接，不丢失数据（捎带确认）"
+
+  - id: "BE-TQ-HW-001"
+    type: "technical"
+    question: "请简述TCP和UDP的区别。在视频直播场景中，通常使用的是哪种协议？为什么？"
+    tags: ["计算机网络", "TCP/IP", "视频流媒体"]
+    difficulty: "medium"
+    source: "华为"
+    key_points:
+      - "TCP是面向连接、可靠的、字节流传输，有拥塞控制；UDP是无连接、不可靠、面向报文的，速度快"
+      - "视频直播场景（特别是对实时性要求极高的场景）通常底层更多使用UDP（或基于UDP的协议如WebRTC/QUIC）"
+      - "原因在于直播可以容忍极少量的丢包和花屏，但对延迟的容忍度极低，TCP的重传机制会导致严重的延迟卡顿"
+
+  - id: "BE-TQ-HW-002"
+    type: "technical"
+    question: "什么是Java的动态代理？一般应用在哪些场景？JDK动态代理与CGLIB动态代理的核心区别是什么？"
+    tags: ["Java基础", "动态代理", "设计模式"]
+    difficulty: "medium"
+    source: "华为"
+    key_points:
+      - "动态代理是指在运行时动态生成代理类，将方法调用转发给处理器，常用于AOP（面向切面编程）、RPC框架、事务管理等"
+      - "JDK动态代理基于反射实现，要求被代理类必须实现至少一个接口"
+      - "CGLIB动态代理基于ASM字节码生成框架，通过生成被代理类的子类来实现，无需接口，但无法代理final方法"
+
+  - id: "BE-TQ-HW-003"
+    type: "technical"
+    question: "请详细讲述Spring Boot应用从运行main方法到完全启动的过程源码执行流。"
+    tags: ["Spring Boot", "源码解析", "启动流程"]
+    difficulty: "hard"
+    source: "华为"
+    key_points:
+      - "初始化SpringApplication实例，推断应用类型，加载所有的ApplicationContextInitializer和ApplicationListener"
+      - "调用run()方法，准备Environment环境配置，创建并准备ApplicationContext（IoC容器）"
+      - "刷新上下文（refreshContext），进行组件扫描、自动装配机制（AutoConfiguration）并实例化所有的单例Bean，最终触发各种CommandLineRunner"
+
+  - id: "BE-TQ-HW-004"
+    type: "technical"
+    question: "在Java并发编程中，volatile关键字有什么作用？请列举它在实际开发中的常见应用场景。"
+    tags: ["Java并发", "JMM", "volatile"]
+    difficulty: "medium"
+    source: "华为"
+    key_points:
+      - "保证变量在多线程环境下的内存可见性（强制刷新主存并使其他线程缓存失效）"
+      - "禁止指令重排序（通过内存屏障实现）"
+      - "常见场景：单例模式的双重检查锁（DCL）、作为状态标志位（如启停标记符）"
+
+  - id: "BE-TQ-HW-005"
+    type: "technical"
+    question: "Redis为什么能实现如此高的读写性能？它的底层数据结构有哪些？另外，Redis的键过期策略有哪些？"
+    tags: ["Redis原理", "高性能", "内存管理"]
+    difficulty: "medium"
+    source: "华为"
+    key_points:
+      - "高性能原因：纯内存操作、单线程处理避免了上下文切换与锁竞争、采用I/O多路复用模型处理并发连接"
+      - "底层结构：SDS（简单动态字符串）、哈希表、跳跃表、双向链表、压缩列表（或listpack）等"
+      - "过期策略：定期删除（随机抽取检查） + 惰性删除（访问时检查并删除）"
+
+  - id: "BE-TQ-HW-006"
+    type: "technical"
+    question: "LSM-Tree（日志结构合并树）是读写均衡、写优先还是读优先的数据结构？为什么？业界对其读取性能做了哪些优化方案？"
+    tags: ["存储引擎", "LSM-Tree", "底层结构"]
+    difficulty: "hard"
+    source: "华为"
+    key_points:
+      - "LSM-Tree是典型的高性能写优先（Write-Optimized）数据结构。它将随机写转化为顺序追加写操作（先写内存MemTable和WAL，然后批量刷盘为SSTable）"
+      - "读取较慢是因为可能需要从新到旧遍历多个SSTable层次进行归并"
+      - "读优化方案包括：引入布隆过滤器（快速判断数据是否存在）、Block Cache（内存缓存数据块）、后台持续的Compaction（压实归并）减小文件层级"
+
+  - id: "BE-TQ-HW-007"
+    type: "technical"
+    question: "RocksDB和LevelDB都是基于LSM-Tree的存储引擎，请问RocksDB在LevelDB的基础上做了哪些关键的优化和改进？"
+    tags: ["RocksDB", "分布式存储", "底层架构"]
+    difficulty: "hard"
+    source: "华为"
+    key_points:
+      - "充分利用多核CPU：引入多线程的Compaction和Flush操作"
+      - "丰富了合并策略（Compaction Style）：支持Leveled Compaction和Universal Compaction等多种策略以适应不同读写场景"
+      - "增加了列族（Column Family）支持，允许多个数据集共享同一个WAL但拥有独立的MemTable和SSTable体系"
+
+  - id: "BE-TQ-HW-008"
+    type: "technical"
+    question: "在后端开发中，如果发现某个数据库接口查询非常慢，你会采取哪些排查步骤和解决手段？"
+    tags: ["数据库优化", "性能调优", "问题排查"]
+    difficulty: "medium"
+    source: "华为"
+    key_points:
+      - "定位问题：开启慢查询日志找出耗时SQL，使用EXPLAIN查看执行计划，分析是否走错索引或全表扫描"
+      - "SQL层面优化：避免SELECT *，优化JOIN逻辑，增加或调整联合索引，避免索引失效的场景（如函数操作、左模糊匹配）"
+      - "架构层面优化：引入Redis缓存热点数据、进行读写分离、对历史海量数据进行分库分表或归档"
+
+  - id: "BE-TQ-HW-009"
+    type: "technical"
+    question: "什么是分布式系统中的“脑裂”（Split-Brain）问题？如何有效地预防和解决脑裂现象？"
+    tags: ["分布式系统", "脑裂", "共识算法"]
+    difficulty: "hard"
+    source: "华为"
+    key_points:
+      - "定义：因网络分区等故障，导致集群分裂成多个子集群，各自选出主节点并同时对外提供写服务，造成数据严重冲突和损坏"
+      - "解决方案1：Quorum机制（过半原则）。要求集群节点数为奇数，只有获得超过半数(N/2+1)节点投票的子集群才能产生主节点并对外服务"
+      - "解决方案2：Lease（租约）机制或引入第三方的仲裁节点节点监控机制来切断旧主的网络或电源（如Fencing机制）"
+
+  - id: "BE-TQ-HW-010"
+    type: "technical"
+    question: "请解释Elasticsearch中倒排索引的工作机制，并对比说明链式存储与行式/列式存储的区别，链式存储在ES中有什么应用或优势？"
+    tags: ["Elasticsearch", "搜索引擎", "底层原理"]
+    difficulty: "hard"
+    source: "华为"
+    key_points:
+      - "倒排索引：将文档内容通过分词器处理成词项（Term），构建从词项到包含该词项的文档ID列表（Posting List）的映射，实现极速全文检索"
+      - "行存适合事务和整行读取；列存适合分析和聚合；ES本身是以列式存储（Doc Values）为主辅助排序聚合"
+      - "在此语境下链式存储通常指Posting List底层在内存或磁盘里的指针链表实现（或SkipList跳表），优势在于快速实现集合的交集（合并搜索条件）"
+
+  - id: "BE-TQ-HW-011"
+    type: "technical"
+    question: "在AI大模型时代，如果要在系统中实现高精度的“敏感词检测”，面对经常出现的“伪命中”（如误杀正常词汇）场景，你会如何设计算法或策略来解决？"
+    tags: ["内容安全", "算法设计", "敏感词过滤"]
+    difficulty: "medium"
+    source: "华为"
+    key_points:
+      - "基础过滤：使用Trie树或AC自动机进行高效的基础多模式串匹配拦截"
+      - "应对伪命中策略1：引入白名单词库跳过机制或词性分析避免字面误杀"
+      - "应对伪命中策略2：结合上下文和NLP大模型/分类模型对疑似命中的句子进行语义意图分析，降低人工审核成本"
+
+  - id: "BE-TQ-HW-012"
+    type: "technical"
+    question: "算法题：给定一个字符串，找到它的第一个不重复的字符，并返回它的索引。如果不存在，则返回 -1。"
+    tags: ["算法与数据结构", "哈希表", "字符串"]
+    difficulty: "easy"
+    source: "华为"
+    key_points:
+      - "正确理解题意，能够通过遍历字符串完成计数"
+      - "最优解法：使用哈希表或长度为26的数组进行第一次遍历统计字符频次"
+      - "第二次顺序遍历原字符串，检查当前字符在哈希表中的频次，若为1则直接返回当前索引，时间复杂度为O(N)"
+
+  - id: "BE-TQ-HW-013"
+    type: "technical"
+    question: "算法题：给定一个正整数 n，生成一个包含 1 到 n^2 所有元素，且元素按顺时针顺序螺旋排列的 n x n 正方形矩阵（螺旋矩阵）。"
+    tags: ["算法与数据结构", "数组", "边界控制"]
+    difficulty: "medium"
+    source: "华为"
+    key_points:
+      - "设计思路清晰，能够设定上下左右四个边界指针（top, bottom, left, right）"
+      - "通过外层循环控制填充数值直到n^2，内层四个并列的循环分别按右、下、左、上的顺序填充矩阵"
+      - "在填充过程中正确收缩边界并处理好边界重叠的终止条件，时间复杂度O(n^2)"
+
+  - id: "BE-TQ-HW-014"
+    type: "technical"
+    question: "手撕SQL：已知 employee 表包含 id 和 salary 字段，同时新增了 departmentId 字段；department 表包含部门信息。请编写SQL联查两张表，找出每个部门中薪资最高的员工记录。"
+    tags: ["SQL编写", "联表查询", "窗口函数"]
+    difficulty: "medium"
+    source: "华为"
+    key_points:
+      - "能正确使用 JOIN 进行表连接"
+      - "解法一：使用子查询配合 GROUP BY 和 MAX(salary) 找到每个部门最高薪水，再关联原表获取员工信息"
+      - "解法二（推荐）：熟练使用窗口函数 RANK() 或 DENSE_RANK() OVER (PARTITION BY departmentId ORDER BY salary DESC) 筛选出排名第一的数据"
+
+  - id: "BE-TQ-HW-015"
+    type: "technical"
+    question: "手撕SQL：给定包含 id 和 salary 字段的 employee 表，请编写SQL查询并返回表中第二高的薪水。如果不存在第二高的薪水，请返回 NULL。"
+    tags: ["SQL编写", "聚合函数", "分页与排序"]
+    difficulty: "easy"
+    source: "华为"
+    key_points:
+      - "需要使用 DISTINCT 进行薪资去重，防止最高薪水有多人相同的情况"
+      - "使用 ORDER BY salary DESC LIMIT 1 OFFSET 1 来获取第二名的数据"
+      - "掌握利用 IFNULL 函数包装结果，以满足查不到时返回 NULL 的要求"
+
+  - id: "BE-TQ-JD-001"
+    type: "technical"
+    question: "请列举常用的Linux命令：如何查找8000端口是否被占用？如何统计一个文件的行数？"
+    tags: ["Linux", "基础命令", "排障"]
+    difficulty: "easy"
+    source: "京东"
+    key_points:
+      - "查端口：netstat -tunlp | grep 8000 或 lsof -i :8000"
+      - "查行数：wc -l filename"
+  - id: "BE-TQ-JD-002"
+    type: "technical"
+    question: "请手写算法题：两数之和（要求时间复杂度为O(N)，禁止暴力破解）。"
+    tags: ["算法", "LeetCode", "哈希表"]
+    difficulty: "easy"
+    source: "京东"
+    key_points:
+      - "使用哈希表（HashMap）存储遍历过的元素及其索引"
+      - "每次遍历时查找 target - nums[i] 是否已存在于哈希表中，实现O(N)时间复杂度"
+  - id: "BE-TQ-JD-003"
+    type: "technical"
+    question: "请从资源分配、调度、通信方式等方面，详细对比说明线程与进程的区别。"
+    tags: ["操作系统", "进程与线程", "基础概念"]
+    difficulty: "easy"
+    source: "京东"
+    key_points:
+      - "资源分配：进程是资源分配的基本单位（拥有独立内存空间），线程是调度的基本单位（共享进程资源）"
+      - "开销：进程创建/销毁/切换开销大，线程较小"
+      - "通信：进程间需IPC（管道、消息队列、共享内存等），线程间直接共享内存即可通信，但需注意同步控制"
+  - id: "BE-TQ-JD-004"
+    type: "technical"
+    question: "Java中创建线程有哪些常见方式？它们之间有什么主要区别和适用场景？"
+    tags: ["Java基础", "多线程"]
+    difficulty: "easy"
+    source: "京东"
+    key_points:
+      - "继承Thread类：不可多继承，不推荐"
+      - "实现Runnable接口：支持多实现，任务与运行机制解耦"
+      - "实现Callable接口：配合Future可获取线程执行结果并捕获异常"
+      - "使用线程池（ExecutorService）：推荐方式，避免频繁创建销毁开销"
+  - id: "BE-TQ-JD-005"
+    type: "technical"
+    question: "如果不使用JUC提供的线程池，请简述手写一个基础线程池的核心组件和实现思路。"
+    tags: ["Java并发编程", "底层原理", "线程池"]
+    difficulty: "hard"
+    source: "京东"
+    key_points:
+      - "核心组件：任务队列（阻塞队列存放待执行任务）、工作线程集合（Worker不断从队列取任务）、拒绝策略"
+      - "实现思路：初始化固定数量线程启动并死循环等待队列任务；提交任务时若队列未满则入队，否则执行拒绝策略"
+  - id: "BE-TQ-JD-006"
+    type: "technical"
+    question: "请详细解释Java中volatile关键字的作用，以及它底层是如何保证可见性和禁止指令重排序的？"
+    tags: ["Java并发编程", "JVM", "volatile"]
+    difficulty: "medium"
+    source: "京东"
+    key_points:
+      - "作用：保证变量在多线程间的内存可见性，禁止编译器和CPU指令重排"
+      - "可见性底层：每次读取从主存读取，写入后强制刷新到主存（缓存一致性协议如MESI）"
+      - "重排底层：通过插入内存屏障（Memory Barrier）实现"
+      - "明确界限：不能保证复合操作的原子性"
+  - id: "BE-TQ-JD-007"
+    type: "technical"
+    question: "请详细说明Java中ThreadPoolExecutor的核心构造参数有哪些，各自的含义是什么？"
+    tags: ["Java并发编程", "线程池"]
+    difficulty: "medium"
+    source: "京东"
+    key_points:
+      - "corePoolSize：常驻核心线程数"
+      - "maximumPoolSize：最大线程数"
+      - "keepAliveTime及unit：非核心线程空闲存活时间"
+      - "workQueue：任务阻塞队列"
+      - "threadFactory：线程创建工厂"
+      - "handler：饱和拒绝策略（Abort, CallerRuns, Discard, DiscardOldest）"
+  - id: "BE-TQ-JD-008"
+    type: "technical"
+    question: "请对比分析HashMap与ConcurrentHashMap在底层数据结构、扩容机制及线程安全保证上的差异。"
+    tags: ["Java集合", "并发编程", "数据结构"]
+    difficulty: "hard"
+    source: "京东"
+    key_points:
+      - "数据结构均演进为 数组+链表+红黑树(JDK 1.8)"
+      - "线程安全：HashMap非线程安全；CHM在1.8中采用CAS + synchronized锁首节点，粒度更细"
+      - "扩容：CHM支持多线程协同扩容（ForwardingNode），效率更高"
+  - id: "BE-TQ-JD-009"
+    type: "technical"
+    question: "请描述一下JVM的内存布局结构。你在实际项目中是否有过JVM性能调优的经验？"
+    tags: ["JVM", "内存模型", "性能调优"]
+    difficulty: "medium"
+    source: "京东"
+    key_points:
+      - "线程私有：程序计数器、虚拟机栈、本地方法栈"
+      - "线程共享：堆（Heap）、方法区（元空间）"
+      - "调优思路：使用jstat, jmap等工具排查OOM或频繁Full GC，调整堆大小（-Xms -Xmx）、新生代老年代比例、更换垃圾收集器（如G1）"
+  - id: "BE-TQ-JD-010"
+    type: "technical"
+    question: "请解释在Java中浅拷贝与深拷贝的区别，并举例说明如何实现深拷贝。"
+    tags: ["Java基础", "对象克隆"]
+    difficulty: "easy"
+    source: "京东"
+    key_points:
+      - "浅拷贝：仅复制对象的基本数据类型和引用地址，内部对象改变会相互影响"
+      - "深拷贝：完全克隆对象及其内部引用的所有对象，彼此独立"
+      - "实现方式：实现Cloneable接口重写clone()并逐层拷贝；或通过序列化/反序列化（如JSON序列化）实现"
+  - id: "BE-TQ-JD-011"
+    type: "technical"
+    question: "请综合讲述MySQL InnoDB存储引擎的底层原理，包括数据存储方式、B+树索引结构、回表查询的概念以及索引的最左匹配原则。"
+    tags: ["MySQL", "InnoDB", "索引原理"]
+    difficulty: "hard"
+    source: "京东"
+    key_points:
+      - "数据存储：聚簇索引机制，数据页和主键B+树叶子节点绑定"
+      - "B+树优势：非叶子节点不存数据，使得树更矮胖，磁盘I/O次数极少"
+      - "回表：通过非主键索引找到主键值后，再去主键树查取整行数据的过程"
+      - "最左匹配：复合索引严格按照从左至右顺序匹配，遇到范围查询停止匹配"
+  - id: "BE-TQ-JD-012"
+    type: "technical"
+    question: "MySQL创建表时，为什么推荐使用自增主键？它对B+树索引结构有什么影响？"
+    tags: ["MySQL", "索引设计", "底层优化"]
+    difficulty: "medium"
+    source: "京东"
+    key_points:
+      - "自增主键保证新插入的数据总是顺序添加到B+树的最右侧"
+      - "极大地减少了数据页的分裂、合并和数据移动操作，提升写入性能，降低空间碎片"
+  - id: "BE-TQ-JD-013"
+    type: "technical"
+    question: "数据库有哪些事务隔离级别？MySQL的InnoDB引擎是如何实现可重复读（Repeatable Read）的？"
+    tags: ["MySQL", "事务隔离", "MVCC"]
+    difficulty: "hard"
+    source: "京东"
+    key_points:
+      - "四种级别：读未提交、读已提交、可重复读、串行化"
+      - "实现机制：MVCC（多版本并发控制），通过Undo Log保存历史版本，依靠Read View在事务开启时生成快照"
+      - "间隙锁（Gap Lock）配合防止部分幻读问题"
+  - id: "BE-TQ-JD-014"
+    type: "technical"
+    question: "请分别介绍Redis的主从复制、哨兵模式（Sentinel）以及分片集群（Cluster）的设计理念和解决的问题。"
+    tags: ["Redis", "高可用", "集群架构"]
+    difficulty: "medium"
+    source: "京东"
+    key_points:
+      - "主从：解决数据备份和读写分离问题，但主节点单点故障需人工干预"
+      - "哨兵：监控主节点健康状态，实现自动故障转移（选主）"
+      - "Cluster分片：通过哈希槽（16384）将数据分散到多个节点，解决单机内存容量和写并发瓶颈"
+  - id: "BE-TQ-JD-015"
+    type: "technical"
+    question: "Redis常见数据结构中，Zset有哪些典型的使用场景？底层结构是什么？"
+    tags: ["Redis", "数据结构", "Zset"]
+    difficulty: "medium"
+    source: "京东"
+    key_points:
+      - "场景：排行榜、延时队列、时间轴数据展示"
+      - "底层结构：跳表（SkipList）+ 哈希表（Dict），保证O(logN)复杂度的同时支持根据member查score"
+  - id: "BE-TQ-JD-016"
+    type: "technical"
+    question: "Redis内存满了之后会怎样？请列举并解释Redis常见的几种缓存淘汰策略。"
+    tags: ["Redis", "内存管理", "淘汰策略"]
+    difficulty: "medium"
+    source: "京东"
+    key_points:
+      - "满了后写入会报错（默认noeviction）"
+      - "常见策略：LRU（最近最少使用）、LFU（最不经常使用）、Random（随机）、TTL（针对设置了过期时间的键淘汰）"
+  - id: "BE-TQ-JD-017"
+    type: "technical"
+    question: "请详细阐述在实际生产环境中，如何保证Redis缓存与MySQL数据库之间的数据最终一致性？"
+    tags: ["分布式", "缓存一致性", "Redis"]
+    difficulty: "hard"
+    source: "京东"
+    key_points:
+      - "经典策略：Cache Aside Pattern，先更新DB，再删除缓存"
+      - "解决并发与失败：延迟双删策略；或借助Canal订阅MySQL Binlog异步精准删除缓存"
+  - id: "BE-TQ-JD-018"
+    type: "technical"
+    question: "在系统架构中，为什么不能依靠Redis作为唯一的数据存储？相比关系型数据库有哪些局限性？"
+    tags: ["架构设计", "数据库选型", "Redis"]
+    difficulty: "easy"
+    source: "京东"
+    key_points:
+      - "数据安全性：基于内存，即便有RDB/AOF，极端情况下仍存在数据丢失风险"
+      - "复杂查询弱：不支持复杂的多表Join查询和强大的ACID事务处理"
+      - "成本高：纯内存存储海量数据成本过于高昂"
+  - id: "BE-TQ-JD-019"
+    type: "technical"
+    question: "Redis中执行Lua脚本在Cluster集群模式下会存在一致性或路由问题吗？应该如何解决？"
+    tags: ["Redis", "集群环境", "Lua脚本"]
+    difficulty: "hard"
+    source: "京东"
+    key_points:
+      - "问题：Cluster要求Lua脚本中操作的所有Key必须路由到同一个哈希槽（Slot）中，否则会报错"
+      - "解决：使用Hash Tag（例如 {user:100}:info），强制要求同一组业务相关的Key路由到同一节点"
+  - id: "BE-TQ-JD-020"
+    type: "technical"
+    question: "消息队列系统通常包含哪些核心组件？常见的路由方式有哪些？Kafka是基于Push还是Pull模式的？"
+    tags: ["MQ", "架构原理", "Kafka"]
+    difficulty: "medium"
+    source: "京东"
+    key_points:
+      - "组件：Producer、Broker、Consumer"
+      - "路由：Direct(精确), Topic(正则模式), Fanout(广播) (以RabbitMQ为例)"
+      - "Kafka消费模式：基于Pull（拉取）模式，允许消费者自主控制消费速率，适合大数据吞吐"
+  - id: "BE-TQ-JD-021"
+    type: "technical"
+    question: "在使用消息队列时，如果出现严重的消息积压（Message Backlog）问题，应该如何排查和处理？"
+    tags: ["MQ", "线上排障", "性能优化"]
+    difficulty: "hard"
+    source: "京东"
+    key_points:
+      - "排查原因：消费者宕机、消费逻辑变慢（如依赖外部接口慢/数据库慢查询）、代码死循环"
+      - "应急处理：紧急扩容消费端实例数（如扩容Kafka Partition和对应的Consumer）；若是脏数据导致，可先将其路由到死信队列（DLQ）暂存"
+  - id: "BE-TQ-JD-022"
+    type: "technical"
+    question: "如果MQ发送消息失败，应该采取回滚机制还是重试机制？在分布式系统中如何处理？"
+    tags: ["分布式系统", "MQ", "可靠投递"]
+    difficulty: "medium"
+    source: "京东"
+    key_points:
+      - "取决于业务场景容忍度：绝大多数情况采用重试+最终一致性"
+      - "技术手段：本地消息表+定时任务补偿；或者利用MQ自带的事务消息能力（如RocketMQ的半事务消息）来保证本地事务和消息发送的一致性"
+  - id: "BE-TQ-JD-023"
+    type: "technical"
+    question: "在Spring框架中，@Autowired和@Resource注解进行依赖注入时有什么区别？"
+    tags: ["Spring", "基础框架", "注解"]
+    difficulty: "easy"
+    source: "京东"
+    key_points:
+      - "来源：@Autowired是Spring特有，@Resource是J2EE规范"
+      - "装配规则：@Autowired默认按Type注入，需结合@Qualifier按Name；@Resource默认按Name匹配注入，找不到才按Type"
+  - id: "BE-TQ-JD-024"
+    type: "technical"
+    question: "请谈谈你对Spring框架中IoC（控制反转）和AOP（面向切面编程）的理解，以及它们在实际开发中的应用场景。"
+    tags: ["Spring", "IoC", "AOP"]
+    difficulty: "medium"
+    source: "京东"
+    key_points:
+      - "IoC：将对象创建和管理的控制权交给Spring容器，降低组件耦合度（场景：Bean的依赖注入）"
+      - "AOP：通过动态代理提取横切关注点，避免业务代码冗余（场景：统一日志输出、权限校验、声明式事务处理@Transactional）"
+  - id: "BE-TQ-JD-025"
+    type: "technical"
+    question: "在MyBatis中，#{} 和 ${} 在参数绑定时有什么本质区别？执行Insert操作后，如何获取自增主键的ID？"
+    tags: ["MyBatis", "数据库访问", "安全"]
+    difficulty: "medium"
+    source: "京东"
+    key_points:
+      - "区别：#{} 使用PreparedStatement进行预编译处理，安全防SQL注入；${} 是直接的字符串替换，存在风险"
+      - "获取主键：使用 useGeneratedKeys=\"true\" 并指定 keyProperty 属性，插入后自动回写到实体类对象中"
+  - id: "BE-TQ-JD-026"
+    type: "technical"
+    question: "简述大模型中Function Calling（函数调用）机制的底层原理，它究竟帮我们做了什么？"
+    tags: ["AI大模型", "Function Calling", "Agent"]
+    difficulty: "medium"
+    source: "京东"
+    key_points:
+      - "原理：模型并不真正直接执行代码，而是具备理解工具定义（Schema）的能力"
+      - "过程：当检测到需调用工具解决问题时，模型会生成结构化的JSON参数停止生成，后端代码拦截解析该JSON并执行本地函数，最后将执行结果返回给模型继续推理"
+  - id: "BE-TQ-JD-027"
+    type: "technical"
+    question: "你了解大模型的上下文工程（Context Engineering）吗？请简述Skill、MCP（Model Context Protocol）在其中的作用。"
+    tags: ["AI大模型", "MCP", "上下文工程"]
+    difficulty: "hard"
+    source: "京东"
+    key_points:
+      - "上下文工程关注如何高效、准确地为模型组装运行时背景信息"
+      - "Skill：通常指赋予Agent执行特定任务的具体插件或工具"
+      - "MCP：标准化应用与大模型双向通信的协议标准，使得不同数据源和工具更容易被统一接入大模型上下文"
+  - id: "BE-TQ-JD-028"
+    type: "technical"
+    question: "在落地RAG系统时，文档分片（Chunking）策略是如何设计的？这对最终的检索效果有什么影响？"
+    tags: ["AI大模型", "RAG", "向量检索"]
+    difficulty: "hard"
+    source: "京东"
+    key_points:
+      - "分片策略：按固定长度切分、按语义段落切分、重叠切分（Overlap）等"
+      - "影响：切片过大导致无关信息稀释核心语义，切片过小导致上下文逻辑断裂，直接影响Embedding质量和检索召回率"
+  - id: "BE-TQ-JD-029"
+    type: "technical"
+    question: "在构建复杂大模型应用时，什么情况下会引入SubAgent（子代理）模式？它解决了什么痛点？"
+    tags: ["AI大模型", "Agent架构", "多智能体"]
+    difficulty: "hard"
+    source: "京东"
+    key_points:
+      - "适用场景：任务过于复杂，步骤繁多，单一Prompt和单一模型无法保证每步的准确率时"
+      - "解决痛点：实现职责分离（SoC）。主控Agent负责意图识别和任务拆解分发，特定的SubAgent专注于特定垂类任务（如代码编写、数据分析），提高整体系统的健壮性和可解释性"
+  - id: "BE-TQ-JD-030"
+    type: "technical"
+    question: "在Agent开发中，Skill（工具调用）能保证百分之百被准确调起吗？如果不能，应如何优化Prompt或流程？"
+    tags: ["AI大模型", "Agent", "Prompt Engineering"]
+    difficulty: "medium"
+    source: "京东"
+    key_points:
+      - "无法保证100%调起，存在模型幻觉、参数理解错误或意图偏离的可能"
+      - "优化手段：提供丰富清晰的Tool Description和few-shot examples；限制同时挂载的工具数量；加入自反思机制（Reflection），执行失败后让模型自动纠错"
+
+  - id: "BE-TQ-JD-031"
+    type: "technical"
+    question: "在后端开发中，如何确保新开发的模块或改动到的模块在线上运行不会产生问题？"
+    tags: ["质量保障", "测试体系", "灰度发布"]
+    difficulty: "medium"
+    source: "京东"
+    key_points:
+      - "开发阶段：规范的代码Review机制、充分的单元测试与Mock"
+      - "测试阶段：覆盖集成测试、全链路压测，回归测试防止影响老功能"
+      - "发布阶段：采用灰度发布/蓝绿部署，配置完善的监控大盘和异常告警，备好回滚预案"
+
+  - id: "BE-TQ-JD-032"
+    type: "technical"
+    question: "请详细描述 MySQL 中一个 update 语句的底层执行过程，以及它是如何保证 ACID 特性的？"
+    tags: ["MySQL", "执行引擎", "事务处理", "日志机制"]
+    difficulty: "hard"
+    source: "京东"
+    key_points:
+      - "执行过程：连接器 -> 分析器 -> 优化器 -> 执行器 -> 存储引擎（查找、修改内存页）"
+      - "持久性(D)与原子性(A)：通过 Redo Log (两阶段提交) 保证宕机不丢失，通过 Undo Log 保证回滚"
+      - "隔离性(I)：通过 MVCC（多版本并发控制）和锁机制（如行锁、Gap Lock）实现"
+
+  - id: "BE-TQ-JD-033"
+    type: "technical"
+    question: "【算法应用】给定一系列空间站和连接它们的虫洞路径（带有能量消耗），如何求解从起点到每个空间站所需的最小能量补给数？"
+    tags: ["算法设计", "图论", "最短路径"]
+    difficulty: "medium"
+    source: "京东"
+    key_points:
+      - "识别该问题为图论中的单源最短路径问题"
+      - "如果能量消耗均为正，提出使用 Dijkstra 算法并分析时间复杂度"
+      - "如果存在负权重的虫洞（恢复能量），提出使用 Bellman-Ford 或 SPFA 算法"
+
+  - id: "BE-TQ-JD-034"
+    type: "technical"
+    question: "如果想从事 AI Agent 开发，你认为应该学习和掌握哪些核心技术栈或概念？"
+    tags: ["AI Agent", "LLM", "架构设计"]
+    difficulty: "medium"
+    source: "京东"
+    key_points:
+      - "掌握大模型API调用、Prompt Engineering及LangChain等核心编排框架"
+      - "深入理解 RAG（检索增强生成）原理，包括向量数据库、文档解析与Embedding切分"
+      - "理解 Agent 的核心组件：规划(Planning)、记忆(Memory)、工具使用(Tools/Function Calling)"
+
+  - id: "BE-TQ-JD-035"
+    type: "technical"
+    question: "请详细描述一下 TCP 建立握手和断开连接的具体过程。"
+    tags: ["计算机网络", "TCP协议"]
+    difficulty: "medium"
+    source: "京东"
+    key_points:
+      - "三次握手：SYN -> SYN+ACK -> ACK。说明双方状态转换及防止历史连接的原因"
+      - "四次挥手：FIN -> ACK -> FIN -> ACK。说明全双工通信断开的必要性"
+      - "核心考点：重点解释 TIME_WAIT 状态的作用（保证最后的ACK到达，防止旧连接数据包干扰）"
+
+  - id: "BE-TQ-JD-036"
+    type: "technical"
+    question: "请说明 TCP 和 UDP 的区别是什么？它们各自适用的业务场景有哪些？"
+    tags: ["计算机网络", "协议对比", "TCP/UDP"]
+    difficulty: "easy"
+    source: "京东"
+    key_points:
+      - "TCP 面向连接、可靠传输、有流量控制和拥塞控制，面向字节流；UDP 无连接、不可靠、速度快，面向报文"
+      - "TCP 适用场景：文件传输、HTTP请求、核心交易等要求数据无误的场景"
+      - "UDP 适用场景：视频直播、实时游戏对战、DNS查询等对实时性要求高但允许轻微丢包的场景"
+
+  - id: "BE-TQ-JD-037"
+    type: "technical"
+    question: "在前端（或UI开发）中，除 Flex 布局外，还有哪些实现元素垂直居中的方法？"
+    tags: ["CSS", "前端基础", "布局"]
+    difficulty: "easy"
+    source: "京东"
+    key_points:
+      - "Grid 布局：align-items: center"
+      - "绝对定位 + transform: translate(-50%, -50%)"
+      - "绝对定位 + margin: auto (配合上下左右设为0)"
+      - "单行文本使用 line-height 等于容器 height"
+
+  - id: "BE-TQ-JD-038"
+    type: "technical"
+    question: "请列举一些目前国内主流的大语言模型，并简述它们各自的特点或背后的厂商。"
+    tags: ["大模型", "行业认知", "LLM"]
+    difficulty: "easy"
+    source: "京东"
+    key_points:
+      - "百度文心一言 (Ernie Bot)：国内较早推出，与百度搜索生态结合紧密"
+      - "阿里通义千问 (Qwen)：开源生态做得好，多模态和代码能力强"
+      - "智谱 ChatGLM：学术背景强，开源版本广受开发者欢迎"
+      - "其他如字节豆包(Doubao)、科大讯飞星火、月之暗面(Kimi - 长文本优势)等"
+
+  - id: "BE-TQ-JD-039"
+    type: "technical"
+    question: "请介绍一下常见的锁机制，乐观锁和悲观锁分别是什么？它们各自有哪些优缺点？"
+    tags: ["多线程", "并发编程", "锁机制"]
+    difficulty: "medium"
+    source: "京东"
+    key_points:
+      - "准确定义悲观锁（假定冲突大概率发生，加排他锁）和乐观锁（假定冲突小概率发生，无锁重试）"
+      - "悲观锁（如 synchronized, For Update）缺点是容易阻塞、性能开销大；优点是数据绝对安全"
+      - "乐观锁（如 CAS, 版本号机制）缺点是高并发下自旋开销大（ABA问题）；优点是读多场景并发度高"
+
+  - id: "BE-TQ-JD-040"
+    type: "technical"
+    question: "为什么创建MySQL数据表时，推荐将主键设置为自增ID？"
+    tags: ["MySQL", "数据库索引", "底层原理"]
+    difficulty: "medium"
+    source: "京东"
+    key_points:
+      - "MySQL InnoDB引擎使用B+树组织聚簇索引，数据按主键顺序存储"
+      - "自增主键可以保证新插入的记录顺序追加在当前页的尾部，减少页分裂和数据移动的开销"
+      - "UUID等无序主键会导致大量的随机IO和页分裂，产生空间碎片，降低写入性能"
+
+  - id: "BE-TQ-JD-041"
+    type: "technical"
+    question: "在Redis集群模式下执行Lua脚本，会存在一致性或报错问题吗？如何解决从而保证操作在一个Hash槽内？"
+    tags: ["Redis", "Lua脚本", "分布式集群"]
+    difficulty: "hard"
+    source: "京东"
+    key_points:
+      - "Redis集群模式下，如果Lua脚本操作的多个Key不在同一个Hash Slot，会直接报错"
+      - "解决方案是通过 Hash Tag `{}` 强制确保相关Key分配到相同的槽"
+      - "认知到大范围跨槽操作破坏了集群水平扩展的初衷，应从业务模型上避免"
+
+  - id: "BE-TQ-JD-042"
+    type: "technical"
+    question: "详细说一下Java线程池的实现原理？以及它的七大核心参数和拒绝策略。"
+    tags: ["Java基础", "多线程", "线程池"]
+    difficulty: "medium"
+    source: "京东"
+    key_points:
+      - "线程池的工作原理：核心线程 -> 阻塞队列 -> 最大线程 -> 拒绝策略的流转过程"
+      - "说出 corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue, threadFactory, handler 参数作用"
+      - "掌握四种常见拒绝策略（AbortPolicy, CallerRunsPolicy, DiscardOldestPolicy, DiscardPolicy）"
+
+  - id: "BE-TQ-JD-043"
+    type: "technical"
+    question: "ThreadLocal的作用是什么？在父子线程中存在什么继承问题，如何解决？"
+    tags: ["Java基础", "多线程", "ThreadLocal"]
+    difficulty: "medium"
+    source: "京东"
+    key_points:
+      - "ThreadLocal用于实现线程间的数据隔离，避免多线程下的资源竞争"
+      - "普通的ThreadLocal在子线程中无法获取父线程设置的值"
+      - "解决方案是使用 InheritableThreadLocal，或者在线程池场景下使用阿里的 TransmittableThreadLocal(TTL)"
+
+  - id: "BE-TQ-JD-044"
+    type: "technical"
+    question: "MySQL索引的数据结构为什么是B+树？什么是回表操作？什么是联合索引的最左匹配原则？"
+    tags: ["MySQL", "索引", "B+树"]
+    difficulty: "medium"
+    source: "京东"
+    key_points:
+      - "B+树非叶子节点不存数据，使得单个节点能容纳更多索引，树层级更低，减少磁盘IO"
+      - "回表：通过二级索引查到主键ID后，再回聚簇索引树查找完整行数据的过程"
+      - "最左匹配原则：复合索引的使用必须从最左边的列开始按顺序匹配，中间不能跳过，否则索引失效"
+
+  - id: "BE-TQ-JD-045"
+    type: "technical"
+    question: "消息队列有哪些常见组件和路由方式？RabbitMQ发生消息积压问题时该如何处理？"
+    tags: ["消息队列", "RabbitMQ", "高可用"]
+    difficulty: "medium"
+    source: "京东"
+    key_points:
+      - "提及Exchange, Queue, RoutingKey等组件及 Direct/Fanout/Topic 路由方式"
+      - "处理消息积压策略1：排查并修复消费者端的消费慢、死锁或异常挂起问题"
+      - "处理消息积压策略2：横向扩容增加消费者实例，或将积压消息临时转存到其它队列延后处理"
+
+  - id: "BE-TQ-JD-046"
+    type: "technical"
+    question: "什么是大模型的 RAG（检索增强生成）？RAG中的文档分片（Chunking）通常怎么做？遇到幻觉问题如何处理？"
+    tags: ["LLM", "RAG", "Agent架构"]
+    difficulty: "hard"
+    source: "京东"
+    key_points:
+      - "理解RAG原理：通过外部向量知识库检索相关上下文，拼接到Prompt中增强模型回答准确性"
+      - "分片策略考量：按句子/段落拆分，设置合理的Chunk Size与Overlap（重叠度）以保留语义连贯性"
+      - "缓解幻觉手段：优化检索TopK的相关性，在Prompt中强约束“仅根据给定上下文回答”，引入二次校验模型"
+
+  - id: "BE-TQ-JD-047"
+    type: "technical"
+    question: "Mybatis中的 #{} 和 ${} 有什么区别？执行插入语句时如何拿到自增返回的主键ID？"
+    tags: ["Mybatis", "框架原理", "安全"]
+    difficulty: "easy"
+    source: "京东"
+    key_points:
+      - "#{} 是预编译处理（PreparedStatement），能有效防止SQL注入；${} 是纯粹的字符串替换"
+      - "动态表名或列名时只能用 ${} 并自己做好防注入"
+      - "获取主键：使用 useGeneratedKeys=\"true\" 并设置 keyProperty 属性映射到实体类字段"
+
+  - id: "BE-TQ-JD-048"
+    type: "technical"
+    question: "Redis的Zset（有序集合）底层是如何实现的？它有哪些经典的业务使用场景？"
+    tags: ["Redis", "数据结构", "底层原理"]
+    difficulty: "medium"
+    source: "京东"
+    key_points:
+      - "底层实现结合了 字典（Hash） 和 跳跃表（SkipList），数据量小时使用压缩列表（ziplist）"
+      - "跳表提供了 O(logN) 的高效范围查找和插入性能"
+      - "典型场景：排行榜（游戏/积分排名）、延时队列、滑动窗口限流等"
+
+  - id: "BE-TQ-MT-001"
+    type: "technical"
+    question: "请解释缓存穿透、缓存击穿和缓存雪崩的概念与区别，并分别说明各自的常见解决方案。"
+    tags: ["Redis", "缓存架构", "高并发"]
+    difficulty: "medium"
+    source: "美团"
+    key_points:
+      - "缓存穿透（请求不存在的数据）：使用布隆过滤器拦截，或缓存空对象并设置较短过期时间"
+      - "缓存击穿（单点热点Key失效导致穿透）：使用互斥锁（如分布式锁）只允许一个线程去查DB，或设置热点数据逻辑永不过期"
+      - "缓存雪崩（大量Key同时失效或Redis宕机）：对过期时间加上随机数打散，使用高可用集群（哨兵/Cluster），以及开启限流降级"
+
+  - id: "BE-TQ-MT-002"
+    type: "technical"
+    question: "请比较Redis的RDB和AOF两种持久化机制，分别阐述它们的原理、优势及适用场景。"
+    tags: ["Redis", "持久化", "原理分析"]
+    difficulty: "medium"
+    source: "美团"
+    key_points:
+      - "RDB是快照持久化，通过fork子进程并利用写时复制生成全量数据文件；优势是恢复速度快，适合灾备；劣势是可能会丢失最后一次快照后的数据"
+      - "AOF是追加日志持久化，记录每条写命令；优势是数据安全性高（最多丢1秒）；劣势是文件体积大，恢复速度慢"
+      - "适用场景：推荐Redis 4.0之后的混合持久化，结合RDB的快速恢复和AOF的数据安全性"
+
+  - id: "BE-TQ-MT-003"
+    type: "technical"
+    question: "请简述Java中创建线程的方式、线程的生命周期状态，比较sleep()和wait()的区别，并说明产生死锁的四个必要条件。"
+    tags: ["Java基础", "多线程", "并发编程"]
+    difficulty: "easy"
+    source: "美团"
+    key_points:
+      - "创建线程：继承Thread类、实现Runnable接口、实现Callable接口（带返回值）、基于线程池"
+      - "sleep与wait区别：sleep属于Thread类且不释放锁；wait属于Object类且释放锁，必须在同步块中使用"
+      - "死锁四大条件：互斥、请求与保持、不剥夺、循环等待；任一条件被打破即可避免死锁"
+
+  - id: "BE-TQ-MT-004"
+    type: "technical"
+    question: "请详细讲解Java中HashMap的底层数据结构与实现原理，包括哈希冲突的解决方式和扩容机制。"
+    tags: ["Java集合", "数据结构", "底层原理"]
+    difficulty: "medium"
+    source: "美团"
+    key_points:
+      - "底层结构：JDK 1.8基于数组 + 链表 + 红黑树实现"
+      - "冲突解决：发生冲突时挂载到链表上，当链表长度大于8且数组长度大于64时，链表转换为红黑树以优化查询效率"
+      - "扩容机制：当元素个数超过（数组长度 * 0.75）时触发扩容，容量翻倍，并将原有元素通过高低位运算重新分配到新数组中"
+
+  - id: "BE-TQ-MT-005"
+    type: "technical"
+    question: "在流式对话场景中，如果用户主动取消了操作，后端如何优雅地中断大语言模型（LLM）的调用并释放相关资源？"
+    tags: ["流式响应", "资源管理", "Spring AI"]
+    difficulty: "hard"
+    source: "美团"
+    key_points:
+      - "利用 Flux/Mono 的取消信号或 HTTP 链接中断感知"
+      - "调用 LLM SDK 提供的 Stop Sequence 或 Abort 控制器"
+      - "确保线程池中的 Task 能够响应中断并清理上下文"
+
+  - id: "BE-TQ-MT-006"
+    type: "technical"
+    question: "请对比分析 G1 垃圾回收器相对于 CMS 垃圾回收器的核心提升点，并说明在什么场景下应该选择 G1？"
+    tags: ["JVM", "垃圾回收", "G1"]
+    difficulty: "medium"
+    source: "美团"
+    key_points:
+      - "分区（Region）结构代替物理分代，解决内存碎片问题"
+      - "可预测的停顿时间模型（MaxGCPauseMillis）"
+      - "混合收集（Mixed GC）能力，大内存（>6G）场景优势更明显"
+
+  - id: "BE-TQ-MT-007"
+    type: "technical"
+    question: "针对 1000 万数据点每 10 秒采集一次的高并发场景，数据传输链路该如何设计以实现高可用与低延迟？"
+    tags: ["高并发", "架构设计", "Kafka"]
+    difficulty: "hard"
+    source: "美团"
+    key_points:
+      - "使用消息队列（Kafka/RocketMQ）削峰填谷"
+      - "批量写入与压缩技术减小传输压力"
+      - "分片处理逻辑与消费者负载均衡设计"
+
+  - id: "BE-TQ-MT-008"
+    type: "technical"
+    question: "请详细讲一下Redis的持久化机制（RDB和AOF）有哪些，各自的原理、优缺点是什么？"
+    tags: ["Redis", "持久化", "高可用"]
+    difficulty: "medium"
+    source: "美团"
+    key_points:
+      - "RDB：内存快照，二进制文件。优点是恢复速度快，文件体积小；缺点是存在丢失数据的风险（取决于备份频率），BGSAVE耗时且耗费CPU。"
+      - "AOF：追加命令日志。优点是数据安全性高（可秒级或每次写入同步）；缺点是文件体积大，恢复速度慢，高并发下对性能有一定影响。"
+      - "混合持久化：结合两者优点，RDB做全量，AOF做增量。"
+  - id: "BE-TQ-MT-009"
+    type: "technical"
+    question: "在数据库分库分表设计中，分片键（Sharding Key）通常是如何选取的？如果查询不带分片键该如何处理？"
+    tags: ["数据库", "分库分表", "架构设计"]
+    difficulty: "hard"
+    source: "美团"
+    key_points:
+      - "选取原则：应选择查询最频繁的字段（如user_id、order_id），且保证数据分布均匀，避免热点问题。"
+      - "无分片键查询方案：引入二级索引/映射表（如非分片键与分片键的映射），或者将数据同步到ES等全文搜索引擎供复杂查询使用。"
+  - id: "BE-TQ-MT-010"
+    type: "technical"
+    question: "请解释Java中重写（Override）与重载（Overload）的区别。"
+    tags: ["Java基础", "面向对象", "多态"]
+    difficulty: "easy"
+    source: "美团"
+    key_points:
+      - "重载（Overload）：发生在同一个类中，方法名相同，参数列表（类型、个数、顺序）不同。编译期绑定。"
+      - "重写（Override）：发生在子类继承父类或实现接口时，方法名、参数列表必须完全相同，返回值类型需兼容。运行期多态绑定。"
+  - id: "BE-TQ-MT-011"
+    type: "technical"
+    question: "请解释Redis中缓存穿透、缓存击穿和缓存雪崩的区别，并说明各自的解决方案。"
+    tags: ["Redis", "缓存异常", "高可用"]
+    difficulty: "medium"
+    source: "美团"
+    key_points:
+      - "缓存穿透：请求不存在的数据。解决：布隆过滤器拦截、缓存空值。"
+      - "缓存击穿：热点Key过期，瞬间高并发打满DB。解决：互斥锁（如Redisson）、热点Key永不过期或逻辑过期。"
+      - "缓存雪崩：大量Key同时过期或Redis宕机。解决：过期时间加随机值、搭建高可用集群（Sentinel/Cluster）、多级缓存与限流降级。"
+  - id: "BE-TQ-MT-012"
+    type: "technical"
+    question: "请简述你对JVM架构和垃圾回收（GC）机制的理解，G1垃圾回收器相较于CMS有哪些核心提升？"
+    tags: ["JVM", "垃圾回收", "G1", "CMS"]
+    difficulty: "hard"
+    source: "美团"
+    key_points:
+      - "简述JVM内存划分（堆、栈、方法区等）及可达性分析算法。"
+      - "CMS的缺点：采用标记-清除算法容易产生内存碎片，且在并发清理阶段遇到浮动垃圾可能触发Full GC（Concurrent Mode Failure）。"
+      - "G1的提升：采用Region内存划分，基于标记-整理算法（局部复制），避免内存碎片；并建立了可预测的停顿时间模型。"
+  - id: "BE-TQ-MT-013"
+    type: "technical"
+    question: "在MySQL的InnoDB引擎中，主键使用自增BigInt和使用UUID，在性能和底层存储上有什么差异？"
+    tags: ["MySQL", "InnoDB", "索引原理"]
+    difficulty: "medium"
+    source: "美团"
+    key_points:
+      - "InnoDB使用聚簇索引（B+树），数据按主键顺序物理存储。"
+      - "自增BigInt：插入时按顺序追加，不会导致频繁的页分裂（Page Split），空间利用率高，查询效率高且占用空间小。"
+      - "UUID：无序的字符串，插入时会导致频繁的B+树节点分裂和页合并，产生大量内存碎片和磁盘随机I/O，且占用空间比BigInt大，导致单页存储的数据量变少。"
+  - id: "BE-TQ-MT-014"
+    type: "technical"
+    question: "在Spring框架中，使用依赖注入时，@Autowired和@Resource注解有什么区别？"
+    tags: ["Spring", "IOC", "依赖注入"]
+    difficulty: "medium"
+    source: "美团"
+    key_points:
+      - "来源不同：@Autowired是Spring提供的注解；@Resource是JDK/J2EE标准（JSR-250）提供的注解。"
+      - "注入规则不同：@Autowired默认按Type（类型）注入，如果存在多个同类型Bean需配合@Qualifier；@Resource默认按Name（名称）注入，找不到时再回退到按Type注入。"
+  - id: "BE-TQ-MT-015"
+    type: "technical"
+    question: "在操作系统中，“并发（Concurrency）”和“并行（Parallelism）”有什么区别？"
+    tags: ["操作系统", "多线程", "并发编程"]
+    difficulty: "easy"
+    source: "美团"
+    key_points:
+      - "并发（Concurrency）：宏观上多个任务同时推进，微观上由于CPU时间片轮转，同一时刻只有一个任务在执行（单核环境下的多任务）。"
+      - "并行（Parallelism）：微观和宏观上均同时执行，依赖于多核CPU资源，多个任务在同一时刻被多个CPU核心分别执行。"
+  - id: "BE-TQ-MT-016"
+    type: "technical"
+    question: "请简述Java多线程中wait()方法和Thread.sleep()方法的区别。"
+    tags: ["Java基础", "多线程", "并发控制"]
+    difficulty: "easy"
+    source: "美团"
+    key_points:
+      - "归属不同：wait()是Object类的方法，sleep()是Thread类的静态方法。"
+      - "锁释放机制不同（核心）：wait()会释放持有的对象锁，而sleep()不会释放锁。"
+      - "唤醒机制不同：wait()需要被notify()/notifyAll()唤醒（或超时），sleep()会在指定时间后自动苏醒。"
+      - "使用场景：wait()用于线程间通信，必须在同步块/方法中调用；sleep()用于暂停当前线程执行。"
+
+  - id: "BE-TQ-PDD-001"
+    type: "technical"
+    question: "请简述MySQL的事务特性（ACID），并分别说明它们在底层是如何实现的？"
+    tags: ["MySQL", "数据库事务", "InnoDB"]
+    difficulty: "medium"
+    source: "拼多多"
+    key_points:
+      - "原子性（Atomicity）：基于 undo log（回滚日志）实现，保证操作失败时能够回滚"
+      - "持久性（Durability）：基于 redo log（重做日志）实现，保证宕机不丢数据（WAL机制）"
+      - "隔离性（Isolation）：基于 锁机制 和 MVCC（多版本并发控制）实现"
+      - "一致性（Consistency）：是最终目的，由业务代码保障以及上述三大特性共同维持"
+
+  - id: "BE-TQ-PDD-002"
+    type: "technical"
+    question: "Spring中的Bean默认是单例还是多例？Spring底层是如何解决Bean的循环依赖问题的？"
+    tags: ["Spring", "IoC", "循环依赖"]
+    difficulty: "medium"
+    source: "拼多多"
+    key_points:
+      - "Spring Bean默认是单例（Singleton）"
+      - "针对单例Bean的setter注入，Spring通过三级缓存机制（singletonObjects, earlySingletonObjects, singletonFactories）解决循环依赖"
+      - "明确指出如果是构造器注入产生的循环依赖，Spring默认无法解决，会抛出BeanCurrentlyInCreationException异常"
+
+  - id: "BE-TQ-PDD-003"
+    type: "technical"
+    question: "在Java 8的HashMap中，为什么当链表长度大于等于8时会转化为红黑树？为什么树化退化阈值设置为6而不是7？"
+    tags: ["Java集合", "HashMap", "红黑树"]
+    difficulty: "hard"
+    source: "拼多多"
+    key_points:
+      - "设计原则基于泊松分布，在理想的哈希算法下，链表长度达到8的概率极小（千万分之一），转化为红黑树是一种极端哈希冲突下的兜底策略以保证O(logN)查询效率"
+      - "退化阈值设为6而不是7，是为了形成缓冲区间，防止当哈希桶中的节点在8附近徘徊时，导致频繁发生树化和链表化的相互转换，引起严重的性能损耗"
+
+  - id: "BE-TQ-PDD-004"
+    type: "technical"
+    question: "为什么ConcurrentHashMap的size()方法在并发环境下可能不精确？在JDK 1.8中有什么替代方案或优化实现？"
+    tags: ["Java并发", "ConcurrentHashMap", "源码解析"]
+    difficulty: "hard"
+    source: "拼多多"
+    key_points:
+      - "在并发环境下，元素不断插入和删除，size处于动态变化中。如果采用强一致性加锁会导致性能断崖"
+      - "JDK 1.8中采用了类似LongAdder的分段思想，通过 baseCount 和 CounterCell 数组分别记录，最后累加得出结果，这种最终一致性设计牺牲了瞬时的精准度换取了高并发性能"
+      - "官方建议使用 mappingCount() 方法替代 size()，因为它返回的是 long 类型，能防止超出 int 上限"
+
+  - id: "BE-TQ-PDD-005"
+    type: "technical"
+    question: "使用Redis实现库存扣减的分布式锁时，如何有效解决业务未执行完但锁超时的安全问题？"
+    tags: ["Redis", "分布式锁", "Redisson"]
+    difficulty: "medium"
+    source: "拼多多"
+    key_points:
+      - "直接设置固定的过期时间无法兼顾所有业务的执行时长"
+      - "标准解决方案是引入看门狗机制（Watch Dog），如Redisson的实现"
+      - "加锁成功后开启一个后台定时任务（看门狗），在业务尚未执行完成前，周期性地自动为锁续期（重置过期时间）"
+      - "业务执行完毕或节点宕机后看门狗停止续期，确保锁能安全释放"
+
+  - id: "BE-TQ-PDD-006"
+    type: "technical"
+    question: "请解释TCP四次挥手中，客户端为什么会进入TIME_WAIT状态并等待2MSL？"
+    tags: ["计算机网络", "TCP协议", "状态机"]
+    difficulty: "medium"
+    source: "拼多多"
+    key_points:
+      - "确保服务端能够正常关闭：如果客户端发送的最后一个ACK丢失，服务端会重发FIN，TIME_WAIT状态允许客户端接收重传并再次回复ACK"
+      - "防止旧连接的数据包干扰新连接：等待2MSL（报文最大生存时间的2倍）足以让本次连接在网络中残留的所有数据包都自然消亡，避免被后续使用相同端口的新连接错误接收"
+
+  - id: "BE-TQ-ZJ-001"
+    type: "technical"
+    question: "请解释一下数据库并发事务中脏读、不可重复读和幻读的区别是什么？MySQL的四种隔离级别分别是如何解决这些问题的？"
+    tags: ["MySQL", "事务隔离", "并发控制"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "脏读是读到未提交数据；不可重复读是同事务内两次读取结果不同（因Update）；幻读是范围查询时结果数量集改变（因Insert/Delete）"
+      - "Read Committed解决脏读，Repeatable Read（MySQL默认）利用MVCC解决不可重复读"
+      - "InnoDB在RR级别下，通过Next-Key Lock（间隙锁+行锁）很大程度上解决了幻读问题"
+
+  - id: "BE-TQ-ZJ-002"
+    type: "technical"
+    question: "为什么MySQL的InnoDB引擎选择使用B+树作为索引结构，而不是B树或红黑树？请简述联合索引的最左前缀匹配原理。"
+    tags: ["MySQL", "底层数据结构", "索引优化"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "相较于B树，B+树非叶子节点不存数据，使得单页可容纳更多键值，降低树高，减少磁盘I/O次数"
+      - "B+树叶子节点形成双向链表，极大地优化了范围查询的性能；红黑树高度太高，磁盘I/O太频繁"
+      - "联合索引依据定义的字段顺序构建索引树，查询必须包含最左边的字段才能利用索引树进行搜索，否则将回退到全表扫描"
+
+  - id: "BE-TQ-ZJ-003"
+    type: "technical"
+    question: "请详细说明一下操作系统中进程和线程的区别是什么？它们各自的资源共享情况是怎样的？"
+    tags: ["操作系统", "进程与线程", "资源调度"]
+    difficulty: "easy"
+    source: "字节跳动"
+    key_points:
+      - "进程是资源分配的基本单位，线程是CPU调度和执行的基本单位"
+      - "进程间相互独立，拥有独立的内存空间；同一进程内的多个线程共享该进程的堆、方法区等资源"
+      - "线程自身保留私有的程序计数器、虚拟机栈和本地方法栈，线程上下文切换开销远小于进程"
+
+  - id: "BE-TQ-ZJ-004"
+    type: "technical"
+    question: "请简述Java中创建线程的几种方式、线程的生命周期状态，以及sleep()和wait()方法的核心区别？产生死锁的四个必要条件是什么？"
+    tags: ["Java基础", "多线程", "并发编程"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "创建方式：继承Thread、实现Runnable、实现Callable配合FutureTask、使用线程池"
+      - "sleep是Thread的静态方法，不释放锁；wait是Object的方法，必须在同步块中调用且会释放当前对象锁"
+      - "死锁四大条件：互斥条件、请求与保持条件、不剥夺条件、循环等待条件"
+
+  - id: "BE-TQ-ZJ-005"
+    type: "technical"
+    question: "Spring框架是如何解决Bean的循环依赖问题的？请详细讲解三级缓存的机制和各自的作用。"
+    tags: ["Spring框架", "IOC机制", "底层源码"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "一级缓存存完整Bean，二级缓存存半成品Bean（已实例化未注入属性），三级缓存存对象工厂（ObjectFactory）"
+      - "通过提前暴露未完全初始化的Bean的引用打破循环"
+      - "三级缓存专门为了处理AOP代理问题，确保提前暴露的依赖如果是代理对象也能被正确生成注入"
+
+  - id: "BE-TQ-ZJ-006"
+    type: "technical"
+    question: "请谈谈你在JUC包中用过的多线程相关的类（如ReentrantLock原理）。另外，CAS机制与普通互斥加锁相比有何优劣？如何解决ABA问题？"
+    tags: ["JUC", "锁机制", "AQS"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "ReentrantLock基于AQS和CAS实现，支持公平锁与非公平锁，提供可中断等待"
+      - "CAS是乐观锁，无线程上下文切换开销，适合竞争不激烈的场景；但在高冲突下会导致大量自旋消耗CPU"
+      - "使用带版本号的原子引用类（如AtomicStampedReference）来解决ABA数据幻觉问题"
+
+  - id: "BE-TQ-ZJ-007"
+    type: "technical"
+    question: "计算机网络七层/四层模型中，TCP和UDP的核心区别是什么？为什么建立连接需要三次握手，断开却需要四次挥手？"
+    tags: ["计算机网络", "TCP/IP", "协议"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "TCP是面向连接、可靠传输、字节流（有拥塞和流量控制）；UDP是无连接、不可靠、面向报文，但速度快"
+      - "三次握手是为了防止失效的连接请求报文段突然又传送到服务端产生错误，并同步双方序列号"
+      - "四次挥手是因为TCP全双工，一方发完数据只能单向关闭发送，需等另一方也将缓冲数据发完才能完全释放"
+
+  - id: "BE-TQ-ZJ-008"
+    type: "technical"
+    question: "算法题：如何从一亿个无序的整数中找出最大的十个数？请给出时间复杂度和空间复杂度最优的方案。"
+    tags: ["数据结构与算法", "海量数据", "TopK"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "方案选择：维护一个容量为10的小顶堆"
+      - "遍历一亿个数，若比堆顶元素大，则替换堆顶并重新调整堆，最终堆里的10个就是最大值"
+      - "时间复杂度O(NlogK)，空间复杂度O(K)，是解决海量数据Top K内存受限场景下的最佳方案"
+
+  - id: "BE-TQ-ZJ-009"
+    type: "technical"
+    question: "从在浏览器中输入一个URL，到最终页面渲染展示在屏幕上，整个链路经历了哪些过程？请详细描述。"
+    tags: ["网络基础", "浏览器渲染", "DNS解析"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "网络阶段：DNS解析获取IP -> TCP三次握手建立连接 -> 发送HTTP请求 -> 服务器处理并返回HTTP响应"
+      - "解析阶段：解析HTML生成DOM树，解析CSS生成CSSOM树"
+      - "渲染阶段：将DOM与CSSOM合并生成Render Tree（渲染树） -> 计算布局（Layout/Reflow） -> 绘制（Paint）及图层合成（Composite）"
+
+  - id: "BE-TQ-ZJ-010"
+    type: "technical"
+    question: "请简述TCP的三次握手与四次挥手过程。为什么建立连接是三次，而断开连接必须是四次？"
+    tags: ["TCP/IP", "三次握手", "四次挥手"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "三次握手：SYN -> SYN+ACK -> ACK。目的是同步双方的序列号，并防止失效的连接请求突然传到服务端造成资源浪费"
+      - "四次挥手：FIN -> ACK -> (数据传输完毕) -> FIN -> ACK"
+      - "四次的原因：TCP是全双工的。客户端发FIN只代表客户端不再发送数据，但服务端可能还有数据未发完，所以先回ACK，等发完数据再发FIN，导致中间两次无法像握手那样合并"
+
+  - id: "BE-TQ-ZJ-011"
+    type: "technical"
+    question: "详述HTTP与HTTPS的区别。HTTPS在通信过程中具体解决了哪些安全问题，其核心的加密流程是怎样的？"
+    tags: ["HTTP/HTTPS", "网络安全", "加密算法"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "解决了三大问题：窃听风险（加密传输）、篡改风险（完整性校验）、冒充风险（数字证书身份认证）"
+      - "HTTPS建立连接的过程涉及TLS/SSL握手：服务端下发CA证书（公钥） -> 客户端验证证书合法性 -> 客户端生成随机数（会话密钥）并用公钥加密发送 -> 双方后续使用会话密钥进行对称加密通信"
+      - "明辨非对称加密（用于握手交换密钥）和对称加密（用于实际数据传输）的结合使用"
+
+  - id: "BE-TQ-ZJ-012"
+    type: "technical"
+    question: "请详细讲讲Spring Boot的启动流程以及自动装配（Auto Configuration）的底层原理。"
+    tags: ["Spring Boot", "源码原理", "自动装配"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "启动流程：创建SpringApplication对象，初始化各种监听器 -> 准备Environment -> 创建ApplicationContext -> 刷新上下文（执行Bean生命周期）"
+      - "自动装配原理：@SpringBootApplication 包含 @EnableAutoConfiguration"
+      - "核心机制：通过 SpringFactoriesLoader 读取 META-INF/spring.factories（或 spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports），配合 @Conditional 系列条件注解按需加载Bean"
+
+  - id: "BE-TQ-ZJ-013"
+    type: "technical"
+    question: "如果线上Java服务出现了内存泄漏（OOM报警），你会按照什么样的思路进行排查和解决？"
+    tags: ["JVM调优", "OOM排查", "线上排障"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "现场保留：确认启动参数中是否配置了 -XX:+HeapDumpOnOutOfMemoryError 抓取Dump文件，或使用 jmap 导出快照"
+      - "内存分析：使用 MAT (Memory Analyzer Tool) 或 JProfiler 分析Dump文件，查找占用内存最大的对象实例 (Dominator Tree)"
+      - "溯源代码：找到 GC Roots 引用链，定位到具体业务代码的内存泄漏点（如静态集合类不断塞入数据、ThreadLocal未调用remove等）"
+
+  - id: "BE-TQ-ZJ-014"
+    type: "technical"
+    question: "介绍一下CAS（Compare And Swap）机制的原理及其优缺点。CAS典型的ABA问题是什么，应该如何解决？"
+    tags: ["并发编程", "CAS", "ABA问题"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "CAS原理：比较内存值与预期值，若相等则替换为新值，依靠CPU硬件原语（如cmpxchg）保证原子性"
+      - "优缺点：优点是无锁并发性能好；缺点是在高并发下自旋可能带来高CPU开销，且只能保证一个共享变量的原子操作"
+      - "ABA问题与解决：值从A变B又变回A，CAS会误以为没被修改过。解决方式是引入版本号（AtomicStampedReference），每次修改版本号加1"
+
+  - id: "BE-TQ-ZJ-015"
+    type: "technical"
+    question: "讲讲HashMap的底层数据结构（JDK 1.8）。为什么链表转化为红黑树的阈值被设定为8，而退化为链表的阈值是6？"
+    tags: ["集合框架", "HashMap", "红黑树"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "结构：数组 + 链表 + 红黑树，解决哈希冲突"
+      - "转树阈值8的原因：遵循泊松分布，在负载因子为0.75时，链表长度达到8的概率极小（亿分之六）。8是为了权衡空间开销（树节点是普通节点2倍大）和时间复杂度（O(1)变O(logN)）"
+      - "退化阈值6的原因：防止在7和8之间频繁进行树化与退化（抖动现象），留出缓冲空间"
+
+  - id: "BE-TQ-ZJ-016"
+    type: "technical"
+    question: "请说明进程与线程的核心区别。在同一个进程下的多线程环境中，哪些系统资源是可以共享的，哪些是线程私有的？"
+    tags: ["操作系统", "进程与线程", "内存模型"]
+    difficulty: "easy"
+    source: "字节跳动"
+    key_points:
+      - "本质区别：进程是操作系统资源分配的基本单位，线程是CPU调度的基本单位；一个进程包含一个或多个线程"
+      - "共享资源：代码段（Text）、数据段（Data：全局变量、静态变量）、堆内存（Heap）、打开的文件描述符（FD）"
+      - "私有资源：线程栈（Stack：局部变量）、程序计数器（PC）、寄存器上下文"
+
+  - id: "BE-TQ-ZJ-017"
+    type: "technical"
+    question: "操作系统中常见的内存淘汰算法有哪些？使用随机淘汰（Random）在某些特定场景下有什么好处？"
+    tags: ["操作系统", "内存淘汰算法", "缓存"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "常见算法：FIFO（先进先出）、LRU（最近最少使用）、LFU（最不经常使用）、OPT（理想淘汰算法）"
+      - "随机淘汰的好处：在业务访问分布极其均匀（完全没有时间局部性和空间局部性），或者为了对抗恶意针对LRU算法进行刷榜导致缓存雪崩的场景下，Random算法开销极小且能防止缓存周期性被大面积清空"
+
+  - id: "BE-TQ-ZJ-018"
+    type: "technical"
+    question: "什么是Reactor模型？它底层是如何通过I/O多路复用（如epoll）来实现高并发处理的？"
+    tags: ["网络编程", "Reactor模型", "IO多路复用"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "Reactor是一种基于事件驱动的设计模式，核心组件包括 Reactor（负责监听和分发事件）和 Handlers（负责处理具体的业务逻辑）"
+      - "底层依赖：利用 epoll/select 等IO多路复用技术，一个线程就能监听多个 Socket 的读写就绪事件"
+      - "能够分清单Reactor单线程、单Reactor多线程、主从Reactor多线程（如Netty的BossGroup与WorkerGroup模型）的差异与适用场景"
+
+  - id: "BE-TQ-ZJ-019"
+    type: "technical"
+    question: "请从浏览器中「敲下一个 URL」开始，详细描述到「页面出现在屏幕」所经历的整条链路全景。"
+    tags: ["计算机网络", "HTTP", "浏览器工作原理"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "DNS解析（本地缓存 -> 根域名服务器 -> 权威服务器）"
+      - "TCP三次握手建立连接，若是HTTPS还需TLS握手协商密钥"
+      - "发送HTTP请求，服务器处理并返回响应报文"
+      - "浏览器解析HTML构建DOM树，解析CSS构建CSSOM树，合并为Render Tree并进行布局（Layout）与绘制（Paint）"
+
+  - id: "BE-TQ-ZJ-020"
+    type: "technical"
+    question: "请简述TCP的三次握手与四次挥手过程，并解释为什么握手是三次，而挥手需要四次？"
+    tags: ["计算机网络", "TCP/IP", "协议机制"]
+    difficulty: "easy"
+    source: "字节跳动"
+    key_points:
+      - "三次握手是为了确认双方的发送与接收能力均正常（SYN -> SYN+ACK -> ACK）"
+      - "为什么不是两次：防止已失效的连接请求报文段突然又传到服务端，导致服务端资源浪费"
+      - "为什么挥手是四次：TCP是全双工通信，服务端收到FIN后可能还有数据未发完，只能先回ACK，等数据发送完毕后再发FIN，导致中间过程拆分为两步"
+
+  - id: "BE-TQ-ZJ-021"
+    type: "technical"
+    question: "什么是缓存穿透、缓存击穿和缓存雪崩？请分别给出具体的解决方案。"
+    tags: ["Redis", "高并发缓存", "架构可靠性"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "缓存穿透（查不存在的数据）：解决方案是缓存空对象（设较短过期时间）或使用布隆过滤器拦截"
+      - "缓存击穿（热点Key突然过期）：解决方案是使用互斥锁（如Redisson）只让一个线程去查DB重建缓存，或者设置热点数据逻辑上永不过期"
+      - "缓存雪崩（大量Key同时过期或Redis宕机）：解决方案是打散Key的过期时间（加随机值）、配置Redis高可用集群、服务限流降级"
+
+  - id: "BE-TQ-ZJ-022"
+    type: "technical"
+    question: "MySQL事务的四大特性（ACID）是什么？InnoDB引擎是如何实现MVCC（多版本并发控制）的？"
+    tags: ["MySQL", "数据库事务", "MVCC", "隔离级别"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "ACID：原子性(undo log)、一致性、隔离性(锁+MVCC)、持久性(redo log)"
+      - "MVCC核心机制基于：隐藏字段（DB_TRX_ID、DB_ROLL_PTR）、Undo Log版本链"
+      - "Read View（读视图）生成时机：RC级别每次查询生成，RR级别首次查询生成。通过可见性算法解决脏读与不可重复读"
+
+  - id: "BE-TQ-ZJ-023"
+    type: "technical"
+    question: "请深入讲讲JVM的类加载机制以及双亲委派模型。双亲委派模型有什么好处？可以被破坏吗？"
+    tags: ["JVM", "类加载", "Java基础"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "类加载生命周期：加载 -> 链接(验证、准备、解析) -> 初始化 -> 使用 -> 卸载"
+      - "双亲委派机制：类加载器收到请求时，先向上委托给父加载器处理，直到顶层Bootstrap，若父加载器无法处理才自己加载"
+      - "好处：保证核心Java API的安全（如防止用户自定义java.lang.String覆盖核心类），避免类的重复加载"
+      - "破坏场景：SPI机制（如JDBC驱动加载，使用线程上下文类加载器）、Tomcat WebApp隔离机制"
+
+  - id: "BE-TQ-ZJ-024"
+    type: "technical"
+    question: "如果线上服务器发生了内存泄漏或频繁OOM，你会采取怎样的步骤去排查和解决问题？"
+    tags: ["JVM调优", "线上排查", "性能监控"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "保护现场：确保JVM启动参数配置了`-XX:+HeapDumpOnOutOfMemoryError`以自动生成Dump文件"
+      - "初步定位：查看系统监控（Prometheus/Grafana）和业务日志，使用`top`或`jstat`观察内存增长和GC频次"
+      - "深度分析：利用MAT或JProfiler等工具分析Heap Dump文件，找出Retained Heap占用最大的对象，查看GCRoots引用链定位具体代码位置"
+
+  - id: "BE-TQ-ZJ-025"
+    type: "technical"
+    question: "JDK 1.8 中 ConcurrentHashMap 的底层实现原理是什么？它相比于1.7做出了哪些优化？"
+    tags: ["Java集合", "并发编程", "ConcurrentHashMap"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "数据结构：与HashMap一致的 数组 + 链表 + 红黑树 结构"
+      - "并发控制：废弃了1.7的Segment分段锁，改用更加细粒度的 CAS 操作 + synchronized 同步块锁定链表或红黑树的首节点"
+      - "锁粒度更低，并发度由Segment数量提升为Node数组长度，且引入树化机制极大优化了严重哈希冲突下的查询性能"
+
+  - id: "BE-TQ-ZJ-026"
+    type: "technical"
+    question: "在微服务架构中，为了提升性能通常会引入Redis缓存，那么如何保证Redis缓存和数据库（如MySQL）之间的数据一致性？如果缓存删除失败了怎么办？"
+    tags: ["Redis", "数据库", "双写一致性", "架构设计"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "读操作：先读缓存，命中则返回；未命中查DB并回写缓存"
+      - "写操作首选策略：先更新数据库，再删除缓存（Cache Aside Pattern）。这种方案产生并发不一致的概率极低"
+      - "兜底保障机制（缓存删除失败）：引入消息队列（MQ）或者订阅MySQL的Binlog（如使用Canal组件），异步重试执行缓存清理操作，直到成功为止"

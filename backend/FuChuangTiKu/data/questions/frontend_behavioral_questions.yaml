@@ -1,14 +1,19 @@
 type: "frontend_behavioral_questions"
 source:
-  - "面经库"
+  - "Interview_Bank"
+  - "Personal_Notes"
+  - "Tech_Blog"
+  - "阿里巴巴"
+  - "腾讯"
+  - "网易"
+  - "字节跳动"
 items:
   - id: "FE-BQ-001"
     type: "behavioral"
     question: "讲一次你为了引入新技术（如 TypeScript/Vue3）去说服团队或 Leader 的经历。"
     tags: ["推动力", "沟通"]
     difficulty: "medium"
-    source: "面经库"
-    status: "draft"
+    source: "Interview_Bank" 
     key_points:
       - "准确拿捏旧痛点并输出颠覆技术的显著正收益拉平团队期盼"
       - "做小盘打样以跑通Demo打破抗拒迷雾与风险警惕展现极强说服驱动力"
@@ -18,8 +23,7 @@ items:
     question: "在前后端分离开发中，如果后端接口迟迟不到位，你会如何推进项目进度？"
     tags: ["团队协作", "进度推进"]
     difficulty: "medium"
-    source: "面经库"
-    status: "draft"
+    source: "Interview_Bank" 
     key_points:
       - "破除干等呆坐主动抛出API契据合同确立两边研发数据口径线"
       - "主打Mock流造假水军脱链实现独行快步不延期护盘绝技"
@@ -29,8 +33,7 @@ items:
     question: "讲一次前端引发严重线上 Bug 的事故，你采取的补救措施和后续复盘。"
     tags: ["应急响应", "担责"]
     difficulty: "hard"
-    source: "面经库"
-    status: "draft"
+    source: "Interview_Bank" 
     key_points:
       - "急诊室级先断血止损绝招（一键发旧版或灰度撤流掐死扩散）"
       - "剖开根基挖掘弱防空查、错位赋值或兼容雷区定损复查深层全盘通报彻省"
@@ -40,8 +43,7 @@ items:
     question: "当 UI 设计师给出的设计稿在实现上性能极差或难以完成时，你如何沟通？"
     tags: ["跨部门沟通", "妥协"]
     difficulty: "easy"
-    source: "面经库"
-    status: "draft"
+    source: "Interview_Bank" 
     key_points:
       - "高维度同理感知挖掘花哨设计背后的核心商业祈愿，不做单一反驳机器"
       - "拿测算强理打脸重耗卡顿实症以及可实现难度倒逼业务体验共识"
@@ -51,8 +53,7 @@ items:
     question: "分享一个你主导编写项目文档或构建前端开发规范的经历。"
     tags: ["工程规范", "团队建设"]
     difficulty: "medium"
-    source: "面经库"
-    status: "draft"
+    source: "Interview_Bank" 
     key_points:
       - "强格局跳脱自我本份转攻惠全军拔升大家战斗力层段的共建统辖心感"
       - "输出全员公测可落地高标准规范如统一代码提交流式卡口防尘防污制导系统流"
@@ -62,8 +63,7 @@ items:
     question: "讲一次你在项目中遇到技术选型分歧时是如何推动达成共识的。"
     tags: ["技术选型", "决策"]
     difficulty: "medium"
-    source: "面经库"
-    status: "draft"
+    source: "Interview_Bank" 
     key_points:
       - "以大局为重的格局感和说服力，先理解不同意见背后的担忧和需求"
       - "通过数据和小规模验证来客观评估不同选项的利弊，避免主观臆断"
@@ -73,19 +73,17 @@ items:
     question: "你如何看待前端领域的技术更新迭代？你是如何保持学习和适应新技术的？"
     tags: ["学习能力", "适应性"]
     difficulty: "medium"
-    source: "面经库"
-    status: "draft"
+    source: "Interview_Bank" 
     key_points:
       - "认识到前端技术的快速迭代是行业发展的必然趋势，保持开放心态迎接变化"
-      - "通过定期阅读技术博客、参加社区活动和在线课程来持续学习新技术"
+      - "通过定期阅读Tech_Blog、参加社区活动和在线课程来持续学习新技术"
       - "在项目中主动尝试引入新技术，通过实践来加深理解和适应能力"
   - id: "FE-BQ-008"
     type: "behavioral"
     question: "讲一次你在项目中遇到过的团队冲突，你是如何处理和调解的？"
     tags: ["团队冲突", "沟通"]
     difficulty: "hard"
-    source: "面经库"
-    status: "draft"
+    source: "Interview_Bank" 
     key_points:
       - "保持冷静和客观，倾听双方的观点和情绪，避免情绪化对抗"
       - "引导团队回归问题本质，聚焦于数据和事实而非个人观点"
@@ -95,8 +93,7 @@ items:
     question: "你在项目中有没有遇到过“技术债务”？你是如何识别和管理它的？"
     tags: ["技术债务", "项目管理"]
     difficulty: "hard"
-    source: "面经库"
-    status: "draft"
+    source: "Interview_Bank" 
     key_points:
       - "识别技术债务的能力，如代码质量下降、缺乏文档等"
       - "主动沟通和说服能力，向团队和管理层说明技术债务的风险和长期成本"
@@ -106,9 +103,642 @@ items:
     question: "你在项目中有没有遇到过“技术孤岛”？你是如何打破它的？"
     tags: ["技术孤岛", "跨部门协作"]
     difficulty: "hard"
-    source: "面经库"
-    status: "draft"
+    source: "Interview_Bank" 
     key_points:
       - "识别技术孤岛的能力，如某个模块或算法只有特定人员理解和维护，缺乏文档和知识共享"
       - "主动沟通和协作能力，推动团队内部的知识分享和交叉培训"
       - "引入代码审查、文档规范和定期技术分享会等机制促进团队整体技术水平的提升和信息流通"
+
+  - id: "FE-BQ-011"
+    type: "behavioral"
+    question: "如果你手里有几个Offer，你的职业规划是什么？如果在实际项目中遇到与同事产生技术分歧，你会如何解决？"
+    tags: ["软素质", "职业规划", "团队协作", "沟通能力"]
+    difficulty: "medium"
+    source: "Personal_Notes"
+    key_points:
+      - "职业规划展现出明确的技术成长路线、稳定性以及与投递岗位的高匹配度。"
+      - "面对技术分歧能保持客观，不带个人情绪，从业务真实需求和技术可行性出发。"
+      - "善于通过数据支撑和实际测试对比方案优缺点（Data-driven），必要时向上级寻求建议，并在达成共识后坚决执行。"
+  
+  
+
+  - id: "FE-BQ-AL-001"
+    type: "behavioral"
+    question: "请谈谈你未来的职业规划是什么？在面对工作压力或者困难时，你通常是如何调节和应对的？"
+    tags:
+      - "职业规划"
+      - "抗压能力"
+      - "综合素质"
+    difficulty: "medium"
+    source: "阿里巴巴"
+    key_points:
+      - "展现清晰且有成长性的短期和中长期职业发展目标，体现自我驱动力"
+      - "提供以往经历中真实的高压或高难度场景，并描述具体的应对行为（如合理拆解任务、主动寻求协助或调整心态）"
+      - "表现出积极的沟通态度与一定的抗挫折能力"
+
+  - id: "FE-BQ-AL-002"
+    type: "behavioral"
+    question: "如果面临前端开发转正实习和准备全栈/Agent项目直接秋招的选择，你会如何规划？"
+    tags: ["职业规划", "技术方向", "实习与秋招"]
+    difficulty: "medium"
+    source: "阿里巴巴"
+    key_points:
+      - "考察候选人对自己未来技术路线的清晰认知（前端 vs 全栈/Agent）"
+      - "评估候选人的抗压能力和对行业趋势（AI时代）的洞察与应对态度"
+      - "是否能结合自身优势给出合理的权衡和选择逻辑"
+
+  - id: "FE-BQ-AL-003"
+    type: "behavioral"
+    question: "能简单分享一下你目前春招的进展以及收到了几个面试邀请吗？"
+    tags: ["面试意向", "求职进展"]
+    difficulty: "easy"
+    source: "阿里巴巴"
+    key_points:
+      - "如实反馈当前的求职进度"
+      - "表达出对目标公司的强烈意向和合理匹配度"
+
+  - id: "FE-BQ-AL-004"
+    type: "behavioral"
+    question: "谈谈你对 Agent 开发的个人感受和理解是什么？"
+    tags: ["技术视野", "AI Agent", "技术热情"]
+    difficulty: "medium"
+    source: "阿里巴巴"
+    key_points:
+      - "能够阐述Agent的核心价值（如自动化、任务编排、工具调用等）"
+      - "结合个人开发或学习经验，分享对大模型赋能应用的理解"
+
+  - id: "FE-BQ-AL-005"
+    type: "behavioral"
+    question: "在你看来，什么样特质的人最适合在大厂工作？"
+    tags: ["企业文化", "软素质", "自我认知"]
+    difficulty: "medium"
+    source: "阿里巴巴"
+    key_points:
+      - "体现出拥抱变化、抗压能力强、自我驱动等大厂核心价值观"
+      - "强调团队协作和沟通能力，以及快速学习解决问题的能力"
+
+  - id: "FE-BQ-AL-006"
+    type: "behavioral"
+    question: "你认为在当前的 AI 时代，程序员还有必要坚持刷 LeetCode 算法题吗？为什么？"
+    tags: ["技术认知", "AI编程", "基础能力"]
+    difficulty: "medium"
+    source: "阿里巴巴"
+    key_points:
+      - "辩证看待问题：AI能生成代码，但底层逻辑、算法思维和系统架构能力仍需人工把控"
+      - "强调算法题对培养严谨思维、边界条件考虑和性能优化的不可替代性"
+
+  - id: "FE-BQ-AL-007"
+    type: "behavioral"
+    question: "如何看待当前很多开发人员转行做 AI Agent，你会盲目跟风转行吗？"
+    tags: ["职业规划", "行业洞察", "技术判断力"]
+    difficulty: "medium"
+    source: "阿里巴巴"
+    key_points:
+      - "表现出对新技术的敏锐度但保持理性思考"
+      - "强调从技术本质出发，将AI作为赋能工具，而非仅仅追逐热点"
+
+  - id: "FE-BQ-AL-008"
+    type: "behavioral"
+    question: "平时遇到一项新技术时，你的学习方法和步骤是怎样的？"
+    tags: ["学习能力", "方法论"]
+    difficulty: "easy"
+    source: "阿里巴巴"
+    key_points:
+      - "具备结构化的学习路线：从官方文档入手 -> 理解核心概念/痛点 -> 动手写Demo -> 深入源码/最佳实践"
+      - "强调输出倒逼输入，如写博客或在项目中落地"
+
+  - id: "FE-BQ-AL-009"
+    type: "behavioral"
+    question: "如果投递的简历迟迟没有回复，你会选择继续海投还是停下来优化简历再投？为什么？"
+    tags: ["抗压能力", "问题解决", "自我反思"]
+    difficulty: "easy"
+    source: "阿里巴巴"
+    key_points:
+      - "体现出复盘与迭代思维：通过无回复的反馈发现问题，优化简历中的项目亮点与数据指标"
+      - "强调精准投递和质量优先，而非盲目海投"
+
+  - id: "FE-BQ-AL-010"
+    type: "behavioral"
+    question: "为什么选择投递阿里巴巴游戏的实习岗位？"
+    tags: 
+      - "求职动机"
+      - "企业认同"
+      - "职业规划"
+    difficulty: "easy"
+    source: "阿里巴巴"
+    key_points:
+      - "表达对游戏行业的热爱，以及对阿里巴巴游戏业务的认可和兴趣"
+      - "结合个人兴趣和职业规划，说明选择阿里巴巴游戏实习岗位的合理性和吸引力"
+
+
+  - id: "FE-BQ-TX-001"
+    type: "behavioral"
+    question: "你学习前端多久了？为什么选择前端这个方向？"
+    tags: ["职业规划", "学习经历", "前端"]
+    difficulty: "easy"
+    source: "腾讯"
+    key_points:
+      - "考察候选人对前端领域的热爱程度及技术初心"
+      - "评估候选人的学习路径和自我驱动力"
+      - "了解其职业稳定性与长期规划"
+
+  - id: "FE-BQ-TX-002"
+    type: "behavioral"
+    question: "你对纯前端开发工作怎么看？能否接受未来一直从事纯前端的开发？"
+    tags: ["职业发展", "岗位认知"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "考察候选人对前端岗位边界的理解与职业认同感"
+      - "评估候选人是否有向全栈或架构方向演进的潜力和意愿"
+
+  - id: "FE-BQ-TX-003"
+    type: "behavioral"
+    question: "除了我们公司，你最近还投递了哪些公司？目前的求职进展如何？"
+    tags: ["求职意向", "竞品情况"]
+    difficulty: "easy"
+    source: "腾讯"
+    key_points:
+      - "了解候选人求职的真实状态和竞争激烈程度"
+      - "侧面评估候选人对行业的认可度（投递企业类型）"
+
+  - id: "FE-BQ-TX-004"
+    type: "behavioral"
+    question: "你在日常开发中，多大程度上依赖AI（如Copilot）辅助编写代码？如何保证AI生成的代码质量？"
+    tags: ["AI辅助", "代码质量", "开发习惯"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "考察候选人对新工具的接纳程度及使用边界"
+      - "评估其代码审查（Code Review）能力和对业务逻辑的把控力"
+      - "判断候选人是否具备独立排查和修复AI生成代码漏洞的能力"
+
+  - id: "FE-BQ-TX-005"
+    type: "behavioral"
+    question: "请问你学习前端多久了？当初为什么会选择前端这个方向？"
+    tags: ["职业规划", "个人意愿", "前端发展"]
+    difficulty: "easy"
+    source: "腾讯"
+    key_points:
+      - "清晰表述学习前端的时间线和契机"
+      - "体现对前端领域的兴趣或对即时正反馈、交互体验的热爱"
+      - "展现对前端行业未来发展的积极看法"
+
+  - id: "FE-BQ-TX-006"
+    type: "behavioral"
+    question: "请做一个自我介绍，着重分享你的项目经历、技术积累以及与前端岗位匹配的核心能力（如工程化、跨端、前后端兼修等）。"
+    tags: ["自我介绍", "项目经历", "核心能力"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "结构化的自我介绍（基本信息、核心优势、项目亮点）"
+      - "能够清晰提炼自己的技术栈广度与深度"
+      - "突出实际业务落地经历和学习连贯性"
+
+  - id: "FE-BQ-TX-007"
+    type: "behavioral"
+    question: "在当前行业背景下，你是否能接受纯前端的开发工作？还是更期望向全栈或AI Agent等方向拓展？"
+    tags: ["岗位匹配度", "职业规划"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "表达对前端本职工作的热爱与胜任力"
+      - "展现拥抱变化的态度，对全栈或新技术（如AI）有合理的探索意愿"
+
+  - id: "FE-BQ-TX-008"
+    type: "behavioral"
+    question: "你认为在AI时代，代码生成工具日益普及，前端工程师还有必要刷算法题（如LeetCode）吗？谈谈你的看法。"
+    tags: ["AI影响", "算法能力", "技术观点"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "认识到AI是提效工具，但底层逻辑和算法思维仍是核心竞争力"
+      - "算法对于解决复杂业务场景、性能优化和底层架构设计不可或缺"
+
+  - id: "FE-BQ-TX-009"
+    type: "behavioral"
+    question: "如果在求职过程中遇到简历投递后无回复的情况，你会选择继续海投还是停下来优化简历再投递？为什么？"
+    tags: ["抗压能力", "问题解决", "求职态度"]
+    difficulty: "easy"
+    source: "腾讯"
+    key_points:
+      - "体现复盘思维：遇到挫折优先分析原因（简历亮点不足、岗位不匹配等）"
+      - "采取行动：针对性优化简历，提高投递精准度"
+
+  - id: "FE-BQ-TX-010"
+    type: "behavioral"
+    question: "在日常开发中，你是如何理解“业务”这个词的？你认为技术开发与业务目标之间是怎样的关系？"
+    tags: ["业务理解", "产研协作"]
+    difficulty: "hard"
+    source: "腾讯"
+    key_points:
+      - "技术是手段，业务是目的，技术应服务于业务价值的创造"
+      - "优秀的前端需要懂业务，从用户体验和业务痛点出发进行技术选型和优化"
+
+  - id: "FE-BQ-TX-011"
+    type: "behavioral"
+    question: "你对未来的技术发展方向有什么偏好或规划吗？"
+    tags: ["职业规划", "技术视野"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "有明确的1-3年技术发展规划"
+      - "目标清晰且具有落地可能性，符合当前行业趋势（如大前端、架构师、AI融合等）"
+
+  - id: "FE-BQ-TX-012"
+    type: "behavioral"
+    question: "请简单做下自我介绍，并着重介绍一下你的技术积累、项目落地经历以及学习的连贯性。"
+    tags: ["自我介绍", "软素质", "项目经历"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "能够清晰、有逻辑地概述自己的教育背景与核心技能栈"
+      - "重点突出与前端岗位高度匹配的实战项目经历（如跨端、工程化等）"
+      - "展示对技术长期的热情与连贯的学习路径"
+
+  - id: "FE-BQ-TX-013"
+    type: "behavioral"
+    question: "学习前端多久了？当初为什么选择前端开发作为未来的职业方向？"
+    tags: ["职业规划", "个人意愿", "前端方向"]
+    difficulty: "easy"
+    source: "腾讯"
+    key_points:
+      - "表达出对前端技术生态的真实兴趣与热情"
+      - "具备明确的职业规划和清晰的发展目标"
+      - "体现出对前端岗位职责的准确认知"
+
+  - id: "FE-BQ-TX-014"
+    type: "behavioral"
+    question: "前端知识体系繁杂，你平时主要靠什么途径自学？又是如何将学到的知识运用到实际开发中的？"
+    tags: ["学习能力", "技术驱动", "自我驱动"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "具备良好的信息获取能力（如阅读官方文档、优质开源项目、技术社区）"
+      - "有系统化的学习方法论，而非碎片化了解"
+      - "能够举例说明将新技术应用到实际项目中并解决具体问题的过程"
+
+  - id: "FE-BQ-TX-015"
+    type: "behavioral"
+    question: "能否接受纯前端的业务开发工作？未来在技术深度或广度上有什么偏好的发展方向？"
+    tags: ["工作意愿", "职业规划", "稳定性"]
+    difficulty: "medium"
+    source: "腾讯"
+    key_points:
+      - "展现对基础业务开发的耐心与责任心"
+      - "对自身未来1-3年的技术成长有明确思考（如走向全栈、深入架构、图形学或音视频等）"
+
+  - id: "FE-BQ-TX-016"
+    type: "behavioral"
+    question: "在过往的项目中遇到的最大困难是什么？如果是现在，有 AI Agent 或更先进的工具帮助，你会如何重新规划和解决这个问题？"
+    tags: ["抗压能力", "问题解决", "AI工具运用"]
+    difficulty: "hard"
+    source: "腾讯"
+    key_points:
+      - "客观分析并复盘过往的技术痛点与业务难点"
+      - "展示出拥抱新技术（如AI赋能开发）的开放心态与应用能力"
+      - "体现思维的迭代升级与全局视角的提升"
+
+  - id: "FE-BQ-WY-001"
+    type: "behavioral"
+    question: "请做一个简短的自我介绍。"
+    tags: ["自我介绍", "软素质", "沟通表达"]
+    difficulty: "easy"
+    source: "网易"
+    key_points:
+      - "逻辑清晰地陈述个人基本背景、教育经历和技术栈"
+      - "重点突出与前端开发相关的核心项目经历或技术亮点"
+      - "表达自信，展现良好的沟通交流能力"
+  - id: "FE-BQ-WY-002"
+    type: "behavioral"
+    question: "谈谈你在开发过程中遇到过的最困难的事情是什么？你是如何克服和解决的？"
+    tags: ["抗压能力", "问题解决", "项目复盘"]
+    difficulty: "medium"
+    source: "网易"
+    key_points:
+      - "能够客观描述问题的复杂性和挑战点"
+      - "展现出系统化排查问题和寻找解决方案的思路"
+      - "总结经验教训，体现技术成长和复盘能力"
+  - id: "FE-BQ-WY-003"
+    type: "behavioral"
+    question: "结合你的过往经历，你认为自己的核心竞争力和最大优点是什么？"
+    tags: ["自我认知", "优势挖掘", "综合素质"]
+    difficulty: "medium"
+    source: "网易"
+    key_points:
+      - "优点描述需结合具体的技术落地或团队协作案例"
+      - "体现出差异化的竞争力（如擅长性能优化、极强的自驱力、懂后端/全栈等）"
+      - "认知客观真实，不浮夸"
+  - id: "FE-BQ-WY-004"
+    type: "behavioral"
+    question: "你为什么选择学习前端开发？"
+    tags: ["职业规划", "学习动机", "技术热情"]
+    difficulty: "easy"
+    source: "网易"
+    key_points:
+      - "阐述对前端领域（如用户体验、可视化交互等）的真实兴趣"
+      - "展示对前端技术生态发展的一定了解和关注"
+      - "体现长期的学习意愿和职业深耕的决心"
+
+  - id: "FE-BQ-WY-005"
+    type: "behavioral"
+    question: "请说明一下上一段离职的原因？离职到现在的这段时间主要在做什么？"
+    tags: ["离职原因", "职业空窗期", "职业规划"]
+    difficulty: "medium"
+    source: "网易"
+    key_points:
+      - "离职原因客观、正向，避免过度抱怨前公司或团队"
+      - "空窗期有明确的学习提升计划或合理的个人安排"
+      - "展现出对新机会的渴望和稳定性"
+
+  - id: "FE-BQ-WY-006"
+    type: "behavioral"
+    question: "请进行一下自我介绍，并着重介绍一下你的项目经验、技术积累以及学习的连贯性？"
+    tags: ["自我介绍", "技术广度", "学习能力"]
+    difficulty: "easy"
+    source: "网易"
+    key_points:
+      - "清晰表达个人基本信息与核心技术栈"
+      - "突出与前端岗位匹配的核心能力（如跨端、工程化、前后端兼修）"
+      - "体现出持续学习的习惯和清晰的学习路线"
+
+  - id: "FE-BQ-WY-007"
+    type: "behavioral"
+    question: "请问你有没有经历过哪些失败的事情？当时是怎么解决的？"
+    tags: ["抗压能力", "问题解决", "自我反思"]
+    difficulty: "medium"
+    source: "网易"
+    key_points:
+      - "坦诚面对失败，不推诿责任"
+      - "详细阐述解决问题的过程和付出的努力"
+      - "总结从失败中吸取的教训以及后续的改进措施"
+
+  - id: "FE-BQ-WY-008"
+    type: "behavioral"
+    question: "春招至今你收到了几个面试？如果 BAT 和网易同时给你发了 Offer，你会选择哪一个？为什么？"
+    tags: ["求职意向", "Offer选择", "企业文化认可"]
+    difficulty: "hard"
+    source: "网易"
+    key_points:
+      - "诚实回答当前的求职进展，展现市场竞争力"
+      - "选择网易时需给出合理的理由（如业务方向匹配度、企业文化、产品认同感等）"
+      - "逻辑自洽，避免空洞的奉承"
+
+  - id: "FE-BQ-WY-009"
+    type: "behavioral"
+    question: "为什么大学会选择计算机专业？未来的职业规划和梦想是什么？"
+    tags: ["职业规划", "个人内驱力", "专业认同"]
+    difficulty: "easy"
+    source: "网易"
+    key_points:
+      - "表达对计算机和前端技术的真实热爱"
+      - "具备清晰的短期（1-3年）和长期职业规划"
+      - "目标脚踏实地且具有一定的进取心"
+
+  - id: "FE-BQ-WY-010"
+    type: "behavioral"
+    question: "你是如何看待学校课程与自学的关系的？平时如何自学新技术？关注过哪些前端最新资讯？"
+    tags: ["学习方法", "技术热情", "前沿视野"]
+    difficulty: "medium"
+    source: "网易"
+    key_points:
+      - "平衡好基础理论（学校课程）与工程实践（自学）的关系"
+      - "有系统性的自学方法（看官方文档、做项目实战、看源码等）"
+      - "能说出具体关注的技术社区或最新技术趋势（如 React 19, AI Agent, 跨端新技术等）"
+
+  - id: "FE-BQ-WY-011"
+    type: "behavioral"
+    question: "实习/前公司里你学到了哪些知识？对比之前有哪些明显的进步？"
+    tags: ["实习总结", "个人成长", "团队协作"]
+    difficulty: "medium"
+    source: "网易"
+    key_points:
+      - "不仅总结技术上的提升（如代码规范、架构思维），也要总结软技能（沟通、敏捷开发等）"
+      - "有具体的案例支撑进步的维度"
+      - "体现出主动学习和融入团队的能力"
+
+  - id: "FE-BQ-WY-012"
+    type: "behavioral"
+    question: "简历如果一直无回复，你会选择继续海投还是优化简历再投？"
+    tags: ["抗挫折能力", "复盘能力", "求职策略"]
+    difficulty: "medium"
+    source: "网易"
+    key_points:
+      - "展现出遇到挫折时的复盘思维，优先选择审视和优化简历"
+      - "寻找问题根源（技能不匹配、亮点不突出等）并精准投递"
+      
+  - id: "FE-BQ-WY-013"
+    type: "behavioral"
+    question: "请做个自我介绍，着重介绍一下你的项目经历和技术积累。"
+    tags: ["自我介绍", "软素质", "项目经历"]
+    difficulty: "easy"
+    source: "网易"
+    key_points:
+      - "条理清晰地概述过往履历与核心成就"
+      - "重点突出与前端岗位匹配的核心能力（如跨端、工程化、前后端兼修等）"
+      - "展现技术学习的连贯性和自我驱动力"
+      
+  - id: "FE-BQ-WY-014"
+    type: "behavioral"
+    question: "在过往的项目中，你遇到过最大的困难是什么？你是如何攻克这个难点的？"
+    tags: ["抗压能力", "问题解决", "项目复盘"]
+    difficulty: "medium"
+    source: "网易"
+    key_points:
+      - "能够清晰描述问题的背景、难点和当时面临的挑战"
+      - "展现出系统性的排查思路或解决问题的逻辑路线"
+      - "总结解决该问题后的技术沉淀与个人反思"
+
+  - id: "FE-BQ-WY-015"
+    type: "behavioral"
+    question: "在你经历的团队项目中，团队共有多少人？你们具体的合作模式是怎样的？特别是与后端是如何协作的？"
+    tags: ["团队协作", "沟通能力", "跨部门协作"]
+    difficulty: "medium"
+    source: "网易"
+    key_points:
+      - "说明在团队中的角色与实际贡献"
+      - "阐述清晰的前后端接口约定流程（如 API 规范、Mock 数据处理）"
+      - "展现良好的沟通和冲突解决能力"
+
+  - id: "FE-BQ-WY-016"
+    type: "behavioral"
+    question: "你的梦想和未来的职业规划是什么？当初在大学为什么会选择计算机相关专业？"
+    tags: ["职业规划", "个人动机", "自我认知"]
+    difficulty: "easy"
+    source: "网易"
+    key_points:
+      - "展示对前端领域的热爱及明确的发展路线（如深入底层或向全栈演进）"
+      - "个人规划与所应聘公司的业务或发展方向有较高的契合度"
+      - "具备长期稳定的技术钻研意愿"
+
+  - id: "FE-BQ-WY-017"
+    type: "behavioral"
+    question: "你的简历显示实习后有一段空窗期，请问这段时间你主要做了什么？另外，请简要评价一下目前的自我代码能力水平。"
+    tags: ["履历解释", "自我评价", "学习能力"]
+    difficulty: "medium"
+    source: "网易"
+    key_points:
+      - "空窗期有合理的解释（如继续学习、个人原因等），并且展现出积极的态度"
+      - "对自己的代码能力有客观的认知，能够指出具体的技术优势和待提升的方面"
+      - "体现出持续学习和自我提升的意识"
+
+  - id: "FE-BQ-ZJ-001"
+    type: "behavioral"
+    question: "你的职业规划是什么？"
+    tags: ["职业规划", "个人发展", "自我认知"]
+    difficulty: "easy"
+    source: "字节跳动"
+    key_points:
+      - "考察候选人对短期与长期职业目标的清晰度"
+      - "规划是否与当前应聘岗位的发展路线高度匹配"
+  - id: "FE-BQ-ZJ-002"
+    type: "behavioral"
+    question: "在AI时代对前端前景比较悲观，纠结是接受前端转正实习，还是准备全栈和Agent项目直接投递，如果是你，会有什么样的看法或规划？"
+    tags: ["行业认知", "技术视野", "抗压与心态"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "考察对AI技术冲击下前端演进的独立思考能力"
+      - "评估候选人面对职业路线分歧时的决策逻辑与适应性"
+  - id: "FE-BQ-ZJ-003"
+    type: "behavioral"
+    question: "有没有在实习或过往项目中遇到过特别难相处的人？或者与同事（开发/策划）产生分歧时，你是怎么处理的？"
+    tags: ["沟通协作", "冲突解决", "情商"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "采用STAR法则描述冲突背景与核心矛盾点"
+      - "展现对事不对人、基于数据和事实驱动的沟通技巧"
+  - id: "FE-BQ-ZJ-004"
+    type: "behavioral"
+    question: "如果你发现一个重大Bug，找开发A反馈，开发A说不归他管让你找开发B，开发B又让你去找策划，面对这种互相踢皮球的局面你会怎么办？"
+    tags: ["问题解决", "推动力", "团队协作"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "展示向上管理与跨部门协调能力"
+      - "强调项目整体责任感，如何闭环追踪问题直至解决"
+  - id: "FE-BQ-ZJ-005"
+    type: "behavioral"
+    question: "你之前的实习经历偏向于纯研发岗，为什么会考虑到投递游戏测试/测开相关的岗位？"
+    tags: ["求职动机", "岗位理解", "技术转岗"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "说明研发背景对测试岗位的降维打击优势（如白盒测试、自动化脚本）"
+      - "展示对目标岗位核心价值的准确理解"
+
+  - id: "FE-BQ-ZJ-006"
+    type: "behavioral"
+    question: "请做一个简单的自我介绍，并简述一下你过往的实习经历和专业技能。"
+    tags: ["自我介绍", "实习经历", "软素质"]
+    difficulty: "easy"
+    source: "字节跳动"
+    key_points:
+      - "清晰表达个人基本信息与技术栈"
+      - "突出实习经历中的业务产出与技术沉淀"
+      - "展现良好的沟通表达能力与逻辑条理性"
+  
+  - id: "FE-BQ-ZJ-007"
+    type: "behavioral"
+    question: "请谈谈你的期望薪资、上一份工作或实习经历、期间遇到的最大困难，以及未来的职业规划。"
+    tags: ["期望薪资", "职业规划", "困难挑战"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "职业规划清晰，能将个人发展与公司业务结合"
+      - "面对困难有合理的解决思路与复盘总结能力"
+      - "期望薪资符合市场及个人能力水平，态度真诚"
+
+  - id: "FE-BQ-ZJ-008"
+    type: "behavioral"
+    question: "春招至今你收到了几个面试邀请？你对目前的求职进展有什么看法？如果在投递时遇到简历无回复，你会如何处理？"
+    tags: ["求职意向", "抗压能力", "自我驱动"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "展现积极的求职态度与抗挫折能力"
+      - "具备复盘意识，能主动优化简历和投递策略"
+      - "表达对当前公司的强烈意愿与清晰定位"
+
+  - id: "FE-BQ-ZJ-009"
+    type: "behavioral"
+    question: "如果你需要在前端开发的转正实习与全栈/AI Agent方向之间做选择，你会如何评估并做出决定？谈谈你的考量依据。"
+    tags: ["技术路线", "职业规划", "AI结合"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "体现对前端及全栈/AI方向行业趋势的洞察"
+      - "有明确的自我认知（优劣势分析）"
+      - "决策逻辑清晰，能权衡短期收益与长期职业发展"
+
+  - id: "FE-BQ-ZJ-010"
+    type: "behavioral"
+    question: "请问你目前的求职进展如何？拿到了几个Offer？遇到过哪些困难及如何应对的？"
+    tags: ["求职规划", "心理抗压", "自我驱动"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "诚实反馈求职进度，不盲目夸大或自贬"
+      - "面对困难有积极的应对策略和复盘总结"
+      - "表达出对目标岗位和公司的强烈意愿与匹配度"
+  - id: "FE-BQ-ZJ-011"
+    type: "behavioral"
+    question: "谈谈你的职业规划，未来是更倾向于深耕前端开发，还是往全栈或 AI Agent 方向发展？为什么？"
+    tags: ["职业规划", "技术方向", "行业认知"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "有清晰的短期和长期职业发展路径"
+      - "能够结合自身优势、兴趣和行业趋势（如AI Agent）给出逻辑自洽的原因"
+      - "体现出拥抱变化、持续学习的自驱力"
+  - id: "FE-BQ-ZJ-012"
+    type: "behavioral"
+    question: "你平时在开发中会使用 AI 辅助编码工具吗？你怎么看待它对开发效率和代码质量的影响？"
+    tags: ["AI工具", "工作效率", "技术视野"]
+    difficulty: "easy"
+    source: "字节跳动"
+    key_points:
+      - "客观评估AI工具（如Copilot, Cursor）的提效作用"
+      - "认识到AI生成代码的局限性，强调人工Review和单测兜底的重要性"
+      - "展示对AI时代软件工程演进的思考"
+  - id: "FE-BQ-ZJ-013"
+    type: "behavioral"
+    question: "你认为什么样的候选人最适合大厂的工作节奏和环境？"
+    tags: ["团队匹配度", "职场认知", "抗压能力"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "强调极强的自驱力、快速学习能力和主动沟通意识"
+      - "能在业务高速迭代或不确定性中找到目标（抗压能力）"
+      - "具备良好的团队协作与闭环思维"
+  - id: "FE-BQ-ZJ-014"
+    type: "behavioral"
+    question: "谈谈你对 AI 时代是否还需要深入学习底层知识和手写算法（如刷LeetCode）的看法。"
+    tags: ["学习方法", "底层原理", "AI影响"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "AI可以提效，但无法替代对核心复杂逻辑和系统架构的深度思考"
+      - "算法和底层原理决定了排查疑难杂症的上限和系统设计的合理性"
+      - "强调人脑的核心竞争力在于“设计规范、抽象业务、解决异常”而非机械搬砖"
+  - id: "FE-BQ-ZJ-015"
+    type: "behavioral"
+    question: "在过去的团队协作中，请用三个关键词形容你的个人优势和劣势，并举例说明。"
+    tags: ["自我复盘", "团队协作", "性格特质"]
+    difficulty: "hard"
+    source: "字节跳动"
+    key_points:
+      - "优势需结合具体的项目成果（如推动重构、攻坚难点）"
+      - "劣势需真实且非致命，重点在于展示“正在通过什么有效方式改进”"
+      - "自我认知清晰，不回避问题"
+  - id: "FE-BQ-ZJ-016"
+    type: "behavioral"
+    question: "你是如何去了解和切入一个全新的技术领域的？有没有可以分享的学习方法论？"
+    tags: ["学习方法论", "快速学习", "知识沉淀"]
+    difficulty: "medium"
+    source: "字节跳动"
+    key_points:
+      - "有系统性的学习路线（如官方文档 -> 核心概念 -> Demo实践 -> 源码剖析）"
+      - "擅长将新知识与已有知识体系建立映射关系"
+      - "有输出倒逼输入的习惯（如写博客、内部技术分享、造轮子）"
