@@ -1,0 +1,49 @@
+items:
+  - question: "请简述两阶段提交协议的基本过程。"
+    type: "technical"
+    difficulty: "medium"
+    tags:
+      - "分布式"
+      - "事务"
+    answer:
+      - "协调者向所有参与者发送准备提交请求"
+      - "参与者执行本地事务并锁定资源"
+      - "协调者根据反馈决定提交或回滚"
+    source: "内部"
+    status: "published"
+    knowledge_points:
+      - "分布式事务"
+      - "数据库锁"
+    follow_up_templates:
+      - "如果系统出现超时，你会怎么排查？"
+      - "这种方案有哪些潜在风险？"
+    required_skills_meta:
+      skill_level: "intermediate"
+      skills:
+        - "MySQL"
+        - "Redis"
+        - "分布式系统"
+    reference_answer_depth: 2
+
+  - question: "当你遇到 Kafka 消息重复消费时，通常有哪些处理方式？"
+    type: "technical"
+    difficulty: "hard"
+    tags:
+      - "消息队列"
+      - "幂等性"
+    answer:
+      - "使用幂等消费者"
+      - "记录消费位点"
+      - "利用事务或 Exactly-Once 语义"
+    source: "技术分享"
+    status: "draft"
+    knowledge_points:
+      - "消息可靠性"
+    follow_up_templates:
+      - "你会如何设计消息重试策略？"
+    required_skills_meta:
+      skill_level: "advanced"
+      skills:
+        - "Kafka"
+        - "幂等性"
+    reference_answer_depth: 3

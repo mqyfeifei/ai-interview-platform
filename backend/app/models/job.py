@@ -93,10 +93,14 @@ class Job(db.Model):
     )
 
     def to_dict(self):
+        # Since knowledge_tags is a dynamic relationship, we need to execute it
+        # to get the list of tags.
+        tags = self.knowledge_tags.all()
         return {
             'id': self.id,
             'name': self.name,
             'description': self.description,
             'tech_stack': self.tech_stack,
-            'icon_url': self.icon_url
+            'icon_url': self.icon_url,
+            'knowledge_tags': [tag.name for tag in tags] if tags else []
         }

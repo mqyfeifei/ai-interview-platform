@@ -122,6 +122,10 @@
                 <label class="form-label">技术栈（逗号分隔）</label>
                 <textarea v-model="techStackText" class="form-control form-textarea" rows="3" placeholder="Java, SpringBoot, MySQL"></textarea>
               </div>
+              <div class="form-group form-group--full">
+                <label class="form-label">岗位知识点（逗号或换行分隔）</label>
+                <textarea v-model="form.knowledgeText" class="form-control form-textarea" rows="3" placeholder="缓存, 分布式, 高并发"></textarea>
+              </div>
             </div>
             <p v-if="formError" class="form-error">{{ formError }}</p>
           </div>
@@ -168,6 +172,7 @@ function defaultJobForm() {
     name: '',
     description: '',
     tech_stack: [],
+    knowledgeText: '',
     icon_url: ''
   }
 }
@@ -269,6 +274,14 @@ export default {
       this.loadData()
     },
 
+    parseLines(text) {
+      if (!text || !text.trim()) return null
+      return text
+        .split(/\r?\n|,/) 
+        .map(s => s.trim())
+        .filter(Boolean)
+    },
+
     goPage(page) {
       if (page < 1 || page > this.totalPages) return
       this.page = page
@@ -291,6 +304,7 @@ export default {
         name: job.name || '',
         description: job.description || '',
         tech_stack: Array.isArray(job.tech_stack) ? job.tech_stack : [],
+        knowledgeText: Array.isArray(job.knowledge_tags) ? job.knowledge_tags.join(', ') : '',
         icon_url: job.icon_url || ''
       }
       this.techStackText = (this.form.tech_stack || []).join(', ')
@@ -345,6 +359,7 @@ export default {
             .split(',')
             .map(s => s.trim())
             .filter(Boolean),
+          knowledge_tags: this.parseLines(this.form.knowledgeText),
           icon_url: this.form.icon_url.trim() || null
         }
         if (this.modalMode === 'create') {

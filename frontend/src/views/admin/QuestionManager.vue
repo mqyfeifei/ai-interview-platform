@@ -30,10 +30,6 @@
               批量导入
             </button>
             <button class="btn btn-primary btn-image" @click="openCreate">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                stroke-linecap="round" stroke-linejoin="round" class="btn-icon">
-                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-              </svg>
               {{ entity === 'question' ? '新建题目' : '新建学习资源' }}
             </button>
           </div>
@@ -239,8 +235,23 @@
                   <textarea v-model="form.content" class="form-control form-textarea" rows="4" placeholder="请输入面试题目…"></textarea>
                 </div>
                 <div class="form-group form-group--full">
-                  <label class="form-label">关键词（逗号分隔）</label>
+                  <label class="form-label">答案关键词（逗号分隔）</label>
                   <input v-model="form.keywordsText" type="text" class="form-control" placeholder="例如：Redis, 缓存穿透" />
+                </div>
+                <div class="form-group form-group--full">
+                  <label class="form-label">考察知识点（逗号分隔）</label>
+                  <input v-model="form.knowledgeText" type="text" class="form-control" placeholder="例如：缓存, 并发, 设计模式" />
+                  <p class="form-hint">多个知识点请用逗号分隔</p>
+                </div>
+                <div class="form-group form-group--full">
+                  <label class="form-label">追问模板（每行一个）</label>
+                  <textarea v-model="form.followUpTemplatesText" class="form-control form-textarea" rows="3" placeholder="例如：\n请你进一步说明系统瓶颈所在\n这个方案的隐患是什么"></textarea>
+                  <p class="form-hint">每行输入一个追问模板</p>
+                </div>
+                <div class="form-group form-group--full">
+                  <label class="form-label">所需技能元信息（JSON）</label>
+                  <textarea v-model="form.requiredSkillsMetaText" class="form-control form-textarea" rows="4" placeholder='例如：{"skills": ["Redis","分布式"], "level": "intermediate"}'></textarea>
+                  <p class="form-hint">请输入合法 JSON，对应 required_skills_meta 字段</p>
                 </div>
                 <div class="form-group form-group--full">
                   <label class="form-label">参考答案</label>
@@ -492,6 +503,9 @@ function defaultForm() {
     content: '',
     reference_answer: '',
     keywordsText: '',
+    knowledgeText: '',
+    followUpTemplatesText: '',
+    requiredSkillsMetaText: '',
     source: '',
     status: 'draft',
     title: '',
@@ -686,6 +700,9 @@ export default {
           content: item.content || '',
           reference_answer: Array.isArray(item.reference_answer) ? item.reference_answer.join('\n') : (item.reference_answer || ''),
           keywordsText: Array.isArray(item.keywords) ? item.keywords.join(', ') : '',
+          knowledgeText: Array.isArray(item.knowledge_points) ? item.knowledge_points.join(', ') : (Array.isArray(item.knowledge_tags) ? item.knowledge_tags.join(', ') : ''),
+          followUpTemplatesText: Array.isArray(item.follow_up_templates) ? item.follow_up_templates.join('\n') : '',
+          requiredSkillsMetaText: item.required_skills_meta ? JSON.stringify(item.required_skills_meta, null, 2) : '',
           source: item.source || '',
           status: item.status || 'draft',
           title: item.title || '',
@@ -727,6 +744,17 @@ export default {
 
       let data
       if (this.entity === 'question') {
+        let requiredSkillsMeta = null
+        if (this.form.requiredSkillsMetaText && this.form.requiredSkillsMetaText.trim()) {
+          try {
+            requiredSkillsMeta = JSON.parse(this.form.requiredSkillsMetaText)
+          } catch (err) {
+            this.formError = 'required_skills_meta 必须是合法 JSON 格式'
+            this.formLoading = false
+            return
+          }
+        }
+
         data = {
           job_id: this.form.job_id,
           type: this.form.type,
@@ -736,7 +764,11 @@ export default {
           source: this.form.source.trim() || null,
           status: this.form.status || 'draft',
           keywords: this.parseLines(this.form.keywordsText),
-          knowledge_points: this.parseLines(this.form.knowledgeText)
+          knowledge_points: this.parseLines(this.form.knowledgeText),
+          follow_up_templates: this.form.followUpTemplatesText && this.form.followUpTemplatesText.trim()
+            ? this.form.followUpTemplatesText.split(/\r?\n/).map(s => s.trim()).filter(Boolean)
+            : null,
+          required_skills_meta: requiredSkillsMeta
         }
         if (!data.job_id) { this.formError = '请选择关联岗位'; this.formLoading = false; return }
         if (!data.content) { this.formError = '题目内容不能为空'; this.formLoading = false; return }
