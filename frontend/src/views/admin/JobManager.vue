@@ -39,7 +39,7 @@
                 <th style="width:60px">ID</th>
                 <th>岗位名称</th>
                 <th>描述</th>
-                <th style="width:230px">技术栈</th>
+                <th style="width:600px">技术栈</th>
                 <th style="width:170px">操作</th>
               </tr>
             </thead>
@@ -462,8 +462,8 @@ export default {
 .data-table th { background: #f9fafb; color: #6b7280; font-weight: 600; }
 .row-actions { display: flex; gap: 6px; }
 
-.job-name-cell { display: flex; align-items: center; gap: 8px; }
-.job-icon { width: 24px; height: 24px; border-radius: 4px; object-fit: cover; }
+.job-name-cell { display: flex;  gap: 8px; align-items: center; min-height: 80px;  }
+.job-icon { width: 26px; height: 26px; border-radius: 4px; object-fit: cover; }
 .job-icon--default { width: 24px; height: 24px; border-radius: 4px; background: #e5e7eb; color: #4b5563; display: inline-flex; align-items: center; justify-content: center; font-size: 14px; }
 
 .icon-upload-row { display: flex; align-items: center; gap: 8px; }
