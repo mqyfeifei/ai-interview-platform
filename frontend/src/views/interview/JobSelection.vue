@@ -198,11 +198,6 @@
                     </div>
                   </div>
 
-                  <div class="job-row__detail-footer">
-                    <button class="profile-detail-btn" @click.stop="openProfileDetailModal(job)">
-                      查看详情
-                    </button>
-                  </div>
                 </div>
 
                 <div v-if="availableProfiles.length > 0" class="job-row__preview">
@@ -210,6 +205,14 @@
                     <div class="job-row__preview-title">预览策略</div>
                     <div class="job-row__preview-line">题型分布：Technical {{ currentStrategy.technique }}% / Project {{ currentStrategy.project }}% / Scenario {{ currentStrategy.scenario }}% / Behavioral {{ currentStrategy.behavioral }}%</div>
                     <div class="job-row__preview-line">难度倾向：Easy {{ currentStrategy.easy }}% / Medium {{ currentStrategy.medium }}% / Hard {{ currentStrategy.hard }}%</div>
+                    <div class="job-row__preview-line">风格：{{ currentStyleLabel }}{{ selectedStyleTone ? ' · ' + selectedStyleTone : '' }}</div>
+                    <div class="job-row__preview-line" v-if="selectedProfile">
+                      维度：{{ selectedProfile.enabled_dimensions && selectedProfile.enabled_dimensions.length ? selectedProfile.enabled_dimensions.join(', ') : '-' }}
+                    
+                    </div>
+                    <div class="job-row__preview-line" v-if="selectedProfile && selectedProfile.tone_descriptor">
+                      风格说明：{{ selectedProfile.tone_descriptor }}
+                    </div>
                   </div>
                 </div>
 
@@ -341,64 +344,77 @@
               面试模式
             </div>
 
-            <div class="mode-switch">
-              <!-- 文字面试 -->
-              <div
-                class="mode-option"
-                :class="{ active: !voiceMode }"
-                @click="voiceMode = false"
-              >
-                <div class="mode-option__radio">
-                  <div class="mode-option__dot"></div>
+            <div class="mode-action-row">
+              <div class="mode-switch">
+                <!-- 文字面试 -->
+                <div
+                  class="mode-option"
+                  :class="{ active: !voiceMode }"
+                  @click="voiceMode = false"
+                >
+                  <div class="mode-option__radio">
+                    <div class="mode-option__dot"></div>
+                  </div>
+                  <div class="mode-option__content">
+                    <div class="mode-option__title">
+                      文字面试
+                    </div>
+                  </div>
                 </div>
-                <div class="mode-option__content">
-                  <div class="mode-option__title">
-                    文字面试
+
+                <!-- 语音面试 -->
+                <div
+                  class="mode-option"
+                  :class="{ active: voiceMode }"
+                  @click="voiceMode = true"
+                >
+                  <div class="mode-option__radio">
+                    <div class="mode-option__dot"></div>
+                  </div>
+                  <div class="mode-option__content">
+                    <div class="mode-option__title">
+                      语音面试
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <!-- 语音面试 -->
-              <div
-                class="mode-option"
-                :class="{ active: voiceMode }"
-                @click="voiceMode = true"
-              >
-                <div class="mode-option__radio">
-                  <div class="mode-option__dot"></div>
-                </div>
-                <div class="mode-option__content">
-                  <div class="mode-option__title">
-                    语音面试
-                  </div>
+              <div v-if="selectedProfile" class="mode-toggle-row">
+                <div class="voice-config-item voice-config-toggle">
+                  <label class="switch-label">
+                    <input type="checkbox" v-model="selectedProfile.is_dynamic_adjust" />
+                    <span class="switch-slider"></span>
+                    <label class="voice-config-label">动态调整</label>
+                  </label>
                 </div>
               </div>
             </div>
 
-            <!-- 语音面试：面试官声音角色选择（预留接口，暂不对接后端） -->
+            <!-- 语音面试：语音配置 -->
             <transition name="voice-expand">
-              <div v-if="voiceMode" class="voice-role-section">
+              <div v-if="voiceMode" class="voice-role-section voice-settings-card">
                 <div class="voice-role-section__title">
-                  面试官声音
+                  面试语音配置
                 </div>
-                <div class="voice-role-grid">
-                  <div
-                    v-for="role in voiceRoles"
-                    :key="role.id"
-                    class="voice-role-card"
-                    :class="{ active: selectedVoiceRole === role.id }"
-                    @click="selectVoiceRole(role.id)"
-                  >
-                    <div class="voice-role-card__info">
-                      <div class="voice-role-card__name">{{ role.name }}</div>
-                      <div class="voice-role-card__style">{{ role.style }}</div>
-                    </div>
-                    <div v-if="selectedVoiceRole === role.id" class="voice-role-card__check">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="20 6 9 17 4 12"/>
-                      </svg>
-                    </div>
+
+                <div v-if="selectedProfile" class="voice-config-row">
+                  <div class="voice-config-item voice-config-field">
+                    <label class="voice-config-label">面试官声音</label>
+                    <select v-model="selectedVoiceRole" class="voice-config-select">
+                      <option
+                        v-for="role in voiceRoles"
+                        :key="role.id"
+                        :value="role.id"
+                      >
+                        {{ role.label || role.name || role.id }}
+                      </option>
+                    </select>
+                  </div>
+                  <div class="voice-config-item voice-config-field voice-config-field--speed">
+                    <label class="voice-config-label">语速</label>
+                    <select v-model.number="selectedProfile.speech_speed" class="voice-config-select voice-config-select--speed">
+                      <option v-for="speed in speechSpeedOptions" :key="speed" :value="speed">{{ speed }}x</option>
+                    </select>
                   </div>
                 </div>
               </div>
@@ -507,97 +523,6 @@
       </div>
     </transition>
 
-    <!-- ===== 面试配置详情弹窗 ===== -->
-    <transition name="modal">
-      <div v-if="showProfileDetailModal" class="modal-overlay" @click.self="closeProfileDetailModal()">
-        <div class="modal-sheet" style="width: 90%; max-width: 760px; max-height: 85vh; display: flex; flex-direction: column;">
-          <div class="modal-header-bar" style="background: #fff; border-bottom: 1px solid #e5e7eb; flex-shrink: 0;">
-            <h2 class="modal-header-title" style="color: #1f2937;">面试配置详情</h2>
-            <p class="modal-header-sub" style="color: #6b7280;">{{ currentSelected && currentSelected.name }}</p>
-          </div>
-
-          <div class="modal-body" style="flex: 1; overflow-y: auto; padding: 20px;">
-            <div class="profile-detail-section">
-              <h3>轮次详情</h3>
-              <div class="profile-detail-row">
-                <div class="profile-detail-field">
-                  <label>题型分布：Technical</label>
-                  <input type="number" v-model.number="profileDetailForm.technique_percentage" @input="handleProfileDetailChange" />
-                </div>
-                <div class="profile-detail-field">
-                  <label>Scenario</label>
-                  <input type="number" v-model.number="profileDetailForm.scenario_percentage" @input="handleProfileDetailChange" />
-                </div>
-                <div class="profile-detail-field">
-                  <label>Project Deep Dive</label>
-                  <input type="number" v-model.number="profileDetailForm.project_deep_dive_percentage" @input="handleProfileDetailChange" />
-                </div>
-                <div class="profile-detail-field">
-                  <label>Behavioral</label>
-                  <input type="number" v-model.number="profileDetailForm.behavioral_percentage" @input="handleProfileDetailChange" />
-                </div>
-              </div>
-              <div class="profile-detail-row">
-                <div class="profile-detail-field">
-                  <label>难度低</label>
-                  <input type="number" v-model.number="profileDetailForm.difficulty_low_percentage" @input="handleProfileDetailChange" />
-                </div>
-                <div class="profile-detail-field">
-                  <label>难度中</label>
-                  <input type="number" v-model.number="profileDetailForm.difficulty_medium_percentage" @input="handleProfileDetailChange" />
-                </div>
-                <div class="profile-detail-field">
-                  <label>难度高</label>
-                  <input type="number" v-model.number="profileDetailForm.difficulty_high_percentage" @input="handleProfileDetailChange" />
-                </div>
-              </div>
-            </div>
-
-            <div class="profile-detail-section">
-              <h3>风格详情</h3>
-              <div class="profile-detail-row">
-                <div class="profile-detail-field">
-                  <label>语速</label>
-                  <input type="number" step="0.1" v-model.number="profileDetailForm.speech_speed" @input="handleProfileDetailChange" />
-                </div>
-                <div class="profile-detail-field">
-                  <label>语音 ID</label>
-                  <input v-model="profileDetailForm.voice_id" @input="handleProfileDetailChange" />
-                </div>
-              </div>
-              <div class="profile-detail-row">
-                <div class="profile-detail-field profile-detail-field--full">
-                  <label>风格说明</label>
-                  <textarea rows="3" v-model="profileDetailForm.tone_descriptor" @input="handleProfileDetailChange"></textarea>
-                </div>
-              </div>
-              <div class="profile-detail-row">
-                <div class="profile-detail-field">
-                  <label>启用维度</label>
-                  <input v-model="profileDetailForm.enabled_dimensions" @input="handleProfileDetailChange" placeholder="用逗号分隔" />
-                </div>
-                <div class="profile-detail-field">
-                  <label>难度级别</label>
-                  <input type="number" min="1" max="5" v-model.number="profileDetailForm.difficulty_level" @input="handleProfileDetailChange" />
-                </div>
-                <div class="profile-detail-field profile-detail-checkbox">
-                  <label>动态调整</label>
-                  <input type="checkbox" v-model="profileDetailForm.is_dynamic_adjust" @change="handleProfileDetailChange" />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="modal-footer-bar" style="background: #f9fafb; border-top: 1px solid #e5e7eb; padding: 16px; flex-shrink: 0; display: flex; gap: 12px; justify-content: flex-end; align-items: center;">
-            <button class="btn-cancel" @click="closeProfileDetailModal">取消</button>
-            <button class="btn-confirm" :class="{ disabled: !profileDetailDirty }" :disabled="!profileDetailDirty" @click="saveProfileDetails">
-              保存
-            </button>
-          </div>
-        </div>
-      </div>
-    </transition>
-
     <!-- ===== 简历详情查看弹窗 ===== -->
     <transition name="modal">
       <div v-if="showResumeDetailModal" class="modal-overlay" @click.self="showResumeDetailModal = false">
@@ -633,6 +558,7 @@
 
 <script>
 import ResumePreview from '@/components/interview/ResumePreview.vue'
+import { VOICE_ID_OPTIONS } from '@/constants/ttsVoices'
 
 // ===================== 简历必填字段定义 =====================
 const REQUIRED_FIELDS = [
@@ -658,13 +584,8 @@ const REQUIRED_FIELDS = [
   }}
 ]
 
-// ===================== 语音角色（预留，待接口开发后替换） =====================
-const VOICE_ROLES_PLACEHOLDER = [
-  { id: 'zh_female_shuangkuaisisi_uranus_bigtts', name: '爽快思思 2.0', style: '干练清晰' },
-  { id: 'zh_female_xiaohe_uranus_bigtts', name: '小何 2.0', style: '温和自然' },
-  { id: 'zh_female_vv_uranus_bigtts', name: 'Vivi 2.0', style: '知性多变' },
-  { id: 'zh_male_m191_uranus_bigtts', name: '云舟 2.0', style: '沉稳男声' }
-]
+// ===================== 语音角色配置 =====================
+// 统一使用管理员端可选的 TTS 音色列表
 
 const INTERVIEW_ROUNDS = [
   { value: 1, label: '一面', summary: '基础能力 + 表达清晰度' },
@@ -720,9 +641,6 @@ export default {
       availableProfiles: [],
       selectedProfile: null,
       profileLoading: false,
-      showProfileDetailModal: false,
-      profileDetailForm: null,
-      profileDetailDirty: false,
 
       // ── 轮次与风格选择 ──
       selectedRound: 1,
@@ -733,9 +651,10 @@ export default {
       roundDropdownOpen: false,
       styleDropdownOpen: false,
 
-      // ── 语音角色（预留） ──
-      voiceRoles: VOICE_ROLES_PLACEHOLDER,
-      selectedVoiceRole: VOICE_ROLES_PLACEHOLDER[0].id,
+      // ── 语音角色（与管理员端保持一致） ──
+      voiceRoles: VOICE_ID_OPTIONS,
+      selectedVoiceRole: VOICE_ID_OPTIONS[0]?.id || '',
+      speechSpeedOptions: [0.5, 0.7, 1.0, 1.5, 2.0],
       // TODO: 后端接口就绪后在 fetchVoiceRoles() 中替换 voiceRoles 数据
       // voiceRolesLoading: false,
 
@@ -1031,6 +950,9 @@ export default {
           if (!this.styleManuallySelected) {
             this.selectedInterviewStyle = this.selectedProfile.interviewer_style || this.selectedInterviewStyle
           }
+          if (this.selectedProfile.voice_id) {
+            this.selectedVoiceRole = this.selectedProfile.voice_id
+          }
           this.$store.dispatch('interview/selectInterviewProfile', this.selectedProfile.id)
         }
       } catch (e) {
@@ -1048,6 +970,9 @@ export default {
         if (!this.styleManuallySelected) {
           this.selectedInterviewStyle = profile.interviewer_style || this.selectedInterviewStyle
         }
+        if (profile.voice_id) {
+          this.selectedVoiceRole = profile.voice_id
+        }
       }
       this.$store.dispatch('interview/selectInterviewProfile', profile ? profile.id : null)
     },
@@ -1064,87 +989,6 @@ export default {
       this.styleDropdownOpen = false
       this.$store.commit('interview/SET_INTERVIEW_STYLE', styleValue)
       this.syncProfileSelection()
-    },
-
-    openProfileDetailModal(job) {
-      if (!this.selectedProfile) return
-      this.profileDetailForm = {
-        round: this.selectedProfile.round,
-        interviewer_style: this.selectedProfile.interviewer_style,
-        technique_percentage: this.selectedProfile.technique_percentage,
-        scenario_percentage: this.selectedProfile.scenario_percentage,
-        project_deep_dive_percentage: this.selectedProfile.project_deep_dive_percentage,
-        behavioral_percentage: this.selectedProfile.behavioral_percentage,
-        difficulty_low_percentage: this.selectedProfile.difficulty_low_percentage,
-        difficulty_medium_percentage: this.selectedProfile.difficulty_medium_percentage,
-        difficulty_high_percentage: this.selectedProfile.difficulty_high_percentage,
-        speech_speed: this.selectedProfile.speech_speed,
-        tone_descriptor: this.selectedProfile.tone_descriptor,
-        voice_id: this.selectedProfile.voice_id,
-        enabled_dimensions: Array.isArray(this.selectedProfile.enabled_dimensions)
-          ? this.selectedProfile.enabled_dimensions.join(', ')
-          : '',
-        difficulty_level: this.selectedProfile.difficulty_level,
-        is_dynamic_adjust: this.selectedProfile.is_dynamic_adjust,
-      }
-      this.profileDetailDirty = false
-      this.showProfileDetailModal = true
-    },
-
-    closeProfileDetailModal() {
-      this.showProfileDetailModal = false
-    },
-
-    handleProfileDetailChange() {
-      if (!this.selectedProfile || !this.profileDetailForm) return
-      const current = {
-        round: this.selectedProfile.round,
-        interviewer_style: this.selectedProfile.interviewer_style,
-        technique_percentage: this.selectedProfile.technique_percentage,
-        scenario_percentage: this.selectedProfile.scenario_percentage,
-        project_deep_dive_percentage: this.selectedProfile.project_deep_dive_percentage,
-        behavioral_percentage: this.selectedProfile.behavioral_percentage,
-        difficulty_low_percentage: this.selectedProfile.difficulty_low_percentage,
-        difficulty_medium_percentage: this.selectedProfile.difficulty_medium_percentage,
-        difficulty_high_percentage: this.selectedProfile.difficulty_high_percentage,
-        speech_speed: this.selectedProfile.speech_speed,
-        tone_descriptor: this.selectedProfile.tone_descriptor,
-        voice_id: this.selectedProfile.voice_id,
-        enabled_dimensions: Array.isArray(this.selectedProfile.enabled_dimensions)
-          ? this.selectedProfile.enabled_dimensions.join(', ')
-          : '',
-        difficulty_level: this.selectedProfile.difficulty_level,
-        is_dynamic_adjust: this.selectedProfile.is_dynamic_adjust,
-      }
-      this.profileDetailDirty = JSON.stringify(current) !== JSON.stringify(this.profileDetailForm)
-    },
-
-    saveProfileDetails() {
-      if (!this.selectedProfile || !this.profileDetailForm || !this.profileDetailDirty) return
-      this.selectedProfile.round = Number(this.profileDetailForm.round)
-      this.selectedProfile.interviewer_style = this.profileDetailForm.interviewer_style
-      this.selectedProfile.technique_percentage = Number(this.profileDetailForm.technique_percentage)
-      this.selectedProfile.scenario_percentage = Number(this.profileDetailForm.scenario_percentage)
-      this.selectedProfile.project_deep_dive_percentage = Number(this.profileDetailForm.project_deep_dive_percentage)
-      this.selectedProfile.behavioral_percentage = Number(this.profileDetailForm.behavioral_percentage)
-      this.selectedProfile.difficulty_low_percentage = Number(this.profileDetailForm.difficulty_low_percentage)
-      this.selectedProfile.difficulty_medium_percentage = Number(this.profileDetailForm.difficulty_medium_percentage)
-      this.selectedProfile.difficulty_high_percentage = Number(this.profileDetailForm.difficulty_high_percentage)
-      this.selectedProfile.speech_speed = Number(this.profileDetailForm.speech_speed)
-      this.selectedProfile.tone_descriptor = this.profileDetailForm.tone_descriptor
-      this.selectedProfile.voice_id = this.profileDetailForm.voice_id
-      this.selectedProfile.enabled_dimensions = this.profileDetailForm.enabled_dimensions
-        .split(',')
-        .map(item => item.trim())
-        .filter(Boolean)
-      this.selectedProfile.difficulty_level = Number(this.profileDetailForm.difficulty_level)
-      this.selectedProfile.is_dynamic_adjust = Boolean(this.profileDetailForm.is_dynamic_adjust)
-      this.profileDetailDirty = false
-      this.showProfileDetailModal = false
-      this.selectedRound = this.selectedProfile.round || this.selectedRound
-      if (!this.styleManuallySelected) {
-        this.selectedInterviewStyle = this.selectedProfile.interviewer_style || this.selectedInterviewStyle
-      }
     },
 
     syncProfileSelection() {
@@ -2196,18 +2040,34 @@ export default {
 }
 
 // ─── 面试模式切换 ───
+.mode-action-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 18px;
+  flex-wrap: nowrap;
+  margin-bottom: 14px;
+}
+
 .mode-switch {
   display: flex;
-  flex-direction: row;
+  align-items: center;
   gap: 8px;
-  margin-bottom: 14px;
+}
+
+.mode-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .mode-option {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 12px 14px;
+  gap: 5px;
+  padding: 12px 10px;
+  min-width: 120px;
+  justify-content: center;
   border-radius: 10px;
   cursor: pointer;
   transition: all 0.18s;
@@ -2331,23 +2191,120 @@ export default {
 // ─── 语音角色选择 ───
 .voice-role-section {
   margin-bottom: 6px;
-  padding: 14px;
-  background: #f8f9ff;
-  border-radius: 10px;
-  border: 1px solid #e0e7ff;
+  padding: 18px 20px;
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #dbeafe;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
 
   &__title {
-    font-size: 15px; font-weight: 600; color: #4338ca;
-    display: flex; align-items: center; gap: 5px;
-    margin-bottom: 10px;
+    font-size: 15px;
+    font-weight: 700;
+    color: #6366f1;
+    margin-bottom: 16px;
   }
 }
 
 .voice-role-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+  display: none;
 }
+
+.voice-config-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 28px;
+  margin-top: 0;
+  flex-wrap: nowrap;
+}
+
+.voice-config-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.voice-config-item.voice-config-field {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 220px;
+}
+
+.voice-config-select {
+  min-width: 220px;
+  width: 220px;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  background: #fff;
+  color: #111827;
+}
+
+.voice-config-select--speed {
+  min-width: 90px;
+  width: 90px;
+}
+
+.voice-config-toggle {
+  min-width: 180px;
+}
+
+.voice-config-label {
+  font-size: 13px;
+  color: #374151;
+  font-weight: 600;
+}
+
+.switch-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.switch-label input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.switch-slider {
+  width: 40px;
+  height: 20px;
+  border-radius: 999px;
+  background: #d1d5db;
+  position: relative;
+  transition: background-color 0.2s ease;
+}
+
+.switch-slider::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: white;
+  transition: transform 0.2s ease;
+}
+
+.switch-label input:checked + .switch-slider {
+  background: #4f46e5;
+}
+
+.switch-label input:checked + .switch-slider::before {
+  transform: translateX(20px);
+}
+
+.switch-text {
+  font-size: 13px;
+  color: #4b5563;
+}
+
 
 .voice-role-card {
   display: flex;
