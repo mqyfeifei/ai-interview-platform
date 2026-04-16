@@ -244,7 +244,10 @@ frontend/src/views/system/ResumeBuilder.vue
             </div>
             <div class="row">
               <label>学历学位 <span class="req-star">*</span></label>
-              <input v-model="item.degree" data-field="degree" type="text" maxlength="20" :class="{ 'input-required': !item.degree?.trim() }" />
+              <select v-model="item.degree" data-field="degree" :class="{ 'input-required': !item.degree?.trim() }">
+                <option value="">请选择学历学位</option>
+                <option v-for="option in degreeOptions" :key="option" :value="option">{{ option }}</option>
+              </select>
             </div>
             <button class="btn-danger" v-if="education.length > 1" @click="removeEducation(idx)">删除</button>
             <hr />
@@ -722,6 +725,7 @@ export default {
       globalLoadingText: '加载中…',
 
       // ── constants ─────────────────────────────────────────────────────────
+      degreeOptions: ['博士', '硕士', '本科', '专科'],
  
       modules: [
         { key: 'personal',   label: '个人信息' },

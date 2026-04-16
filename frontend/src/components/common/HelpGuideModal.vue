@@ -103,27 +103,43 @@ export default {
       activeIndex: 0,
       slides: [
         {
+          key: 'resume',
+          icon: '📄',
+          iconClass: 'help-slide__icon--info',
+          title: '简历管理',
+          desc: '新建和完善个人简历，确保简历信息完整，为面试做好准备。',
+          how: '个人中心 → 简历管理 → 新建/编辑简历'
+        },
+        {
+          key: 'job',
+          icon: '💼',
+          iconClass: 'help-slide__icon--primary',
+          title: '岗位选择',
+          desc: '选择目标岗位，设置面试轮次、风格和来源，系统会根据岗位特点进行提问。',
+          how: '首页 → 选择岗位 → 设置面试参数'
+        },
+        {
           key: 'interview',
           icon: '🚀',
-          iconClass: 'help-slide__icon--primary',
+          iconClass: 'help-slide__icon--success',
           title: '开始模拟面试',
-          desc: '选择岗位后即可开始模拟面试，系统会根据岗位特点进行提问。',
-          how: '首页 → 选择岗位 → 开始面试'
+          desc: '根据设置的参数开始模拟面试，系统会逐题提问，你需要认真作答。',
+          how: '岗位选择页 → 选择简历 → 开始面试'
         },
         {
           key: 'report',
           icon: '📊',
-          iconClass: 'help-slide__icon--success',
+          iconClass: 'help-slide__icon--warning',
           title: '查看面试报告',
-          desc: '面试结束会生成报告，帮助你复盘优缺点并制定改进方向。',
+          desc: '面试结束会生成详细报告，帮助你复盘优缺点并制定改进方向。',
           how: '历史记录 → 查看报告'
         },
         {
           key: 'learning',
           icon: '📚',
-          iconClass: 'help-slide__icon--warning',
+          iconClass: 'help-slide__icon--neutral',
           title: '学习中心提升',
-          desc: '展示多维度能力曲线，针对薄弱点进行学习与练习，持续提升面试表现。',
+          desc: '基于面试报告，针对薄弱点进行学习与练习，持续提升面试表现。',
           how: '学习中心 → 查看能力评价 → 根据学习资源进行学习'
         },
         {
@@ -131,8 +147,8 @@ export default {
           icon: '👤',
           iconClass: 'help-slide__icon--neutral',
           title: '个人中心管理',
-          desc: '上传头像、完善基本信息，并在账号安全中修改密码等。',
-          how: '个人中心 → 信息完善'
+          desc: '管理个人信息、账号安全，查看历史面试记录和学习进度。',
+          how: '个人中心 → 信息完善/账号安全/历史记录'
         }
       ]
     }

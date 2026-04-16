@@ -1,4 +1,4 @@
-﻿<!--
+﻿﻿﻿<!--
   =============================================
   frontend/src/views/interview/JobSelection.vue
   岗位选择页 — 双栏重构版
@@ -926,12 +926,33 @@ export default {
       this.showProfileDetail = false
       if (this.currentSelected) {
         await this.loadProfileOptions(this.currentSelected.id)
+        // 选择岗位后重新验证简历是否符合要求
+        if (this.selectedResume) {
+          // 获取完整简历内容用于校验
+          let content = this.selectedResume.content
+          if (!content) {
+            try {
+              const { getResume } = await import('@/api/resume')
+              const full = await getResume(this.selectedResume.id)
+              content = full.content || {}
+            } catch (e) {
+              console.warn('获取简历详情失败', e)
+              content = {}
+            }
+          }
+          this.resumeContent = content
+          this.validateResume(content)
+        }
       } else {
         this.availableProfiles = []
         this.selectedProfile = null
         this.sourceOptions = DEFAULT_SOURCE_OPTIONS
         this.selectedSource = '通用'
         this.$store.dispatch('interview/selectInterviewProfile', null)
+        // 取消选择岗位后重新验证简历
+        if (this.selectedResume) {
+          this.validateResume(this.resumeContent)
+        }
       }
     },
 
@@ -1862,7 +1883,7 @@ export default {
 
 .job-row__detail-row {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr)) auto;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 14px;
   align-items: end;
   margin-bottom: 16px;
@@ -1872,14 +1893,6 @@ export default {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 14px;
-  margin-bottom: 16px;
-}
-
-.job-row__detail-row {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr)) auto;
-  gap: 14px;
-  align-items: end;
   margin-bottom: 16px;
 }
 
