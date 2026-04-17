@@ -22,9 +22,10 @@ def get_growth_curve():
 def get_weaknesses():
     """获取技能短板"""
     user_id = request.args.get('user_id', type=int)
+    report_id = request.args.get('report_id', type=int)
 
     try:
-        data = LearningService.get_weaknesses(user_id)
+        data = LearningService.get_weaknesses(user_id, report_id=report_id)
         return jsonify({"code": 200, "data": data, "msg": "success"})
     except Exception as e:
         return jsonify({"code": 500, "msg": str(e)})
@@ -35,9 +36,10 @@ def get_recommendations():
     """获取个性化学习推荐（基于向量检索）"""
     user_id = request.args.get('user_id', type=int)
     limit = request.args.get('limit', type=int, default=5)
+    report_id = request.args.get('report_id', type=int)
 
     try:
-        data = LearningService.get_personalized_recommendations(user_id, limit)
+        data = LearningService.get_personalized_recommendations(user_id, limit, report_id=report_id)
         return jsonify({"code": 200, "data": data, "msg": "success"})
     except Exception as e:
         return jsonify({"code": 500, "msg": str(e)})
@@ -47,9 +49,24 @@ def get_recommendations():
 def get_daily_plan():
     """获取每日学习计划"""
     user_id = request.args.get('user_id', type=int)
+    daily_hours = request.args.get('daily_hours', type=float)
+    report_id = request.args.get('report_id', type=int)
 
     try:
-        data = LearningService.get_daily_plan(user_id)
+        data = LearningService.get_daily_plan(user_id, daily_hours=daily_hours, report_id=report_id)
+        return jsonify({"code": 200, "data": data, "msg": "success"})
+    except Exception as e:
+        return jsonify({"code": 500, "msg": str(e)})
+
+
+@learning_bp.route('/study-plan', methods=['GET'])
+def get_study_plan():
+    """获取学习规划（含优先级与预计完成日期）"""
+    user_id = request.args.get('user_id', type=int)
+    daily_hours = request.args.get('daily_hours', type=float)
+    report_id = request.args.get('report_id', type=int)
+    try:
+        data = LearningService.get_study_plan(user_id, daily_hours=daily_hours, report_id=report_id)
         return jsonify({"code": 200, "data": data, "msg": "success"})
     except Exception as e:
         return jsonify({"code": 500, "msg": str(e)})
@@ -102,6 +119,45 @@ def update_task_status(task_id):
 
     try:
         res = LearningService.update_task_status(user_id=user_id, task_id=task_id, done=done)
+        return jsonify({"code": 200, "data": res, "msg": "success"})
+    except Exception as e:
+        return jsonify({"code": 500, "msg": str(e)})
+
+
+@learning_bp.route('/settings', methods=['GET'])
+def get_learning_settings():
+    user_id = request.args.get('user_id', type=int)
+    try:
+        data = LearningService.get_learning_settings(user_id)
+        return jsonify({"code": 200, "data": data, "msg": "success"})
+    except Exception as e:
+        return jsonify({"code": 500, "msg": str(e)})
+
+
+@learning_bp.route('/settings', methods=['POST'])
+def update_learning_settings():
+    data = request.get_json() or {}
+    user_id = data.get('user_id')
+    daily_hours = data.get('daily_hours')
+    selected_day_index = data.get('selected_day_index')
+    try:
+        res = LearningService.update_learning_settings(
+            user_id=user_id,
+            daily_hours=daily_hours,
+            selected_day_index=selected_day_index
+        )
+        return jsonify({"code": 200, "data": res, "msg": "success"})
+    except Exception as e:
+        return jsonify({"code": 500, "msg": str(e)})
+
+
+@learning_bp.route('/resources/<int:resource_id>/bookmark', methods=['POST'])
+def toggle_resource_bookmark(resource_id):
+    data = request.get_json() or {}
+    user_id = data.get('user_id')
+    bookmarked = bool(data.get('bookmarked', False))
+    try:
+        res = LearningService.toggle_bookmark(user_id=user_id, resource_id=resource_id, bookmarked=bookmarked)
         return jsonify({"code": 200, "data": res, "msg": "success"})
     except Exception as e:
         return jsonify({"code": 500, "msg": str(e)})

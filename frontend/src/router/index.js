@@ -122,6 +122,12 @@ const routes = [
     meta: { requiresAuth: true, title: '学习中心', showBottomNav: true }
   },
   {
+    path: '/learning/plan',
+    name: 'StudyPlanner',
+    component: () => import('@/views/system/StudyPlanner.vue'),
+    meta: { requiresAuth: true, title: '智能练习规划', showBottomNav: true }
+  },
+  {
     path: '/resume',
     name: 'ResumeBuilder',
     component: () => import('@/views/system/ResumeBuilder.vue'),

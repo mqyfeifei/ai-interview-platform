@@ -341,6 +341,7 @@ class InterviewQAHandler:
             interview=interview,
             session_config=session_config,
             asked_count=int(getattr(interview, 'question_count', 0) or 0),
+            target_mix_override=(assigned_result.get('question_mix', {}) or {}).get('target') if isinstance(assigned_result, dict) else None,
         )
 
         system_prompt = InterviewPromptBuilder.build_turn_system_prompt(

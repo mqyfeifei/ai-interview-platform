@@ -9,9 +9,11 @@ import {
   getCompletedResourceIds,
   getRecommendedResources,
   getDailyPlan,
+  getLearningSettings,
   toggleBookmark as apiToggleBookmark,
   markCompleted as apiMarkCompleted,
-  updateTaskStatus as apiUpdateTaskStatus
+  updateTaskStatus as apiUpdateTaskStatus,
+  updateLearningSettings as apiUpdateLearningSettings
 } from '@/api/learning'
 
 const state = () => ({
@@ -20,7 +22,9 @@ const state = () => ({
   recommendations: [],
   dailyPlan: null,
   completedResourceIds: [],
-  loading: false
+  loading: false,
+  reportContextId: null,
+  learningSettings: { dailyHours: 2, selectedDayIndex: 1 },
 })
 
 const mutations = {
@@ -30,6 +34,13 @@ const mutations = {
   SET_RECOMMENDATIONS(state, list) { state.recommendations = list || [] },
   SET_DAILY_PLAN(state, plan) { state.dailyPlan = plan || null },
   SET_COMPLETED_IDS(state, ids) { state.completedResourceIds = Array.isArray(ids) ? ids : [] },
+  SET_REPORT_CONTEXT(state, reportId) { state.reportContextId = reportId || null },
+  SET_LEARNING_SETTINGS(state, settings) {
+    state.learningSettings = {
+      dailyHours: settings?.dailyHours || 2,
+      selectedDayIndex: settings?.selectedDayIndex || 1
+    }
+  },
   UPDATE_RECOMMENDATION(state, { resourceId, patch }) {
     state.recommendations = state.recommendations.map(item =>
       item.id === resourceId ? { ...item, ...patch } : item
@@ -44,14 +55,17 @@ const mutations = {
 }
 
 const actions = {
-  async loadAll({ commit }) {
+  async loadAll({ commit }, { reportId = null, dailyHours = 2 } = {}) {
     commit('SET_LOADING', true)
+    commit('SET_REPORT_CONTEXT', reportId)
     try {
+      const settings = await getLearningSettings().catch(() => ({ dailyHours: 2, selectedDayIndex: 1 }))
+      const effectiveDailyHours = dailyHours ?? settings.dailyHours ?? 2
       const [growthData, weaknesses, recommendations, dailyPlan, completedIds] = await Promise.all([
         getGrowthCurve(),
-        getWeaknessTags(),
-        getRecommendedResources(),
-        getDailyPlan(),
+        getWeaknessTags({ reportId }),
+        getRecommendedResources({ reportId }),
+        getDailyPlan({ reportId, dailyHours: effectiveDailyHours }),
         getCompletedResourceIds()
       ])
       commit('SET_GROWTH_DATA', growthData)
@@ -59,7 +73,11 @@ const actions = {
       commit('SET_RECOMMENDATIONS', recommendations)
       commit('SET_DAILY_PLAN', dailyPlan)
       commit('SET_COMPLETED_IDS', completedIds)
-      return { growthData, weaknesses, recommendations, dailyPlan, completedIds }
+      commit('SET_LEARNING_SETTINGS', {
+        dailyHours: dailyPlan?.recommendedDailyHours || effectiveDailyHours,
+        selectedDayIndex: dailyPlan?.selectedDayIndex || settings?.selectedDayIndex || 1
+      })
+      return { growthData, weaknesses, recommendations, dailyPlan, completedIds, settings }
     } finally {
       commit('SET_LOADING', false)
     }
@@ -97,6 +115,20 @@ const actions = {
       console.warn('[learning] updateTaskStatus 失败', e)
       throw e
     }
+  },
+
+  async updateLearningSettings({ commit, state, dispatch }, { dailyHours, selectedDayIndex } = {}) {
+    const payload = {
+      dailyHours: dailyHours ?? state.learningSettings.dailyHours,
+      selectedDayIndex: selectedDayIndex ?? state.learningSettings.selectedDayIndex
+    }
+    const result = await apiUpdateLearningSettings(payload)
+    commit('SET_LEARNING_SETTINGS', payload)
+    await dispatch('loadAll', {
+      reportId: state.reportContextId,
+      dailyHours: payload.dailyHours
+    })
+    return result
   }
 }
 
@@ -110,7 +142,9 @@ const getters = {
     return state.dailyPlan.tasks.filter(t => t.done).length
   },
   totalTaskCount: state => (state.dailyPlan?.tasks?.length || 0),
-  isLoading: state => state.loading
+  isLoading: state => state.loading,
+  reportContextId: state => state.reportContextId,
+  learningSettings: state => state.learningSettings
 }
 
 export default { namespaced: true, state, mutations, actions, getters }

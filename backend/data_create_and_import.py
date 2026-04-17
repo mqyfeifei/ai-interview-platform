@@ -1,3 +1,4 @@
+import argparse
 import os
 import sys
 import yaml
@@ -11,7 +12,7 @@ sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 from app import create_app
 from app.extensions import db
 from app.models.job import Job, DEFAULT_JOBS
-from app.models.interview import Dimension
+from app.models.interview import Dimension, InterviewProfile
 from app.models.prompt import AiPrompt
 from app.models.learning import KnowledgeTag, Resource
 from app.models.question import Question
@@ -79,6 +80,78 @@ JOB_PS = {
         'greeting_message': '你好，欢迎来到测开岗位的面试。对于测开来说，开发能力和质量保障思维同等重要。咱们今天重点聊聊你的接口自动化落地经验以及CI/CD实践。',
         'temperature': 0.7
     }
+}
+
+INTERVIEW_PROFILE_STYLE_CONFIGS = {
+    'confident': {
+        'technique_percentage': 60.0,
+        'scenario_percentage': 10.0,
+        'project_deep_dive_percentage': 10.0,
+        'behavioral_percentage': 20.0,
+        'difficulty_low_percentage': 35.0,
+        'difficulty_medium_percentage': 55.0,
+        'difficulty_high_percentage': 10.0,
+    },
+    'teaching': {
+        'technique_percentage': 50.0,
+        'scenario_percentage': 15.0,
+        'project_deep_dive_percentage': 15.0,
+        'behavioral_percentage': 20.0,
+        'difficulty_low_percentage': 30.0,
+        'difficulty_medium_percentage': 50.0,
+        'difficulty_high_percentage': 20.0,
+    },
+    'pressure': {
+        'technique_percentage': 70.0,
+        'scenario_percentage': 10.0,
+        'project_deep_dive_percentage': 10.0,
+        'behavioral_percentage': 10.0,
+        'difficulty_low_percentage': 20.0,
+        'difficulty_medium_percentage': 50.0,
+        'difficulty_high_percentage': 30.0,
+    },
+}
+
+INTERVIEW_PROFILE_ROUND_ADJUSTMENTS = {
+    1: {
+        'technique_percentage': 5.0,
+        'scenario_percentage': -5.0,
+        'project_deep_dive_percentage': -2.0,
+        'behavioral_percentage': 2.0,
+        'difficulty_low_percentage': 5.0,
+        'difficulty_medium_percentage': -3.0,
+        'difficulty_high_percentage': -2.0,
+    },
+    2: {
+        'technique_percentage': 0.0,
+        'scenario_percentage': 0.0,
+        'project_deep_dive_percentage': 5.0,
+        'behavioral_percentage': -5.0,
+        'difficulty_low_percentage': -5.0,
+        'difficulty_medium_percentage': 5.0,
+        'difficulty_high_percentage': 0.0,
+    },
+    3: {
+        'technique_percentage': -3.0,
+        'scenario_percentage': 10.0,
+        'project_deep_dive_percentage': 2.0,
+        'behavioral_percentage': -9.0,
+        'difficulty_low_percentage': -10.0,
+        'difficulty_medium_percentage': 5.0,
+        'difficulty_high_percentage': 5.0,
+    },
+}
+
+INTERVIEW_PROFILE_STYLE_LABELS = {
+    'confident': '自信面',
+    'teaching': '教学面',
+    'pressure': '压力面',
+}
+
+INTERVIEW_PROFILE_ROUND_LABELS = {
+    1: '一面',
+    2: '二面',
+    3: '三面',
 }
 
 def normalize_question_source(raw_source):
@@ -302,6 +375,107 @@ def run_job_m2m_backfill(reset=False):
             print(f"⚠️ 关联建立跳过: {e}")
     else:
         print("⚠️ 未找到关联回填脚本，跳过")
+
+
+def find_interview_profile_target_jobs() -> dict[str, Job]:
+    """返回用于生成面试画像的核心岗位。"""
+    jobs: dict[str, Job] = {}
+    for domain, info in DEFAULT_JOBS.items():
+        job = Job.query.filter_by(name=info['name']).first()
+        if job is None:
+            job = Job.query.filter(Job.name.ilike(f"%{info['name']}%")).order_by(Job.id.asc()).first()
+        if job is not None:
+            jobs[domain] = job
+    return jobs
+
+
+def build_interview_profile_for_round_style(job_id: int, round_number: int, style: str) -> InterviewProfile:
+    """根据轮次与面试官风格生成单条面试画像。"""
+    base = INTERVIEW_PROFILE_STYLE_CONFIGS[style].copy()
+    adjust = INTERVIEW_PROFILE_ROUND_ADJUSTMENTS.get(round_number, {})
+    for key, delta in adjust.items():
+        base[key] = max(0.0, base.get(key, 0.0) + delta)
+
+    total_topic = (
+        base['technique_percentage']
+        + base['scenario_percentage']
+        + base['project_deep_dive_percentage']
+        + base['behavioral_percentage']
+    )
+    if abs(total_topic - 100.0) > 0.1:
+        scale = 100.0 / total_topic
+        for field in ['technique_percentage', 'scenario_percentage', 'project_deep_dive_percentage', 'behavioral_percentage']:
+            base[field] = round(base[field] * scale, 2)
+
+    return InterviewProfile(
+        job_id=job_id,
+        round=round_number,
+        interviewer_style=style,
+        technique_percentage=base['technique_percentage'],
+        scenario_percentage=base['scenario_percentage'],
+        project_deep_dive_percentage=base['project_deep_dive_percentage'],
+        behavioral_percentage=base['behavioral_percentage'],
+        difficulty_low_percentage=base['difficulty_low_percentage'],
+        difficulty_medium_percentage=base['difficulty_medium_percentage'],
+        difficulty_high_percentage=base['difficulty_high_percentage'],
+        is_dynamic_adjust=True,
+        enabled_dimensions=['communication', 'problem_solving', 'technical'],
+        difficulty_level=round_number,
+        tone_descriptor=f"{INTERVIEW_PROFILE_ROUND_LABELS[round_number]} {INTERVIEW_PROFILE_STYLE_LABELS[style]}",
+    )
+
+
+def fill_interview_profiles(reset: bool = False, dry_run: bool = False) -> dict:
+    """填充 5 个核心岗位的 3 轮 × 3 风格面试画像。"""
+    target_jobs = find_interview_profile_target_jobs()
+    if len(target_jobs) < 5:
+        raise RuntimeError(
+            f'未找到 5 个核心岗位，请检查 jobs 表是否包含必要岗位。已匹配岗位: '
+            f'{ {k: v.name for k, v in target_jobs.items()} }'
+        )
+
+    if reset:
+        deleted = db.session.query(InterviewProfile).filter(
+            InterviewProfile.job_id.in_([job.id for job in target_jobs.values()])
+        ).delete(synchronize_session=False)
+        db.session.commit()
+        print(f'已删除 {deleted} 条已有 interview_profiles')
+
+    profiles = []
+    for _, job in target_jobs.items():
+        for round_number in (1, 2, 3):
+            for style in ('confident', 'teaching', 'pressure'):
+                exists = InterviewProfile.query.filter_by(
+                    job_id=job.id, round=round_number, interviewer_style=style
+                ).first()
+                if exists:
+                    continue
+                profiles.append(build_interview_profile_for_round_style(job.id, round_number, style))
+
+    if dry_run:
+        return {
+            'target_jobs': {k: v.id for k, v in target_jobs.items()},
+            'planned_inserts': len(profiles)
+        }
+
+    db.session.add_all(profiles)
+    db.session.commit()
+    return {
+        'created_profiles': len(profiles),
+        'jobs': {k: v.id for k, v in target_jobs.items()},
+    }
+
+
+def run_interview_profiles_fill(reset=False):
+    """填充 interview_profiles。"""
+    print("\n" + "="*60)
+    print("🧩 步骤 7/7: 正在填充面试画像配置...")
+    print("="*60)
+    result = fill_interview_profiles(reset=reset, dry_run=False)
+    print(
+        f"✅ interview_profiles 填充完成：新增 {result.get('created_profiles', 0)} 条，"
+        f"岗位数 {len(result.get('jobs', {}))}"
+    )
 
 
 def update_job_tech_stack_and_icon():
@@ -581,6 +755,9 @@ def import_knowledge_base():
         
         # 10. 更新岗位技术栈和图标
         update_job_tech_stack_and_icon()
+        
+        # 11. 填充面试画像配置
+        run_interview_profiles_fill(reset=False)
 
         print("\n" + "="*60)
         print("🎉 知识库自动化构建全部完成！")
@@ -590,8 +767,26 @@ def import_knowledge_base():
         print("   ✅ 图谱元数据已回填")
         print("   ✅ 岗位-题目关联已建立")
         print("   ✅ 岗位技术栈和图标已更新")
+        print("   ✅ 面试画像配置已填充")
         print("="*60)
 
 
-if __name__ == '__main__':
+def main():
+    parser = argparse.ArgumentParser(description='知识库数据初始化与导入脚本')
+    parser.add_argument('--only-interview-profiles', action='store_true', help='只执行 interview_profiles 填充')
+    parser.add_argument('--profile-reset', action='store_true', help='仅在填充 interview_profiles 时，先删除核心岗位已有配置')
+    parser.add_argument('--profile-dry-run', action='store_true', help='仅在填充 interview_profiles 时，预览将写入的数据量')
+    args = parser.parse_args()
+
+    if args.only_interview_profiles:
+        app = create_app('development')
+        with app.app_context():
+            result = fill_interview_profiles(reset=args.profile_reset, dry_run=args.profile_dry_run)
+            print(result)
+        return
+
     import_knowledge_base()
+
+
+if __name__ == '__main__':
+    main()

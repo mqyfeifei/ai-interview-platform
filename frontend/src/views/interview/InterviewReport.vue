@@ -46,6 +46,9 @@
           <div class="hero-meta">
             <span class="job-badge">{{ report.jobName }}</span>
             <span class="date-text">{{ formatDateTime(report.createdAt) }}</span>
+            <span v-if="report.sessionConfig?.interviewRoundText" class="date-text">{{ report.sessionConfig.interviewRoundText }}</span>
+            <span v-if="report.sessionConfig?.interviewStyleText" class="date-text">{{ report.sessionConfig.interviewStyleText }}</span>
+            <span v-if="report.sessionConfig?.targetSourceText" class="date-text">{{ report.sessionConfig.targetSourceText }}</span>
           </div>
           <div class="hero-score-block">
             <div class="score-number">{{ animatedScore }}</div>
@@ -81,6 +84,11 @@
 <div class="hero-stat">
   <span class="hero-stat__value">{{ report.improvements ? report.improvements.length : 0 }}</span>
   <span class="hero-stat__label">待提升项</span>
+</div>
+<div class="hero-stat-divider" />
+<div class="hero-stat">
+  <span class="hero-stat__value">{{ formatDateTime(report.startTime || report.createdAt) }}</span>
+  <span class="hero-stat__label">开始时间</span>
 </div>
 <!-- <div class="hero-stat">
   <span class="hero-stat__value">{{ formatDateTime(report.createdAt) }}</span>
@@ -139,6 +147,10 @@
                 <span class="improvement-item__num">{{ i + 1 }}</span>
                 <p class="improvement-item__point" v-html="renderMarkdown(imp.point)" />
               </div>
+              <div v-if="imp.weaknessTag" class="resource-text" style="margin:4px 0 8px 26px">
+                <span class="resource-title">{{ imp.weaknessTag }}</span>
+                <span v-if="imp.estimatedHours" class="resource-source">· 预计 {{ imp.estimatedHours }}h</span>
+              </div>
               <a
                 v-if="imp.resource"
                 class="improvement-item__resource"
@@ -158,6 +170,26 @@
                   <polyline points="9 18 15 12 9 6"/>
                 </svg>
               </a>
+            </div>
+          </div>
+        </section>
+
+        <section class="report-section" v-if="recommendedResources.length">
+          <div class="section-header">
+            <h2 class="section-title">本次面试推荐资源</h2>
+            <div style="display:flex;gap:8px;">
+              <button class="expand-all-btn" @click="bookmarkAll(true)">一键收藏</button>
+              <button class="expand-all-btn" @click="bookmarkAll(false)">一键取消</button>
+            </div>
+          </div>
+          <div class="recommend-row">
+            <div v-for="res in recommendedResources" :key="res.id" class="recommend-card">
+              <p class="recommend-card__title">{{ res.title }}</p>
+              <p class="recommend-card__meta">{{ res.weaknessTag || res.matchedTag || '通用补强' }}</p>
+              <div class="recommend-card__actions">
+                <button class="reference-btn" @click="toggleRecommendBookmark(res, true)">{{ res.bookmarked ? '已收藏' : '收藏' }}</button>
+                <button class="reference-btn" @click="toggleRecommendBookmark(res, false)">取消</button>
+              </div>
             </div>
           </div>
         </section>
@@ -246,7 +278,7 @@
           <button class="action-btn action-btn--primary" @click="retryInterview">
             <span>再次面试</span>
           </button>
-          <button class="action-btn action-btn--outline" @click="$router.push('/learning')">
+          <button class="action-btn action-btn--outline" @click="$router.push({ path: '/learning', query: { reportId: reportId } })">
             <span>学习中心</span>
           </button>
           <button class="action-btn action-btn--ghost" @click="$router.push('/history')">
@@ -268,6 +300,7 @@
 
 <script>
 import { getReport, getReplyAnalysis, requestExcellentAnswer } from '@/api/report'
+import { toggleBookmark } from '@/api/learning'
 import { INTERVIEW_DIMENSIONS } from '@/utils/constants'
 import { marked } from 'marked'
 let echarts = null
@@ -281,6 +314,7 @@ export default {
       analysisLoading: false,   // 逐题点评单独加载状态
       analysisLoaded: false,   // 记录是否已请求过，避免重复调用
       report: null,
+      recommendedResources: [],
       expandedItems: [],
       animatedScore: 0,
       scoreInterval: null,
@@ -330,6 +364,7 @@ export default {
       try {
         // 1. 先加载报告基础数据（含 questions，但 comment 为空）
         this.report = await getReport(this.reportId)
+        this.recommendedResources = (this.report?.recommendedResources || []).map(r => ({ ...r }))
 
         // 2. 修复雷达图：先确保 echarts 加载完毕，再初始化图表
         await this.ensureECharts()
@@ -502,7 +537,7 @@ export default {
     formatDateTime(iso) {
       if (!iso) return ''
       const d = new Date(iso)
-      return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`
+      return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
     },
     async requestQuestionExcellentAnswer(q, idx) {
       if (!q) return
@@ -515,6 +550,24 @@ export default {
       } finally {
         q.referenceAnswerLoading = false
       }
+    },
+    async toggleRecommendBookmark(resource, bookmarked) {
+      if (!resource) return
+      if (!bookmarked) {
+        const ok = window.confirm('确认取消收藏该资源吗？')
+        if (!ok) return
+      }
+      await toggleBookmark(resource.id, bookmarked)
+      resource.bookmarked = bookmarked
+    },
+    async bookmarkAll(bookmarked) {
+      if (!bookmarked) {
+        const ok = window.confirm('确认一键取消收藏当前推荐资源吗？')
+        if (!ok) return
+      }
+      const tasks = this.recommendedResources.map(res => toggleBookmark(res.id, bookmarked))
+      await Promise.all(tasks)
+      this.recommendedResources = this.recommendedResources.map(r => ({ ...r, bookmarked }))
     },
     retryInterview() {
       this.$store.dispatch('interview/resetInterview')
@@ -995,6 +1048,39 @@ export default {
 .report-actions {
   display: flex; gap: $spacing-sm;
   margin-bottom: $spacing-xl;
+}
+
+.recommend-row {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.recommend-card {
+  min-width: 220px;
+  max-width: 260px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 10px;
+  background: #fff;
+}
+
+.recommend-card__title {
+  margin: 0 0 6px;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.recommend-card__meta {
+  margin: 0 0 8px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.recommend-card__actions {
+  display: flex;
+  gap: 8px;
 }
 
 .action-btn {

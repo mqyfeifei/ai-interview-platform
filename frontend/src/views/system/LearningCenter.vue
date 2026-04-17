@@ -21,43 +21,38 @@
     <!-- 主体 -->
 <div class="page-body page-container">
 
-  <!-- 第一行：能力成长曲线（全宽） -->
-  <section class="section">
-    <div class="section-header">
-      <h2 class="section-title">能力成长曲线</h2>
-    </div>
-    <div v-if="enableCharts">
-      <div class="curve-tabs">
-        <button
-          v-for="tab in curveTabs"
-          :key="tab.key"
-          :class="['curve-tab', { active: activeCurveTab === tab.key }]"
-          @click="switchCurveTab(tab.key)"
-        >{{ tab.label }}</button>
-      </div>
-      <div class="chart-card" style="position:relative">
-        <div ref="lineChart" class="line-chart" />
-        <div v-if="!growthData" class="chart-loading chart-loading--overlay">
-          <div class="mini-spinner" />
-        </div>
-      </div>
-    </div>
-    <div v-else class="chart-card chart-card--disabled">
-      <p>能力成长曲线图表暂时关闭，不影响其它学习功能使用。</p>
-    </div>
-  </section>
-
-  <!-- 第二行：左主列 + 右侧边栏 -->
+  <!-- 左主列 + 右侧边栏 -->
   <div class="learning-layout">
 
     <!-- ===== 左列：推荐学习资源 ===== -->
     <div class="learning-main">
       <section class="section">
         <div class="section-header">
+          <h2 class="section-title">技能短板</h2>
+        </div>
+        <div class="weakness-chip-wrap">
+          <button
+            v-for="w in sortedWeaknesses"
+            :key="w.id"
+            :class="['weakness-pill', { active: activeWeaknessFilter === (w.tag || w.name) }]"
+            @click="filterByWeakness(w)"
+          >
+            <span class="weakness-pill__text">{{ w.tag || w.name }}</span>
+            <span class="weakness-pill__water" :style="{ width: `${Math.max(10, Math.min(100, 100 - (w.mastery_level || 0)))}%` }" />
+          </button>
+          <button v-if="activeWeaknessFilter" class="btn btn-ghost btn-sm" @click="clearWeaknessFilter">恢复全部</button>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-header">
           <h2 class="section-title">推荐学习资源</h2>
-          <span v-if="activeWeaknessFilter" class="filter-chip" @click="clearWeaknessFilter">
-            {{ activeWeaknessFilter }} ✕
-          </span>
+          <div style="display:flex;gap:8px;align-items:center">
+            <span v-if="isReportScope" class="filter-chip">当前报告短板</span>
+            <span v-if="activeWeaknessFilter" class="filter-chip" @click="clearWeaknessFilter">
+              {{ activeWeaknessFilter }} ✕
+            </span>
+          </div>
         </div>
 
         <!-- 类型筛选、难度筛选和搜索 -->
@@ -201,7 +196,7 @@
       <div class="sidebar-card" v-if="dailyPlan">
         <div class="sidebar-card__header">
           <span class="sidebar-card__title">📅 今日学习计划</span>
-          <span class="plan-date">{{ todayLabel }}</span>
+          <span class="plan-date">{{ todayLabel }} · {{ dailyPlan.recommendedDailyHours || 2 }}h/天</span>
         </div>
         <div class="plan-progress-bar" style="margin-bottom:10px">
           <div class="plan-progress-bar__fill" :style="{ width: planProgressPct + '%' }" />
@@ -222,53 +217,27 @@
               <p class="sidebar-task__title">{{ task.title }}</p>
               <div class="sidebar-task__meta">
                 <span :class="['task-type-tag', 'task-type-' + task.type]">{{ taskTypeLabel(task.type) }}</span>
-                <span class="task-time">{{ task.estimatedMinutes }}min</span>
+                <span class="task-time">{{ task.estimatedHours || 1 }}h</span>
               </div>
             </div>
           </div>
         </div>
-      </div>
-
-      <!-- 侧边栏卡片2：技能短板 -->
-      <div class="sidebar-card">
-        <div class="sidebar-card__header">
-          <span class="sidebar-card__title">⚡ 技能短板</span>
-          <span class="weakness-count">{{ (weaknesses || []).length }} 项待提升</span>
+        <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
+          <button class="btn btn-ghost btn-sm" @click="$router.push({ path: '/learning/plan', query: { reportId: reportContextId || undefined } })">定制计划</button>
+          <button class="btn btn-ghost btn-sm" @click="$router.push({ path: '/learning/plan', query: { reportId: reportContextId || undefined } })">查看完整学习规划</button>
         </div>
-        <div v-if="weaknesses && weaknesses.length">
-          <div class="weakness-bar-list">
-            <div
-              v-for="w in sortedWeaknesses.slice(0, 6)"
-              :key="w.id"
-              class="weakness-bar-item"
-              :data-percentage="w.mastery_level || 0"
-              @click="filterByWeakness(w)"
-              style="cursor:pointer"
-            >
-              <div class="weakness-bar-label-row">
-                <span class="weakness-bar-label">{{ w.tag || w.name || '未知' }}</span>
-                <span class="weakness-bar-pct" :style="{ color: getColor(w.mastery_level) }">{{ w.mastery_level || 0 }}%</span>
-              </div>
-              <div class="weakness-bar">
-                <div class="weakness-bar__fill"
-                  :style="{ width: (w.mastery_level || 0) + '%', background: getColor(w.mastery_level) }" />
-              </div>
-            </div>
-          </div>
-          <div class="weakness-legend" style="margin-top:10px">
-            <span class="legend-dot" style="background:#EF4444" />薄弱
-            <span class="legend-dot" style="background:#F59E0B;margin-left:10px" />一般
-            <span class="legend-dot" style="background:#10B981;margin-left:10px" />良好
-            <span class="legend-dot" style="background:#6366F1;margin-left:10px" />优秀
-          </div>
-        </div>
-        <div v-else class="sidebar-empty">
-          <span>📊</span>
-          <p>暂无短板数据</p>
+        <div class="plan-heatmap">
+          <div
+            v-for="cell in heatmapCells"
+            :key="cell.day"
+            :class="['plan-heatmap__cell', `state-${cell.state}`, { active: cell.day === selectedDayIndex }]"
+            :title="`第${cell.day}天`"
+            @click="selectPlanDay(cell.day)"
+          />
         </div>
       </div>
 
-      <!-- 侧边栏卡片3：技术热榜 -->
+      <!-- 侧边栏卡片2：技术热榜 -->
       <div class="sidebar-card">
         <div class="sidebar-card__header">
           <span class="sidebar-card__title">🔥 技术热榜</span>
@@ -369,7 +338,7 @@ import { mapGetters, mapActions } from 'vuex'
 
 // 图表渲染总开关
 // 如再次出现浏览器侧 ECharts 报错，可临时改为 false 关闭图表，仅保留其它学习功能
-const ENABLE_CHARTS = true
+const ENABLE_CHARTS = false
 let echarts = null
 const CURVE_COLORS = {
   overall: '#4338CA',
@@ -420,8 +389,11 @@ trendingActiveTab: 'all',
   computed: {
     ...mapGetters('learning', [
       'growthData', 'weaknesses', 'recommendations',
-      'dailyPlan', 'completedTaskCount', 'totalTaskCount'
+      'dailyPlan', 'completedTaskCount', 'totalTaskCount', 'reportContextId', 'learningSettings'
     ]),
+    isReportScope() {
+      return !!this.reportContextId
+    },
 
     todayLabel() {
       const d = new Date()
@@ -431,6 +403,21 @@ trendingActiveTab: 'all',
     planProgressPct() {
       if (!this.totalTaskCount) return 0
       return Math.round(this.completedTaskCount / this.totalTaskCount * 100)
+    },
+    selectedDayIndex() {
+      return this.dailyPlan?.selectedDayIndex || this.learningSettings?.selectedDayIndex || 1
+    },
+    heatmapCells() {
+      const total = this.dailyPlan?.planTotalDays || 0
+      const statusMap = this.dailyPlan?.dayStatusMap || {}
+      if (!total) return []
+      return Array.from({ length: total }, (_, i) => {
+        const day = i + 1
+        return {
+          day,
+          state: statusMap[day] || 'future'
+        }
+      })
     },
     sortedWeaknesses() {
       if (!this.weaknesses) return []
@@ -522,9 +509,8 @@ pagedRecommendations() {
 },
   },
 async created() {
-  if (!this.growthData) {
-    this.$store.dispatch('learning/loadAll')
-  }
+  const reportId = this.$route.query?.reportId ? Number(this.$route.query.reportId) : null
+  await this.$store.dispatch('learning/loadAll', { reportId })
   this.loadTrendingTopics()
 },
   mounted() {
@@ -548,9 +534,20 @@ async created() {
     activeDifficultyFilter() { this.currentPage = 1 },
     searchKeyword() { this.currentPage = 1 },
     pageSize() { this.currentPage = 1 },
+    '$route.query.reportId': {
+      async handler(v) {
+        const reportId = v ? Number(v) : null
+        await this.$store.dispatch('learning/loadAll', { reportId })
+      }
+    }
   },
   methods: {
     ...mapActions('learning', ['toggleBookmark', 'markCompleted', 'updateTaskStatus']),
+    async toggleWeaknessScope() {
+      const current = this.reportContextId
+      const next = current ? null : (this.$route.query?.reportId ? Number(this.$route.query.reportId) : null)
+      await this.$store.dispatch('learning/loadAll', { reportId: next })
+    },
     updateHeights() {
       this.$nextTick(() => {
         const header = this.$el.querySelector('.page-header');
@@ -701,11 +698,9 @@ async created() {
     },
 
     filterByWeakness(weakness) {
-      const tag = weakness.tag
+      const tag = weakness.tag || weakness.name
       this.activeWeaknessFilter = this.activeWeaknessFilter === tag ? null : tag
       if (this.activeWeaknessFilter) {
-        // 展开推荐资源区并滚动到资源列表，提升交互感
-        this.showResourceSection = true
         this.$nextTick(() => {
           this.updateHeights()
           const el = this.$el.querySelector('.resource-list')
@@ -718,6 +713,11 @@ async created() {
 
     clearWeaknessFilter() {
       this.activeWeaknessFilter = null
+    },
+    async selectPlanDay(dayIndex) {
+      await this.$store.dispatch('learning/updateLearningSettings', {
+        selectedDayIndex: dayIndex
+      })
     },
 
     async handleBookmark(res) {
@@ -1649,17 +1649,75 @@ goToQuestionDetail(item) {
   align-items: start;
 }
 
+.weakness-chip-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.weakness-pill {
+  position: relative;
+  border: none;
+  border-radius: 999px;
+  background: #fff;
+  color: #4c1d95;
+  padding: 6px 12px;
+  font-weight: 700;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.weakness-pill__text {
+  position: relative;
+  z-index: 2;
+}
+
+.weakness-pill__water {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  background: #e9d5ff;
+  z-index: 1;
+}
+
+.weakness-pill.active {
+  box-shadow: 0 0 0 2px #c4b5fd inset;
+}
+
+.plan-heatmap {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: repeat(14, 1fr);
+  gap: 4px;
+}
+
+.plan-heatmap__cell {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 4px;
+  background: #d1d5db;
+  cursor: pointer;
+}
+
+.plan-heatmap__cell.state-done { background: #8b5cf6; }
+.plan-heatmap__cell.state-pending { background: #ef4444; }
+.plan-heatmap__cell.state-partial { background: #f59e0b; }
+.plan-heatmap__cell.active { outline: 2px solid #4c1d95; }
+
 .learning-main {
   padding-top: 20px;
   min-width: 0; // 防止内容撑破 grid
 }
 
 .learning-sidebar {
-  padding-top: 110px;
+  padding-top: 20px;
   display: flex;
   flex-direction: column;
   gap: $spacing-md;
-  // 侧边栏跟随页面滚动，不粘性定位（移动端友好）
+  position: sticky;
+  top: 76px;
+  align-self: start;
 }
 
 // ======================================================

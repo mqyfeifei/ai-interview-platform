@@ -22,6 +22,11 @@ const fmtDate = d => {
   return `${parseInt(m)}/${parseInt(day)}`
 }
 
+const getCachedUserId = () => {
+  const cached = localStorage.getItem('ai_interview_user')
+  return cached ? (JSON.parse(cached).id || JSON.parse(cached).user_id) : null
+}
+
 // ---- API 函数 ----
 
 /**
@@ -31,8 +36,7 @@ const fmtDate = d => {
  */
 export const getGrowthCurve = async () => {
   try {
-    const cached = localStorage.getItem('ai_interview_user')
-    const userId = cached ? (JSON.parse(cached).id || JSON.parse(cached).user_id) : null
+    const userId = getCachedUserId()
     if (!userId) {
       console.warn('[GrowthCurve] 未找到用户ID')
       return { overall: [], dimensions: {}, dates: [], realDates: [] }
@@ -71,20 +75,23 @@ export const getGrowthCurve = async () => {
 /**
  * 获取薄弱知识点标签
  */
-export const getWeaknessTags = async () => {
+export const getWeaknessTags = async ({ reportId = null } = {}) => {
   try {
-    const cached = localStorage.getItem('ai_interview_user')
-    const userId = cached ? (JSON.parse(cached).id || JSON.parse(cached).user_id) : null
+    const userId = getCachedUserId()
     if (!userId) {
       console.warn('[Weaknesses] 未找到用户ID')
       return []
     }
-    const data = await request.get('/learning/weaknesses', { params: { user_id: userId } })
+    const params = { user_id: userId }
+    if (reportId) params.report_id = reportId
+    const data = await request.get('/learning/weaknesses', { params })
     if (!Array.isArray(data) || !data.length) return []
     return data.map((item, idx) => ({
       id: `w${item.tag_id || idx}`,
       tag: item.name,
       mastery_level: item.mastery_level,
+      estimated_hours: item.estimated_hours,
+      frequency: item.frequency || 0,
       level: item.mastery_level < 40 ? 'high' : item.mastery_level < 70 ? 'medium' : item.mastery_level < 90 ? 'good' : 'excellent'
     }))
   } catch (err) {
@@ -101,8 +108,7 @@ export const getWeaknesses = getWeaknessTags
  */
 export const getCompletedResourceIds = async () => {
   try {
-    const cached = localStorage.getItem('ai_interview_user')
-    const userId = cached ? (JSON.parse(cached).id || JSON.parse(cached).user_id) : null
+    const userId = getCachedUserId()
     if (!userId) {
       console.warn('[Completed] 未找到用户ID')
       return []
@@ -130,14 +136,13 @@ export const getCompletedResourceIds = async () => {
  * 后端返回: [{id, title, type, source, difficulty}, ...]
  * 前端补全展示所需字段
  */
-export const getRecommendedResources = async () => {
+export const getRecommendedResources = async ({ reportId = null } = {}) => {
   try {
     // 从 localStorage 中缓存的书签信息
     const bookmarks = JSON.parse(localStorage.getItem('learning_bookmarks') || '{}')
 
     // 当前用户 id
-    const cachedUser = localStorage.getItem('ai_interview_user')
-    const userId = cachedUser ? (JSON.parse(cachedUser).id || JSON.parse(cachedUser).user_id) : null
+    const userId = getCachedUserId()
     if (!userId) {
       console.warn('[Recommendations] 未找到用户ID，无法加载推荐')
       return []
@@ -163,9 +168,9 @@ export const getRecommendedResources = async () => {
     } catch (_) { }
 
     // always use backend recommendation endpoint
-    const data = await request.get('/learning/recommendations', {
-      params: { user_id: userId, limit: 10 }
-    })
+    const params = { user_id: userId, limit: 10 }
+    if (reportId) params.report_id = reportId
+    const data = await request.get('/learning/recommendations', { params })
     if (!Array.isArray(data) || !data.length) {
       return []
     }
@@ -184,7 +189,9 @@ export const getRecommendedResources = async () => {
       readTime: diffMap[item.difficulty] || item.difficulty || '中级',
       difficulty: diffMap[item.difficulty] || item.difficulty || '中级',
       relatedWeakness: null,
-      bookmarked: bookmarks[item.id] || false,
+      estimated_hours: item.estimated_hours || null,
+      priority: item.priority || 0,
+      bookmarked: typeof item.bookmarked === 'boolean' ? item.bookmarked : (bookmarks[item.id] || false),
       // 如果后端本身返回 completed 字段优先使用，否则由 completedSet 决定
       completed: item.completed || completedSet.has(item.id),
       url: item.url || null
@@ -270,15 +277,17 @@ function _getCachedItem(id) {
 /**
  * 获取每日学习计划
  */
-export const getDailyPlan = async () => {
+export const getDailyPlan = async ({ reportId = null, dailyHours = 2 } = {}) => {
   try {
-    const cached = localStorage.getItem('ai_interview_user')
-    const userId = cached ? (JSON.parse(cached).id || JSON.parse(cached).user_id) : null
+    const userId = getCachedUserId()
     if (!userId) {
       console.warn('[DailyPlan] 未找到用户ID')
       return null
     }
-    return await request.get('/learning/daily-plan', { params: { user_id: userId } })
+    const params = { user_id: userId }
+    if (dailyHours !== undefined && dailyHours !== null) params.daily_hours = dailyHours
+    if (reportId) params.report_id = reportId
+    return await request.get('/learning/daily-plan', { params })
   } catch (err) {
     console.warn('[DailyPlan] 请求失败', err)
     return null
@@ -302,8 +311,8 @@ export const toggleBookmark = async (resourceId, bookmarked) => {
     _updateCacheWithList([cached])
   }
 
-  // always call backend
-  return request.post(`/learning/resources/${resourceId}/bookmark`, { bookmarked }).catch(() => ({ success: true }))
+  const userId = getCachedUserId()
+  return request.post(`/learning/resources/${resourceId}/bookmark`, { bookmarked, user_id: userId })
 }
 
 /**
@@ -324,8 +333,7 @@ export const markCompleted = async (resourceId) => {
     _updateCacheWithList([cached])
   }
 
-  const userCached = localStorage.getItem('ai_interview_user')
-  const userId = userCached ? (JSON.parse(userCached).id || JSON.parse(userCached).user_id) : null
+  const userId = getCachedUserId()
   if (!userId) return { success: true }
 
   try {
@@ -343,7 +351,36 @@ export const markCompleted = async (resourceId) => {
  * @param {boolean} done - 完成状态
  */
 export const updateTaskStatus = async (taskId, done) => {
-  const cached = localStorage.getItem('ai_interview_user')
-  const userId = cached ? (JSON.parse(cached).id || JSON.parse(cached).user_id) : null
+  const userId = getCachedUserId()
   return request.post(`/learning/tasks/${taskId}/status`, { done, user_id: userId })
+}
+
+export const getStudyPlan = async ({ reportId = null, dailyHours = 2 } = {}) => {
+  try {
+    const userId = getCachedUserId()
+    if (!userId) return null
+    const params = { user_id: userId }
+    if (dailyHours !== undefined && dailyHours !== null) params.daily_hours = dailyHours
+    if (reportId) params.report_id = reportId
+    return await request.get('/learning/study-plan', { params })
+  } catch (err) {
+    console.warn('[StudyPlan] 请求失败', err)
+    return null
+  }
+}
+
+export const getLearningSettings = async () => {
+  const userId = getCachedUserId()
+  if (!userId) return { dailyHours: 2, selectedDayIndex: 1 }
+  return request.get('/learning/settings', { params: { user_id: userId } })
+}
+
+export const updateLearningSettings = async ({ dailyHours, selectedDayIndex } = {}) => {
+  const userId = getCachedUserId()
+  if (!userId) return { success: false }
+  return request.post('/learning/settings', {
+    user_id: userId,
+    daily_hours: dailyHours,
+    selected_day_index: selectedDayIndex
+  })
 }

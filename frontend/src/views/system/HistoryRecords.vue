@@ -72,6 +72,13 @@
 
     <!-- 主体 -->
     <div class="page-body page-container">
+      <section class="trend-card">
+        <div class="trend-card__head">
+          <h3>能力成长曲线</h3>
+          <span>{{ list.length }} 次面试</span>
+        </div>
+        <div ref="trendChart" class="trend-card__chart" />
+      </section>
 
       <!-- 加载中 -->
       <div v-if="loading" class="loading-wrap">
@@ -154,8 +161,17 @@
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                       <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
                     </svg>
-                    {{ formatDate(record.createdAt) }}
+                    {{ formatDateTime(record.startTime || record.createdAt) }}
                   </span>
+                </div>
+                <div v-if="record.sessionConfig" class="record-info__config">
+                  <span v-if="record.sessionConfig.interviewRoundText" class="config-chip">{{ record.sessionConfig.interviewRoundText }}</span>
+                  <span v-if="record.sessionConfig.interviewStyleText" class="config-chip">{{ record.sessionConfig.interviewStyleText }}</span>
+                  <span v-if="record.sessionConfig.targetSourceText" class="config-chip">{{ record.sessionConfig.targetSourceText }}</span>
+                </div>
+                <div class="record-info__tags">
+                  <span v-for="tag in (record.highlightTags || [])" :key="`h-${record.id}-${tag}`" class="tag-chip tag-chip--good">{{ tag }}</span>
+                  <span v-for="tag in (record.weaknessTags || [])" :key="`w-${record.id}-${tag}`" class="tag-chip tag-chip--weak">{{ tag }}</span>
                 </div>
               </div>
 
@@ -200,7 +216,9 @@
 <script>
 import { getHistoryList } from '@/api/report'
 import { fetchJobs } from '@/api/job'  // 从后端获取岗位列表
+import { getGrowthCurve } from '@/api/learning'
 import { JOB_TYPES } from '@/utils/constants'
+let echarts = null
 
 const PAGE_SIZE = 10
 
@@ -219,7 +237,9 @@ export default {
       sortOrder: 'desc',
       // header height handled via CSS variable
       sidebarWidth: 0,
-      isDesktop: false
+      isDesktop: false,
+      growthData: null,
+      trendChart: null
     }
   },
   computed: {
@@ -310,12 +330,13 @@ export default {
     }
   },
   async created() {
-    await Promise.all([this.loadList(), this.loadJobs()])
+    await Promise.all([this.loadList(), this.loadJobs(), this.loadGrowthCurve()])
   },
   mounted() {
     this.updateHeights()
     this.updateSidebarWidth()
     this.scrollToTopContent()
+    this.initTrendChart()
     window.addEventListener('resize', this.onWindowResize)
   },
   watch: {
@@ -328,12 +349,49 @@ export default {
     }
   },
   beforeDestroy() {
+    if (this.trendChart) {
+      this.trendChart.dispose()
+      this.trendChart = null
+    }
     window.removeEventListener('resize', this.onWindowResize)
   },
   methods: {
     onWindowResize() {
       this.updateSidebarWidth()
       this.updateHeights()
+      if (this.trendChart) this.trendChart.resize()
+    },
+    async loadGrowthCurve() {
+      this.growthData = await getGrowthCurve()
+      this.renderTrendChart()
+    },
+    async initTrendChart() {
+      if (!echarts) {
+        echarts = await import('echarts')
+      }
+      this.renderTrendChart()
+    },
+    renderTrendChart() {
+      if (!echarts || !this.$refs.trendChart) return
+      const overall = this.growthData?.overall || []
+      const xData = overall.map(i => i.label)
+      const yData = overall.map(i => i.score)
+      if (!xData.length) return
+      if (!this.trendChart) this.trendChart = echarts.init(this.$refs.trendChart)
+      this.trendChart.setOption({
+        grid: { top: 18, left: 36, right: 20, bottom: 28 },
+        tooltip: { trigger: 'axis' },
+        xAxis: { type: 'category', data: xData },
+        yAxis: { type: 'value', min: 0, max: 100 },
+        series: [{
+          type: 'line',
+          smooth: true,
+          data: yData,
+          lineStyle: { color: '#7c3aed', width: 3 },
+          areaStyle: { color: 'rgba(124,58,237,0.12)' },
+          symbolSize: 8
+        }]
+      })
     },
 
     updateSidebarWidth() {
@@ -474,6 +532,16 @@ export default {
       const m = String(d.getMonth() + 1).padStart(2, '0')
       const day = String(d.getDate()).padStart(2, '0')
       return `${y}-${m}-${day}`
+    },
+    formatDateTime(iso) {
+      if (!iso) return ''
+      const d = new Date(iso)
+      const y = d.getFullYear()
+      const m = String(d.getMonth() + 1).padStart(2, '0')
+      const day = String(d.getDate()).padStart(2, '0')
+      const hh = String(d.getHours()).padStart(2, '0')
+      const mm = String(d.getMinutes()).padStart(2, '0')
+      return `${y}-${m}-${day} ${hh}:${mm}`
     },
 
     updateHeights() {
@@ -682,6 +750,60 @@ export default {
 }
 
 .record-list { display: flex; flex-direction: column; gap: $spacing-md; }
+
+.trend-card {
+  background: #fff;
+  border: 1px solid #e8edf5;
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 14px;
+}
+
+.trend-card__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.trend-card__head h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.trend-card__chart {
+  height: 220px;
+}
+
+.record-info__config,
+.record-info__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.config-chip,
+.tag-chip {
+  font-size: 12px;
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
+.config-chip {
+  background: #eef2ff;
+  color: #4338ca;
+}
+
+.tag-chip--good {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.tag-chip--weak {
+  background: #fee2e2;
+  color: #991b1b;
+}
 
 // ---- 记录卡片 ----
 .record-card {

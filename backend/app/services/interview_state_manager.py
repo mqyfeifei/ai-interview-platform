@@ -71,7 +71,33 @@ class InterviewStateManager:
         return counts
 
     @staticmethod
-    def _get_ratio_map(session_config):
+    def _get_ratio_map(session_config, interview=None, session_round='first_round', target_mix_override=None):
+        if isinstance(target_mix_override, dict) and target_mix_override:
+            raw = {
+                'technical': max(0.0, float(target_mix_override.get('technical', 0.0) or 0.0)),
+                'project_deep_dive': max(0.0, float(target_mix_override.get('project_deep_dive', 0.0) or 0.0)),
+                'scenario_design': max(0.0, float(target_mix_override.get('scenario_design', 0.0) or 0.0)),
+                'behavioral': max(0.0, float(target_mix_override.get('behavioral', 0.0) or 0.0)),
+            }
+            total = sum(raw.values()) or 1.0
+            return {k: v / total for k, v in raw.items()}
+
+        if interview is not None:
+            try:
+                strategy = InterviewSessionManager.get_round_strategy(interview.job_id, session_round)
+                target_mix = dict(strategy.get('target_mix') or {})
+                if target_mix:
+                    raw = {
+                        'technical': max(0.0, float(target_mix.get('technical', 0.0) or 0.0)),
+                        'project_deep_dive': max(0.0, float(target_mix.get('project_deep_dive', 0.0) or 0.0)),
+                        'scenario_design': max(0.0, float(target_mix.get('scenario_design', 0.0) or 0.0)),
+                        'behavioral': max(0.0, float(target_mix.get('behavioral', 0.0) or 0.0)),
+                    }
+                    total = sum(raw.values()) or 1.0
+                    return {k: v / total for k, v in raw.items()}
+            except Exception:
+                pass
+
         cfg = session_config or {}
         tech = float(getattr(cfg, 'tech_ratio', 60.0) or 60.0) / 100.0
         project = float(getattr(cfg, 'project_deep_dive_percentage', 15.0) or 15.0) / 100.0
@@ -96,7 +122,7 @@ class InterviewStateManager:
         return InterviewPhase.CLOSING
 
     @staticmethod
-    def build_turn_state(interview, session_config, asked_count):
+    def build_turn_state(interview, session_config, asked_count, target_mix_override=None):
         round_raw = getattr(session_config, 'interview_round', None)
         session_round = ROUND_ALIASES.get(
             str(round_raw).strip().lower() if round_raw is not None else '',
@@ -115,7 +141,12 @@ class InterviewStateManager:
         max_questions = InterviewStateManager._safe_int(plan.get('max_questions', 10), 10)
         planned_questions = InterviewStateManager._safe_int(plan.get('planned_questions', max_questions), max_questions)
 
-        ratios = InterviewStateManager._get_ratio_map(session_config)
+        ratios = InterviewStateManager._get_ratio_map(
+            session_config,
+            interview=interview,
+            session_round=session_round,
+            target_mix_override=target_mix_override,
+        )
         target_counts = InterviewStateManager._compute_target_counts(
             planned_questions,
             ratios,

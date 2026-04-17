@@ -60,8 +60,20 @@ class UserLearning(db.Model):
     progress = db.Column(db.Integer, default=0)
     start_time = db.Column(db.DateTime)
     finish_time = db.Column(db.DateTime)
+    bookmarked = db.Column(db.Boolean, nullable=False, default=False)
+    planned_day_index = db.Column(db.Integer)
+    planned_hours = db.Column(db.Float)
 
     __table_args__ = (db.UniqueConstraint('user_id', 'resource_id'),)
+
+
+class UserLearningPreference(db.Model):
+    __tablename__ = 'user_learning_preferences'
+    id = db.Column(db.BigInteger, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False, unique=True)
+    daily_hours = db.Column(db.Float, nullable=False, default=2.0)
+    selected_day_index = db.Column(db.Integer, nullable=False, default=1)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
 class UserKnowledgeMastery(db.Model):
