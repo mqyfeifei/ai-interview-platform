@@ -277,7 +277,7 @@ function _getCachedItem(id) {
 /**
  * 获取每日学习计划
  */
-export const getDailyPlan = async ({ reportId = null, dailyHours = 2 } = {}) => {
+export const getDailyPlan = async ({ reportId = null, dailyHours = undefined } = {}) => {
   try {
     const userId = getCachedUserId()
     if (!userId) {
@@ -355,7 +355,7 @@ export const updateTaskStatus = async (taskId, done) => {
   return request.post(`/learning/tasks/${taskId}/status`, { done, user_id: userId })
 }
 
-export const getStudyPlan = async ({ reportId = null, dailyHours = 2 } = {}) => {
+export const getStudyPlan = async ({ reportId = null, dailyHours = undefined } = {}) => {
   try {
     const userId = getCachedUserId()
     if (!userId) return null
@@ -378,9 +378,8 @@ export const getLearningSettings = async () => {
 export const updateLearningSettings = async ({ dailyHours, selectedDayIndex } = {}) => {
   const userId = getCachedUserId()
   if (!userId) return { success: false }
-  return request.post('/learning/settings', {
-    user_id: userId,
-    daily_hours: dailyHours,
-    selected_day_index: selectedDayIndex
-  })
+  const payload = { user_id: userId }
+  if (dailyHours !== undefined && dailyHours !== null) payload.daily_hours = dailyHours
+  if (selectedDayIndex !== undefined && selectedDayIndex !== null) payload.selected_day_index = selectedDayIndex
+  return request.post('/learning/settings', payload)
 }

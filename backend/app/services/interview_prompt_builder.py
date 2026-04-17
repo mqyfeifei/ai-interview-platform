@@ -30,8 +30,23 @@ class InterviewPromptBuilder:
         valid_tags_str,
         user_answer_evidence,
         turn_state,
+        teaching_feedback_mode='none',
+        teaching_feedback_instruction='',
     ):
         phase_key = turn_state.phase.value
+        style_key = str(getattr(turn_state, 'session_style', '') or '').strip().lower()
+        teaching_block = ''
+        if style_key == 'teaching':
+            teaching_block = f"""
+【教学面执行规则（必须遵守）】
+1. 你每轮都要先做“评估-教学-追问”三步：先判断候选人回答质量，再给简明教学反馈，最后仅提1个问题。
+2. 如果候选人“不会/不清楚”，必须先解释关键概念与正确思路，再给一个最小可用示例，然后再追问。
+3. 如果候选人“回答不确定或有明显错误”，必须先纠偏并解释原因，再继续追问。
+4. 如果候选人“回答认真”，必须先肯定其具体亮点，再给出一个明确提升方向（结构、边界、指标或取舍），再追问。
+5. 教学反馈要短小具体，避免长篇讲课；追问仍然围绕当前考察点，不要跳题。
+6. 本轮教学触发信号：{teaching_feedback_mode}
+7. 本轮教学动作：{teaching_feedback_instruction or '按常规教学面规则执行。'}
+"""
         return f"""
 {base_prompt}
 {emotion_instruction}
@@ -56,6 +71,7 @@ class InterviewPromptBuilder:
 6. 减少模板化承接，不要每次都以“你提到…”开头；可用“嗯，理解了”“顺着这个思路”“我换个角度问你”等自然过渡。
 7. 切换项目或切换考察维度时，先用一句桥接话术再提问（例如“这块我了解了，我们切到你另一个项目…”）。
 8. 若当前风格为压力面，可适度表达质疑与更高标准，但保持专业，不做人身攻击。
+9. 若当前风格为教学面，必须体现“先反馈再追问”的教练式引导，不可只提问不讲解。
 
 【候选人画像与图谱引导】
 掌握度画像：{mastery_profile_str}
@@ -66,6 +82,7 @@ class InterviewPromptBuilder:
 本轮考察重点：{round_focus_prompt}
 面试大纲范围：[{valid_tags_str}]
 用户本轮原话："{user_answer_evidence}"
+{teaching_block}
 
 【结构化输出要求（必须严格 JSON）】
 请只输出一个JSON对象，不要输出markdown代码块，不要输出额外解释：

@@ -61,10 +61,10 @@ export default {
       showUserMenu: false,
       navItems: [
         { name: 'Dashboard', path: '/dashboard', label: '首页' },
-        { name: 'LearningCenter', path: '/learning', label: '学习中心' },
-        { name: 'HistoryRecords', path: '/history', label: '历史记录' },
-        { name: 'JobSelection', path: '/interview/select', label: '岗位选择' },
-        { name: 'PersonalCenter', path: '/profile', label: '个人中心' }
+        { name: 'JobSelection', path: '/interview/select', label: '面试' },
+        { name: 'HistoryRecords', path: '/history', label: '报告' },
+        { name: 'LearningCenter', path: '/learning', label: '学习' },
+        { name: 'PersonalCenter', path: '/profile', label: '简历' }
       ]
     }
   },

@@ -37,8 +37,14 @@
             :class="['weakness-pill', { active: activeWeaknessFilter === (w.tag || w.name) }]"
             @click="filterByWeakness(w)"
           >
-            <span class="weakness-pill__text">{{ w.tag || w.name }}</span>
-            <span class="weakness-pill__water" :style="{ width: `${Math.max(10, Math.min(100, 100 - (w.mastery_level || 0)))}%` }" />
+            <span class="weakness-pill__water" :style="{ height: `${weaknessMasteryLevel(w)}%` }">
+              <span class="weakness-pill__wave weakness-pill__wave--a"></span>
+              <span class="weakness-pill__wave weakness-pill__wave--b"></span>
+            </span>
+            <span class="weakness-pill__content">
+              <span class="weakness-pill__text">{{ w.tag || w.name }}</span>
+              <span class="weakness-pill__percent">{{ weaknessMasteryLevel(w) }}%</span>
+            </span>
           </button>
           <button v-if="activeWeaknessFilter" class="btn btn-ghost btn-sm" @click="clearWeaknessFilter">恢复全部</button>
         </div>
@@ -195,7 +201,7 @@
       <!-- 侧边栏卡片1：今日学习计划 -->
       <div class="sidebar-card" v-if="dailyPlan">
         <div class="sidebar-card__header">
-          <span class="sidebar-card__title">📅 今日学习计划</span>
+          <span class="sidebar-card__title sidebar-card__title--plan">今日学习计划</span>
           <span class="plan-date">{{ todayLabel }} · {{ dailyPlan.recommendedDailyHours || 2 }}h/天</span>
         </div>
         <div class="plan-progress-bar" style="margin-bottom:10px">
@@ -206,9 +212,9 @@
             v-for="task in dailyPlan.tasks"
             :key="task.id"
             :class="['sidebar-task', { done: task.done }]"
-            @click="toggleTask(task)"
+            @click="openTaskResource(task)"
           >
-            <div :class="['plan-task__check', { done: task.done }]">
+            <div :class="['plan-task__check', { done: task.done }]" @click.stop="toggleTask(task)">
               <svg v-if="task.done" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="20 6 9 17 4 12"/>
               </svg>
@@ -222,9 +228,9 @@
             </div>
           </div>
         </div>
-        <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
+        <div class="plan-actions-row">
           <button class="btn btn-ghost btn-sm" @click="$router.push({ path: '/learning/plan', query: { reportId: reportContextId || undefined } })">定制计划</button>
-          <button class="btn btn-ghost btn-sm" @click="$router.push({ path: '/learning/plan', query: { reportId: reportContextId || undefined } })">查看完整学习规划</button>
+          <span class="plan-goal-text">全部资源学习目标：{{ allResourceGoal }}</span>
         </div>
         <div class="plan-heatmap">
           <div
@@ -233,7 +239,9 @@
             :class="['plan-heatmap__cell', `state-${cell.state}`, { active: cell.day === selectedDayIndex }]"
             :title="`第${cell.day}天`"
             @click="selectPlanDay(cell.day)"
-          />
+          >
+            <span v-if="cell.state === 'overdue'" class="plan-heatmap__mark">!</span>
+          </div>
         </div>
       </div>
 
@@ -407,16 +415,48 @@ trendingActiveTab: 'all',
     selectedDayIndex() {
       return this.dailyPlan?.selectedDayIndex || this.learningSettings?.selectedDayIndex || 1
     },
+    todayISODate() {
+      const now = new Date()
+      const y = now.getFullYear()
+      const m = String(now.getMonth() + 1).padStart(2, '0')
+      const d = String(now.getDate()).padStart(2, '0')
+      return `${y}-${m}-${d}`
+    },
+    allResourceGoal() {
+      return `${(this.recommendations || []).length} 项`
+    },
     heatmapCells() {
+      const calendar = this.dailyPlan?.planCalendar || []
+      const completedSet = new Set(
+        (this.$store.state.learning?.completedResourceIds || []).map(id => String(id))
+      )
+
+      if (calendar.length > 0) {
+        return calendar.map(dayItem => {
+          const day = Number(dayItem?.dayIndex || 0)
+          const items = dayItem?.items || []
+          const totalItems = items.length
+          const doneItems = items.filter(it => completedSet.has(String(it?.resourceId))).length
+          const dateText = String(dayItem?.date || '').slice(0, 10)
+
+          let state = 'future'
+          if (totalItems > 0 && doneItems === totalItems) {
+            state = 'done'
+          } else if (dateText && dateText < this.todayISODate) {
+            state = 'overdue'
+          }
+          return { day, state }
+        })
+      }
+
       const total = this.dailyPlan?.planTotalDays || 0
       const statusMap = this.dailyPlan?.dayStatusMap || {}
       if (!total) return []
       return Array.from({ length: total }, (_, i) => {
         const day = i + 1
-        return {
-          day,
-          state: statusMap[day] || 'future'
-        }
+        const raw = statusMap[day] || 'future'
+        const state = raw === 'done' ? 'done' : (raw === 'pending' ? 'overdue' : 'future')
+        return { day, state }
       })
     },
     sortedWeaknesses() {
@@ -559,6 +599,9 @@ async created() {
     getColor(v) {
       return v < 40 ? '#EF4444' : v < 70 ? '#F59E0B' : v < 90 ? '#10B981' : '#6366F1'
     },
+    weaknessMasteryLevel(weakness) {
+      return Math.max(0, Math.min(100, Number(weakness?.mastery_level || 0)))
+    },
     async initECharts() {
       if (!this.enableCharts) return
       if (!echarts) {
@@ -696,6 +739,23 @@ async created() {
     async toggleTask(task) {
       await this.updateTaskStatus({ taskId: task.id, done: !task.done })
     },
+    openTaskResource(task) {
+      if (!task) return
+      const rid = task.resource_id
+      const fromList = (this.recommendations || []).find(r => String(r.id) === String(rid))
+      const target = fromList || {
+        id: rid,
+        title: task.title || '学习任务',
+        type: 'article',
+        difficulty: '中级',
+        summary: task.relatedWeakness ? `针对短板：${task.relatedWeakness}` : '来自今日学习计划',
+        source: '学习计划',
+        tags: task.relatedWeakness ? [task.relatedWeakness] : [],
+        relatedWeakness: task.relatedWeakness || null,
+        url: task.url || null
+      }
+      this.openResource(target)
+    },
 
     filterByWeakness(weakness) {
       const tag = weakness.tag || weakness.name
@@ -715,6 +775,7 @@ async created() {
       this.activeWeaknessFilter = null
     },
     async selectPlanDay(dayIndex) {
+      if (Number(dayIndex) === Number(this.selectedDayIndex)) return
       await this.$store.dispatch('learning/updateLearningSettings', {
         selectedDayIndex: dayIndex
       })
@@ -1657,32 +1718,81 @@ goToQuestionDetail(item) {
 
 .weakness-pill {
   position: relative;
-  border: none;
-  border-radius: 999px;
+  width: 168px;
+  min-height: 64px;
+  border: 1px solid #ddd6fe;
+  border-radius: 10px;
   background: #fff;
   color: #4c1d95;
-  padding: 6px 12px;
+  padding: 8px 10px;
   font-weight: 700;
   overflow: hidden;
   cursor: pointer;
+  text-align: left;
+}
+
+.weakness-pill__content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .weakness-pill__text {
-  position: relative;
-  z-index: 2;
+  font-size: 13px;
+  line-height: 1.25;
+  word-break: break-word;
+}
+
+.weakness-pill__percent {
+  font-size: 12px;
+  font-weight: 800;
+  color: #6d28d9;
 }
 
 .weakness-pill__water {
   position: absolute;
   left: 0;
-  top: 0;
+  right: 0;
   bottom: 0;
-  background: #e9d5ff;
+  background: linear-gradient(180deg, #c4b5fd 0%, #a78bfa 100%);
   z-index: 1;
+  transition: height 0.5s ease;
+}
+
+.weakness-pill__wave {
+  position: absolute;
+  left: -50%;
+  width: 200%;
+  height: 16px;
+  border-radius: 42%;
+  background: rgba(255, 255, 255, 0.42);
+}
+
+.weakness-pill__wave--a {
+  top: -8px;
+  animation: weaknessWaveA 4s linear infinite;
+}
+
+.weakness-pill__wave--b {
+  top: -6px;
+  background: rgba(255, 255, 255, 0.28);
+  animation: weaknessWaveB 6s linear infinite;
+}
+
+@keyframes weaknessWaveA {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(25%); }
+}
+
+@keyframes weaknessWaveB {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-25%); }
 }
 
 .weakness-pill.active {
-  box-shadow: 0 0 0 2px #c4b5fd inset;
+  box-shadow: 0 0 0 2px #8b5cf6 inset;
 }
 
 .plan-heatmap {
@@ -1698,11 +1808,23 @@ goToQuestionDetail(item) {
   border-radius: 4px;
   background: #d1d5db;
   cursor: pointer;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.plan-heatmap__cell.state-done { background: #8b5cf6; }
-.plan-heatmap__cell.state-pending { background: #ef4444; }
-.plan-heatmap__cell.state-partial { background: #f59e0b; }
+.plan-heatmap__cell.state-done { background: #c4b5fd; }
+.plan-heatmap__cell.state-overdue {
+  background: #fff;
+  border: 1px solid #ef4444;
+}
+.plan-heatmap__mark {
+  color: #ef4444;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+}
 .plan-heatmap__cell.active { outline: 2px solid #4c1d95; }
 
 .learning-main {
@@ -1744,6 +1866,23 @@ goToQuestionDetail(item) {
     font-weight: $font-weight-bold;
     color: $text-primary;
   }
+  &__title--plan {
+    font-size: $font-size-lg;
+  }
+}
+
+.plan-actions-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.plan-goal-text {
+  font-size: $font-size-xs;
+  color: $text-secondary;
+  white-space: nowrap;
 }
 
 // ======================================================

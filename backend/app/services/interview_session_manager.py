@@ -666,6 +666,35 @@ class InterviewSessionManager:
         return False
 
     @staticmethod
+    def _extract_opening_question_text(candidate):
+        """从候选题对象/字典中提取可展示的题干文本，避免 `<Question 123>` 这类对象repr泄漏。"""
+        if candidate is None:
+            return ''
+
+        if isinstance(candidate, str):
+            text = candidate.strip()
+            return '' if re.fullmatch(r'<[^>]+>', text) else text
+
+        if isinstance(candidate, (int, float, bool)):
+            return str(candidate).strip()
+
+        if isinstance(candidate, dict):
+            for key in ('content', 'question', 'text', 'title'):
+                text = InterviewSessionManager._extract_opening_question_text(candidate.get(key))
+                if text:
+                    return text
+            return ''
+
+        for attr in ('content', 'question', 'text', 'title'):
+            if hasattr(candidate, attr):
+                text = InterviewSessionManager._extract_opening_question_text(getattr(candidate, attr))
+                if text:
+                    return text
+
+        fallback = str(candidate).strip()
+        return '' if re.fullmatch(r'<[^>]+>', fallback) else fallback
+
+    @staticmethod
     def _build_opening_candidates(base_greeting, interview_round='first_round', interview_style='confident', round_focus=''):
         """构建多组开场候选，用于去重后挑选。"""
         base_pool = [base_greeting] + InterviewSessionManager._DIVERSE_GREETING_FALLBACKS
@@ -965,7 +994,7 @@ class InterviewSessionManager:
             else:
                 opening_candidates = opening_assigned or []
             if opening_candidates:
-                opening_seed_question = str(opening_candidates[0].content or '').strip()
+                opening_seed_question = InterviewSessionManager._extract_opening_question_text(opening_candidates[0])
         except Exception as e:
             print(f"[开场问题] 题库候选生成失败: {e}")
 

@@ -8,19 +8,7 @@
   <div class="report-page">
     <!-- 顶部导航：修复返回按钮 -->
     <div class="report-nav">
-      <button class="back-btn" @click="$router.back()">  <!-- ← 修复：back()替代push('/dashboard') -->
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="15 18 9 12 15 6"/>
-        </svg>
-      </button>
       <span class="report-nav__title">面试报告</span>
-      <button class="share-btn" @click="handleShare">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
-          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
-          <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
-        </svg>
-      </button>
     </div>
 
     <!-- 加载中 -->
@@ -46,9 +34,6 @@
           <div class="hero-meta">
             <span class="job-badge">{{ report.jobName }}</span>
             <span class="date-text">{{ formatDateTime(report.createdAt) }}</span>
-            <span v-if="report.sessionConfig?.interviewRoundText" class="date-text">{{ report.sessionConfig.interviewRoundText }}</span>
-            <span v-if="report.sessionConfig?.interviewStyleText" class="date-text">{{ report.sessionConfig.interviewStyleText }}</span>
-            <span v-if="report.sessionConfig?.targetSourceText" class="date-text">{{ report.sessionConfig.targetSourceText }}</span>
           </div>
           <div class="hero-score-block">
             <div class="score-number">{{ animatedScore }}</div>
@@ -64,7 +49,7 @@
             </div>
             <div class="hero-stat-divider" />
             <div class="hero-stat">
-              <span class="hero-stat__value">{{ report.questions ? report.questions.length : 0 }}</span>
+              <span class="hero-stat__value">{{ displayQuestionCount }}</span>
               <span class="hero-stat__label">回答题目</span>
             </div>
             <!-- <div class="hero-stat-divider" />
@@ -89,6 +74,11 @@
 <div class="hero-stat">
   <span class="hero-stat__value">{{ formatDateTime(report.startTime || report.createdAt) }}</span>
   <span class="hero-stat__label">开始时间</span>
+</div>
+<div class="hero-stat-divider" />
+<div class="hero-stat">
+  <span class="hero-stat__value">{{ interviewConfigText }}</span>
+  <span class="hero-stat__label">面试配置</span>
 </div>
 <!-- <div class="hero-stat">
   <span class="hero-stat__value">{{ formatDateTime(report.createdAt) }}</span>
@@ -282,7 +272,7 @@
             <span>学习中心</span>
           </button>
           <button class="action-btn action-btn--ghost" @click="$router.push('/history')">
-            <span>历史记录</span>
+            <span>报告</span>
           </button>
         </section>
 
@@ -295,6 +285,8 @@
       <p>报告加载失败</p>
       <button class="btn btn-primary btn-sm" @click="loadReport">重新加载</button>
     </div>
+
+    <button class="float-btn" @click="goReportHome">← 返回</button>
   </div>
 </template>
 
@@ -349,6 +341,15 @@ export default {
     allExpanded() {
       return this.report?.questions?.length > 0 &&
              this.report.questions.length === this.expandedItems.length
+    },
+    displayQuestionCount() {
+      if (!this.report?.questions?.length) return 0
+      return this.report.questions.filter(q => !String(q?.question || '').includes('[INTERVIEW_OVER]')).length
+    },
+    interviewConfigText() {
+      const cfg = this.report?.sessionConfig || {}
+      const text = [cfg.interviewRoundText, cfg.interviewStyleText, cfg.targetSourceText].filter(Boolean).join(' ')
+      return text || '--'
     }
   },
   async created() {
@@ -573,6 +574,9 @@ export default {
       this.$store.dispatch('interview/resetInterview')
       this.$router.push('/interview/select')
     },
+    goReportHome() {
+      this.$router.push('/history')
+    },
     handleShare() {
       const text = `我的${this.report.jobName}模拟面试得分：${this.report.totalScore}分！`
       if (navigator.share) {
@@ -594,7 +598,7 @@ export default {
 // ---- 导航栏 ----
 .report-nav {
   position: sticky; top: 0; z-index: 90;
-  display: flex; align-items: center; justify-content: space-between;
+  display: flex; align-items: center; justify-content: center;
   height: $top-nav-height;
   padding: 0 $spacing-base;
   // background: rgb(219, 225, 254);
@@ -604,20 +608,31 @@ export default {
   box-shadow: $shadow-sm;
 
   &__title {
-    font-size: $font-size-lg; font-weight: $font-weight-semibold;
-    color: $text-primary; position: absolute;
-    left: 50%; transform: translateX(-50%);
+    font-size: $font-size-lg;
+    font-weight: $font-weight-semibold;
+    color: $text-primary;
   }
 }
 
-.back-btn, .share-btn {
-  width: 36px; height: 36px; border-radius: 50%;
-  background: $gray-100; border: none;
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer; color: $text-secondary;
-  transition: all $transition-fast;
-  svg { width: 18px; height: 18px; }
-  &:hover { background: $gray-200; }
+.float-btn {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  height: 40px;
+  padding: 0 16px;
+  border-radius: 20px;
+  border: none;
+  background: #7c56ff;
+  color: #fff;
+  cursor: pointer;
+  font-size: 13px;
+  box-shadow: 0 4px 12px rgba(124, 86, 255, 0.35);
+  transition: opacity 0.15s;
+  z-index: 95;
+}
+
+.float-btn:hover {
+  opacity: 0.88;
 }
 
 // ---- 加载 ----

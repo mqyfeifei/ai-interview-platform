@@ -14,6 +14,7 @@ from app.utils.llm_client import DeepSeekClient
 
 
 class ReportService:
+    _MAX_IMPROVEMENT_POINT_LENGTH = 140
     DIMENSION_ALIASES = {
         '表达沟通力': '表达沟通',
         '表达能力': '表达沟通',
@@ -162,6 +163,9 @@ class ReportService:
         for idx, chat in enumerate(chats):
             if chat.role != 'ai':
                 continue
+            question_text = (chat.content or '').replace('[INTERVIEW_OVER]', '').strip()
+            if not question_text:
+                continue
 
             user_reply = None
             for j in range(idx + 1, len(chats)):
@@ -178,7 +182,7 @@ class ReportService:
                 if matched_q and job_question_ids and matched_q.id not in job_question_ids:
                     matched_q = None
             if matched_q is None:
-                matched_q = cls._match_question_by_text(chat.content or '', job_question_ids)
+                matched_q = cls._match_question_by_text(question_text, job_question_ids)
 
             source = (matched_q.source or '').strip() if matched_q else ''
             is_enterprise = cls._is_enterprise_source(source)
@@ -187,7 +191,7 @@ class ReportService:
                 'index': analysis_index,
                 'questionChatId': chat.id,
                 'answerChatId': user_reply.id if user_reply else None,
-                'question': chat.content or '',
+                'question': question_text,
                 'answer': (user_reply.content if user_reply else '') or '',
                 'answerAt': user_reply.timestamp.isoformat() if (user_reply and user_reply.timestamp) else None,
                 'questionId': matched_q.id if matched_q else None,
@@ -222,12 +226,8 @@ class ReportService:
             for tag in list(getattr(q_obj, 'knowledge_tags', []) or []):
                 bucket = tag_bad_examples.setdefault(tag.id, [])
                 bucket.append(gap_detail)
-
-        for q in questions:
-            tags = list(getattr(q, 'knowledge_tags', []) or [])
-            for t in tags:
-                tag_counter[t.id] += 1
-                tag_map[t.id] = t
+                tag_counter[tag.id] += 1
+                tag_map[tag.id] = tag
 
         if not tag_counter:
             return []
@@ -305,7 +305,9 @@ class ReportService:
             return {
                 'question': question,
                 'answer': cls._truncate_text(answer or '（未作答）', 50),
-                'issue': f'题目“{question}”回答信息不足，缺少可验证的知识点与实现过程。'
+                'gap_type': 'no_answer',
+                'missing_keywords': [],
+                'issue': '回答信息不足，缺少可验证的知识点与实现过程。'
             }
 
         refs = item.get('reference') or []
@@ -315,16 +317,45 @@ class ReportService:
             return {
                 'question': question,
                 'answer': cls._truncate_text(answer, 50),
-                'issue': f'题目“{question}”未覆盖关键点：{ "、".join(missing) }。'
+                'gap_type': 'keyword_gap',
+                'missing_keywords': missing,
+                'issue': f'未覆盖关键点：{ "、".join(missing) }。'
             }
 
         if len(answer) < 30:
             return {
                 'question': question,
                 'answer': cls._truncate_text(answer, 50),
-                'issue': f'题目“{question}”回答偏简略，缺少步骤拆解或场景化说明。'
+                'gap_type': 'too_short',
+                'missing_keywords': [],
+                'issue': '回答偏简略，缺少步骤拆解或场景化说明。'
             }
         return None
+
+    @classmethod
+    def _build_weakness_point(cls, weakness):
+        tag_name = str(weakness.get('name') or '该知识点').strip() or '该知识点'
+        examples = weakness.get('examples') or []
+        if not examples:
+            text = f'你在{tag_name}相关题目上的回答稳定性不足，建议补齐“概念-原理-场景”三层表达。'
+            return cls._truncate_text(text, cls._MAX_IMPROVEMENT_POINT_LENGTH)
+
+        ex = examples[0] if isinstance(examples[0], dict) else {}
+        question = cls._truncate_text(ex.get('question') or '本场相关题目', 30)
+        gap_type = ex.get('gap_type') or ''
+        missing_keywords = [str(x).strip() for x in (ex.get('missing_keywords') or []) if str(x).strip()]
+
+        if gap_type == 'keyword_gap' and missing_keywords:
+            reason = f'在“{question}”这题中，你对{tag_name}的关键点（{"、".join(missing_keywords)}）覆盖不足，因此该知识点被识别为待提升项。'
+        elif gap_type == 'no_answer':
+            reason = f'在“{question}”这题中，你的回答信息不足，未体现{tag_name}的核心思路与实现过程，因此被识别为待提升项。'
+        elif gap_type == 'too_short':
+            reason = f'在“{question}”这题中，你的回答偏简略，缺少{tag_name}的步骤与边界说明，因此该知识点需要继续补强。'
+        else:
+            issue = str(ex.get('issue') or '回答不够完整').strip('。')
+            reason = f'在“{question}”这题中，你在{tag_name}上的表现存在短板（{issue}），因此被识别为待提升项。'
+
+        return cls._truncate_text(reason, cls._MAX_IMPROVEMENT_POINT_LENGTH)
 
     @staticmethod
     def _format_session_config(interview):
@@ -333,22 +364,29 @@ class ReportService:
             'first_round': '一面',
             'second_round': '二面',
             'third_round': '三面',
-            'hr_round': 'HR面'
+            'hr_round': 'HR面',
+            '1': '一面',
+            '2': '二面',
+            '3': '三面'
         }
         style_text_map = {
-            'confident': '自信引导',
-            'gentle': '温和鼓励',
-            'strict': '高压挑战'
+            'confident': '自信面',
+            'teaching': '教学面',
+            'pressure': '压力面',
+            'gentle': '教学面',
+            'strict': '压力面'
         }
         round_raw = getattr(cfg, 'interview_round', None) if cfg else None
         style_raw = getattr(cfg, 'interview_style', None) if cfg else None
+        round_key = str(round_raw).strip().lower() if round_raw is not None else ''
+        style_key = str(style_raw).strip().lower() if style_raw is not None else ''
         source_raw = (getattr(cfg, 'target_source', '') or '').strip() if cfg else ''
         source_text = source_raw if source_raw and source_raw != '通用' else ''
         return {
             'interviewRound': round_raw or '',
-            'interviewRoundText': round_text_map.get(round_raw, round_raw or ''),
+            'interviewRoundText': round_text_map.get(round_key, round_raw or ''),
             'interviewStyle': style_raw or '',
-            'interviewStyleText': style_text_map.get(style_raw, style_raw or ''),
+            'interviewStyleText': style_text_map.get(style_key, style_raw or ''),
             'targetSource': source_raw or '通用',
             'targetSourceText': source_text,
             'startTime': interview.start_time.isoformat() if interview.start_time else None
@@ -732,6 +770,13 @@ class ReportService:
             })
         return questions
 
+    @classmethod
+    def _effective_question_count(cls, interview):
+        try:
+            return len(cls._collect_reply_items(interview))
+        except Exception:
+            return int(getattr(interview, 'question_count', 0) or 0)
+
     @staticmethod
     def _build_chat_details(interview_id):
         chats = InterviewChat.query.filter_by(interview_id=interview_id).order_by(InterviewChat.timestamp.asc()).all()
@@ -785,11 +830,9 @@ class ReportService:
             tag = KnowledgeTag.query.get(weakness['tag_id'])
             resource = cls._get_recommended_resource_by_tag(tag, interview.user_id) if tag else None
             examples = weakness.get('examples') or []
-            detail_lines = [f"技能短板：{weakness['name']}（掌握度 {weakness['mastery_level']}）"]
-            for ex in examples[:2]:
-                detail_lines.append(f"- 题目：{ex.get('question', '')}；不足：{ex.get('issue', '')}")
+            point = cls._build_weakness_point(weakness)
             improvements.append({
-                'point': "\n".join(detail_lines),
+                'point': point,
                 'resource': resource,
                 'weaknessTag': weakness['name'],
                 'masteryLevel': weakness['mastery_level'],
@@ -798,8 +841,9 @@ class ReportService:
             })
         if not improvements:
             for item in raw_improvements:
+                point = cls._truncate_text(item, cls._MAX_IMPROVEMENT_POINT_LENGTH)
                 improvements.append({
-                    'point': item,
+                    'point': point,
                     'resource': cls._get_recommended_resource(item, interview.user_id)
                 })
 
@@ -869,6 +913,7 @@ class ReportService:
             'graphResources': graph_resources,
             'recommendedResources': recommended_resources,
             'questions': questions,
+            'questionCount': len(questions),
             'chatDetails': cls._build_chat_details(interview.id)
         }
 
@@ -894,7 +939,7 @@ class ReportService:
                 'jobName': job.name if job else '',
                 'totalScore': interview.total_score or 0,
                 'duration': interview.used_time or 0,
-                'questionCount': interview.question_count or 0,
+                'questionCount': cls._effective_question_count(interview),
                 'startTime': interview.start_time.isoformat() if interview.start_time else None,
                 'endTime': interview.end_time.isoformat() if interview.end_time else None,
                 'createdAt': (interview.end_time or interview.start_time).isoformat() if (interview.end_time or interview.start_time) else None,
@@ -1045,7 +1090,7 @@ class ReportService:
                 'jobName': job.name if job else '',
                 'totalScore': interview.total_score or 0,
                 'duration': interview.used_time or 0,
-                'questionCount': interview.question_count or 0,
+                'questionCount': cls._effective_question_count(interview),
                 'sessionConfig': cls._format_session_config(interview),
                 'highlightTags': summary_tags.get('highlightTags') or [],
                 'weaknessTags': summary_tags.get('weaknessTags') or [],

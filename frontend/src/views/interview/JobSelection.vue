@@ -407,10 +407,10 @@
                 </div>
               </div>
 
-              <div v-if="selectedProfile" class="mode-toggle-row">
+              <div class="mode-toggle-row">
                 <div class="voice-config-item voice-config-toggle">
                   <label class="switch-label">
-                    <input type="checkbox" v-model="selectedProfile.is_dynamic_adjust" />
+                    <input type="checkbox" v-model="selectedDynamicAdjust" />
                     <span class="switch-slider"></span>
                     <label class="voice-config-label">动态调整</label>
                   </label>
@@ -425,7 +425,7 @@
                   面试语音配置
                 </div>
 
-                <div v-if="selectedProfile" class="voice-config-row">
+                <div class="voice-config-row">
                   <div class="voice-config-item voice-config-field">
                     <label class="voice-config-label">面试官声音</label>
                     <select v-model="selectedVoiceRole" class="voice-config-select">
@@ -440,7 +440,7 @@
                   </div>
                   <div class="voice-config-item voice-config-field voice-config-field--speed">
                     <label class="voice-config-label">语速</label>
-                    <select v-model.number="selectedProfile.speech_speed" class="voice-config-select voice-config-select--speed">
+                    <select v-model.number="selectedSpeechSpeed" class="voice-config-select voice-config-select--speed">
                       <option v-for="speed in speechSpeedOptions" :key="speed" :value="speed">{{ speed }}x</option>
                     </select>
                   </div>
@@ -690,6 +690,8 @@ export default {
       voiceRoles: VOICE_ID_OPTIONS,
       selectedVoiceRole: VOICE_ID_OPTIONS[0]?.id || '',
       speechSpeedOptions: [0.5, 0.7, 1.0, 1.5, 2.0],
+      selectedSpeechSpeed: 1.0,
+      selectedDynamicAdjust: true,
       // TODO: 后端接口就绪后在 fetchVoiceRoles() 中替换 voiceRoles 数据
       // voiceRolesLoading: false,
 
@@ -1030,12 +1032,18 @@ export default {
             if (this.selectedProfile.voice_id) {
               this.selectedVoiceRole = this.selectedProfile.voice_id
             }
+            this.selectedSpeechSpeed = Number(this.selectedProfile.speech_speed || 1.0)
+            this.selectedDynamicAdjust = !!this.selectedProfile.is_dynamic_adjust
             this.$store.dispatch('interview/selectInterviewProfile', this.selectedProfile.id)
           } else {
+            this.selectedSpeechSpeed = 1.0
+            this.selectedDynamicAdjust = true
             this.$store.dispatch('interview/selectInterviewProfile', null)
           }
         } else {
           this.selectedProfile = null
+          this.selectedSpeechSpeed = 1.0
+          this.selectedDynamicAdjust = true
           this.$store.dispatch('interview/selectInterviewProfile', null)
         }
       } catch (e) {
@@ -1070,9 +1078,9 @@ export default {
         if (!this.styleManuallySelected) {
           this.selectedInterviewStyle = profile.interviewer_style || this.selectedInterviewStyle
         }
-        if (profile.voice_id) {
-          this.selectedVoiceRole = profile.voice_id
-        }
+        if (profile.voice_id) this.selectedVoiceRole = profile.voice_id
+        this.selectedSpeechSpeed = Number(profile.speech_speed || 1.0)
+        this.selectedDynamicAdjust = !!profile.is_dynamic_adjust
       }
       this.$store.dispatch('interview/selectInterviewProfile', profile ? profile.id : null)
     },
@@ -1295,9 +1303,9 @@ export default {
             difficulty_low_percentage: this.selectedProfile.difficulty_low_percentage,
             difficulty_medium_percentage: this.selectedProfile.difficulty_medium_percentage,
             difficulty_high_percentage: this.selectedProfile.difficulty_high_percentage,
-            is_dynamic_adjust: this.selectedProfile.is_dynamic_adjust,
-            voice_id: this.selectedProfile.voice_id,
-            speech_speed: this.selectedProfile.speech_speed,
+            is_dynamic_adjust: this.selectedDynamicAdjust,
+            voice_id: this.selectedVoiceRole,
+            speech_speed: this.selectedSpeechSpeed,
             tone_descriptor: this.selectedProfile.tone_descriptor,
             enabled_dimensions: this.selectedProfile.enabled_dimensions,
             difficulty_level: this.selectedProfile.difficulty_level,
@@ -1308,7 +1316,10 @@ export default {
           this.$store.commit('interview/SET_SELECTED_PROFILE_CONFIG', {
             interview_round: this.selectedRound,
             interview_style: interviewStyle,
-            target_source: this.selectedSource || '通用'
+            target_source: this.selectedSource || '通用',
+            voice_id: this.selectedVoiceRole,
+            speech_speed: this.selectedSpeechSpeed,
+            is_dynamic_adjust: this.selectedDynamicAdjust
           })
         }
 

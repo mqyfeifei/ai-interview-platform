@@ -1261,7 +1261,7 @@ export default {
       const detail = item.description?.trim() || defaultText
       const achievement = item.achievements?.trim()
       if (achievement) {
-        return `${detail}；${achievement}`
+        return `${detail}\n业绩/成就：${achievement}`
       }
       return detail
     },
@@ -1353,9 +1353,10 @@ export default {
 .resume-builder-page {
   display: flex;
   width: 100%;
-  max-width: 1400px;
-  margin: 0 auto;
-  height: calc(100vh - 60px);
+  max-width: none;
+  margin: 0;
+  min-height: 100vh;
+  height: 100vh;
   background: #f2f3f7;
   overflow: hidden;
   padding: 16px;
@@ -1800,7 +1801,7 @@ export default {
 
 .experience-list { display: flex; flex-direction: column; gap: 10px; }
 .experience-item { padding: 8px; border-left: 3px solid #7c56ff; background: #fafbff; border-radius: 0 6px 6px 0; }
-.experience-item p { margin: 4px 0 0; font-size: 13px; color: #555; }
+.experience-item p { margin: 4px 0 0; font-size: 13px; color: #555; white-space: pre-line; }
 
 /* ── Float buttons ────────────────────────────────────────────────────────── */
 .float-btn {

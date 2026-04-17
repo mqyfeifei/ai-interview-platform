@@ -43,7 +43,7 @@ const routes = [
     path: '/profile',
     name: 'PersonalCenter',
     component: () => import('@/views/users/PersonalCenter.vue'),
-    meta: { requiresAuth: true, title: '个人中心', showBottomNav: true }
+    meta: { requiresAuth: true, title: '简历', showBottomNav: true }
   },
 
   // ---- 面试相关路由 ----
@@ -51,7 +51,7 @@ const routes = [
     path: '/interview/select',
     name: 'JobSelection',
     component: () => import('@/views/interview/JobSelection.vue'),
-    meta: { requiresAuth: true, title: '选择岗位' }
+    meta: { requiresAuth: true, title: '面试' }
   },
   {
     path: '/interview/session',
@@ -75,7 +75,7 @@ const routes = [
     path: '/interview/report/:reportId',
     name: 'InterviewReport',
     component: () => import('@/views/interview/InterviewReport.vue'),
-    meta: { requiresAuth: true, title: '面试报告' }
+    meta: { requiresAuth: true, title: '面试报告', hideNavigation: true }
   },
   // ----管理员页面相关路由----
   {
@@ -119,25 +119,25 @@ const routes = [
     path: '/learning',
     name: 'LearningCenter',
     component: () => import('@/views/system/LearningCenter.vue'),
-    meta: { requiresAuth: true, title: '学习中心', showBottomNav: true }
+    meta: { requiresAuth: true, title: '学习', showBottomNav: true }
   },
   {
     path: '/learning/plan',
     name: 'StudyPlanner',
     component: () => import('@/views/system/StudyPlanner.vue'),
-    meta: { requiresAuth: true, title: '智能练习规划', showBottomNav: true }
+    meta: { requiresAuth: true, title: '智能练习规划', hideNavigation: true }
   },
   {
     path: '/resume',
     name: 'ResumeBuilder',
     component: () => import('@/views/system/ResumeBuilder.vue'),
-    meta: { requiresAuth: true, title: '简历制作', showBottomNav: true }
+    meta: { requiresAuth: true, title: '简历制作', hideNavigation: true }
   },
   {
     path: '/history',
     name: 'HistoryRecords',
     component: () => import('@/views/system/HistoryRecords.vue'),
-    meta: { requiresAuth: true, title: '历史记录', showBottomNav: true }
+    meta: { requiresAuth: true, title: '报告', showBottomNav: true }
   },
   {
     path: '/question/detail',

@@ -6,6 +6,7 @@
 
 import json
 import queue
+import re
 import threading
 import time
 from datetime import datetime
@@ -36,6 +37,15 @@ class InterviewQAHandler:
         r'^(好|好的|嗯|嗯嗯|嗯哼|哦|噢|啊|行|可以|是|对|没了|没有了|不知道|ok|okay|yes|no|1|2|3|4|5|6|7|8|9|0|[，。！？、\s]+)$',
         __import__('re').IGNORECASE
     )
+    _TEACHING_UNKNOWN_PATTERN = re.compile(
+        r'(不会|不太会|不清楚|不知道|没做过|没了解过|不会答|答不上来|忘了|记不清|没思路)',
+        re.IGNORECASE,
+    )
+    _TEACHING_UNSURE_PATTERN = re.compile(
+        r'(我猜|可能是|大概|应该是|不确定|也许)',
+        re.IGNORECASE,
+    )
+    _TEACHING_EFFORT_MARKERS = ('首先', '然后', '最后', '因为', '所以', '例如', '比如', '项目', '指标', '优化', '权衡', '落地')
 
     @staticmethod
     def normalize_answer_text(text):
@@ -134,6 +144,42 @@ class InterviewQAHandler:
             return "COEM检索上下文（供内部参考）：\n" + "\n".join([f"- {h}" for h in hints])
         except Exception:
             return ""
+
+    @staticmethod
+    def _resolve_teaching_feedback_mode(session_style, normalized_answer):
+        if session_style != 'teaching':
+            return {'mode': 'none', 'instruction': ''}
+
+        answer = str(normalized_answer or '').strip()
+        if not answer:
+            return {
+                'mode': 'unknown',
+                'instruction': '教学面触发：候选人未有效作答。先用1-2句讲清核心概念，再给一个最小可用示例，最后只追问1个基础确认问题。',
+            }
+
+        if InterviewQAHandler._TEACHING_UNKNOWN_PATTERN.search(answer):
+            return {
+                'mode': 'unknown',
+                'instruction': '教学面触发：候选人明确表示不会/不清楚。先解释正确思路与关键概念，再给可复述的答题模板，最后追问1个由浅入深的问题。',
+            }
+
+        if InterviewQAHandler._TEACHING_UNSURE_PATTERN.search(answer):
+            return {
+                'mode': 'unsure',
+                'instruction': '教学面触发：候选人表达不确定。优先纠偏，指出可能误区，补充正确结论与判断依据，然后再提1个验证理解的问题。',
+            }
+
+        effort_hit = sum(1 for marker in InterviewQAHandler._TEACHING_EFFORT_MARKERS if marker in answer)
+        if len(answer) >= 80 or effort_hit >= 2:
+            return {
+                'mode': 'effortful',
+                'instruction': '教学面触发：候选人回答认真。先肯定一个具体亮点，再指出一个可提升方向（结构、边界或指标），给出可执行改进建议后再继续追问。',
+            }
+
+        return {
+            'mode': 'normal',
+            'instruction': '教学面常规：保持引导式追问；若发现明显事实错误，先纠错并解释原因，再继续提问。',
+        }
 
     @staticmethod
     def _stream_spoken_text(spoken_text, voice_mode, tts_voice):
@@ -343,6 +389,7 @@ class InterviewQAHandler:
             asked_count=int(getattr(interview, 'question_count', 0) or 0),
             target_mix_override=(assigned_result.get('question_mix', {}) or {}).get('target') if isinstance(assigned_result, dict) else None,
         )
+        teaching_feedback = InterviewQAHandler._resolve_teaching_feedback_mode(session_style, normalized_answer)
 
         system_prompt = InterviewPromptBuilder.build_turn_system_prompt(
             base_prompt=base_prompt,
@@ -361,6 +408,8 @@ class InterviewQAHandler:
             valid_tags_str=valid_tags_str,
             user_answer_evidence=normalized_answer or '',
             turn_state=turn_state,
+            teaching_feedback_mode=teaching_feedback.get('mode', 'none'),
+            teaching_feedback_instruction=teaching_feedback.get('instruction', ''),
         )
 
         messages = [{"role": "system", "content": system_prompt}]

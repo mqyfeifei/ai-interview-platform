@@ -9,41 +9,6 @@
     <!-- 顶部 Header -->
       <div class="page-header" :style="{ left: isDesktop ? sidebarWidth + 'px' : '0', right: '0' }">
         <div class="page-container">
-        <div class="page-header__top">
-        <div class="page-header__text">
-          <h1>历史记录</h1>
-          <p>共 {{ totalCount }} 次面试练习</p>
-        </div>
-        <!-- 统计概览徽章 -->
-        <div class="header-stats">
-          <div class="header-stat">
-            <span class="header-stat__value">{{ bestScore || '--' }}</span>
-            <span class="header-stat__label">最高分</span>
-          </div>
-          <div class="header-stat-divider" />
-          <div class="header-stat">
-            <span class="header-stat__value">{{ avgScore || '--' }}</span>
-            <span class="header-stat__label">平均分</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- 搜索框 -->
-      <div class="search-box">
-        <span class="search-box__icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="11" cy="11" r="8"/>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-          </svg>
-        </span>
-        <input
-          v-model="searchQuery"
-          type="text"
-          placeholder="搜索岗位名称..."
-          class="search-box__input"
-        />
-        <button v-if="searchQuery" class="search-box__clear" @click="searchQuery = ''">✕</button>
-      </div>
       <!-- 筛选条放在头部容器中 -->
       <div class="filter-row">
         <div class="filter-tabs">
@@ -74,8 +39,24 @@
     <div class="page-body page-container">
       <section class="trend-card">
         <div class="trend-card__head">
-          <h3>能力成长曲线</h3>
-          <span>{{ list.length }} 次面试</span>
+          <div class="trend-card__title-wrap">
+            <h3>能力成长曲线</h3>
+            <span>{{ list.length }} 次面试</span>
+          </div>
+          <div class="trend-stats">
+            <span class="trend-stat">最高分 {{ bestScore || '--' }}</span>
+            <span class="trend-stat">平均分 {{ avgScore || '--' }}</span>
+          </div>
+        </div>
+        <div class="curve-tabs">
+          <button
+            v-for="tab in curveTabs"
+            :key="tab.key"
+            :class="['curve-tab', { active: activeCurveTab === tab.key }]"
+            @click="activeCurveTab = tab.key"
+          >
+            {{ tab.label }}
+          </button>
         </div>
         <div ref="trendChart" class="trend-card__chart" />
       </section>
@@ -163,11 +144,13 @@
                     </svg>
                     {{ formatDateTime(record.startTime || record.createdAt) }}
                   </span>
-                </div>
-                <div v-if="record.sessionConfig" class="record-info__config">
-                  <span v-if="record.sessionConfig.interviewRoundText" class="config-chip">{{ record.sessionConfig.interviewRoundText }}</span>
-                  <span v-if="record.sessionConfig.interviewStyleText" class="config-chip">{{ record.sessionConfig.interviewStyleText }}</span>
-                  <span v-if="record.sessionConfig.targetSourceText" class="config-chip">{{ record.sessionConfig.targetSourceText }}</span>
+                  <span
+                    v-for="(cfgText, cfgIndex) in sessionConfigInlineTexts(record.sessionConfig)"
+                    :key="`${record.id}-cfg-${cfgIndex}`"
+                    class="meta-item meta-item--plain"
+                  >
+                    {{ cfgText }}
+                  </span>
                 </div>
                 <div class="record-info__tags">
                   <span v-for="tag in (record.highlightTags || [])" :key="`h-${record.id}-${tag}`" class="tag-chip tag-chip--good">{{ tag }}</span>
@@ -194,7 +177,7 @@
 
       <!-- 空态 -->
       <div v-else-if="!loading" class="empty-state-wrap">
-        <template v-if="searchQuery || activeJobFilter !== 'all'">
+        <template v-if="activeJobFilter !== 'all'">
           <span style="font-size:48px">🔍</span>
           <p>没有匹配的记录</p>
           <button class="btn btn-ghost btn-sm" @click="clearFilters">清空筛选</button>
@@ -232,14 +215,22 @@ export default {
       loading: true,
       loadingMore: false,
       page: 1,
-      searchQuery: '',
       activeJobFilter: 'all',
       sortOrder: 'desc',
       // header height handled via CSS variable
       sidebarWidth: 0,
       isDesktop: false,
       growthData: null,
-      trendChart: null
+      trendChart: null,
+      activeCurveTab: 'overall',
+      curveTabs: [
+        { key: 'overall', label: '面试得分' },
+        { key: 'technical', label: '技术正确性' },
+        { key: 'logic', label: '逻辑严谨性' },
+        { key: 'matching', label: '岗位匹配度' },
+        { key: 'expression', label: '表达沟通' },
+        { key: 'adaptability', label: '应变能力' }
+      ]
     }
   },
   computed: {
@@ -279,12 +270,6 @@ export default {
         })
       }
 
-      if (this.searchQuery.trim()) {
-        const q = this.searchQuery.toLowerCase()
-        arr = arr.filter(r => r.jobName.toLowerCase().includes(q))
-      }
-
-
       // 排序
       arr.sort((a, b) => {
         if (this.sortOrder === 'desc') return new Date(b.createdAt) - new Date(a.createdAt)
@@ -311,14 +296,26 @@ export default {
 
     totalCount() { return this.total },
 
+    currentCurveScores() {
+      if (this.activeCurveTab === 'overall') {
+        const overall = this.growthData?.overall || []
+        if (overall.length) {
+          return overall.map(i => Number(i.score) || 0)
+        }
+        return this.list.map(r => Number(r.totalScore) || 0)
+      }
+      const dimensions = this.growthData?.dimensions || {}
+      return (dimensions[this.activeCurveTab] || []).map(v => Number(v) || 0)
+    },
+
     bestScore() {
-      if (!this.list.length) return null
-      return Math.max(...this.list.map(r => r.totalScore))
+      if (!this.currentCurveScores.length) return null
+      return Math.max(...this.currentCurveScores)
     },
 
     avgScore() {
-      if (!this.list.length) return null
-      return Math.round(this.list.reduce((s, r) => s + r.totalScore, 0) / this.list.length)
+      if (!this.currentCurveScores.length) return null
+      return Math.round(this.currentCurveScores.reduce((s, v) => s + v, 0) / this.currentCurveScores.length)
     },
 
     hasMore() {
@@ -340,6 +337,12 @@ export default {
     window.addEventListener('resize', this.onWindowResize)
   },
   watch: {
+    activeCurveTab() {
+      this.renderTrendChart()
+    },
+    growthData() {
+      this.renderTrendChart()
+    },
     $route() {
       this.$nextTick(() => {
         this.updateSidebarWidth()
@@ -374,22 +377,75 @@ export default {
     renderTrendChart() {
       if (!echarts || !this.$refs.trendChart) return
       const overall = this.growthData?.overall || []
-      const xData = overall.map(i => i.label)
-      const yData = overall.map(i => i.score)
-      if (!xData.length) return
+      const dimensions = this.growthData?.dimensions || {}
+      const dateLabels = this.growthData?.realDates || this.growthData?.dates || []
+      let xData = []
+      let yRaw = []
+      let seriesName = '面试得分'
+      let lineColor = '#7c3aed'
+      if (this.activeCurveTab === 'overall') {
+        xData = overall.map(i => i.label)
+        yRaw = overall.map(i => i.score)
+      } else {
+        xData = dateLabels
+        yRaw = dimensions[this.activeCurveTab] || []
+        const labelMap = {
+          technical: '技术正确性',
+          logic: '逻辑严谨性',
+          matching: '岗位匹配度',
+          expression: '表达沟通',
+          adaptability: '应变能力'
+        }
+        const colorMap = {
+          technical: '#f59e0b',
+          logic: '#3b82f6',
+          matching: '#10b981',
+          expression: '#8b5cf6',
+          adaptability: '#ef4444'
+        }
+        seriesName = labelMap[this.activeCurveTab] || this.activeCurveTab
+        lineColor = colorMap[this.activeCurveTab] || '#7c3aed'
+      }
+      const safeLength = Math.min(xData.length, yRaw.length)
+      if (!safeLength) {
+        if (this.trendChart) this.trendChart.clear()
+        return
+      }
+      const safeX = []
+      const safeY = []
+      for (let i = 0; i < safeLength; i++) {
+        const raw = Number(yRaw[i])
+        safeX.push(xData[i])
+        safeY.push(Number.isFinite(raw) ? Math.max(0, Math.min(100, raw)) : 0)
+      }
       if (!this.trendChart) this.trendChart = echarts.init(this.$refs.trendChart)
       this.trendChart.setOption({
-        grid: { top: 18, left: 36, right: 20, bottom: 28 },
+        grid: { top: 36, left: 36, right: 20, bottom: 28 },
         tooltip: { trigger: 'axis' },
-        xAxis: { type: 'category', data: xData },
+        xAxis: { type: 'category', data: safeX },
         yAxis: { type: 'value', min: 0, max: 100 },
         series: [{
+          name: seriesName,
           type: 'line',
           smooth: true,
-          data: yData,
-          lineStyle: { color: '#7c3aed', width: 3 },
-          areaStyle: { color: 'rgba(124,58,237,0.12)' },
-          symbolSize: 8
+          data: safeY,
+          lineStyle: { color: lineColor, width: 3 },
+          itemStyle: { color: lineColor },
+          areaStyle: { color: `${lineColor}1f` },
+          symbolSize: 8,
+          label: {
+            show: true,
+            position: 'top',
+            formatter: ({ value }) => `${Math.round(Number(value) || 0)}`,
+            color: '#1e293b',
+            fontSize: 11,
+            fontWeight: 700,
+            backgroundColor: 'rgba(255,255,255,0.9)',
+            borderColor: lineColor,
+            borderWidth: 1,
+            borderRadius: 8,
+            padding: [2, 6]
+          }
         }]
       })
     },
@@ -451,7 +507,6 @@ export default {
       }
     },
     clearFilters() {
-      this.searchQuery = ''
       this.activeJobFilter = 'all'
     },
 
@@ -516,6 +571,14 @@ export default {
       if (score >= 70) return { label: '中等', cls: 'grade-average' }
       if (score >= 60) return { label: '及格', cls: 'grade-pass' }
       return { label: '待提升', cls: 'grade-fail' }
+    },
+    sessionConfigInlineTexts(sessionConfig) {
+      if (!sessionConfig) return []
+      return [
+        sessionConfig.interviewRoundText || '',
+        sessionConfig.interviewStyleText || '',
+        sessionConfig.targetSourceText || ''
+      ].filter(Boolean)
     },
 
     formatDuration(seconds) {
@@ -603,58 +666,6 @@ export default {
       color: #202b42; margin-bottom: 4px;
     }
     p { font-size: 14px; color: #738096; margin: 0; }
-  }
-}
-
-.header-stats {
-  display: flex; align-items: center; gap: $spacing-md;
-  background: #f8f9fb;
-  border: 1px solid #e8edf5;
-  border-radius: 6px;
-  padding: 4px 12px;
-}
-
-.header-stat {
-  display: flex; flex-direction: column; align-items: flex-start;
-  gap: 4px;
-  &__value {
-    font-family: $font-family-display;
-    font-size: 16px; font-weight: $font-weight-bold;
-    color: #242f45; line-height: 1;
-  }
-  &__label { font-size: 13px; color: #8d9cb4; }
-}
-
-.header-stat-divider { width: 1px; height: 28px; background: #dbe2ed; }
-
-.search-box {
-  position: relative; z-index: 1;
-  margin: 4px 0;
-
-  &__icon {
-    position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
-    color: #9baac5; display: flex; align-items: center; pointer-events: none;
-    svg { width: 16px; height: 16px; }
-  }
-
-  &__input {
-    width: 100%; height: 42px;
-    padding: 0 42px 0 40px;
-    background: #f9fbff; border: 1px solid #dbe2ed;
-    border-radius: 8px;
-    font-size: 15px; color: #1f3047;
-    outline: none; font-family: $font-family-base;
-    box-shadow: none;
-    &::placeholder { color: #9baac5; }
-  }
-
-  &__clear {
-    position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
-    background: #dbe2ed; border: none;
-    width: 22px; height: 22px; border-radius: 50%;
-    cursor: pointer; font-size: 14px; color: #607698;
-    display: flex; align-items: center; justify-content: center;
-    &:hover { background: #b8c8e4; }
   }
 }
 
@@ -764,6 +775,14 @@ export default {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 8px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.trend-card__title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .trend-card__head h3 {
@@ -771,11 +790,47 @@ export default {
   font-size: 16px;
 }
 
+.trend-stats {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.trend-stat {
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+}
+
+.curve-tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  margin-bottom: 10px;
+}
+
+.curve-tab {
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #475569;
+  padding: 4px 10px;
+  cursor: pointer;
+  white-space: nowrap;
+
+  &.active {
+    border-color: #7c3aed;
+    color: #7c3aed;
+    background: #f5f3ff;
+  }
+}
+
 .trend-card__chart {
   height: 220px;
 }
 
-.record-info__config,
 .record-info__tags {
   display: flex;
   flex-wrap: wrap;
@@ -783,16 +838,10 @@ export default {
   margin-top: 8px;
 }
 
-.config-chip,
 .tag-chip {
   font-size: 12px;
   border-radius: 999px;
   padding: 2px 8px;
-}
-
-.config-chip {
-  background: #eef2ff;
-  color: #4338ca;
 }
 
 .tag-chip--good {
@@ -888,6 +937,11 @@ export default {
   display: flex; align-items: center; gap: 4px;
   font-size: 14px; color: $text-muted;
   svg { width: 13px; height: 13px; }
+}
+
+.meta-item--plain {
+  gap: 0;
+  color: $text-muted;
 }
 
 .record-arrow {
