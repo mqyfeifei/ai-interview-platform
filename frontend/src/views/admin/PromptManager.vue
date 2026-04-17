@@ -180,7 +180,7 @@
                   <span class="form-label-hint">控制 AI 面试官行为的核心指令</span>
                 </label>
                 <textarea v-model="form.system_prompt" class="form-control form-textarea form-textarea--lg" rows="10"
-                  placeholder="你是一位专业的 XX 面试官。请围绕该岗位核心能力进行提问…&#10;&#10;【核心指令】：当你觉得已经问了足够多的问题（例如超过5题），请主动结束面试。结束时，请在回复的最后加上 [INTERVIEW_OVER]。"></textarea>
+                  placeholder="你是一位专业的 XX 面试官。请围绕该岗位核心能力进行提问…&#10;&#10;【核心指令】：题量请结合知识库规模动态控制（建议 8-16 题）；评估充分后再结束。结束时最后一句请感谢候选人，并在该句末尾加上 [INTERVIEW_OVER]。"></textarea>
                 <p class="form-hint">⚠️ 请在结束面试指令末尾包含 <code>[INTERVIEW_OVER]</code> 标记，否则面试将无法自动结束</p>
               </div>
               <!-- 提问风格 / 参数行 -->

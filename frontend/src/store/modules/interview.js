@@ -395,7 +395,7 @@ const actions = {
         voiceRole: state.voiceRole,
         voice: state.ttsVoice
       })
-      commit('SET_SESSION', { sessionId: res.sessionId, totalQuestions: 10 })
+      commit('SET_SESSION', { sessionId: res.sessionId, totalQuestions: Number(res.totalQuestions || 10) })
       commit('ADD_MESSAGE', {
         id: Date.now(),
         role: 'ai',

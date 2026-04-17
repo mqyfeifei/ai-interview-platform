@@ -37,6 +37,9 @@ export const startInterview = async (data) => {
     sessionId: String(res.interview_id),
     firstQuestion: res.question,
     firstQuestionAudio: res.audio_b64 || null,
+    totalQuestions: Number(res.total_questions || 10),
+    minQuestions: Number(res.min_questions || 6),
+    maxQuestions: Number(res.max_questions || 10),
     isFinished: false
   }
 }

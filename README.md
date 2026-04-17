@@ -219,7 +219,7 @@ ALTER TABLE interviews ADD COLUMN evaluation_suggestions TEXT;
 -- 3. 更新系统提示词（强制 AI 输出结束标记）
 UPDATE ai_prompts 
 SET system_prompt = system_prompt || '
-【核心指令】：当你觉得已经问了足够多的问题（例如超过5题），或者你认为已经充分评估了该候选人的能力时，请主动结束面试。结束时，请务必在你的回复文本的最后面加上特殊标记 [INTERVIEW_OVER]。'
+【核心指令】：题量请结合知识库规模动态控制（建议8-16题），达到充分评估后再结束。结束时最后一句必须感谢候选人，并在该句末尾加上特殊标记 [INTERVIEW_OVER]。'
 WHERE is_active = true;
 ```
 
