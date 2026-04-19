@@ -362,7 +362,13 @@ export default {
     onWindowResize() {
       this.updateSidebarWidth()
       this.updateHeights()
-      if (this.trendChart) this.trendChart.resize()
+      if (!this.trendChart) return
+      try {
+        this.trendChart.resize()
+      } catch (e) {
+        console.warn('[HistoryRecords] chart resize failed, re-rendering', e)
+        this.renderTrendChart()
+      }
     },
     async loadGrowthCurve() {
       this.growthData = await getGrowthCurve()
@@ -448,8 +454,26 @@ export default {
           }
         }]
       }
-      this.trendChart.clear()
-      this.trendChart.setOption(option, { notMerge: true, lazyUpdate: false, silent: true })
+      try {
+        this.trendChart.clear()
+        this.trendChart.setOption(option, {
+          notMerge: true,
+          replaceMerge: ['xAxis', 'yAxis', 'series'],
+          lazyUpdate: false,
+          silent: true
+        })
+      } catch (e) {
+        console.warn('[HistoryRecords] chart render failed, fallback to minimal option', e)
+        if (this.trendChart && !this.trendChart.isDisposed()) {
+          this.trendChart.dispose()
+        }
+        this.trendChart = echarts.init(this.$refs.trendChart)
+        this.trendChart.setOption({
+          xAxis: { type: 'category', data: safeX },
+          yAxis: { type: 'value', min: 0, max: 100 },
+          series: [{ type: 'line', data: safeY, smooth: false, symbol: 'none' }]
+        }, { notMerge: true, lazyUpdate: false, silent: true })
+      }
     },
 
     updateSidebarWidth() {

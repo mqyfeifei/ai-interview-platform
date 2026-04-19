@@ -648,6 +648,10 @@ export default {
       if (this.performanceChartInstance && !this.performanceChartInstance.isDisposed()) {
         this.performanceChartInstance.dispose()
       }
+      if (this.__performanceResizeObserver) {
+        this.__performanceResizeObserver.disconnect()
+        this.__performanceResizeObserver = null
+      }
       this.performanceChartInstance = null
     },
     async loadUserInterviews(userId) {
@@ -747,11 +751,19 @@ export default {
 
       if (!this.performanceChartInstance || this.performanceChartInstance.isDisposed()) {
         this.performanceChartInstance = markRaw(echarts.init(el))
-        new ResizeObserver(() => {
-          if (this.performanceChartInstance && !this.performanceChartInstance.isDisposed()) {
+        if (this.__performanceResizeObserver) {
+          this.__performanceResizeObserver.disconnect()
+        }
+        this.__performanceResizeObserver = new ResizeObserver(() => {
+          if (!this.performanceChartInstance || this.performanceChartInstance.isDisposed()) return
+          if (el.clientWidth === 0 || el.clientHeight === 0) return
+          try {
             this.performanceChartInstance.resize()
+          } catch (e) {
+            console.warn('[AdminUsers] chart resize failed, re-rendering', e)
           }
-        }).observe(el)
+        })
+        this.__performanceResizeObserver.observe(el)
       }
 
       const curve = Array.isArray(this.userPerformance.growth_curve) ? this.userPerformance.growth_curve : []
@@ -880,8 +892,26 @@ export default {
         animationEasing: 'cubicOut'
       }
 
-      this.performanceChartInstance.clear()
-      this.performanceChartInstance.setOption(option, { notMerge: true, lazyUpdate: false, silent: true })
+      try {
+        this.performanceChartInstance.clear()
+        this.performanceChartInstance.setOption(option, {
+          notMerge: true,
+          replaceMerge: ['xAxis', 'yAxis', 'series'],
+          lazyUpdate: false,
+          silent: true
+        })
+      } catch (e) {
+        console.warn('[AdminUsers] chart render failed, fallback to minimal option', e)
+        if (this.performanceChartInstance && !this.performanceChartInstance.isDisposed()) {
+          this.performanceChartInstance.dispose()
+        }
+        this.performanceChartInstance = markRaw(echarts.init(el))
+        this.performanceChartInstance.setOption({
+          xAxis: { type: 'category', data: normalizedXAxis },
+          yAxis: { type: 'value', min: 0, max: 100 },
+          series: [{ type: 'line', data: normalizedSeries, smooth: false, symbol: 'none' }]
+        }, { notMerge: true, lazyUpdate: false, silent: true })
+      }
     },
     addUser() {
       this.editUserForm = {

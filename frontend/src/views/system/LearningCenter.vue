@@ -560,6 +560,10 @@ async created() {
   },
   beforeUnmount() {
     if (this.chartInstance) { this.chartInstance.dispose(); this.chartInstance = null }
+    if (this.__lineResizeObserver) {
+      this.__lineResizeObserver.disconnect()
+      this.__lineResizeObserver = null
+    }
     window.removeEventListener('resize', this.updateHeights)
   },
   watch: {
@@ -646,7 +650,19 @@ async created() {
       // 复用实例或创建新实例（使用 markRaw 避免被 Vue3 响应式代理）
       if (!this.chartInstance || this.chartInstance.isDisposed()) {
         this.chartInstance = markRaw(echarts.init(el))
-        new ResizeObserver(() => { if (this.chartInstance && !this.chartInstance.isDisposed()) this.chartInstance.resize() }).observe(el)
+        if (this.__lineResizeObserver) {
+          this.__lineResizeObserver.disconnect()
+        }
+        this.__lineResizeObserver = new ResizeObserver(() => {
+          if (!this.chartInstance || this.chartInstance.isDisposed()) return
+          if (el.clientWidth === 0 || el.clientHeight === 0) return
+          try {
+            this.chartInstance.resize()
+          } catch (e) {
+            console.warn('[LearningCenter] chart resize failed, recreating instance', e)
+          }
+        })
+        this.__lineResizeObserver.observe(el)
       }
 
       const isOverall = this.activeCurveTab === 'overall'
@@ -741,8 +757,26 @@ async created() {
         animationDuration: 600,
         animationEasing: 'cubicOut'
       }
-      this.chartInstance.clear()
-      this.chartInstance.setOption(option, { notMerge: true, lazyUpdate: false, silent: true })
+      try {
+        this.chartInstance.clear()
+        this.chartInstance.setOption(option, {
+          notMerge: true,
+          replaceMerge: ['xAxis', 'yAxis', 'series'],
+          lazyUpdate: false,
+          silent: true
+        })
+      } catch (e) {
+        console.warn('[LearningCenter] chart render failed, fallback to minimal option', e)
+        if (this.chartInstance && !this.chartInstance.isDisposed()) {
+          this.chartInstance.dispose()
+        }
+        this.chartInstance = markRaw(echarts.init(el))
+        this.chartInstance.setOption({
+          xAxis: { type: 'category', data: safeX },
+          yAxis: { type: 'value', min: 0, max: 100 },
+          series: [{ type: 'line', data: safeY, smooth: false, symbol: 'none' }]
+        }, { notMerge: true, lazyUpdate: false, silent: true })
+      }
     },
 
     switchCurveTab(key) {

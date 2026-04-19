@@ -304,6 +304,15 @@ export default {
       if (!this.echartsInstance) {
         this.echartsInstance = echarts.init(chartElement)
       }
+      const safeLength = Math.min(
+        this.usageTrend.dates.length,
+        this.usageTrend.total_users.length,
+        this.usageTrend.total_interviews.length
+      )
+      if (!safeLength) return
+      const safeDates = this.usageTrend.dates.slice(0, safeLength)
+      const safeUsers = this.usageTrend.total_users.slice(0, safeLength).map((v) => Number(v) || 0)
+      const safeInterviews = this.usageTrend.total_interviews.slice(0, safeLength).map((v) => Number(v) || 0)
 
       const option = {
         tooltip: {
@@ -322,7 +331,7 @@ export default {
         xAxis: {
           type: 'category',
           boundaryGap: false,
-          data: this.usageTrend.dates,
+          data: safeDates,
           axisLabel: {
             formatter: (value) => value.replace(/^-/, ''),
             rotate: 35
@@ -337,26 +346,66 @@ export default {
             name: '用户总数',
             type: 'line',
             smooth: true,
-            data: this.usageTrend.total_users
+            data: safeUsers
           },
           {
             name: '面试总数',
             type: 'line',
             smooth: true,
-            data: this.usageTrend.total_interviews
+            data: safeInterviews
           }
         ]
       }
 
-      this.echartsInstance.clear()
-      this.echartsInstance.setOption(option, { notMerge: true, lazyUpdate: false, silent: true })
-      window.addEventListener('resize', () => {
-        if (this.echartsInstance) this.echartsInstance.resize()
-      })
+      try {
+        this.echartsInstance.clear()
+        this.echartsInstance.setOption(option, {
+          notMerge: true,
+          replaceMerge: ['xAxis', 'yAxis', 'series'],
+          lazyUpdate: false,
+          silent: true
+        })
+      } catch (e) {
+        console.warn('[AdminDashboard] chart render failed, fallback to minimal option', e)
+        if (this.echartsInstance && !this.echartsInstance.isDisposed()) {
+          this.echartsInstance.dispose()
+        }
+        this.echartsInstance = echarts.init(chartElement)
+        this.echartsInstance.setOption({
+          xAxis: { type: 'category', data: safeDates },
+          yAxis: { type: 'value' },
+          series: [
+            { type: 'line', data: safeUsers, smooth: false, symbol: 'none' },
+            { type: 'line', data: safeInterviews, smooth: false, symbol: 'none' }
+          ]
+        }, { notMerge: true, lazyUpdate: false, silent: true })
+      }
+
+      if (!this.__usageResizeHandler) {
+        this.__usageResizeHandler = () => {
+          if (!this.echartsInstance || this.echartsInstance.isDisposed()) return
+          try {
+            this.echartsInstance.resize()
+          } catch (e) {
+            console.warn('[AdminDashboard] chart resize failed', e)
+          }
+        }
+        window.addEventListener('resize', this.__usageResizeHandler)
+      }
     }
   },
   mounted() {
     this.fetchDashboard()
+  },
+  beforeDestroy() {
+    if (this.__usageResizeHandler) {
+      window.removeEventListener('resize', this.__usageResizeHandler)
+      this.__usageResizeHandler = null
+    }
+    if (this.echartsInstance && !this.echartsInstance.isDisposed()) {
+      this.echartsInstance.dispose()
+    }
+    this.echartsInstance = null
   }
 }
 </script>

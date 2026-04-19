@@ -153,8 +153,8 @@
         </div>
       </div>
 
-      <!-- 右边：语音聊天动画和输入区 -->
-      <div class="right-panel">
+        <!-- 右边：语音聊天动画和语音控制 -->
+        <div class="right-panel">
         <div class="voice-animation-container">
           <!-- 语音动画 -->
           <div class="voice-animation">
@@ -209,8 +209,8 @@
             <button
               :class="['voice-control-btn', { active: isRecording }]"
               @click="toggleRecording"
-              :disabled="isFinished || isLoading || isEnding"
-              >
+              :disabled="!canStartRecording"
+               >
               <svg v-if="!isRecording" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
                 <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
@@ -224,69 +224,8 @@
             </button>
           </div>
         </div>
-
-        <!-- 输入区 -->
-        <div class="input-area" :class="{ disabled: isFinished || isLoading || isEnding }">
-          <!-- 语音状态提示条 -->
-          <transition name="slide-up">
-            <div v-if="isRecording" class="recording-bar">
-              <div class="recording-bar__wave">
-                <span v-for="n in 5" :key="n" class="wave-bar" :style="{ animationDelay: n * 0.1 + 's' }" />
-              </div>
-              <span class="recording-bar__text">正在录音... 再次点击麦克风停止</span>
-              <span class="recording-bar__time">{{ recordingTime }}s</span>
-            </div>
-          </transition>
-          <div v-if="isSending" class="transcribing-tip">
-            📡 语音发送中，请稍候...
-          </div>
-
-          <div class="input-row">
-            <!-- 语音按钮 -->
-            <button
-              :class="['voice-btn', { active: isRecording }]"
-              @click="toggleRecording"
-              :disabled="isFinished || isLoading"
-              :title="isRecording ? '停止录音' : '语音输入'"
-              >
-              <svg v-if="!isRecording" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
-                <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-                <line x1="12" y1="19" x2="12" y2="23"/>
-                <line x1="8" y1="23" x2="16" y2="23"/>
-              </svg>
-              <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="6" y="6" width="12" height="12" rx="2"/>
-              </svg>
-            </button>
-
-            <!-- 文本输入框 -->
-            <div class="textarea-wrapper">
-              <textarea
-                ref="inputRef"
-                v-model="inputText"
-                :placeholder="isLoading ? 'AI 正在思考中...' : '在此输入你的回答，支持换行...'"
-                :disabled="isFinished || isLoading || isEnding"
-                class="input-textarea"
-                rows="1"
-                @keydown.enter.exact.prevent="handleSend"
-                @input="autoResize"
-              />
-              <span class="input-hint">Enter 发送 · Shift+Enter 换行</span>
-            </div>
-
-            <!-- 发送按钮 -->
-            <button
-              :class="['send-btn', { ready: inputText.trim() && !isLoading && !isFinished }]"
-              :disabled="!inputText.trim() || isLoading || isFinished || isEnding"
-              @click="handleSend"
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="22" y1="2" x2="11" y2="13"/>
-                <polygon points="22 2 15 22 11 13 2 9 22 2"/>
-              </svg>
-            </button>
-          </div>
+        <div class="transcribing-tip" v-if="isSending">
+          📡 语音发送中，请稍候...
         </div>
       </div>
     </div>
@@ -428,6 +367,9 @@ export default {
     },
     hasStreamingMessage() {
       return this.messages.some(m => m.streaming && m.content.length > 0)
+    },
+    canStartRecording() {
+      return !this.isFinished && !this.isLoading && !this.isEnding && !this.isAISpeaking && !this.isSending
     }
   },
   async created() {
@@ -480,7 +422,10 @@ export default {
       this.$nextTick(this.scrollToBottom)
       this.tryScheduleAutoRecording()
     },
-    isAISpeaking() {
+    isAISpeaking(val) {
+      if (val && this.isRecording) {
+        this.stopRecording()
+      }
       this.tryScheduleAutoRecording()
     }
   },
@@ -782,6 +727,10 @@ export default {
     },
 
     async startRecording() {
+      if (this.isAISpeaking) {
+        console.log('[ASR] AI 仍在播报，禁止开启收音')
+        return
+      }
       if (this.isSending) {
         alert('正在发送上一段语音，请稍等...')
         return

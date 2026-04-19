@@ -1,5 +1,5 @@
 import concurrent.futures
-from sqlalchemy import func
+from sqlalchemy import func, or_
 import re
 import json
 from collections import Counter
@@ -314,6 +314,158 @@ class ReportService:
         return [normalized] if len(normalized) >= 2 else []
 
     @classmethod
+    def _extract_keywords_from_point(cls, point_text, limit=4):
+        text = str(point_text or '').strip()
+        if not text:
+            return []
+        candidates = re.findall(r'[A-Za-z][A-Za-z0-9\+\-\.]{1,20}|[\u4e00-\u9fff]{2,10}', text)
+        stop_words = {'问题', '能力', '方面', '场景', '回答', '建议', '提升', '需要', '相关', '知识点', '基础'}
+        filtered = []
+        for token in candidates:
+            t = token.strip()
+            if not t:
+                continue
+            if t in stop_words:
+                continue
+            if t not in filtered:
+                filtered.append(t)
+            if len(filtered) >= limit:
+                break
+        return filtered
+
+    @classmethod
+    def _collect_job_scope_tags(cls, interview):
+        if not interview:
+            return []
+        job = db.session.get(Job, interview.job_id)
+        if not job:
+            return []
+
+        target_source = getattr(getattr(interview, 'session_config', None), 'target_source', '通用')
+        tags = {}
+
+        tags_rel = job.knowledge_tags
+        job_tags = tags_rel.all() if hasattr(tags_rel, 'all') else list(tags_rel or [])
+        for tag in job_tags:
+            tags[tag.id] = tag
+
+        scoped_questions = cls._filter_questions_by_source(cls._fetch_job_questions(job), target_source)
+        for q in scoped_questions:
+            for tag in (q.knowledge_tags or []):
+                tags[tag.id] = tag
+
+        return list(tags.values())
+
+    @classmethod
+    def _extract_keywords_with_llm(cls, points):
+        sanitized_points = [cls._truncate_text(p, 180) for p in (points or []) if str(p or '').strip()]
+        if not sanitized_points:
+            return {}
+
+        try:
+            llm = DeepSeekClient()
+            system_prompt = (
+                "你是技能标签抽取助手。请从每条“待提升项”中抽取 1-3 个最核心的技术关键词，"
+                "用于后续匹配知识标签。必须严格返回 JSON 数组，结构为："
+                "[{\"index\":1,\"keywords\":[\"关键词1\",\"关键词2\"]}]。"
+                "只返回 JSON，不要解释。"
+            )
+            user_prompt = json.dumps(
+                [{'index': i + 1, 'point': txt} for i, txt in enumerate(sanitized_points)],
+                ensure_ascii=False
+            )
+            raw = llm.generate_reply(
+                messages=[
+                    {'role': 'system', 'content': system_prompt},
+                    {'role': 'user', 'content': user_prompt}
+                ],
+                temperature=0.1,
+                request_timeout=12,
+                max_retries=1,
+                retry_backoff_seconds=0.0,
+                max_tokens=260
+            )
+            cleaned = cls._clean_json_block(raw)
+            parsed = json.loads(cleaned)
+            result = {}
+            if isinstance(parsed, list):
+                for item in parsed:
+                    try:
+                        idx = int(item.get('index'))
+                    except Exception:
+                        continue
+                    kws = [str(x).strip() for x in (item.get('keywords') or []) if str(x).strip()]
+                    if kws:
+                        result[idx] = kws[:3]
+            return result
+        except Exception:
+            return {}
+
+    @classmethod
+    def _match_tag_by_keywords(cls, keywords, scope_tags):
+        if not keywords or not scope_tags:
+            return None
+
+        best_tag = None
+        best_score = 0.0
+        for tag in scope_tags:
+            tag_name = str(tag.name or '')
+            tag_tokens = set(cls._extract_match_tokens(tag_name))
+            if not tag_tokens:
+                continue
+            score = 0.0
+            for kw in keywords:
+                kw_tokens = set(cls._extract_match_tokens(kw))
+                if kw_tokens and kw_tokens.intersection(tag_tokens):
+                    score += 2.0
+                norm_kw = cls._normalize_text_for_match(kw)
+                norm_tag = cls._normalize_text_for_match(tag_name)
+                if norm_kw and norm_tag and (norm_kw in norm_tag or norm_tag in norm_kw):
+                    score += 1.0
+            if score > best_score:
+                best_score = score
+                best_tag = tag
+
+        if best_tag and best_score >= 2.0:
+            return best_tag
+
+        scope_ids = [t.id for t in scope_tags]
+        for kw in keywords:
+            try:
+                vec = InterviewService.get_embedding(kw)
+                candidate = (
+                    KnowledgeTag.query
+                    .filter(KnowledgeTag.id.in_(scope_ids))
+                    .order_by(KnowledgeTag.embedding.l2_distance(vec))
+                    .first()
+                )
+                if candidate:
+                    return candidate
+            except Exception:
+                continue
+        return best_tag
+
+    @classmethod
+    def _map_improvements_to_tags(cls, interview, improvements):
+        points = [str(p or '').strip() for p in (improvements or []) if str(p or '').strip()]
+        if not points:
+            return []
+
+        scope_tags = cls._collect_job_scope_tags(interview)
+        llm_keywords = cls._extract_keywords_with_llm(points)
+
+        mapped = []
+        for idx, point in enumerate(points, start=1):
+            keywords = llm_keywords.get(idx) or cls._extract_keywords_from_point(point)
+            tag = cls._match_tag_by_keywords(keywords, scope_tags)
+            mapped.append({
+                'point': point,
+                'tag': tag,
+                'keywords': keywords,
+            })
+        return mapped
+
+    @classmethod
     def _is_tag_related_to_gap(cls, tag_name, item, gap_detail):
         tag_text = str(tag_name or '').strip()
         if not tag_text:
@@ -509,7 +661,34 @@ class ReportService:
         return {row.resource_id for row in rows}
 
     @classmethod
-    def _get_recommended_resource(cls, point_text, user_id):
+    def _resource_query_for_tag(cls, tag, completed_resource_ids=None):
+        if not tag:
+            return Resource.query.filter(Resource.id == -1)
+
+        query = (
+            Resource.query
+            .outerjoin(Resource.knowledge_tags)
+            .filter(or_(Resource.tag_id == tag.id, KnowledgeTag.id == tag.id))
+            .distinct()
+        )
+        if completed_resource_ids:
+            query = query.filter(~Resource.id.in_(list(completed_resource_ids)))
+        return query
+
+    @classmethod
+    def _sort_resource_query_by_mastery(cls, query, user_id, tag_id):
+        mastery = UserKnowledgeMastery.query.filter_by(
+            user_id=user_id,
+            tag_id=tag_id
+        ).first()
+        if mastery and (mastery.mastery_level or 0) < 40:
+            return query.order_by(Resource.difficulty.asc().nullslast(), Resource.id.asc())
+        if mastery and (mastery.mastery_level or 0) > 70:
+            return query.order_by(Resource.difficulty.desc().nullslast(), Resource.id.asc())
+        return query.order_by(Resource.id.asc())
+
+    @classmethod
+    def _get_recommended_resource(cls, point_text, user_id, scoped_tag_ids=None):
         """
         基于图谱断层进行资源推荐：
         1) 将改进点文本匹配到 KnowledgeTag 节点
@@ -522,7 +701,12 @@ class ReportService:
         completed_resource_ids = cls._get_completed_resource_ids(user_id)
 
         try:
-            matched_tag = KnowledgeTag.query.filter(KnowledgeTag.name.ilike(f"%{point_text}%")).first()
+            tag_query = KnowledgeTag.query
+            if scoped_tag_ids:
+                tag_query = tag_query.filter(KnowledgeTag.id.in_(list(scoped_tag_ids)))
+
+            matched_tag = tag_query.filter(KnowledgeTag.name.ilike(f"%{point_text}%")).first()
+            matched_by_embedding = False
 
             if not matched_tag:
                 token_candidates = [
@@ -531,7 +715,7 @@ class ReportService:
                 ]
                 token_candidates.sort(key=len, reverse=True)
                 for token in token_candidates[:5]:
-                    tag = KnowledgeTag.query.filter(KnowledgeTag.name.ilike(f"%{token}%")).first()
+                    tag = tag_query.filter(KnowledgeTag.name.ilike(f"%{token}%")).first()
                     if tag:
                         matched_tag = tag
                         break
@@ -540,12 +724,19 @@ class ReportService:
             if not matched_tag:
                 try:
                     vec = InterviewService.get_embedding(point_text)
-                    matched_tag = KnowledgeTag.query.order_by(KnowledgeTag.embedding.l2_distance(vec)).first()
+                    matched_tag = tag_query.order_by(KnowledgeTag.embedding.l2_distance(vec)).first()
+                    matched_by_embedding = bool(matched_tag)
                 except Exception:
                     matched_tag = None
 
             if not matched_tag:
                 return None
+
+            if matched_by_embedding:
+                point_tokens = set(cls._extract_match_tokens(point_text))
+                tag_tokens = set(cls._extract_match_tokens(matched_tag.name))
+                if point_tokens and tag_tokens and not point_tokens.intersection(tag_tokens):
+                    return None
 
             visited_ids = set()
             current_tag = matched_tag
@@ -553,26 +744,11 @@ class ReportService:
 
             while current_tag and current_tag.id not in visited_ids:
                 visited_ids.add(current_tag.id)
+                if scoped_tag_ids and current_tag.id not in scoped_tag_ids:
+                    break
 
-                query = Resource.query.join(Resource.knowledge_tags).filter(KnowledgeTag.id == current_tag.id)
-                if completed_resource_ids:
-                    query = query.filter(~Resource.id.in_(list(completed_resource_ids)))
-
-                mastery = UserKnowledgeMastery.query.filter_by(
-                    user_id=user_id,
-                    tag_id=current_tag.id
-                ).first()
-
-                if mastery:
-                    target_level = mastery.mastery_level or 0
-                    if target_level < 40:
-                        query = query.order_by(Resource.difficulty.asc(), Resource.id.asc())
-                    elif target_level > 70:
-                        query = query.order_by(Resource.difficulty.desc(), Resource.id.asc())
-                    else:
-                        query = query.order_by(Resource.id.asc())
-                else:
-                    query = query.order_by(Resource.id.asc())
+                query = cls._resource_query_for_tag(current_tag, completed_resource_ids)
+                query = cls._sort_resource_query_by_mastery(query, user_id, current_tag.id)
 
                 res = query.first()
                 if res:
@@ -605,7 +781,7 @@ class ReportService:
         return None
 
     @classmethod
-    def _get_recommended_resource_by_tag(cls, tag, user_id):
+    def _get_recommended_resource_by_tag(cls, tag, user_id, scoped_tag_ids=None, max_parent_hops=1):
         if not tag:
             return None
 
@@ -614,22 +790,14 @@ class ReportService:
         visited_ids = set()
         current_tag = tag
         used_fallback = False
+        hop = 0
 
         while current_tag and current_tag.id not in visited_ids:
             visited_ids.add(current_tag.id)
-
-            query = Resource.query.filter(Resource.tag_id == current_tag.id)
-            if completed_resource_ids:
-                query = query.filter(~Resource.id.in_(list(completed_resource_ids)))
-
-            mastery = UserKnowledgeMastery.query.filter_by(
-                user_id=user_id,
-                tag_id=current_tag.id
-            ).first()
-            if mastery and (mastery.mastery_level or 0) < 40:
-                query = query.order_by(Resource.difficulty.asc().nullslast(), Resource.id.asc())
-            else:
-                query = query.order_by(Resource.id.asc())
+            if scoped_tag_ids and current_tag.id not in scoped_tag_ids:
+                break
+            query = cls._resource_query_for_tag(current_tag, completed_resource_ids)
+            query = cls._sort_resource_query_by_mastery(query, user_id, current_tag.id)
 
             res = query.first()
             if res:
@@ -650,9 +818,10 @@ class ReportService:
                     'reason': reason
                 }
 
-            if current_tag.parent_id:
+            if current_tag.parent_id and hop < max_parent_hops:
                 current_tag = KnowledgeTag.query.get(current_tag.parent_id)
                 used_fallback = True
+                hop += 1
             else:
                 current_tag = None
 
@@ -697,7 +866,12 @@ class ReportService:
             tag = core_tags.get(row.tag_id)
             if not tag:
                 continue
-            resource = cls._get_recommended_resource_by_tag(tag, interview.user_id)
+            resource = cls._get_recommended_resource_by_tag(
+                tag,
+                interview.user_id,
+                scoped_tag_ids=list(core_tags.keys()),
+                max_parent_hops=0
+            )
             if not resource or resource['id'] in seen_resource_ids:
                 continue
             seen_resource_ids.add(resource['id'])
@@ -902,10 +1076,16 @@ class ReportService:
 
         raw_improvements = cls._split_text_to_list(interview.evaluation_improvements) + dim_improvements
         report_weaknesses = cls._build_report_weaknesses(interview, limit=8)
+        scope_tags = cls._collect_job_scope_tags(interview)
+        scope_tag_ids = [t.id for t in scope_tags]
         improvements = []
         for weakness in report_weaknesses:
             tag = KnowledgeTag.query.get(weakness['tag_id'])
-            resource = cls._get_recommended_resource_by_tag(tag, interview.user_id) if tag else None
+            resource = cls._get_recommended_resource_by_tag(
+                tag,
+                interview.user_id,
+                scoped_tag_ids=scope_tag_ids
+            ) if tag else None
             examples = weakness.get('examples') or []
             point = cls._build_weakness_point(weakness)
             improvements.append({
@@ -917,11 +1097,26 @@ class ReportService:
                 'examples': examples,
             })
         if not improvements:
-            for item in raw_improvements:
-                point = cls._truncate_text(item, cls._MAX_IMPROVEMENT_POINT_LENGTH)
+            mapped_points = cls._map_improvements_to_tags(interview, raw_improvements)
+            for mapped in mapped_points:
+                point = cls._truncate_text(mapped.get('point'), cls._MAX_IMPROVEMENT_POINT_LENGTH)
+                tag = mapped.get('tag')
+                resource = cls._get_recommended_resource_by_tag(
+                    tag,
+                    interview.user_id,
+                    scoped_tag_ids=scope_tag_ids
+                ) if tag else None
+                if not resource:
+                    resource = cls._get_recommended_resource(
+                        point,
+                        interview.user_id,
+                        scoped_tag_ids=scope_tag_ids
+                    )
                 improvements.append({
                     'point': point,
-                    'resource': cls._get_recommended_resource(item, interview.user_id)
+                    'resource': resource,
+                    'weaknessTag': tag.name if tag else None,
+                    'keywords': mapped.get('keywords') or []
                 })
 
         suggestions = cls._split_text_to_list(interview.evaluation_suggestions)
@@ -946,6 +1141,11 @@ class ReportService:
         graph_resources = cls._build_gap_resources(interview)
         recommended_resources = []
         seen_resource_ids = set()
+        weakness_tag_names = {
+            str(imp.get('weaknessTag') or '').strip()
+            for imp in improvements if isinstance(imp, dict)
+            if str(imp.get('weaknessTag') or '').strip()
+        }
         for imp in improvements:
             res = imp.get('resource') if isinstance(imp, dict) else None
             if res and res.get('id') not in seen_resource_ids:
@@ -958,6 +1158,9 @@ class ReportService:
                     'bookmarked': bool(learning_row and learning_row.bookmarked)
                 })
         for res in graph_resources:
+            resource_tag_name = str(res.get('matchedTag') or res.get('resourceTag') or '').strip()
+            if weakness_tag_names and resource_tag_name and resource_tag_name not in weakness_tag_names:
+                continue
             if res.get('id') not in seen_resource_ids:
                 learning_row = UserLearning.query.filter_by(user_id=interview.user_id, resource_id=res.get('id')).first()
                 seen_resource_ids.add(res.get('id'))
