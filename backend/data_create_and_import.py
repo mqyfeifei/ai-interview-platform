@@ -320,7 +320,10 @@ def run_graph_backfill():
     print("\n" + "="*60)
     print("📊 步骤 4/5: 正在回填图谱元数据...")
     print("="*60)
-    backfill_script = os.path.join(os.path.dirname(__file__), 'backfill_knowledge_tags_metadata.py')
+    backfill_script = os.path.join(
+        os.path.dirname(__file__),
+        'scripts', 'db', 'backfill', 'backfill_knowledge_tags_metadata.py'
+    )
     if os.path.exists(backfill_script):
         try:
             result = subprocess.run(
@@ -340,12 +343,43 @@ def run_graph_backfill():
         print("⚠️ 未找到图谱回填脚本，跳过")
 
 
+def run_phase1_columns_backfill():
+    """回填 questions/resources 的 phase1 图谱字段。"""
+    print("\n" + "="*60)
+    print("🧱 步骤 4.5/5: 正在回填 Phase1 图谱字段...")
+    print("="*60)
+    backfill_script = os.path.join(
+        os.path.dirname(__file__),
+        'scripts', 'db', 'backfill', 'run_phase1_backfill.py'
+    )
+    if os.path.exists(backfill_script):
+        try:
+            result = subprocess.run(
+                [sys.executable, backfill_script],
+                cwd=os.path.dirname(__file__),
+                capture_output=True,
+                text=True,
+                env={**os.environ, 'FLASK_APP': 'run.py', 'FLASK_ENV': 'development'}
+            )
+            if result.returncode == 0:
+                print("✅ Phase1 图谱字段回填完成")
+            else:
+                print(f"⚠️ Phase1 回填警告: {result.stderr[:200]}")
+        except Exception as e:
+            print(f"⚠️ Phase1 回填跳过: {e}")
+    else:
+        print("⚠️ 未找到 Phase1 回填脚本，跳过")
+
+
 def run_job_m2m_backfill(reset=False):
     """回填岗位-题目多对多关系"""
     print("\n" + "="*60)
     print("🔗 步骤 5/5: 正在建立岗位-题目关联...")
     print("="*60)
-    backfill_script = os.path.join(os.path.dirname(__file__), 'scripts', 'backfill_job_m2m_links.py')
+    backfill_script = os.path.join(
+        os.path.dirname(__file__),
+        'scripts', 'db', 'backfill', 'backfill_job_m2m_links.py'
+    )
     if os.path.exists(backfill_script):
         try:
             cmd = [sys.executable, backfill_script]
@@ -375,6 +409,33 @@ def run_job_m2m_backfill(reset=False):
             print(f"⚠️ 关联建立跳过: {e}")
     else:
         print("⚠️ 未找到关联回填脚本，跳过")
+
+
+def run_upgrade_graph_db(dry_run=False, skip_backfill=False, skip_phase1_backfill=False):
+    """调用 scripts/ops/upgrade_graph_db.py 执行统一升级流程。"""
+    script_path = os.path.join(os.path.dirname(__file__), 'scripts', 'ops', 'upgrade_graph_db.py')
+    if not os.path.exists(script_path):
+        raise FileNotFoundError(f"未找到升级脚本: {script_path}")
+
+    cmd = [sys.executable, script_path]
+    if dry_run:
+        cmd.append('--dry-run')
+    if skip_backfill:
+        cmd.append('--skip-backfill')
+    if skip_phase1_backfill:
+        cmd.append('--skip-phase1-backfill')
+
+    result = subprocess.run(
+        cmd,
+        cwd=os.path.dirname(__file__),
+        capture_output=True,
+        text=True,
+        env={**os.environ, 'FLASK_APP': 'run.py', 'FLASK_ENV': 'development'}
+    )
+    if result.returncode != 0:
+        raise RuntimeError(result.stderr or 'upgrade_graph_db 执行失败')
+    if result.stdout:
+        print(result.stdout.strip())
 
 
 def find_interview_profile_target_jobs() -> dict[str, Job]:
@@ -622,11 +683,6 @@ def import_knowledge_base():
                         # 遍历关联的学习资源
                         for res in resources:
                             res_title = res.get('name')
-
-                            generated_meta = InterviewGraphHelper.build_question_graph_meta(q)
-                            q.reference_answer_depth = generated_meta.get('reference_answer_depth', 1)
-                            q.required_skills_meta = generated_meta.get('required_skills_meta')
-                            q.follow_up_templates = generated_meta.get('follow_up_templates')
                             res_url = res.get('url')
                             yaml_type = res.get('type')
 
@@ -675,6 +731,9 @@ def import_knowledge_base():
                         reference_answer=key_points, # 数据库已支持 JSONB 存储数组
                         source=source,               # 映射新增字段
                         status=status,               # 映射新增字段
+                        reference_answer_depth=item.get('reference_answer_depth'),
+                        follow_up_templates=item.get('follow_up_templates') or None,
+                        required_skills_meta=item.get('required_skills_meta') or None,
                         embedding=embedding
                     )
                     db.session.add(q)
@@ -715,6 +774,17 @@ def import_knowledge_base():
                                 q.knowledge_tags.append(stag)
                                 matched_tag_ids.add(stag.id)
 
+                    # YAML 未显式给出时，按图谱规则自动推断并回填
+                    generated_meta = InterviewGraphHelper.build_question_graph_meta(q)
+                    q.reference_answer_depth = (
+                        q.reference_answer_depth
+                        or generated_meta.get('reference_answer_depth', 1)
+                    )
+                    if not q.required_skills_meta:
+                        q.required_skills_meta = generated_meta.get('required_skills_meta')
+                    if not q.follow_up_templates:
+                        q.follow_up_templates = generated_meta.get('follow_up_templates')
+
                 db.session.commit()
 
             # =====================================================================
@@ -749,6 +819,9 @@ def import_knowledge_base():
 
         # 8. 回填图谱元数据
         run_graph_backfill()
+
+        # 8.5 回填 Phase1 questions/resources 图谱字段
+        run_phase1_columns_backfill()
         
         # 9. 回填岗位-题目关联
         run_job_m2m_backfill(reset=True)
@@ -776,7 +849,19 @@ def main():
     parser.add_argument('--only-interview-profiles', action='store_true', help='只执行 interview_profiles 填充')
     parser.add_argument('--profile-reset', action='store_true', help='仅在填充 interview_profiles 时，先删除核心岗位已有配置')
     parser.add_argument('--profile-dry-run', action='store_true', help='仅在填充 interview_profiles 时，预览将写入的数据量')
+    parser.add_argument('--upgrade-only', action='store_true', help='仅执行 scripts/ops/upgrade_graph_db.py')
+    parser.add_argument('--upgrade-dry-run', action='store_true', help='仅对 --upgrade-only 生效：以 dry-run 运行升级脚本')
+    parser.add_argument('--upgrade-skip-backfill', action='store_true', help='仅对 --upgrade-only 生效：跳过 metadata backfill')
+    parser.add_argument('--upgrade-skip-phase1-backfill', action='store_true', help='仅对 --upgrade-only 生效：跳过 Phase1 backfill')
     args = parser.parse_args()
+
+    if args.upgrade_only:
+        run_upgrade_graph_db(
+            dry_run=args.upgrade_dry_run,
+            skip_backfill=args.upgrade_skip_backfill,
+            skip_phase1_backfill=args.upgrade_skip_phase1_backfill
+        )
+        return
 
     if args.only_interview_profiles:
         app = create_app('development')

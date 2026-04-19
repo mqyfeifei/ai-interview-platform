@@ -29,7 +29,6 @@ from app.services.emotion_service import EmotionService
 # 向量模型相关(保留原有实现)
 import os
 import threading
-from sentence_transformers import SentenceTransformer
 
 _EMBEDDING_MODEL_NAME = 'BAAI/bge-small-zh-v1.5'
 _local_embedding_model = None
@@ -64,8 +63,18 @@ class InterviewService:
             if _local_embedding_model is not None:
                 return _local_embedding_model
             try:
+                # 懒加载第三方依赖，避免在 Flask 启动阶段导入失败导致服务无法启动
+                from sentence_transformers import SentenceTransformer
+            except (ImportError, OSError) as e:
+                raise RuntimeError(
+                    "本地向量模型依赖加载失败：sentence-transformers/transformers 导入异常。"
+                    "请检查当前环境依赖版本与安装完整性。"
+                    f"原始错误: {e}"
+                ) from e
+
+            try:
                 model = SentenceTransformer(_EMBEDDING_MODEL_NAME, local_files_only=False)
-            except ValueError as e:
+            except (ValueError, OSError, RuntimeError) as e:
                 raise RuntimeError(
                     "本地向量模型加载失败：当前 sentence-transformers/transformers 与 "
                     f"{_EMBEDDING_MODEL_NAME} 不兼容。请升级/降级依赖后重试。原始错误: {e}"

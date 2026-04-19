@@ -6,7 +6,7 @@ from __future__ import annotations
 from pathlib import Path
 import sys
 
-BACKEND_ROOT = Path(__file__).resolve().parents[1]
+BACKEND_ROOT = Path(__file__).resolve().parents[3]
 if str(BACKEND_ROOT) not in sys.path:
     sys.path.insert(0, str(BACKEND_ROOT))
 
@@ -15,7 +15,7 @@ from app.extensions import db
 
 
 def main() -> None:
-    sql_path = BACKEND_ROOT / 'scripts' / 'backfill_phase1_columns.sql'
+    sql_path = BACKEND_ROOT / 'scripts' / 'db' / 'sql' / 'backfill_phase1_columns.sql'
     sql_text = sql_path.read_text(encoding='utf-8')
 
     app = create_app()

@@ -7,10 +7,10 @@ Default flow:
 3. Backfill Phase1 graph columns (questions/resources/session config)
 
 Usage:
-    python scripts/upgrade_graph_db.py
-    python scripts/upgrade_graph_db.py --dry-run
-    python scripts/upgrade_graph_db.py --skip-backfill
-    python scripts/upgrade_graph_db.py --skip-phase1-backfill
+    python scripts/ops/upgrade_graph_db.py
+    python scripts/ops/upgrade_graph_db.py --dry-run
+    python scripts/ops/upgrade_graph_db.py --skip-backfill
+    python scripts/ops/upgrade_graph_db.py --skip-phase1-backfill
 """
 
 from __future__ import annotations
@@ -37,7 +37,7 @@ def main() -> None:
     parser.add_argument('--skip-phase1-backfill', action='store_true', help='Skip Phase1 columns backfill script')
     args = parser.parse_args()
 
-    backend_root = Path(__file__).resolve().parents[1]
+    backend_root = Path(__file__).resolve().parents[2]
     env = os.environ.copy()
     env.setdefault('FLASK_APP', 'run.py')
     env.setdefault('FLASK_ENV', 'development')
@@ -45,14 +45,14 @@ def main() -> None:
     run_command([sys.executable, '-m', 'flask', 'db', 'upgrade'], backend_root, env, 'Running Alembic upgrade')
 
     if not args.skip_backfill:
-        backfill_script = backend_root / 'backfill_knowledge_tags_metadata.py'
+        backfill_script = backend_root / 'scripts' / 'db' / 'backfill' / 'backfill_knowledge_tags_metadata.py'
         backfill_command = [sys.executable, str(backfill_script)]
         if args.dry_run:
             backfill_command.append('--dry-run')
         run_command(backfill_command, backend_root, env, 'Backfilling knowledge tag metadata')
 
     if not args.skip_phase1_backfill and not args.dry_run:
-        phase1_script = backend_root / 'scripts' / 'run_phase1_backfill.py'
+        phase1_script = backend_root / 'scripts' / 'db' / 'backfill' / 'run_phase1_backfill.py'
         run_command([sys.executable, str(phase1_script)], backend_root, env, 'Backfilling Phase1 graph columns')
 
     print('\nAll done.')

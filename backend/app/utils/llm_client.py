@@ -39,7 +39,16 @@ class DeepSeekClient:
         )
         return any(keyword in message for keyword in retryable_keywords)
 
-    def generate_reply(self, messages, stream=False, temperature=0.7):
+    def generate_reply(
+        self,
+        messages,
+        stream=False,
+        temperature=0.7,
+        request_timeout=None,
+        max_retries=None,
+        retry_backoff_seconds=None,
+        max_tokens=None,
+    ):
         """
         调用大模型生成回复
         :param messages: 对话上下文列表，例如 [{"role": "system", "content": "..."}, {"role": "user", "content": "..."}]
@@ -52,11 +61,26 @@ class DeepSeekClient:
             'stream': stream,
             'temperature': temperature
         }
-        max_retries = max(1, int(current_app.config.get('LLM_MAX_RETRIES', 3)))
-        backoff_seconds = max(0.1, float(current_app.config.get('LLM_RETRY_BACKOFF_SECONDS', 1.0)))
+        if request_timeout is not None:
+            request_params['timeout'] = float(request_timeout)
+        if max_tokens is not None:
+            request_params['max_tokens'] = int(max_tokens)
+
+        retries = max(
+            1,
+            int(max_retries if max_retries is not None else current_app.config.get('LLM_MAX_RETRIES', 3))
+        )
+        backoff_seconds = max(
+            0.0,
+            float(
+                retry_backoff_seconds
+                if retry_backoff_seconds is not None
+                else current_app.config.get('LLM_RETRY_BACKOFF_SECONDS', 1.0)
+            )
+        )
 
         last_error = None
-        for attempt in range(1, max_retries + 1):
+        for attempt in range(1, retries + 1):
             try:
                 response = self.client.chat.completions.create(**request_params)
                 if stream:
@@ -65,13 +89,14 @@ class DeepSeekClient:
             except Exception as e:
                 last_error = e
                 retryable = self._is_retryable_exception(e)
-                can_retry = retryable and attempt < max_retries
+                can_retry = retryable and attempt < retries
                 print(
-                    f"[DeepSeekClient] 调用失败（{attempt}/{max_retries}）："
+                    f"[DeepSeekClient] 调用失败（{attempt}/{retries}）："
                     f"{type(e).__name__}: {e}"
                 )
                 if not can_retry:
                     break
-                time.sleep(backoff_seconds * attempt)
+                if backoff_seconds > 0:
+                    time.sleep(backoff_seconds * attempt)
 
         raise RuntimeError(f"LLM 调用失败: {last_error}") from last_error

@@ -206,7 +206,7 @@ ROUND_ALIASES = {
 class InterviewSessionManager:
     """面试会话管理器"""
     _OPENING_GREETING_WAIT_TIMEOUT_SECONDS = float(
-        os.environ.get('OPENING_GREETING_WAIT_TIMEOUT_SECONDS', '2.5')
+        os.environ.get('OPENING_GREETING_WAIT_TIMEOUT_SECONDS', '8.0')
     )
     _OPENING_TTS_WAIT_TIMEOUT_SECONDS = float(
         os.environ.get('OPENING_TTS_WAIT_TIMEOUT_SECONDS', '10.0')
@@ -695,6 +695,161 @@ class InterviewSessionManager:
         return '' if re.fullmatch(r'<[^>]+>', fallback) else fallback
 
     @staticmethod
+    def _is_opening_question_domain_match(job, candidate):
+        """开场首问做岗位域校验，避免明显错岗题进入开场。"""
+        text = InterviewSessionManager._extract_opening_question_text(candidate)
+        if not text:
+            return False
+
+        normalized_text = text.lower()
+        job_name = (getattr(job, 'name', '') or '').lower()
+
+        # 计算机视觉岗位：显式排除典型网络协议题
+        is_cv_job = any(k in job_name for k in ('视觉', 'cv', 'image', 'computer vision'))
+        if is_cv_job:
+            network_keywords = (
+                'arp', 'proxy arp', 'gratuitous arp', 'dhcp', 'dns', 'tcp', 'udp', 'icmp',
+                'ip', 'vlan', '子网', '掩码', '网关', '路由', '交换机', 'mac地址', 'osi',
+                '证书链', 'root ca', 'ca', 'ssl', 'tls', 'https', 'x.509', 'x509'
+            )
+            cv_keywords = (
+                'opencv', 'cnn', 'yolo', '图像', '视觉', '检测', '分割', '跟踪',
+                '特征提取', '标注', 'mAP', 'iou', '推理', '模型'
+            )
+            has_network = any(k in normalized_text for k in network_keywords)
+            has_cv = any(k in normalized_text for k in cv_keywords)
+            if has_network and not has_cv:
+                return False
+
+        return True
+
+    @staticmethod
+    def _pick_opening_seed_question(job, target_source='通用', seed=None):
+        """快速挑选岗位匹配的开场首问，避免走重型选题链路。"""
+        if not job:
+            return ''
+
+        questions_rel = job.questions
+        if hasattr(questions_rel, 'filter_by'):
+            base_query = questions_rel.filter_by(status='published')
+            questions = base_query.limit(240).all()
+            if not questions:
+                questions = questions_rel.limit(240).all()
+        else:
+            questions = list(questions_rel or [])
+            published = [q for q in questions if getattr(q, 'status', None) == 'published']
+            if published:
+                questions = published
+
+        if not questions:
+            return ''
+
+        normalized_source = InterviewSessionManager.normalize_target_source(target_source)
+        generic_sources = {'', '通用'}
+        if normalized_source == '通用':
+            source_filtered = [
+                q for q in questions
+                if InterviewSessionManager.normalize_target_source(getattr(q, 'source', None)) in generic_sources
+            ]
+            if source_filtered:
+                questions = source_filtered
+        else:
+            company = [
+                q for q in questions
+                if InterviewSessionManager.normalize_target_source(getattr(q, 'source', None)) == normalized_source
+            ]
+            generic = [
+                q for q in questions
+                if InterviewSessionManager.normalize_target_source(getattr(q, 'source', None)) in generic_sources
+            ]
+            if company:
+                questions = company + generic
+            elif generic:
+                questions = generic
+
+        domain_matched = [q for q in questions if InterviewSessionManager._is_opening_question_domain_match(job, q)]
+        if domain_matched:
+            questions = domain_matched
+
+        type_order = {'technical': 0, 'project_deep_dive': 1, 'scenario_design': 2, 'behavioral': 3}
+        questions.sort(key=lambda q: (type_order.get(str(getattr(q, 'type', '')).strip(), 9), int(getattr(q, 'id', 0) or 0)))
+
+        rng = random.Random(int(seed or 0))
+        top_window = questions[:24] if len(questions) > 24 else questions
+        pool = list(top_window)
+        rng.shuffle(pool)
+        for q in pool:
+            text = InterviewSessionManager._extract_opening_question_text(q)
+            if text:
+                return text
+        return ''
+
+    @staticmethod
+    def _default_opening_seed_by_job(job):
+        """按岗位给出保底首问，避免错岗和过泛化。"""
+        job_name = (getattr(job, 'name', '') or '').lower()
+        if any(k in job_name for k in ('视觉', 'cv', 'image', 'computer vision')):
+            return "请你挑一个最有代表性的视觉项目，讲讲从数据处理到模型评估你是怎么落地的。"
+        if any(k in job_name for k in ('后端', 'backend', 'java', 'golang', 'python')):
+            return "请你结合一个后端项目，说明你如何做接口设计、性能优化和异常处理。"
+        if any(k in job_name for k in ('前端', 'frontend', 'web', 'vue', 'react')):
+            return "请你结合一个前端项目，讲讲你如何做性能优化、状态管理和问题排查。"
+        if any(k in job_name for k in ('算法', 'algorithm')):
+            return "请你结合一个算法题或算法项目，说明你的建模思路、复杂度分析和优化过程。"
+        return "请你结合一个最有代表性的项目，说明你如何完成问题建模、方案选择和效果评估。"
+
+    @staticmethod
+    def _build_resume_personalized_opening(resume_data, opening_seed_question, round_focus=''):
+        """在大模型超时时，基于简历结构化数据快速生成个性化开场。"""
+        content = (resume_data or {}).get('content', {}) if isinstance(resume_data, dict) else {}
+
+        skills = []
+        for item in (content.get('skills') or []):
+            if isinstance(item, dict):
+                name = str(item.get('name', '')).strip()
+            else:
+                name = str(item or '').strip()
+            if name:
+                skills.append(name)
+
+        experiences = []
+        for exp in (content.get('workExperiences') or []):
+            if isinstance(exp, dict):
+                org = str(exp.get('company', '')).strip()
+                role = str(exp.get('role', '')).strip()
+                if org or role:
+                    experiences.append((org or '你的团队', role or '相关岗位'))
+        for exp in (content.get('internshipExperiences') or []):
+            if isinstance(exp, dict):
+                org = str(exp.get('company', '')).strip()
+                role = str(exp.get('role', '')).strip()
+                if org or role:
+                    experiences.append((org or '实习团队', role or '实习岗位'))
+        for exp in (content.get('campusExperiences') or []):
+            if isinstance(exp, dict):
+                org = str(exp.get('organization') or exp.get('school') or '').strip()
+                role = str(exp.get('role', '')).strip()
+                if org or role:
+                    experiences.append((org or '校园项目', role or '成员角色'))
+
+        if experiences:
+            org, role = experiences[0]
+            first_sentence = f"我看你在{org}做过{role}，先从这个项目里你最关键的一次技术决策聊起。"
+        elif skills:
+            top_skills = '、'.join(skills[:2])
+            first_sentence = f"我看过你的简历，先从你写到的{top_skills}里挑一个你做得最深入的项目说起。"
+        else:
+            first_sentence = "我们直接开始，你先用一个最能代表你水平的项目来展开。"
+
+        seed_question = str(opening_seed_question or '').strip()
+        if not seed_question:
+            seed_question = "请你结合一个最有代表性的项目，说明你如何完成问题建模、方案选择和效果评估。"
+        if not seed_question.rstrip().endswith(('？', '?', '。', '！', '!')):
+            seed_question = f"{seed_question}？"
+
+        return f"{first_sentence}{seed_question}"
+
+    @staticmethod
     def _build_opening_candidates(base_greeting, interview_round='first_round', interview_style='confident', round_focus=''):
         """构建多组开场候选，用于去重后挑选。"""
         base_pool = [base_greeting] + InterviewSessionManager._DIVERSE_GREETING_FALLBACKS
@@ -977,29 +1132,15 @@ class InterviewSessionManager:
         )
         active_source = selected_source if selected_source in source_options else '通用'
 
-        opening_seed_question = ''
-        try:
-            opening_assigned = InterviewGraphHelper.assign_questions(
-                job_id,
-                user_id,
-                limit=4,
-                recent_tag_ids=[],
-                interview_round=session_payload.get('interview_round', 'first_round'),
-                interview_style=session_payload.get('interview_style', 'confident'),
-                target_source=active_source,
-                is_dynamic_adjust=bool(session_payload.get('is_dynamic_adjust', True)),
-            )
-            if isinstance(opening_assigned, dict):
-                opening_candidates = opening_assigned.get('selected_questions', []) or []
-            else:
-                opening_candidates = opening_assigned or []
-            if opening_candidates:
-                opening_seed_question = InterviewSessionManager._extract_opening_question_text(opening_candidates[0])
-        except Exception as e:
-            print(f"[开场问题] 题库候选生成失败: {e}")
+        job = Job.query.get(job_id) if job_id else None
+        opening_seed_question = InterviewSessionManager._pick_opening_seed_question(
+            job=job,
+            target_source=active_source,
+            seed=interview.id,
+        )
 
         if not opening_seed_question:
-            opening_seed_question = "请你结合一个最有代表性的项目，说明你如何完成问题建模、方案选择和效果评估。"
+            opening_seed_question = InterviewSessionManager._default_opening_seed_by_job(job)
 
         round_label_map = {
             'first_round': '一面',
@@ -1011,7 +1152,6 @@ class InterviewSessionManager:
             'first_round',
         )
         round_label = round_label_map.get(round_key, '一面')
-        job = Job.query.get(job_id) if job_id else None
         job_name = (job.name if job else '目标岗位')
         company_prefix = f"{active_source}·" if active_source != '通用' else ''
         opening_prefix = f"【{company_prefix}{job_name}{round_label}】"
@@ -1028,27 +1168,31 @@ class InterviewSessionManager:
             interview_round=session_payload.get('interview_round', 'first_round'),
             limit=8,
         )
+        deterministic_personalized_greeting = InterviewSessionManager._build_resume_personalized_opening(
+            resume_data=resume_data,
+            opening_seed_question=opening_seed_question,
+            round_focus=round_focus,
+        )
         
         # 5. 结合简历生成个性化开场问题（直接提问，不做风格说明）
         tts_voice = InterviewTTSHelper.get_tts_voice(prompt_config, voice) if voice_mode else None
         greeting_audio_b64 = None
+        opening_generation_timed_out = False
+        opening_from_llm = False
 
         try:
             try:
-                resume_context = InterviewGraphHelper.extract_resume_context(user_id)
+                resume_context = InterviewGraphHelper.extract_resume_context(user_id, max_chars=420)
                 from app.utils.llm_client import DeepSeekClient
 
                 llm = DeepSeekClient()
                 company_desc = active_source if active_source != '通用' else '通用题库'
                 sys_msg = (
                     f"你是{company_desc}的{job_name}面试官。"
-                    f"请生成“自然开场+首问”的两句话话术，要求："
-                    f"1）第一句要有真人互动感，并优先引用简历经历（如“我看你在XX做过XX”）；"
-                    f"2）第二句提出首个问题，围绕轮次重点：{round_focus or '基础能力与表达清晰度'}；"
-                    f"3）不要解释面试风格/流程，不要出现“追问1/第X题/编号列表”；"
-                    f"4）优先参考该候选题并口语化改写：{opening_seed_question}；"
-                    f"5）最多两句话。"
-                    f"只输出给候选人的最终话术。"
+                    f"请输出两句话：第一句自然破冰并提到候选人简历里的真实经历；"
+                    f"第二句只提一个首问，并以这道题为准：{opening_seed_question}。"
+                    "禁止解释流程、禁止“这轮我会重点看…/最熟悉的实战场景”等模板化表达。"
+                    "语气像真人面试官，简洁直接。只输出最终话术。"
                 )
                 app_obj = current_app._get_current_object()
 
@@ -1059,42 +1203,70 @@ class InterviewSessionManager:
                 )
 
                 personalized_greeting = None
+                def _generate_opening_question():
+                    with app_obj.app_context():
+                        return llm.generate_reply(
+                            [
+                                {'role': 'system', 'content': sys_msg},
+                                {'role': 'user', 'content': resume_context or '候选人暂无可用简历摘要。'},
+                            ],
+                            temperature=greeting_temp,
+                            request_timeout=max(
+                                2.5,
+                                InterviewSessionManager._OPENING_GREETING_WAIT_TIMEOUT_SECONDS - 0.2
+                            ),
+                            max_retries=1,
+                            retry_backoff_seconds=0.0,
+                            max_tokens=120,
+                        )
+                timed_out = False
+                response = None
+                greeting_executor = ThreadPoolExecutor(max_workers=1)
+                future = greeting_executor.submit(_generate_opening_question)
                 try:
-                    def _generate_opening_question():
-                        with app_obj.app_context():
-                            return llm.generate_reply(
-                                [
-                                    {'role': 'system', 'content': sys_msg},
-                                    {'role': 'user', 'content': resume_context or '候选人暂无可用简历摘要。'},
-                                ],
-                                temperature=greeting_temp,
-                            )
-                    with ThreadPoolExecutor(max_workers=1) as greeting_executor:
-                        future = greeting_executor.submit(_generate_opening_question)
-                        response = future.result(timeout=InterviewSessionManager._OPENING_GREETING_WAIT_TIMEOUT_SECONDS)
-                    personalized_greeting = (response or '').strip()
+                    response = future.result(
+                        timeout=InterviewSessionManager._OPENING_GREETING_WAIT_TIMEOUT_SECONDS
+                    )
                 except FutureTimeoutError:
+                    timed_out = True
+                    opening_generation_timed_out = True
+                    future.cancel()
                     print(
                         f"[开场问题生成] 等待超时（{InterviewSessionManager._OPENING_GREETING_WAIT_TIMEOUT_SECONDS:.1f}s），"
                         "直接使用题库兜底问题。"
                     )
+                finally:
+                    greeting_executor.shutdown(wait=not timed_out, cancel_futures=timed_out)
+                personalized_greeting = (response or '').strip()
 
                 if personalized_greeting and len(personalized_greeting) > 8:
                     personalized_greeting = personalized_greeting.replace('[INTERVIEW_OVER]', '').strip()
                     if not personalized_greeting.rstrip().endswith(('？', '?', '。', '！', '!')):
                         personalized_greeting = f"{personalized_greeting}？"
                     if InterviewSessionManager._is_opening_similar(personalized_greeting, recent_openings):
-                        greeting = f"{opening_prefix}我们直接进入正题。{opening_seed_question}"
+                        if deterministic_personalized_greeting:
+                            greeting = f"{opening_prefix}{deterministic_personalized_greeting}"
+                        else:
+                            greeting = f"{opening_prefix}我们直接进入正题。{opening_seed_question}"
                     else:
                         greeting = f"{opening_prefix}{personalized_greeting}"
+                        opening_from_llm = True
             except Exception as e:
                 print(f"个性化开场问题生成失败，使用默认问题: {str(e)}")
         except Exception as e:
             print(f"开场问题链路异常，使用默认问题: {str(e)}")
 
+        if not opening_from_llm and deterministic_personalized_greeting:
+            greeting = f"{opening_prefix}{deterministic_personalized_greeting}"
+
         # 6. 仅在语音面试时合成开场白音频
         if voice_mode:
             speak_text = InterviewTTSHelper.strip_stream_control_tokens(greeting)
+            if speak_text:
+                if opening_generation_timed_out:
+                    print("[开场白 TTS] 跳过同步等待：开场问题已超时回退，本次响应不携带开场白音频。")
+                    speak_text = ''
+
             if speak_text:
                 def async_tts_task():
                     return InterviewTTSHelper.synthesize_audio_async(
@@ -1112,22 +1284,29 @@ class InterviewSessionManager:
                 )
                 try:
                     # 开场白与流式回答共用全局队列会互相阻塞，这里使用独立执行器避免排队导致“先超时后成功”。
-                    with ThreadPoolExecutor(max_workers=1) as opening_tts_executor:
-                        future = opening_tts_executor.submit(async_tts_task)
+                    tts_timed_out = False
+                    audio_bytes = None
+                    opening_tts_executor = ThreadPoolExecutor(max_workers=1)
+                    future = opening_tts_executor.submit(async_tts_task)
+                    try:
                         audio_bytes = future.result(timeout=timeout_seconds)
+                    except FutureTimeoutError:
+                        tts_timed_out = True
+                        future.cancel()
+                        print(
+                            f"[开场白 TTS] 等待超时（{timeout_seconds:.1f}s），"
+                            "本次响应不携带开场白音频。"
+                        )
+                    finally:
+                        opening_tts_executor.shutdown(wait=not tts_timed_out, cancel_futures=tts_timed_out)
                     if audio_bytes:
                         greeting_audio_b64 = bytes_to_b64(audio_bytes)
                         print(
                             f"[开场白 TTS] {timeout_seconds:.1f}秒内合成成功，"
                             f"音频大小={len(audio_bytes)} bytes"
                         )
-                    else:
+                    elif not tts_timed_out:
                         print(f"[开场白 TTS] 合成返回空数据")
-                except FutureTimeoutError:
-                    print(
-                        f"[开场白 TTS] 等待超时（{timeout_seconds:.1f}s），"
-                        "本次响应不携带开场白音频。"
-                    )
                 except Exception as e:
                     print(f"[开场白 TTS] 异步合成异常: {type(e).__name__}: {e}")
         

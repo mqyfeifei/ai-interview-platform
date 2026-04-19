@@ -415,11 +415,11 @@ export default {
       const safeY = []
       for (let i = 0; i < safeLength; i++) {
         const raw = Number(yRaw[i])
-        safeX.push(xData[i])
+        safeX.push(String(xData[i] ?? '').trim() || '暂无')
         safeY.push(Number.isFinite(raw) ? Math.max(0, Math.min(100, raw)) : 0)
       }
       if (!this.trendChart) this.trendChart = echarts.init(this.$refs.trendChart)
-      this.trendChart.setOption({
+      const option = {
         grid: { top: 36, left: 36, right: 20, bottom: 28 },
         tooltip: { trigger: 'axis' },
         xAxis: { type: 'category', data: safeX },
@@ -447,7 +447,9 @@ export default {
             padding: [2, 6]
           }
         }]
-      })
+      }
+      this.trendChart.clear()
+      this.trendChart.setOption(option, { notMerge: true, lazyUpdate: false, silent: true })
     },
 
     updateSidebarWidth() {

@@ -11,8 +11,8 @@ It prefers exact matches from FuChuangTiKu knowledge_points YAML files.
 If a tag is not found there, it inherits metadata from its parent tag.
 
 Usage:
-    python backfill_knowledge_tags_metadata.py
-    python backfill_knowledge_tags_metadata.py --dry-run
+    python scripts/db/backfill/backfill_knowledge_tags_metadata.py
+    python scripts/db/backfill/backfill_knowledge_tags_metadata.py --dry-run
 """
 
 from __future__ import annotations
@@ -43,7 +43,7 @@ def get_db_dsn() -> str:
 
 
 def get_backend_root() -> Path:
-    return Path(__file__).resolve().parent
+    return Path(__file__).resolve().parents[3]
 
 
 def load_catalog() -> dict:

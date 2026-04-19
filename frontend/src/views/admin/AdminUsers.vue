@@ -806,13 +806,19 @@ export default {
         yData = [0]
       }
 
-      const validScores = yData.filter((v) => typeof v === 'number')
+      const normalizedXAxis = xData.map((v) => String(v ?? '').trim() || '暂无')
+      const normalizedSeries = yData.map((v) => {
+        const n = Number(v)
+        return Number.isFinite(n) ? n : 0
+      })
+      const validScores = normalizedSeries.filter((v) => Number.isFinite(v))
       const minScore = validScores.length ? Math.min(...validScores) : 0
       const maxScore = validScores.length ? Math.max(...validScores) : 100
       const yMin = Math.max(0, Math.floor((minScore - 10) / 10) * 10)
       const yMax = Math.min(100, Math.ceil((maxScore + 10) / 10) * 10)
+      const canUseMarkPoint = normalizedSeries.length >= 2 && validScores.length >= 2
 
-      this.performanceChartInstance.setOption({
+      const option = {
         backgroundColor: 'transparent',
         tooltip: {
           trigger: 'axis',
@@ -828,7 +834,7 @@ export default {
         },
         xAxis: {
           type: 'category',
-          data: xData,
+          data: normalizedXAxis,
           boundaryGap: false,
           axisLine: { lineStyle: { color: '#E2E8F0' } },
           axisTick: { show: false },
@@ -849,28 +855,33 @@ export default {
           {
             name: seriesName,
             type: 'line',
-            data: yData,
+            data: normalizedSeries,
             smooth: false,
             symbol: 'circle',
             symbolSize: 8,
             itemStyle: { color, borderColor: 'white', borderWidth: 2 },
             lineStyle: { color, width: 2.5 },
             areaStyle: { color: color + '22' },
-            markPoint: {
-              data: [
-                { type: 'max', name: '最高' },
-                { type: 'min', name: '最低' }
-              ],
-              label: { color: 'white', fontSize: 10 },
-              itemStyle: { color },
-              symbolSize: 40
-            }
+            ...(canUseMarkPoint ? {
+              markPoint: {
+                data: [
+                  { type: 'max', name: '最高' },
+                  { type: 'min', name: '最低' }
+                ],
+                label: { color: 'white', fontSize: 10 },
+                itemStyle: { color },
+                symbolSize: 40
+              }
+            } : {})
           }
         ],
         animation: true,
         animationDuration: 600,
         animationEasing: 'cubicOut'
-      }, true)
+      }
+
+      this.performanceChartInstance.clear()
+      this.performanceChartInstance.setOption(option, { notMerge: true, lazyUpdate: false, silent: true })
     },
     addUser() {
       this.editUserForm = {

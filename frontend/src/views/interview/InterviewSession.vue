@@ -455,7 +455,7 @@ renderMarkdown(text) {
   marked.setOptions({ breaks: false });
   const cleaned = text
     .replace(/\r\n|\r/g, '\n')
-    .replace(/\n{3,}/g, '\n\n')
+    .replace(/\n{2,}/g, '\n')
     .trim();
   let html = marked.parse(cleaned);
   html = html

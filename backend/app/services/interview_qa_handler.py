@@ -217,7 +217,7 @@ class InterviewQAHandler:
                     print(f"[TTS] 异步合成失败: {e}")
 
         for content in InterviewTTSHelper.split_stream_display_chunks(spoken_text):
-            if not content:
+            if not content or not content.strip():
                 continue
             full_reply += content
             sentence_buffer += content
@@ -390,6 +390,13 @@ class InterviewQAHandler:
             target_mix_override=(assigned_result.get('question_mix', {}) or {}).get('target') if isinstance(assigned_result, dict) else None,
         )
         teaching_feedback = InterviewQAHandler._resolve_teaching_feedback_mode(session_style, normalized_answer)
+        related_question = diverse_refs[0]['question'] if diverse_refs else None
+        follow_up_chain_context = InterviewGraphHelper.build_follow_up_chain_context(
+            related_question,
+            interview_round=session_round,
+            interview_style=session_style,
+            max_items=3,
+        ) if related_question else ''
 
         system_prompt = InterviewPromptBuilder.build_turn_system_prompt(
             base_prompt=base_prompt,
@@ -404,6 +411,7 @@ class InterviewQAHandler:
             route_prompt=route_prompt,
             assigned_question_prompt=assigned_question_prompt,
             graph_edge_context=graph_edge_context,
+            follow_up_chain_context=follow_up_chain_context,
             round_focus_prompt=round_focus_prompt,
             valid_tags_str=valid_tags_str,
             user_answer_evidence=normalized_answer or '',
@@ -413,7 +421,6 @@ class InterviewQAHandler:
         )
 
         messages = [{"role": "system", "content": system_prompt}]
-        related_question = diverse_refs[0]['question'] if diverse_refs else None
         if related_question:
             messages.append({
                 "role": "system",

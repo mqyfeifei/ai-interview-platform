@@ -21,7 +21,7 @@ class TextInterviewStyleSelectionTestCase(unittest.TestCase):
         interview_columns = {column['name'] for column in inspector.get_columns('interviews')}
         required_columns = {'graph_coverage_rate', 'graph_depth_rate'}
         if not required_columns.issubset(interview_columns):
-            self.skipTest('数据库尚未执行最新迁移，请先运行 backend/scripts/upgrade_graph_db.py')
+            self.skipTest('数据库尚未执行最新迁移，请先运行 backend/scripts/ops/upgrade_graph_db.py')
 
         ts = int(time.time() * 1000)
         self.username = f'style_test_user_{ts}'

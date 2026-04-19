@@ -26,6 +26,7 @@ class InterviewPromptBuilder:
         route_prompt,
         assigned_question_prompt,
         graph_edge_context,
+        follow_up_chain_context,
         round_focus_prompt,
         valid_tags_str,
         user_answer_evidence,
@@ -79,6 +80,7 @@ class InterviewPromptBuilder:
 本轮优先候选题：
 {assigned_question_prompt}
 候选题相邻图谱节点：{graph_edge_context or '暂无'}
+候选题追问链模板：{follow_up_chain_context or '暂无'}
 本轮考察重点：{round_focus_prompt}
 面试大纲范围：[{valid_tags_str}]
 用户本轮原话："{user_answer_evidence}"

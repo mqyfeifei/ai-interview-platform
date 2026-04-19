@@ -15,6 +15,16 @@ from app.models.question import question_tags
 
 class LearningService:
     @staticmethod
+    def _resolve_report_weaknesses(user_id, report_id=None, limit=20):
+        if not report_id:
+            return []
+        interview = Interview.query.filter_by(id=int(report_id), user_id=user_id).first()
+        if not interview:
+            return []
+        from app.services.report_service import ReportService
+        return ReportService._build_report_weaknesses(interview, limit=limit) or []
+
+    @staticmethod
     def _difficulty_factor(difficulty):
         diff = str(difficulty or '').strip().lower()
         if diff == 'hard':
@@ -62,14 +72,11 @@ class LearningService:
     @staticmethod
     def _resolve_focus_tag_ids(user_id, report_id=None):
         if report_id:
-            interview = Interview.query.filter_by(id=int(report_id), user_id=user_id).first()
-            if interview:
-                from app.services.report_service import ReportService
-                weak_rows = ReportService._build_report_weaknesses(interview, limit=20)
-                tag_ids = [row.get('tag_id') for row in weak_rows if row.get('tag_id')]
-                if tag_ids:
-                    return list(dict.fromkeys(tag_ids))
-                return []
+            weak_rows = LearningService._resolve_report_weaknesses(user_id, report_id=report_id, limit=20)
+            tag_ids = [row.get('tag_id') for row in weak_rows if row.get('tag_id')]
+            if tag_ids:
+                return list(dict.fromkeys(tag_ids))
+            return []
         return None
 
     @staticmethod
@@ -127,6 +134,33 @@ class LearningService:
     def get_weaknesses(user_id, limit=5, report_id=None):
         if not user_id:
             return []
+
+        if report_id:
+            report_rows = LearningService._resolve_report_weaknesses(
+                user_id=user_id,
+                report_id=report_id,
+                limit=max(limit, 20)
+            )
+            if not report_rows:
+                return []
+            weaknesses = []
+            for row in report_rows:
+                tag_id = row.get('tag_id')
+                if not tag_id:
+                    continue
+                tag = KnowledgeTag.query.get(tag_id)
+                if not tag:
+                    continue
+                weaknesses.append({
+                    "tag_id": tag.id,
+                    "name": tag.name,
+                    "mastery_level": int(row.get('mastery_level') or 0),
+                    "complexity": tag.complexity,
+                    "estimated_hours": tag.estimated_hours,
+                    "frequency": int(row.get('frequency') or 0)
+                })
+            weaknesses.sort(key=lambda x: (x['mastery_level'], -(x.get('frequency') or 0)))
+            return weaknesses[:limit]
 
         target_job_id = None
         last_interview = Interview.query.filter_by(user_id=user_id, status='completed').order_by(Interview.start_time.desc()).first()
@@ -278,7 +312,9 @@ class LearningService:
                 needed = quota - current_count
                 try:
                     weak_vector = InterviewService.get_embedding(tag_name)
-                    vec_query = Resource.query
+                    vec_query = Resource.query.join(resource_tags, Resource.id == resource_tags.c.resource_id).filter(
+                        resource_tags.c.tag_id == tag_id
+                    )
                     exclude_vec_ids = list(completed_ids | recommended_ids)
                     if exclude_vec_ids:
                         vec_query = vec_query.filter(~Resource.id.in_(exclude_vec_ids))

@@ -667,20 +667,31 @@ async created() {
         seriesName = dimLabels[this.activeCurveTab] || this.activeCurveTab
       }
 
+      const normalizedXAxis = (xData || []).map(v => String(v ?? '').trim() || '暂无')
+      const normalizedSeries = (scoreData || []).map(v => {
+        const n = Number(v)
+        return Number.isFinite(n) ? n : 0
+      })
+
       // 检查是否有有效数据，避免 ECharts 渲染空系列报错
-      if (!xData.length || !scoreData.length) {
+      if (!normalizedXAxis.length || !normalizedSeries.length) {
         console.warn('图表数据为空，跳过渲染')
         return
       }
+      const safeLength = Math.min(normalizedXAxis.length, normalizedSeries.length)
+      if (!safeLength) return
+      const safeX = normalizedXAxis.slice(0, safeLength)
+      const safeY = normalizedSeries.slice(0, safeLength)
 
       // Y轴自适应范围
-      const allScores = scoreData.filter(v => typeof v === 'number')
+      const allScores = safeY.filter(v => Number.isFinite(v))
       const minScore = allScores.length ? Math.min(...allScores) : 0
       const maxScore = allScores.length ? Math.max(...allScores) : 100
       const yMin = Math.max(0, Math.floor((minScore - 10) / 10) * 10)
       const yMax = Math.min(100, Math.ceil((maxScore + 10) / 10) * 10)
+      const canUseMarkPoint = safeY.length >= 2 && allScores.length >= 2
 
-      this.chartInstance.setOption({
+      const option = {
         backgroundColor: 'transparent',
         grid: { top: 24, right: 16, bottom: 32, left: 40 },
         tooltip: {
@@ -697,7 +708,7 @@ async created() {
           }
         },
         xAxis: {
-          type: 'category', data: xData,
+          type: 'category', data: safeX,
           axisLine: { lineStyle: { color: '#E2E8F0' } },
           axisTick: { show: false },
           axisLabel: { color: '#94A3B8', fontSize: 11, fontFamily: "'Noto Sans SC'" }
@@ -709,25 +720,29 @@ async created() {
           axisLine: { show: false }, axisTick: { show: false }
         },
         series: [{
-          name: seriesName, type: 'line', data: scoreData,
+          name: seriesName, type: 'line', data: safeY,
           smooth: false, symbol: 'circle', symbolSize: 8,
           itemStyle: { color: color, borderColor: 'white', borderWidth: 2 },
           lineStyle: { color: color, width: 2.5 },
           areaStyle: { color: color + '18' },
-          markPoint: {
-            data: [
-              { type: 'max', name: '最高' },
-              { type: 'min', name: '最低' }
-            ],
-            label: { color: 'white', fontSize: 10 },
-            itemStyle: { color: color },
-            symbolSize: 40
-          }
+          ...(canUseMarkPoint ? {
+            markPoint: {
+              data: [
+                { type: 'max', name: '最高' },
+                { type: 'min', name: '最低' }
+              ],
+              label: { color: 'white', fontSize: 10 },
+              itemStyle: { color: color },
+              symbolSize: 40
+            }
+          } : {})
         }],
         animation: true,
         animationDuration: 600,
         animationEasing: 'cubicOut'
-      }, true)
+      }
+      this.chartInstance.clear()
+      this.chartInstance.setOption(option, { notMerge: true, lazyUpdate: false, silent: true })
     },
 
     switchCurveTab(key) {

@@ -74,6 +74,32 @@ class InterviewGraphHelper:
     }
 
     @staticmethod
+    def _is_question_domain_match(job, question):
+        """按岗位做题目域匹配，避免明显错岗题混入选题池。"""
+        if not job or not question:
+            return True
+
+        job_name = (getattr(job, 'name', '') or '').lower()
+        q_text = str(getattr(question, 'content', '') or '').lower()
+
+        if any(k in job_name for k in ('视觉', 'cv', 'image', 'computer vision')):
+            network_keywords = (
+                'arp', 'proxy arp', 'gratuitous arp', 'dhcp', 'dns', 'tcp', 'udp', 'icmp',
+                'vlan', '子网', '掩码', '网关', '路由', '交换机', 'mac地址', '证书链',
+                'root ca', 'ssl', 'tls', 'https', 'x.509', 'x509'
+            )
+            cv_keywords = (
+                'opencv', 'cnn', 'yolo', '图像', '视觉', '检测', '分割', '跟踪',
+                '特征提取', '标注', 'mAP', 'iou', '推理', '模型', 'vit', 'transformer'
+            )
+            has_network = any(k in q_text for k in network_keywords)
+            has_cv = any(k in q_text for k in cv_keywords)
+            if has_network and not has_cv:
+                return False
+
+        return True
+
+    @staticmethod
     def normalize_target_source(raw_source):
         source = str(raw_source or '').strip()
         if not source:
@@ -1109,6 +1135,10 @@ class InterviewGraphHelper:
                     questions = merged
                 elif generic_questions:
                     questions = generic_questions
+        if questions and job:
+            domain_matched = [q for q in questions if InterviewGraphHelper._is_question_domain_match(job, q)]
+            if domain_matched:
+                questions = domain_matched
         target_mix = dict(strategy.get('target_mix') or {})
         target_difficulty = dict(strategy.get('difficulty') or {})
         round_focus = strategy.get('focus', '')

@@ -259,9 +259,15 @@ export default {
         this.top_users = Array.isArray(data.top_users) ? data.top_users.slice(0, 8) : []
         this.recent_events = Array.isArray(data.recent_events) ? data.recent_events.slice(0, 10) : []
         if (Array.isArray(data.usage_trend)) {
-          this.usageTrend.dates = data.usage_trend.map(item => item.date)
-          this.usageTrend.total_users = data.usage_trend.map(item => item.total_users)
-          this.usageTrend.total_interviews = data.usage_trend.map(item => item.total_interviews)
+          this.usageTrend.dates = data.usage_trend.map(item => String(item?.date ?? '').trim() || '未知')
+          this.usageTrend.total_users = data.usage_trend.map(item => {
+            const n = Number(item?.total_users)
+            return Number.isFinite(n) ? n : 0
+          })
+          this.usageTrend.total_interviews = data.usage_trend.map(item => {
+            const n = Number(item?.total_interviews)
+            return Number.isFinite(n) ? n : 0
+          })
         } else {
           this.usageTrend = { dates: [], total_users: [], total_interviews: [] }
         }
@@ -342,7 +348,8 @@ export default {
         ]
       }
 
-      this.echartsInstance.setOption(option)
+      this.echartsInstance.clear()
+      this.echartsInstance.setOption(option, { notMerge: true, lazyUpdate: false, silent: true })
       window.addEventListener('resize', () => {
         if (this.echartsInstance) this.echartsInstance.resize()
       })

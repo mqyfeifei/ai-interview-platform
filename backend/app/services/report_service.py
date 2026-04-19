@@ -224,6 +224,8 @@ class ReportService:
                 continue
             q_obj = question_map[q_id]
             for tag in list(getattr(q_obj, 'knowledge_tags', []) or []):
+                if not cls._is_tag_related_to_gap(tag.name, item, gap_detail):
+                    continue
                 bucket = tag_bad_examples.setdefault(tag.id, [])
                 bucket.append(gap_detail)
                 tag_counter[tag.id] += 1
@@ -297,6 +299,57 @@ class ReportService:
                     keywords.append(token)
         return list(dict.fromkeys(keywords))[:6]
 
+    @staticmethod
+    def _normalize_text_for_match(text):
+        return re.sub(r'[\s·•\-_（）()、,，。；:：]+', '', str(text or '').lower())
+
+    @classmethod
+    def _extract_match_tokens(cls, text):
+        normalized = cls._normalize_text_for_match(text)
+        if not normalized:
+            return []
+        parts = re.findall(r'[a-z0-9\+\#\.\/]+|[\u4e00-\u9fff]{2,}', normalized)
+        if parts:
+            return list(dict.fromkeys(parts))
+        return [normalized] if len(normalized) >= 2 else []
+
+    @classmethod
+    def _is_tag_related_to_gap(cls, tag_name, item, gap_detail):
+        tag_text = str(tag_name or '').strip()
+        if not tag_text:
+            return False
+
+        question_text = str(item.get('question') or '')
+        answer_text = str(item.get('answer') or '')
+        refs = item.get('reference') or []
+        missing_keywords = (gap_detail or {}).get('missing_keywords') or []
+
+        corpus = " ".join(
+            [question_text, answer_text] +
+            [str(x) for x in refs] +
+            [str(x) for x in missing_keywords]
+        )
+        normalized_corpus = cls._normalize_text_for_match(corpus)
+        normalized_tag = cls._normalize_text_for_match(tag_text)
+        if normalized_tag and normalized_tag in normalized_corpus:
+            return True
+
+        tag_tokens = cls._extract_match_tokens(tag_text)
+        corpus_tokens = set(cls._extract_match_tokens(corpus))
+        if not tag_tokens or not corpus_tokens:
+            return False
+
+        overlap = [tok for tok in tag_tokens if tok in corpus_tokens]
+        if overlap:
+            return True
+
+        # 复合标签（A/B、A与B）的弱匹配兜底
+        sub_tokens = []
+        for seg in re.split(r'[\/与和及、]+', tag_text):
+            sub_tokens.extend(cls._extract_match_tokens(seg))
+        sub_tokens = list(dict.fromkeys(sub_tokens))
+        return bool(sub_tokens and any(tok in corpus_tokens for tok in sub_tokens))
+
     @classmethod
     def _build_question_gap_detail(cls, item):
         answer = (item.get('answer') or '').strip()
@@ -333,6 +386,27 @@ class ReportService:
         return None
 
     @classmethod
+    def _filter_missing_keywords_by_tag(cls, tag_name, missing_keywords):
+        keywords = [str(x).strip() for x in (missing_keywords or []) if str(x).strip()]
+        if not keywords:
+            return []
+
+        tag_tokens = set(cls._extract_match_tokens(tag_name))
+        if not tag_tokens:
+            return []
+
+        matched = []
+        normalized_tag = cls._normalize_text_for_match(tag_name)
+        for kw in keywords:
+            kw_tokens = set(cls._extract_match_tokens(kw))
+            normalized_kw = cls._normalize_text_for_match(kw)
+            if kw_tokens and kw_tokens.intersection(tag_tokens):
+                matched.append(kw)
+            elif normalized_kw and normalized_kw in normalized_tag:
+                matched.append(kw)
+        return matched[:2]
+
+    @classmethod
     def _build_weakness_point(cls, weakness):
         tag_name = str(weakness.get('name') or '该知识点').strip() or '该知识点'
         examples = weakness.get('examples') or []
@@ -344,9 +418,12 @@ class ReportService:
         question = cls._truncate_text(ex.get('question') or '本场相关题目', 30)
         gap_type = ex.get('gap_type') or ''
         missing_keywords = [str(x).strip() for x in (ex.get('missing_keywords') or []) if str(x).strip()]
+        related_missing_keywords = cls._filter_missing_keywords_by_tag(tag_name, missing_keywords)
 
-        if gap_type == 'keyword_gap' and missing_keywords:
-            reason = f'在“{question}”这题中，你对{tag_name}的关键点（{"、".join(missing_keywords)}）覆盖不足，因此该知识点被识别为待提升项。'
+        if gap_type == 'keyword_gap' and related_missing_keywords:
+            reason = f'在“{question}”这题中，你对{tag_name}的关键点（{"、".join(related_missing_keywords)}）覆盖不足，因此该知识点被识别为待提升项。'
+        elif gap_type == 'keyword_gap':
+            reason = f'在“{question}”这题中，你对{tag_name}的核心概念与实现细节覆盖不足，因此该知识点被识别为待提升项。'
         elif gap_type == 'no_answer':
             reason = f'在“{question}”这题中，你的回答信息不足，未体现{tag_name}的核心思路与实现过程，因此被识别为待提升项。'
         elif gap_type == 'too_short':

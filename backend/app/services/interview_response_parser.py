@@ -56,7 +56,10 @@ class InterviewResponseParser:
         text = str(spoken_text or '').replace('[INTERVIEW_OVER]', '').strip()
         for pattern in InterviewResponseParser._LABEL_PATTERNS:
             text = pattern.sub('', text)
-        text = re.sub(r'\n{3,}', '\n\n', text).strip()
+        text = re.sub(r'\r\n|\r', '\n', text)
+        text = re.sub(r'[ \t]+\n', '\n', text)
+        text = re.sub(r'\n[ \t]+', '\n', text)
+        text = re.sub(r'\n{2,}', '\n', text).strip()
         if not text:
             return '我们继续，你围绕刚才的问题补充一个具体例子：你的做法、指标结果和一次关键取舍是什么？'
 
