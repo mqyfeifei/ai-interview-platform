@@ -38,6 +38,14 @@ class ReportService:
         r'^(好|好的|嗯|嗯嗯|嗯哼|哦|噢|啊|行|可以|是|对|没了|没有了|不知道|ok|okay|yes|no|1|2|3|4|5|6|7|8|9|0|[，。！？、\s]+)$',
         re.IGNORECASE
     )
+    _NON_QUESTION_CLOSING_PATTERN = re.compile(
+        r'(感谢|谢谢|本次面试|今天的面试|今天就到这里|先到这里|结束语|祝你|后续通知|辛苦了)',
+        re.IGNORECASE
+    )
+    _QUESTION_HINT_PATTERN = re.compile(
+        r'(如何|怎么|为什么|是否|有没有|哪些|哪个|什么|请你|请说明|请介绍|你会|你如何|能否|如果|那在)',
+        re.IGNORECASE
+    )
 
     @staticmethod
     def _split_text_to_list(raw_text):
@@ -81,6 +89,25 @@ class ReportService:
         if len(t) <= 2:
             return True
         return bool(cls._MEANINGLESS_ANSWER_PATTERN.match(t))
+
+    @classmethod
+    def _is_reviewable_question_text(cls, text):
+        content = str(text or '').replace('[INTERVIEW_OVER]', '').strip()
+        if not content:
+            return False
+
+        has_question_signal = (
+            ('？' in content) or
+            ('?' in content) or
+            bool(cls._QUESTION_HINT_PATTERN.search(content))
+        )
+        if has_question_signal:
+            return True
+
+        # 非疑问且明显是收尾致谢话术，不进入逐题回顾
+        if cls._NON_QUESTION_CLOSING_PATTERN.search(content):
+            return False
+        return False
 
     @staticmethod
     def _is_enterprise_source(source):
@@ -165,6 +192,8 @@ class ReportService:
                 continue
             question_text = (chat.content or '').replace('[INTERVIEW_OVER]', '').strip()
             if not question_text:
+                continue
+            if not cls._is_reviewable_question_text(question_text):
                 continue
 
             user_reply = None
@@ -1055,7 +1084,7 @@ class ReportService:
         total_score = interview.total_score or 0
 
         dimensions, dimension_comments = cls._build_dimensions(interview.id)
-        dim_highlights, dim_improvements = cls._build_dimension_feedback(dimensions)
+        _, dim_improvements = cls._build_dimension_feedback(dimensions)
         highlights = []
         for dim_key, dim_score in dimensions.items():
             label_map = {
@@ -1071,7 +1100,6 @@ class ReportService:
                 summary = '可继续保持这一优势' if int(dim_score or 0) >= 80 else '建议继续通过专项练习强化'
                 highlights.append(f'【{label}】{comment}。{summary}。')
         highlights.extend(cls._split_text_to_list(interview.evaluation_highlights))
-        highlights.extend(dim_highlights)
         highlights = list(dict.fromkeys([h for h in highlights if h]))
 
         raw_improvements = cls._split_text_to_list(interview.evaluation_improvements) + dim_improvements

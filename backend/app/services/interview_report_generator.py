@@ -7,12 +7,52 @@
 import re
 import json
 from datetime import datetime
+from urllib.parse import quote
+
+from pydantic import BaseModel, Field, ValidationError
 
 from app.extensions import db
 from app.models.interview import Interview, InterviewChat, InterviewScore, Dimension
-from app.models.learning import KnowledgeTag, UserKnowledgeMastery
+from app.models.learning import KnowledgeTag, UserKnowledgeMastery, Resource, UserLearning
 from app.models.example import Example
 from app.utils.llm_client import DeepSeekClient
+
+
+WEAKNESS_SEARCH_PROMPT_TEMPLATE = """
+你是资深技术面试官。请基于给定的面试记录与评分结果，识别候选人的待提升项。
+
+任务要求：
+1. 输出 3~8 个待提升项（按优先级从高到低）。
+2. 每个待提升项必须包含：
+   - title：简洁标题（如“数据增强算子不熟悉”）
+   - description：结合面试表现的具体问题描述
+   - search_keyword：1个可直接用于检索学习资源的精确关键词（面向 B站或掘金检索）
+3. search_keyword 要求：
+   - 必须是中文技术关键词，避免空泛词（如“学习Python”）
+   - 包含技术领域+主题+实践导向词更佳（如“CV 数据增强算子 实战”）
+   - 每个待提升项仅输出 1 个关键词
+
+严格输出格式（只允许纯 JSON，不要任何 Markdown、解释文字、前后缀）：
+{
+  "weaknesses": [
+    {
+      "title": "待提升项标题（如：数据增强算子不熟悉）",
+      "description": "具体表现描述",
+      "search_keyword": "CV 数据增强算子实战"
+    }
+  ]
+}
+""".strip()
+
+
+class WeaknessSearchItem(BaseModel):
+    title: str = Field(min_length=1, max_length=200)
+    description: str = Field(min_length=1, max_length=2000)
+    search_keyword: str = Field(min_length=1, max_length=120)
+
+
+class WeaknessSearchPayload(BaseModel):
+    weaknesses: list[WeaknessSearchItem] = Field(default_factory=list)
 
 
 class InterviewReportGenerator:
@@ -28,6 +68,70 @@ class InterviewReportGenerator:
     def _normalize_dimension_name(cls, dim_name):
         name = str(dim_name or '').strip()
         return cls.DIMENSION_ALIASES.get(name, name)
+
+    @staticmethod
+    def _extract_json_block(text):
+        cleaned_text = str(text or '').replace("```json", "").replace("```", "").strip()
+        json_match = re.search(r'\{.*\}', cleaned_text, re.DOTALL)
+        if json_match:
+            return json_match.group(0)
+        raise ValueError("未在模型响应中匹配到有效的 JSON 结构")
+
+    @staticmethod
+    def _build_dynamic_search_url(search_keyword, platform="bilibili"):
+        encoded_keyword = quote(str(search_keyword or '').strip(), safe='')
+        if not encoded_keyword:
+            raise ValueError("search_keyword 不能为空")
+        if platform == "bilibili":
+            return f"https://search.bilibili.com/all?keyword={encoded_keyword}"
+        if platform == "juejin":
+            return f"https://juejin.cn/search?query={encoded_keyword}"
+        raise ValueError(f"不支持的搜索平台: {platform}")
+
+    @classmethod
+    def _parse_weakness_search_payload(cls, raw_text):
+        try:
+            payload = json.loads(cls._extract_json_block(raw_text))
+            return WeaknessSearchPayload.model_validate(payload)
+        except (json.JSONDecodeError, ValidationError, ValueError) as e:
+            raise ValueError(f"解析弱项推荐 JSON 失败: {e}") from e
+
+    @classmethod
+    def _generate_and_save_dynamic_resources(cls, interview, chat_history, report_data, llm):
+        user_payload = {
+            "interview_context": chat_history,
+            "report_summary": {
+                "total_score": report_data.get("total_score"),
+                "dimensions": report_data.get("dimensions", {}),
+                "improvements": report_data.get("improvements", ""),
+                "suggestions": report_data.get("suggestions", "")
+            }
+        }
+        weakness_response = llm.generate_reply([
+            {"role": "system", "content": WEAKNESS_SEARCH_PROMPT_TEMPLATE},
+            {"role": "user", "content": json.dumps(user_payload, ensure_ascii=False)}
+        ])
+        weakness_payload = cls._parse_weakness_search_payload(weakness_response)
+
+        for item in weakness_payload.weaknesses:
+            keyword = item.search_keyword.strip()
+            resource = Resource(
+                title=f"AI专属推荐：{keyword}",
+                url=cls._build_dynamic_search_url(keyword, platform="bilibili"),
+                type="dynamic_search",
+                source="bilibili_search"
+            )
+            db.session.add(resource)
+            db.session.flush()
+
+            learning = UserLearning(
+                user_id=interview.user_id,
+                resource_id=resource.id,
+                status='pending',
+                progress=0
+            )
+            db.session.add(learning)
+            db.session.flush()
     
     @staticmethod
     def finish_interview(interview_id):
@@ -137,16 +241,7 @@ class InterviewReportGenerator:
         
         # 6. 解析并验证JSON
         try:
-            # 清理markdown标记
-            cleaned_text = response_text.replace("```json", "").replace("```", "").strip()
-            
-            # 提取首尾大括号之间的核心JSON块
-            json_match = re.search(r'\{.*\}', cleaned_text, re.DOTALL)
-            if json_match:
-                cleaned_text = json_match.group(0)
-            else:
-                raise ValueError("未在模型响应中匹配到有效的 JSON 结构")
-            
+            cleaned_text = InterviewReportGenerator._extract_json_block(response_text)
             report_data = json.loads(cleaned_text)
         
         except (json.JSONDecodeError, ValueError) as e:
@@ -188,6 +283,14 @@ class InterviewReportGenerator:
         # 9. 更新用户知识图谱掌握度
         InterviewReportGenerator._update_knowledge_mastery(
             interview, report_data.get("knowledge_tags_eval", {}), questions
+        )
+
+        # 10. 动态创建搜索资源并写入学习计划
+        InterviewReportGenerator._generate_and_save_dynamic_resources(
+            interview=interview,
+            chat_history=chat_history,
+            report_data=report_data,
+            llm=llm
         )
         
         db.session.commit()

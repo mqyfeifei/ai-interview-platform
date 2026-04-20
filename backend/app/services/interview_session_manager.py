@@ -634,6 +634,15 @@ class InterviewSessionManager:
 
             if 'source' in session_config and session_config['source'] is not None and 'target_source' not in session_config:
                 payload['target_source'] = session_config['source']
+
+        # 覆盖后再次标准化关键字段，避免出现 interview_round=1 这类非规范值泄漏到后续流程
+        payload['interview_style'] = InterviewSessionManager.normalize_interview_style(
+            voice_mode=voice_mode,
+            interview_style=payload.get('interview_style'),
+            voice_role=voice_role,
+        )
+        round_value = str(payload.get('interview_round', '')).strip().lower()
+        payload['interview_round'] = ROUND_ALIASES.get(round_value) or 'first_round'
         
         # 最后，如果明确传入了 voice 参数，优先使用
         if voice:
@@ -724,6 +733,36 @@ class InterviewSessionManager:
         return True
 
     @staticmethod
+    def _is_opening_intro_domain_match(job, opening_text):
+        """校验开场首句是否跑偏到非岗位方向（重点拦截 CV 场景下网络项目开场）。"""
+        content = str(opening_text or '').strip()
+        if not content:
+            return False
+        first_sentence = next((seg.strip() for seg in re.split(r'[。！？!?]', content) if seg.strip()), content)
+        if not first_sentence:
+            return False
+
+        job_name = (getattr(job, 'name', '') or '').lower()
+        is_cv_job = any(k in job_name for k in ('视觉', 'cv', 'image', 'computer vision'))
+        if is_cv_job:
+            normalized = first_sentence.lower()
+            network_keywords = (
+                'arp', 'proxy arp', 'gratuitous arp', 'dhcp', 'dns', 'tcp', 'udp', 'icmp',
+                'ip', 'vlan', '子网', '掩码', '网关', '路由', '交换机', 'mac地址', 'osi',
+                '证书链', 'root ca', 'ca', 'ssl', 'tls', 'https', 'x.509', 'x509',
+                '园区网', '数据中心网络'
+            )
+            cv_keywords = (
+                'opencv', 'cnn', 'yolo', '图像', '视觉', '检测', '分割', '跟踪',
+                '特征提取', '标注', 'mAP', 'iou', '推理', '模型', 'pytorch', '量化'
+            )
+            has_network = any(k in normalized for k in network_keywords)
+            has_cv = any(k in normalized for k in cv_keywords)
+            if has_network and not has_cv:
+                return False
+        return True
+
+    @staticmethod
     def _pick_opening_seed_question(job, target_source='通用', seed=None):
         """快速挑选岗位匹配的开场首问，避免走重型选题链路。"""
         if not job:
@@ -799,7 +838,7 @@ class InterviewSessionManager:
         return "请你结合一个最有代表性的项目，说明你如何完成问题建模、方案选择和效果评估。"
 
     @staticmethod
-    def _build_resume_personalized_opening(resume_data, opening_seed_question, round_focus=''):
+    def _build_resume_personalized_opening(resume_data, opening_seed_question, round_focus='', job=None):
         """在大模型超时时，基于简历结构化数据快速生成个性化开场。"""
         content = (resume_data or {}).get('content', {}) if isinstance(resume_data, dict) else {}
 
@@ -832,8 +871,14 @@ class InterviewSessionManager:
                 if org or role:
                     experiences.append((org or '校园项目', role or '成员角色'))
 
-        if experiences:
-            org, role = experiences[0]
+        selected_experience = None
+        for org, role in experiences:
+            probe = f"我看你在{org}做过{role}"
+            if InterviewSessionManager._is_opening_intro_domain_match(job, probe):
+                selected_experience = (org, role)
+                break
+        if selected_experience:
+            org, role = selected_experience
             first_sentence = f"我看你在{org}做过{role}，先从这个项目里你最关键的一次技术决策聊起。"
         elif skills:
             top_skills = '、'.join(skills[:2])
@@ -1172,6 +1217,7 @@ class InterviewSessionManager:
             resume_data=resume_data,
             opening_seed_question=opening_seed_question,
             round_focus=round_focus,
+            job=job,
         )
         
         # 5. 结合简历生成个性化开场问题（直接提问，不做风格说明）
@@ -1191,6 +1237,8 @@ class InterviewSessionManager:
                     f"你是{company_desc}的{job_name}面试官。"
                     f"请输出两句话：第一句自然破冰并提到候选人简历里的真实经历；"
                     f"第二句只提一个首问，并以这道题为准：{opening_seed_question}。"
+                    f"第一句必须围绕{job_name}方向，若简历缺少该方向经历，直接用“我们直接进入{job_name}方向正题”过渡。"
+                    "禁止把非该岗位方向的项目当作主导项目引入。"
                     "禁止解释流程、禁止“这轮我会重点看…/最熟悉的实战场景”等模板化表达。"
                     "语气像真人面试官，简洁直接。只输出最终话术。"
                 )
@@ -1243,14 +1291,18 @@ class InterviewSessionManager:
                     personalized_greeting = personalized_greeting.replace('[INTERVIEW_OVER]', '').strip()
                     if not personalized_greeting.rstrip().endswith(('？', '?', '。', '！', '!')):
                         personalized_greeting = f"{personalized_greeting}？"
-                    if InterviewSessionManager._is_opening_similar(personalized_greeting, recent_openings):
-                        if deterministic_personalized_greeting:
-                            greeting = f"{opening_prefix}{deterministic_personalized_greeting}"
+                    if not InterviewSessionManager._is_opening_intro_domain_match(job, personalized_greeting):
+                        personalized_greeting = ''
+                        print("[开场问题生成] 首句岗位方向不匹配，回退到非LLM开场模板。")
+                    if personalized_greeting:
+                        if InterviewSessionManager._is_opening_similar(personalized_greeting, recent_openings):
+                            if deterministic_personalized_greeting:
+                                greeting = f"{opening_prefix}{deterministic_personalized_greeting}"
+                            else:
+                                greeting = f"{opening_prefix}我们直接进入正题。{opening_seed_question}"
                         else:
-                            greeting = f"{opening_prefix}我们直接进入正题。{opening_seed_question}"
-                    else:
-                        greeting = f"{opening_prefix}{personalized_greeting}"
-                        opening_from_llm = True
+                            greeting = f"{opening_prefix}{personalized_greeting}"
+                            opening_from_llm = True
             except Exception as e:
                 print(f"个性化开场问题生成失败，使用默认问题: {str(e)}")
         except Exception as e:

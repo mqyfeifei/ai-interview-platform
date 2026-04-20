@@ -9,6 +9,11 @@ class InterviewResponseParser:
         re.compile(r'第\s*\d+\s*题[:：]?'),
         re.compile(r'^\s*\d+[\.、]\s*', re.MULTILINE),
     ]
+    _AIISH_BRIDGE_PATTERNS = [
+        re.compile(r'^\s*(那我|那就|我再|我来)?追问一下[：:，,\s]*'),
+        re.compile(r'^\s*继续追问一下[：:，,\s]*'),
+        re.compile(r'^\s*我再补问一下[：:，,\s]*'),
+    ]
 
     @staticmethod
     def _strip_code_fence(text):
@@ -55,6 +60,8 @@ class InterviewResponseParser:
     def sanitize_spoken_text(spoken_text, max_questions_per_turn=1):
         text = str(spoken_text or '').replace('[INTERVIEW_OVER]', '').strip()
         for pattern in InterviewResponseParser._LABEL_PATTERNS:
+            text = pattern.sub('', text)
+        for pattern in InterviewResponseParser._AIISH_BRIDGE_PATTERNS:
             text = pattern.sub('', text)
         text = re.sub(r'\r\n|\r', '\n', text)
         text = re.sub(r'[ \t]+\n', '\n', text)
