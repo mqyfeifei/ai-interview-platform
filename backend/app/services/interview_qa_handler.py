@@ -487,7 +487,7 @@ class InterviewQAHandler:
             yield f"data: {json.dumps(payload, ensure_ascii=False)}\n\n"
 
         if '[INTERVIEW_OVER]' in spoken_text:
-            yield f"data: {json.dumps({'chunk': '[INTERVIEW_OVER]'}, ensure_ascii=False)}\n\n"
+            yield f"data: {json.dumps({'chunk': '[INTERVIEW_OVER]', 'interview_over': True}, ensure_ascii=False)}\n\n"
 
         ai_chat = InterviewChat(
             interview_id=interview.id,

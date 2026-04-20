@@ -29,7 +29,7 @@ export const startInterview = async (data) => {
     voice_role: data.voiceRole,
     voice: data.voice || null
   }, {
-    timeout: 60000  // 单独设置 60 秒，确保 TTS 初始化和音频生成有充足时间
+    timeout: 120000  // 启动阶段可能包含开场白生成+TTS，放宽到 120 秒避免前端先超时
   })
   // 响应拦截器已解包，res 就是后端返回的 data 对象
   // 统一适配为前端期望的格式
@@ -145,8 +145,8 @@ export const sendVoiceAnswerStream = (sessionId, answer, { onChunk, onFinish, on
           onAudio(json.audio_b64)
         }
 
-        // ✅ 检测面试结束标记
-        if (!isOver && fullText.includes('[INTERVIEW_OVER]')) {
+        // ✅ 检测面试结束标记（兼容显式标志 + 文本标志）
+        if (!isOver && (json.interview_over === true || fullText.includes('[INTERVIEW_OVER]'))) {
           isOver = true
           const cleanChunk = chunk.replace('[INTERVIEW_OVER]', '')
           if (cleanChunk && onChunk) onChunk(cleanChunk)
@@ -260,7 +260,7 @@ export const sendAnswerStream = (sessionId, answer, { onChunk, onFinish, onStrea
           onAudio(json.audio_b64)
         }
 
-        if (!isOver && fullText.includes('[INTERVIEW_OVER]')) {
+        if (!isOver && (json.interview_over === true || fullText.includes('[INTERVIEW_OVER]'))) {
           isOver = true
           const cleanChunk = chunk.replace('[INTERVIEW_OVER]', '')
           if (cleanChunk && onChunk) onChunk(cleanChunk)

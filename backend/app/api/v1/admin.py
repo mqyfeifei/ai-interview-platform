@@ -1144,7 +1144,8 @@ def _resolve_import_source(entity, file_obj=None):
         if not index_path.exists():
             return None, '未找到 FuChuangTiKu/index.yaml'
         try:
-            index_data = yaml.safe_load(index_path)
+            with open(index_path, 'r', encoding='utf-8') as fp:
+                index_data = yaml.safe_load(fp) or {}
         except Exception:
             return None, '无法解析 index.yaml'
 

@@ -7,6 +7,7 @@ from app.extensions import db
 from app.models.user import User
 from app.models.job import Job
 from app.models.interview import Interview, InterviewChat, InterviewScore, Dimension
+from app.models.learning import Resource, UserLearning
 
 
 class ReportApiIntegrationTestCase(unittest.TestCase):
@@ -19,6 +20,12 @@ class ReportApiIntegrationTestCase(unittest.TestCase):
         self.created_interview_ids = []
 
     def tearDown(self):
+        if self.created_user_ids:
+            learning_rows = UserLearning.query.filter(UserLearning.user_id.in_(self.created_user_ids)).all()
+            resource_ids = [row.resource_id for row in learning_rows if row.resource_id]
+            UserLearning.query.filter(UserLearning.user_id.in_(self.created_user_ids)).delete(synchronize_session=False)
+            if resource_ids:
+                Resource.query.filter(Resource.id.in_(resource_ids)).delete(synchronize_session=False)
         if self.created_interview_ids:
             Interview.query.filter(Interview.id.in_(self.created_interview_ids)).delete(synchronize_session=False)
         if self.created_user_ids:
@@ -106,6 +113,21 @@ class ReportApiIntegrationTestCase(unittest.TestCase):
             InterviewScore(interview_id=interview.id, dimension_id=dim_map['表达沟通'].id, score=82, comment='较好'),
             InterviewScore(interview_id=interview.id, dimension_id=dim_map['应变能力'].id, score=84, comment='较好')
         ])
+        dynamic_resource = Resource(
+            title='AI专属推荐（技术专项）：JVM 内存模型',
+            type='dynamic_search',
+            url='https://search.bilibili.com/all?keyword=JVM%20%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B',
+            source=f'llm_dynamic:bilibili:interview:{interview.id}',
+            content='针对本场面试JVM内存模型的动态推荐'
+        )
+        db.session.add(dynamic_resource)
+        db.session.flush()
+        db.session.add(UserLearning(
+            user_id=user_id,
+            resource_id=dynamic_resource.id,
+            status='pending',
+            progress=0
+        ))
         db.session.commit()
         self.created_interview_ids.append(interview.id)
         return interview.id
@@ -125,6 +147,10 @@ class ReportApiIntegrationTestCase(unittest.TestCase):
         self.assertIn('suggestions', body['data'])
         self.assertEqual(body['data']['suggestions'], ['建议A', '建议B'])
         self.assertIn('questions', body['data'])
+        self.assertTrue(any(
+            str(item.get('type') or '') == 'dynamic_search'
+            for item in (body['data'].get('recommendedResources') or [])
+        ))
 
     def test_list_reports(self):
         user_id, token = self._register_and_login()

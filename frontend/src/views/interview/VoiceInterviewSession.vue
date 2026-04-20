@@ -524,6 +524,19 @@ export default {
       return !/^(好|好的|嗯|嗯嗯|嗯哼|哦|噢|啊|行|可以|是|对|没了|没有了|不知道|ok|okay|yes|no|[，。！？、\s]+)$/i.test(t)
     },
 
+    shouldAutoFinishByClosingText() {
+      const lastAi = [...this.messages].reverse().find(
+        m => m.role === 'ai' && (m.content || '').trim()
+      )
+      if (!lastAi) return false
+      const text = (lastAi.content || '').trim()
+      if (!text) return false
+
+      const hasClosingSignal = /(感谢(?:你|您)?(?:今天|本次|此次)?(?:的)?面试|今天(?:的)?面试(?:就)?到这里|本轮面试(?:就)?到这里|面试(?:就)?到此结束|祝你求职顺利|后续会通知)/.test(text)
+      const hasQuestionSignal = /[？?]/.test(text)
+      return hasClosingSignal && !hasQuestionSignal
+    },
+
     async handleSend() {
       const text = this.inputText.trim()
       // ✅ 修复：移除 isTranscribing 检查，语音模式下不需要
@@ -595,6 +608,16 @@ export default {
           // ✅ 标记流式消息完成
           this.$store.commit('interview/MARK_STREAM_DONE')
           this.$store.commit('interview/SET_LOADING', false)
+
+          // 兜底：若模型输出了明显结束语但缺少结束标记，仍自动收尾生成报告
+          if (!this.isFinished && !this.isEnding && this.shouldAutoFinishByClosingText()) {
+            console.log('[语音面试] 检测到结束语，触发自动结束')
+            this.clearTTSQueue()
+            this.endInterview().catch((err) => {
+              console.error('[语音面试] 自动结束失败:', err)
+            })
+            return
+          }
           
           // ✅ 关键：不立即开始录音，等待 TTS 音频播放完毕
           // playNextTTSAudio() 会在队列清空时自动触发 tryScheduleAutoRecording()

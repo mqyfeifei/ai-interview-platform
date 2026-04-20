@@ -690,6 +690,78 @@ class ReportService:
         return {row.resource_id for row in rows}
 
     @classmethod
+    def _get_dynamic_resources_for_interview(cls, user_id, interview_id, exclude_ids=None):
+        if not user_id or not interview_id:
+            return []
+        excluded = set(exclude_ids or [])
+        rows = (
+            db.session.query(Resource, UserLearning)
+            .join(UserLearning, UserLearning.resource_id == Resource.id)
+            .filter(
+                UserLearning.user_id == user_id,
+                Resource.type == 'dynamic_search',
+                Resource.source.ilike(f"%interview:{int(interview_id)}%")
+            )
+            .order_by(Resource.id.desc())
+            .all()
+        )
+        results = []
+        for resource, learning_row in rows:
+            if resource.id in excluded:
+                continue
+            results.append({
+                'id': resource.id,
+                'title': resource.title,
+                'type': resource.type,
+                'url': resource.url,
+                'source': resource.source,
+                'matchedTag': None,
+                'resourceTag': None,
+                'resourceTagId': None,
+                'resourceTagDepth': 999,
+                'reason': '根据本场面试待提升项生成的动态学习资源。',
+                'bookmarked': bool(learning_row and learning_row.bookmarked),
+                'content': resource.content or ''
+            })
+        return results
+
+    @classmethod
+    def _pick_dynamic_resource_for_improvement(
+        cls,
+        user_id,
+        interview_id,
+        point_text,
+        weakness_tag=None,
+        exclude_ids=None
+    ):
+        dynamic_resources = cls._get_dynamic_resources_for_interview(
+            user_id=user_id,
+            interview_id=interview_id,
+            exclude_ids=exclude_ids
+        )
+        if not dynamic_resources:
+            return None
+
+        point_tokens = set(cls._extract_match_tokens(point_text or ''))
+        tag_tokens = set(cls._extract_match_tokens(weakness_tag or ''))
+        scored = []
+        for item in dynamic_resources:
+            corpus = f"{item.get('title') or ''} {item.get('content') or ''}"
+            corpus_tokens = set(cls._extract_match_tokens(corpus))
+            score = 0
+            if point_tokens and corpus_tokens:
+                score += len(point_tokens.intersection(corpus_tokens)) * 2
+            if tag_tokens and corpus_tokens:
+                score += len(tag_tokens.intersection(corpus_tokens)) * 3
+            scored.append((score, item))
+        scored.sort(key=lambda x: (x[0], x[1].get('id', 0)), reverse=True)
+        chosen = scored[0][1] if scored else None
+        if not chosen:
+            return None
+        chosen.pop('content', None)
+        return chosen
+
+    @classmethod
     def _resource_query_for_tag(cls, tag, completed_resource_ids=None):
         if not tag:
             return Resource.query.filter(Resource.id == -1)
@@ -1107,6 +1179,7 @@ class ReportService:
         scope_tags = cls._collect_job_scope_tags(interview)
         scope_tag_ids = [t.id for t in scope_tags]
         improvements = []
+        used_resource_ids = set()
         for weakness in report_weaknesses:
             tag = KnowledgeTag.query.get(weakness['tag_id'])
             resource = cls._get_recommended_resource_by_tag(
@@ -1116,6 +1189,16 @@ class ReportService:
             ) if tag else None
             examples = weakness.get('examples') or []
             point = cls._build_weakness_point(weakness)
+            if not resource:
+                resource = cls._pick_dynamic_resource_for_improvement(
+                    user_id=interview.user_id,
+                    interview_id=interview.id,
+                    point_text=point,
+                    weakness_tag=weakness.get('name'),
+                    exclude_ids=used_resource_ids
+                )
+            if resource and resource.get('id'):
+                used_resource_ids.add(resource['id'])
             improvements.append({
                 'point': point,
                 'resource': resource,
@@ -1140,6 +1223,16 @@ class ReportService:
                         interview.user_id,
                         scoped_tag_ids=scope_tag_ids
                     )
+                if not resource:
+                    resource = cls._pick_dynamic_resource_for_improvement(
+                        user_id=interview.user_id,
+                        interview_id=interview.id,
+                        point_text=point,
+                        weakness_tag=tag.name if tag else None,
+                        exclude_ids=used_resource_ids
+                    )
+                if resource and resource.get('id'):
+                    used_resource_ids.add(resource['id'])
                 improvements.append({
                     'point': point,
                     'resource': resource,
@@ -1167,6 +1260,10 @@ class ReportService:
 
         summary_tags = cls._build_summary_tags(interview)
         graph_resources = cls._build_gap_resources(interview)
+        dynamic_resources = cls._get_dynamic_resources_for_interview(
+            user_id=interview.user_id,
+            interview_id=interview.id
+        )
         recommended_resources = []
         seen_resource_ids = set()
         weakness_tag_names = {
@@ -1195,6 +1292,14 @@ class ReportService:
                 recommended_resources.append({**res, 'bookmarked': bool(learning_row and learning_row.bookmarked)})
             if len(recommended_resources) >= 8:
                 break
+        if len(recommended_resources) < 8:
+            for res in dynamic_resources:
+                if res.get('id') in seen_resource_ids:
+                    continue
+                seen_resource_ids.add(res.get('id'))
+                recommended_resources.append(res)
+                if len(recommended_resources) >= 8:
+                    break
 
         return {
             'id': interview.id,

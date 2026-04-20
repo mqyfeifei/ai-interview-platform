@@ -19,17 +19,23 @@ from app.utils.llm_client import DeepSeekClient
 
 
 WEAKNESS_SEARCH_PROMPT_TEMPLATE = """
-你是资深技术面试官。请基于给定的面试记录与评分结果，识别候选人的待提升项。
+你是资深技术面试官。请基于给定的面试记录与评分结果，识别候选人的待提升项，并给出可落地的学习检索关键词。
 
 任务要求：
 1. 输出 3~8 个待提升项（按优先级从高到低）。
 2. 每个待提升项必须包含：
-   - title：简洁标题（如“数据增强算子不熟悉”）
+   - title：简洁标题（与缺口高度一致）
    - description：结合面试表现的具体问题描述
-   - search_keyword：1个可直接用于检索学习资源的精确关键词（面向 B站或掘金检索）
-3. search_keyword 要求：
-   - 必须是中文技术关键词，避免空泛词（如“学习Python”）
-   - 包含技术领域+主题+实践导向词更佳（如“CV 数据增强算子 实战”）
+   - skill_type：只能是 "Hard Skills" 或 "Soft Skills"
+   - search_keyword：1个可直接用于检索学习资源的精确关键词
+3. 严格约束：
+   - 【领域隔离】不得跨技术栈推荐：CV/AI 问题只能给 CV/AI 方向关键词；后端问题只能给后端方向关键词。
+   - 【软硬技能分流】Hard Skills 必须是技术学习关键词；Soft Skills 必须是沟通表达/面试方法/抗压训练等通用软技能关键词。
+   - 【禁止强行凑数】如果无法给出高匹配技术关键词，使用“该方向基础复习 实战”这类保守关键词，不要跨领域乱推。
+4. search_keyword 要求：
+   - 必须是中文关键词，避免空泛词（如“学习Python”）
+   - Hard Skills 推荐“技术领域 + 主题 + 实战/教程/源码/部署”等组合
+   - Soft Skills 推荐“STAR面试法/结构化表达/模拟压力面试”等组合
    - 每个待提升项仅输出 1 个关键词
 
 严格输出格式（只允许纯 JSON，不要任何 Markdown、解释文字、前后缀）：
@@ -38,7 +44,8 @@ WEAKNESS_SEARCH_PROMPT_TEMPLATE = """
     {
       "title": "待提升项标题（如：数据增强算子不熟悉）",
       "description": "具体表现描述",
-      "search_keyword": "CV 数据增强算子实战"
+      "skill_type": "Hard Skills",
+      "search_keyword": "CV 数据增强算子 实战"
     }
   ]
 }
@@ -48,6 +55,7 @@ WEAKNESS_SEARCH_PROMPT_TEMPLATE = """
 class WeaknessSearchItem(BaseModel):
     title: str = Field(min_length=1, max_length=200)
     description: str = Field(min_length=1, max_length=2000)
+    skill_type: str = Field(min_length=1, max_length=40)
     search_keyword: str = Field(min_length=1, max_length=120)
 
 
@@ -115,11 +123,15 @@ class InterviewReportGenerator:
 
         for item in weakness_payload.weaknesses:
             keyword = item.search_keyword.strip()
+            skill_type = cls._normalize_skill_type(item.skill_type)
+            title_prefix = "技术专项" if skill_type == 'Hard Skills' else "软技能专项"
+            source_platform = "juejin" if skill_type == 'Hard Skills' else "bilibili"
             resource = Resource(
-                title=f"AI专属推荐：{keyword}",
-                url=cls._build_dynamic_search_url(keyword, platform="bilibili"),
+                title=f"AI专属推荐（{title_prefix}）：{item.title.strip()}",
+                url=cls._build_dynamic_search_url(keyword, platform=source_platform),
                 type="dynamic_search",
-                source="bilibili_search"
+                source=f"llm_dynamic:{source_platform}:interview:{interview.id}",
+                content=f"{item.description.strip()}\n关键词：{keyword}\n技能类型：{skill_type}"
             )
             db.session.add(resource)
             db.session.flush()
@@ -405,3 +417,11 @@ class InterviewReportGenerator:
                 InterviewReportGenerator._update_node_score(
                     interview.user_id, t, 50, 1.0
                 )  # 默认及格偏下分数
+    @staticmethod
+    def _normalize_skill_type(skill_type):
+        normalized = str(skill_type or '').strip().lower()
+        if normalized in {'hard skills', 'hard', 'hard_skill', 'hard-skills'}:
+            return 'Hard Skills'
+        if normalized in {'soft skills', 'soft', 'soft_skill', 'soft-skills'}:
+            return 'Soft Skills'
+        return 'Hard Skills'

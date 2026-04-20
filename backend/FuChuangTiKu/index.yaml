@@ -1,6 +1,9 @@
 meta:
   name: 研发与工程岗位知识库(含后端、前端、CV、网络、QA)
-  generated_at: 2026-03-03
+  generated_at: 2026-04-20
+  notes:
+    - "questions 已补充企业专用来源（company-specific source）。"
+    - "管理员批量导入通过 index.yaml > datasets.path 自动扫描题库文件。"
 
 targets:
   technical_interview_questions: 30
@@ -14,16 +17,16 @@ datasets:
   # 1. 后端数据源 (Backend)
   - type: technical_interview_questions_backend
     path: data/questions/backend_technical_interview_questions.yaml
-    source: ["牛客网", "CSDN"]
+    source: ["Nowcoder", "CSDN", "阿里巴巴", "腾讯", "华为", "京东", "美团", "拼多多", "字节跳动"]
   - type: project_deep_dive_questions_backend
     path: data/questions/backend_project_deep_dive_questions.yaml
-    source: ["面经库"]
+    source: ["Interview_Bank", "阿里巴巴", "腾讯", "华为", "京东", "美团", "拼多多", "字节跳动"]
   - type: scenario_design_questions_backend
     path: data/questions/backend_scenario_design_questions.yaml
-    source: ["技术博客"]
+    source: ["Tech_Blog", "阿里巴巴", "腾讯", "华为", "京东", "美团", "拼多多", "字节跳动"]
   - type: behavioral_questions_backend
     path: data/questions/backend_behavioral_questions.yaml
-    source: ["面经库"]
+    source: ["Interview_Bank", "Tech_Blog", "阿里巴巴", "腾讯", "华为", "京东", "美团", "拼多多", "字节跳动"]
   - type: excellent_answer_examples_backend
     path: data/examples/backend_excellent_answers.yaml
     source: ["自己整理"]
@@ -34,16 +37,16 @@ datasets:
   # 2. 前端数据源 (Frontend)
   - type: technical_interview_questions_frontend
     path: data/questions/frontend_technical_interview_questions.yaml
-    source: ["牛客网", "掘金"]
+    source: ["Juejin", "Nowcoder", "LeetCode CN", "JavaGuide", "Interview_Bank", "Personal_Notes", "阿里巴巴", "腾讯", "网易", "字节跳动"]
   - type: project_deep_dive_questions_frontend
     path: data/questions/frontend_project_deep_dive_questions.yaml
-    source: ["面经库"]
+    source: ["Interview_Bank", "阿里巴巴", "腾讯", "网易", "字节跳动"]
   - type: scenario_design_questions_frontend
     path: data/questions/frontend_scenario_design_questions.yaml
-    source: ["技术博客"]
+    source: ["Tech_Blog", "Personal_Notes", "阿里巴巴", "腾讯", "网易", "字节跳动"]
   - type: behavioral_questions_frontend
     path: data/questions/frontend_behavioral_questions.yaml
-    source: ["面经库"]
+    source: ["Interview_Bank", "Personal_Notes", "Tech_Blog", "阿里巴巴", "腾讯", "网易", "字节跳动"]
   - type: excellent_answer_examples_frontend
     path: data/examples/frontend_excellent_answers.yaml
     source: ["自己整理"]
@@ -54,16 +57,16 @@ datasets:
   # 3. 计算机视觉数据源 (CV)
   - type: technical_interview_questions_cv
     path: data/questions/cv_technical_interview_questions.yaml
-    source: ["牛客网", "顶会论文"]
+    source: ["Nowcoder", "Personal_Notes", "Tech_Blog", "Papers", "字节跳动", "旷视科技", "商汤科技"]
   - type: project_deep_dive_questions_cv
     path: data/questions/cv_project_deep_dive_questions.yaml
-    source: ["面经库", "自己整理"]
+    source: ["Interview_Bank", "Personal_Notes", "字节跳动", "旷视科技", "商汤科技"]
   - type: scenario_design_questions_cv
     path: data/questions/cv_scenario_design_questions.yaml
-    source: ["技术博客", "自己整理"]
+    source: ["Tech_Blog", "Personal_Notes", "字节跳动", "旷视科技", "商汤科技"]
   - type: behavioral_questions_cv
     path: data/questions/cv_behavioral_questions.yaml
-    source: ["面经库", "自己整理"]
+    source: ["Interview_Bank", "Personal_Notes", "字节跳动", "旷视科技", "商汤科技"]
   - type: excellent_answer_examples_cv
     path: data/examples/cv_excellent_answers.yaml
     source: ["自己整理"]
@@ -74,16 +77,16 @@ datasets:
   # 4. 网络工程师数据源 (Network)
   - type: technical_interview_questions_network
     path: data/questions/network_technical_interview_questions.yaml
-    source: ["牛客网", "经典教材"]
+    source: ["Nowcoder", "Classics", "Personal_Notes", "华为", "中兴通讯"]
   - type: project_deep_dive_questions_network
     path: data/questions/network_project_deep_dive_questions.yaml
-    source: ["面经库"]
+    source: ["Interview_Bank", "Personal_Notes", "华为", "中兴通讯"]
   - type: scenario_design_questions_network
     path: data/questions/network_scenario_design_questions.yaml
-    source: ["技术博客", "自己整理"]
+    source: ["Tech_Blog", "Personal_Notes", "华为", "中兴通讯"]
   - type: behavioral_questions_network
     path: data/questions/network_behavioral_questions.yaml
-    source: ["面经库", "自己整理"]
+    source: ["Interview_Bank", "Personal_Notes", "RAG知识库重构", "华为", "中兴通讯"]
   - type: excellent_answer_examples_network
     path: data/examples/network_excellent_answers.yaml
     source: ["自己整理"]
@@ -94,16 +97,16 @@ datasets:
   # 5. 测试工程师数据源 (QA)
   - type: technical_interview_questions_qa
     path: data/questions/qa_technical_interview_questions.yaml
-    source: ["牛客网", "测试社区"]
+    source: ["Nowcoder", "Personal_Notes", "Community", "美团", "字节跳动"]
   - type: project_deep_dive_questions_qa
     path: data/questions/qa_project_deep_dive_questions.yaml
-    source: ["面经库"]
+    source: ["Interview_Bank", "Personal_Notes", "美团", "字节跳动"]
   - type: scenario_design_questions_qa
     path: data/questions/qa_scenario_design_questions.yaml
-    source: ["技术博客", "自己整理"]
+    source: ["Tech_Blog", "Personal_Notes", "美团", "字节跳动"]
   - type: behavioral_questions_qa
     path: data/questions/qa_behavioral_questions.yaml
-    source: ["面经库", "自己整理"]
+    source: ["Interview_Bank", "Personal_Notes", "美团", "字节跳动"]
   - type: excellent_answer_examples_qa
     path: data/examples/qa_excellent_answers.yaml
     source: ["自己整理"]

@@ -1,28 +1,34 @@
 # FuChuangTiKu - 综合研发与工程岗位知识库
 
-本仓库用于沉淀 **Java后端、Web前端、计算机视觉(CV)、网络工程(Network)、测试开发(QA)** 五大岗位的面试题库与知识点地图。数据格式（YAML）高度结构化，可直接用于项目内知识库接入（如静态站点、内部文档系统、大模型检索增强 RAG 系统）。
+本目录沉淀 **后端 / 前端 / 计算机视觉 / 网络工程 / 测试开发** 五大岗位题库与知识点数据，供管理端批量导入与面试端动态选题使用。
 
-## 目录结构
+## 当前数据结构
 
-- `kb.config.yaml`：知识库全局配置文件（定义字段、状态流转）
-- `index.yaml`：知识库全局索引与数据集清单
-- `data/questions/`：核心题库（按岗位类型细分为技术基础、项目深挖、场景设计、行为面试四大类）
-- `data/examples/`：优秀回答范例库（采用 STAR/PREP 等框架沉淀的高质量回答）
-- `data/knowledge_points/`：技术知识点地图（按模块划分，附带官方文档与优质学习资源）
+- `kb.config.yaml`：全局配置（字段定义、状态流转、岗位映射）
+- `index.yaml`：导入索引（管理员“批量导入”会读取 datasets.path）
+- `data/questions/`：题目库（`technical / project_deep_dive / scenario_design / behavioral`）
+- `data/examples/`：优秀回答范例
+- `data/knowledge_points/`：知识点地图
 
-## 涵盖领域与数据体系
+## 企业专用题库支持（已启用）
 
-知识库目前覆盖以下五大核心领域，每个领域包含 6 份独立的数据资产：
+questions 文件中的 `source` 现已支持：
 
-1. **Java 后端 (Backend)**: 涵盖 JVM、并发、Spring 生态、MySQL、Redis、分布式微服务等。
-2. **Web 前端 (Frontend)**: 涵盖 JS核心、Vue/React 架构、工程化、性能优化及跨域等。
-3. **计算机视觉 (CV)**: 涵盖 经典机器学习、CNN/Transformer 架构、目标检测/分割、工程部署优化等。
-4. **网络工程 (Network)**: 涵盖 TCP/IP 协议栈、OSPF/BGP 路由控制、SD-WAN、数据中心架构等。
-5. **测试开发 (QA)**: 涵盖 白盒/黑盒理论、UI/接口自动化、性能调优、CI/CD 及质量保障体系等。
+1. 通用来源（如 `Nowcoder`、`Tech_Blog`、`Interview_Bank`）
+2. 企业来源（如 `字节跳动`、`阿里巴巴`、`腾讯`、`华为`、`美团` 等）
 
-## 使用建议
+系统会结合会话中的 `target_source` 做来源过滤：优先企业来源题，再回落到“通用”题，避免题源跑偏。
 
-1. **内容维护**：按 `data/questions/*.yaml` 持续补充真实的面试题目与答案。注意 YAML 的缩进和格式规范。
-2. **状态流转**：将校验完毕的数据的 `status: draft` 逐步更新为 `status: reviewed`。
-3. **数据校验**：建议在 CI 流程中引入脚本，校验 `id` 的唯一性与必填字段（如 `question`, `tags`, `difficulty`）的完整性。
-4. **应用接入**：检索侧可按领域 (`type` 的前缀)、标签 (`tags`)、难度 (`difficulty`) 进行交叉过滤，快速生成模拟面试题卷或知识图谱。
+## 管理端导入约定
+
+1. 批量导入入口：`/api/v1/admin/questions/import`
+2. 未上传文件时，后端按 `index.yaml -> datasets -> path` 自动扫描
+3. `index.yaml` 中 path 必须是以 `FuChuangTiKu/` 为根的相对路径，例如：
+   - `data/questions/backend_technical_interview_questions.yaml`
+   - `data/questions/cv_scenario_design_questions.yaml`
+
+## 维护建议
+
+1. 题目 `id` 保持全局唯一（建议按岗位前缀）
+2. 新增企业来源时，同步更新对应 questions 文件头部 `source` 列表
+3. 调整题库结构后，同步更新 `index.yaml` 与本 README

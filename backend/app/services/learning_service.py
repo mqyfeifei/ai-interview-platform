@@ -15,6 +15,43 @@ from app.models.question import question_tags
 
 class LearningService:
     @staticmethod
+    def _get_dynamic_report_recommendations(user_id, report_id=None, exclude_ids=None):
+        if not user_id or not report_id:
+            return []
+        excluded = set(exclude_ids or [])
+        rows = (
+            db.session.query(Resource, UserLearning)
+            .join(UserLearning, UserLearning.resource_id == Resource.id)
+            .filter(
+                UserLearning.user_id == user_id,
+                Resource.type == 'dynamic_search',
+                Resource.source.ilike(f"%interview:{int(report_id)}%")
+            )
+            .order_by(Resource.id.desc())
+            .all()
+        )
+        results = []
+        for resource, learning in rows:
+            if resource.id in excluded:
+                continue
+            results.append({
+                "id": resource.id,
+                "title": resource.title,
+                "type": resource.type,
+                "url": resource.url,
+                "content": resource.content,
+                "source": resource.source,
+                "difficulty": resource.difficulty,
+                "tags": [],
+                "completed": bool(learning and learning.status == 'completed'),
+                "bookmarked": bool(learning and learning.bookmarked),
+                "relatedWeakness": "本场面试待提升项",
+                "estimated_hours": None,
+                "priority": 999
+            })
+        return results
+
+    @staticmethod
     def _resolve_report_weaknesses(user_id, report_id=None, limit=20):
         if not report_id:
             return []
@@ -339,6 +376,19 @@ class LearningService:
                         recommended_ids.add(r.id)
                 except Exception as e:
                     print(f"[{tag_name}] 向量检索兜底失败: {e}")
+
+        dynamic_results = LearningService._get_dynamic_report_recommendations(
+            user_id=user_id,
+            report_id=report_id,
+            exclude_ids=recommended_ids | completed_ids
+        )
+        if dynamic_results:
+            existing_ids = {item['id'] for item in results if item.get('id')}
+            for item in dynamic_results:
+                if item.get('id') in existing_ids:
+                    continue
+                results.append(item)
+                existing_ids.add(item.get('id'))
 
         results.sort(key=lambda x: int(x.get('priority') or 0), reverse=True)
         return results[:limit]
