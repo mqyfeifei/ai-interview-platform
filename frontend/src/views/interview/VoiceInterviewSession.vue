@@ -336,7 +336,7 @@ export default {
     ...mapGetters('interview', [
       'selectedJob', 'messages', 'questionIndex',
       'isEnding',
-      'totalQuestions', 'isFinished', 'isLoading', 'isAISpeaking', 'reportId'
+      'totalQuestions', 'isFinished', 'isLoading', 'isAISpeaking', 'reportId', 'ttsVoice'
     ]),
     questionTimeLimit() {
       return 180 // 语音3分钟
@@ -532,7 +532,11 @@ export default {
       const text = (lastAi.content || '').trim()
       if (!text) return false
 
-      const hasClosingSignal = /(感谢(?:你|您)?(?:今天|本次|此次)?(?:的)?面试|今天(?:的)?面试(?:就)?到这里|本轮面试(?:就)?到这里|面试(?:就)?到此结束|祝你求职顺利|后续会通知)/.test(text)
+      const hasClosingSignal = (
+        /(面试(?:就)?到(?:这里|此结束)|本轮面试(?:就)?到这里|今天(?:的)?面试(?:就)?到这里)/.test(text) ||
+        /(感谢(?:你|您)?(?:今天|本次|此次)?(?:的)?面试|感谢(?:你|您)?(?:的)?(?:时间|分享|参与|配合))/.test(text) ||
+        /(后续(?:会|将|由)?(?:HR|人事)?(?:尽快)?(?:与您|与你)?(?:同步|通知|联系)|祝你(?:求职|面试)?顺利)/.test(text)
+      )
       const hasQuestionSignal = /[？?]/.test(text)
       return hasClosingSignal && !hasQuestionSignal
     },
@@ -588,6 +592,9 @@ export default {
         onFinish: () => {
           console.log('[语音面试] AI主动结束面试，开始生成报告')
           this.isSending = false
+          if (this.isRecording) {
+            this.forceStopRecordingForEnding()
+          }
           // ✅ 标记流式消息完成
           this.$store.commit('interview/MARK_STREAM_DONE')
           this.$store.commit('interview/SET_LOADING', false)
@@ -612,6 +619,9 @@ export default {
           // 兜底：若模型输出了明显结束语但缺少结束标记，仍自动收尾生成报告
           if (!this.isFinished && !this.isEnding && this.shouldAutoFinishByClosingText()) {
             console.log('[语音面试] 检测到结束语，触发自动结束')
+            if (this.isRecording) {
+              this.forceStopRecordingForEnding()
+            }
             this.clearTTSQueue()
             this.endInterview().catch((err) => {
               console.error('[语音面试] 自动结束失败:', err)
@@ -628,7 +638,7 @@ export default {
           alert('发送失败：' + error.message)
           this.isSending = false
         },
-        voice: null  // 使用默认音色
+        voice: this.ttsVoice || null
       })
     },
     goToReport() {
@@ -835,6 +845,16 @@ export default {
         }, 10000)
       }
       // ==================================================================
+    },
+
+    forceStopRecordingForEnding() {
+      this.isRecording = false
+      if (this.recordingInterval) {
+        clearInterval(this.recordingInterval)
+        this.recordingInterval = null
+      }
+      this.stopAsrPolling()
+      this.cleanupAudioResources()
     },
 
     scrollToBottom() {

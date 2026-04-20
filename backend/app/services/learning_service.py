@@ -401,6 +401,58 @@ class LearningService:
         return [rec.resource_id for rec in records]
 
     @staticmethod
+    def _get_bookmarked_plan_resources(user_id, weaknesses):
+        if not user_id:
+            return []
+
+        weakness_map = {int(w.get('tag_id')): w for w in (weaknesses or []) if w.get('tag_id')}
+        rows = (
+            db.session.query(UserLearning, Resource)
+            .join(Resource, Resource.id == UserLearning.resource_id)
+            .filter(
+                UserLearning.user_id == user_id,
+                UserLearning.bookmarked.is_(True)
+            )
+            .order_by(UserLearning.id.desc())
+            .all()
+        )
+        results = []
+        for record, resource in rows:
+            tags = [t.name for t in (resource.knowledge_tags or [])]
+            related = None
+            estimated_hours = None
+            best_priority = 0
+            for tag in (resource.knowledge_tags or []):
+                matched = weakness_map.get(int(tag.id))
+                if not matched:
+                    continue
+                cand_priority = int(100 - (matched.get('mastery_level') or 0) + 5 * (matched.get('frequency') or 0))
+                if cand_priority >= best_priority:
+                    best_priority = cand_priority
+                    related = matched.get('name')
+                    estimated_hours = matched.get('estimated_hours')
+            if estimated_hours is None:
+                primary_hours = resource.tag.estimated_hours if getattr(resource, 'tag', None) else None
+                backup_hours = next((t.estimated_hours for t in (resource.knowledge_tags or []) if t.estimated_hours), None)
+                estimated_hours = primary_hours or backup_hours or 1
+            results.append({
+                "id": resource.id,
+                "title": resource.title,
+                "type": resource.type,
+                "url": resource.url,
+                "content": resource.content,
+                "source": resource.source,
+                "difficulty": resource.difficulty,
+                "tags": tags,
+                "completed": record.status == 'completed',
+                "bookmarked": True,
+                "relatedWeakness": related,
+                "estimated_hours": estimated_hours,
+                "priority": best_priority,
+            })
+        return results
+
+    @staticmethod
     def toggle_bookmark(user_id, resource_id, bookmarked):
         if not user_id or not resource_id:
             return {"success": False}
@@ -457,7 +509,7 @@ class LearningService:
             db.session.commit()
 
         weaknesses = LearningService.get_weaknesses(user_id, limit=20, report_id=report_id)
-        resources = LearningService.get_personalized_recommendations(user_id, limit=40, report_id=report_id)
+        resources = LearningService._get_bookmarked_plan_resources(user_id, weaknesses)
         if not resources:
             return {
                 "recommendedDailyHours": daily,

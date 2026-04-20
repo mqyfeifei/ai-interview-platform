@@ -481,7 +481,10 @@ class InterviewQAHandler:
                 internal_thought[:500],
             )
 
-        tts_voice = InterviewTTSHelper.get_tts_voice(prompt_config, voice) if voice_mode else None
+        selected_voice = voice
+        if voice_mode and not selected_voice:
+            selected_voice = getattr(getattr(interview, 'session_config', None), 'voice_id', None)
+        tts_voice = InterviewTTSHelper.get_tts_voice(prompt_config, selected_voice) if voice_mode else None
         stream_text = spoken_text.replace('[INTERVIEW_OVER]', '')
         for payload in InterviewQAHandler._stream_spoken_text(stream_text, voice_mode=voice_mode, tts_voice=tts_voice):
             yield f"data: {json.dumps(payload, ensure_ascii=False)}\n\n"
