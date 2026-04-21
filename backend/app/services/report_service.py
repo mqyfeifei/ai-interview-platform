@@ -1393,7 +1393,7 @@ class ReportService:
         }
 
     @classmethod
-    def generate_reference_answer(cls, report_id, item_index, user_id):
+    def _prepare_reference_answer_context(cls, report_id, item_index, user_id):
         interview = db.session.get(Interview, int(report_id))
         if not interview:
             raise ValueError('报告不存在')
@@ -1453,6 +1453,24 @@ class ReportService:
             '',
             '请直接输出“参考优秀回答”正文，不要输出标题和额外说明。'
         ]
+
+        return {
+            'interview': interview,
+            'target_index': target_index,
+            'question_text': question_text,
+            'source': source,
+            'prompt_lines': prompt_lines,
+        }
+
+    @classmethod
+    def generate_reference_answer(cls, report_id, item_index, user_id):
+        ctx = cls._prepare_reference_answer_context(report_id, item_index, user_id)
+        interview = ctx['interview']
+        target_index = ctx['target_index']
+        question_text = ctx['question_text']
+        source = ctx['source']
+        prompt_lines = ctx['prompt_lines']
+
         llm = DeepSeekClient()
         generated = llm.generate_reply(
             messages=[{'role': 'system', 'content': '\n'.join(prompt_lines)}],
@@ -1470,6 +1488,33 @@ class ReportService:
             'isEnterpriseQuestion': cls._is_enterprise_source(source),
             'referenceAnswer': result_text,
         }
+
+    @classmethod
+    def generate_reference_answer_stream(cls, report_id, item_index, user_id):
+        ctx = cls._prepare_reference_answer_context(report_id, item_index, user_id)
+        llm = DeepSeekClient()
+        stream = llm.generate_reply(
+            messages=[{'role': 'system', 'content': '\n'.join(ctx['prompt_lines'])}],
+            temperature=0.6,
+            stream=True
+        )
+
+        has_content = False
+        for event in stream:
+            choices = getattr(event, 'choices', None) or []
+            if not choices:
+                continue
+            delta = getattr(choices[0], 'delta', None)
+            if not delta:
+                continue
+            piece = getattr(delta, 'content', None)
+            if not piece:
+                continue
+            has_content = True
+            yield str(piece)
+
+        if not has_content:
+            raise ValueError('生成参考优秀回答失败，请稍后重试')
 
     @classmethod
     def list_history_records(cls, user_id, page=1, page_size=10):

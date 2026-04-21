@@ -291,7 +291,7 @@
 </template>
 
 <script>
-import { getReport, getReplyAnalysis, requestExcellentAnswer } from '@/api/report'
+import { getReport, getReplyAnalysis, requestExcellentAnswerStream } from '@/api/report'
 import { toggleBookmark } from '@/api/learning'
 import { INTERVIEW_DIMENSIONS } from '@/utils/constants'
 import { marked } from 'marked'
@@ -542,9 +542,14 @@ export default {
     },
     async requestQuestionExcellentAnswer(q, idx) {
       if (!q) return
+      q.referenceAnswer = ''
       q.referenceAnswerLoading = true
       try {
-        const res = await requestExcellentAnswer(this.reportId, idx + 1)
+        const res = await requestExcellentAnswerStream(this.reportId, idx + 1, {
+          onChunk: (chunk) => {
+            q.referenceAnswer += chunk
+          }
+        })
         q.referenceAnswer = res?.referenceAnswer || ''
       } catch (e) {
         console.error('生成参考优秀回答失败', e)

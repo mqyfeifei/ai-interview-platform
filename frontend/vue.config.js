@@ -16,7 +16,14 @@ module.exports = defineConfig({
         target: 'http://127.0.0.1:5000',
         changeOrigin: true,
         onProxyRes(proxyRes, req) {
-          if (req.url && req.url.includes('/interviews/') && req.url.includes('/chat/stream')) {
+          if (
+            req.url &&
+            req.url.includes('/interviews/') &&
+            (
+              req.url.includes('/chat/stream') ||
+              req.url.includes('/voice-chat/stream')
+            )
+          ) {
             proxyRes.headers['cache-control'] = 'no-cache, no-transform'
             proxyRes.headers['x-accel-buffering'] = 'no'
           }

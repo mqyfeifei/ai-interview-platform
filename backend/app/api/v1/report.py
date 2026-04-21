@@ -1,5 +1,6 @@
 from itsdangerous import BadSignature, SignatureExpired
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, Response, stream_with_context
+import json
 from app.services.auth_service import AuthService
 from app.services.report_service import ReportService
 from app.services.user_service import UserService
@@ -141,3 +142,45 @@ def get_reference_excellent_answer(report_id, item_index):
         return error_response(msg, 400)
     except Exception as exc:
         return error_response(str(exc), 500)
+
+
+@report_bp.route('/<int:report_id>/reply-analysis/<int:item_index>/excellent-answer/stream', methods=['POST'])
+def get_reference_excellent_answer_stream(report_id, item_index):
+    try:
+        user_id = get_current_user_id_required()
+    except ValueError as exc:
+        msg = str(exc)
+        if msg in {'缺少登录凭证', '登录已过期，请重新登录', '登录凭证无效'}:
+            return error_response(msg, 401)
+        return error_response(msg, 400)
+
+    def _event_stream():
+        yield ': connected\n\n'
+        try:
+            for chunk in ReportService.generate_reference_answer_stream(
+                report_id=report_id,
+                item_index=item_index,
+                user_id=user_id
+            ):
+                payload = {'chunk': chunk}
+                yield f"data: {json.dumps(payload, ensure_ascii=False)}\n\n"
+
+            yield f"data: {json.dumps({'done': True}, ensure_ascii=False)}\n\n"
+        except ValueError as exc:
+            payload = {'error': str(exc), 'done': True}
+            yield f"data: {json.dumps(payload, ensure_ascii=False)}\n\n"
+        except Exception as exc:
+            payload = {'error': '生成参考优秀回答失败，请稍后重试', 'done': True}
+            yield f"data: {json.dumps(payload, ensure_ascii=False)}\n\n"
+        finally:
+            yield ': done\n\n'
+
+    response = Response(
+        stream_with_context(_event_stream()),
+        mimetype='text/event-stream; charset=utf-8'
+    )
+    response.headers['Cache-Control'] = 'no-cache, no-transform'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['X-Accel-Buffering'] = 'no'
+    response.headers['Connection'] = 'keep-alive'
+    return response

@@ -39,6 +39,106 @@ export const requestExcellentAnswer = async (reportId, index) => {
   })
 }
 
+export const requestExcellentAnswerStream = (reportId, index, { onChunk, onDone, onError } = {}) => {
+  const API_BASE = process.env.VUE_APP_API_BASE_URL || '/api/v1'
+  const token = localStorage.getItem('ai_interview_token')
+
+  const readErrorMessage = async (response) => {
+    const contentType = response.headers.get('content-type') || ''
+    try {
+      if (contentType.includes('application/json')) {
+        const data = await response.clone().json()
+        return data?.message || data?.msg || data?.error || `请求失败（${response.status}）`
+      }
+      const text = await response.clone().text()
+      return text?.trim() || `请求失败（${response.status}）`
+    } catch (_) {
+      return `请求失败（${response.status}）`
+    }
+  }
+
+  return new Promise((resolve, reject) => {
+    fetch(`${API_BASE}/reports/${reportId}/reply-analysis/${index}/excellent-answer/stream`, {
+      method: 'POST',
+      headers: {
+        'Accept': 'text/event-stream',
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {})
+      },
+      cache: 'no-store',
+      body: JSON.stringify({})
+    }).then(async (response) => {
+      if (!response.ok) {
+        throw new Error(await readErrorMessage(response))
+      }
+      if (!response.body) {
+        throw new Error('服务器未返回可读取的流响应')
+      }
+
+      const reader = response.body.getReader()
+      const decoder = new TextDecoder()
+      let buffer = ''
+      let fullText = ''
+      let doneFlag = false
+
+      const handleEvent = (rawEvent) => {
+        if (!rawEvent) return
+        const dataLines = rawEvent
+          .split('\n')
+          .filter(line => line.startsWith('data:'))
+          .map(line => line.slice(5).trimStart())
+        if (!dataLines.length) return
+
+        try {
+          const payload = JSON.parse(dataLines.join('\n'))
+          if (payload.error) {
+            throw new Error(payload.error)
+          }
+          const chunk = payload.chunk || ''
+          if (chunk) {
+            fullText += chunk
+            onChunk && onChunk(chunk)
+          }
+          if (payload.done === true) {
+            doneFlag = true
+          }
+        } catch (err) {
+          throw err
+        }
+      }
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        buffer += decoder.decode(value, { stream: true }).replace(/\r\n/g, '\n')
+        let delimiterIndex = buffer.indexOf('\n\n')
+        while (delimiterIndex !== -1) {
+          const rawEvent = buffer.slice(0, delimiterIndex)
+          buffer = buffer.slice(delimiterIndex + 2)
+          handleEvent(rawEvent)
+          delimiterIndex = buffer.indexOf('\n\n')
+        }
+      }
+
+      const tail = decoder.decode()
+      if (tail) buffer += tail.replace(/\r\n/g, '\n')
+      if (buffer.trim()) {
+        handleEvent(buffer)
+      }
+
+      if (!doneFlag && !fullText) {
+        throw new Error('未收到模型输出')
+      }
+
+      onDone && onDone(fullText)
+      resolve({ referenceAnswer: fullText })
+    }).catch((err) => {
+      onError && onError(err)
+      reject(err)
+    })
+  })
+}
+
 
 /**
  * 获取历史面试列表

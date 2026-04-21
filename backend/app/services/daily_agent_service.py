@@ -324,7 +324,7 @@ class AgentScheduler:
         with app.app_context():
             while True:
                 now = datetime.datetime.now()
-                today_8am = now.replace(hour=8, minute=0, second=0, microsecond=0)
+                today_8am = now.replace(hour=5, minute=49, second=0, microsecond=0)
                 today_8pm = now.replace(hour=20, minute=0, second=0, microsecond=0)
 
                 if now < today_8am:

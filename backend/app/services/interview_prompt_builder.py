@@ -90,10 +90,10 @@ class InterviewPromptBuilder:
 【结构化输出要求（必须严格 JSON）】
 请只输出一个JSON对象，不要输出markdown代码块，不要输出额外解释：
 {{
-  "internal_thought": "你对候选人回答质量的内部判断、下一步追问思路（不展示给候选人）",
   "spoken_text": "唯一给候选人看的口语化话术",
+  "internal_thought": "你对候选人回答质量的内部判断、下一步追问思路（不展示给候选人）",
   "follow_up_points": ["可选，内部追问点列表"],
   "should_end_interview": false
 }}
-其中 spoken_text 必须符合上述硬约束，且不包含 [INTERVIEW_OVER]。
+其中 spoken_text 必须符合上述硬约束，且不包含 [INTERVIEW_OVER]。流式生成时请先开始输出 spoken_text 字段，再输出其他字段。
 """

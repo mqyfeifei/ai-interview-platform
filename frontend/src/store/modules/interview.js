@@ -447,10 +447,12 @@ const actions = {
     let streamDone = false
     let shouldFinishInterview = false
     let pendingAudioCount = 0
+    let typingQueue = []
+    let typingTimer = null
     let playbackChain = Promise.resolve()
 
     const tryCompleteTurn = () => {
-      if (!streamDone || pendingAudioCount > 0) return
+      if (!streamDone || pendingAudioCount > 0 || typingQueue.length > 0 || typingTimer) return
 
       commit('SET_AI_SPEAKING', false)
       commit('SET_LOADING', false)
@@ -490,11 +492,31 @@ const actions = {
         })
     }
 
+    const appendChunkWithTyping = (chunk) => {
+      const text = String(chunk || '')
+      if (!text) return
+
+      typingQueue.push(...Array.from(text))
+      if (typingTimer) return
+
+      const flushOne = () => {
+        if (!typingQueue.length) {
+          typingTimer = null
+          tryCompleteTurn()
+          return
+        }
+        const nextChar = typingQueue.shift()
+        commit('APPEND_AI_CHUNK', nextChar)
+        typingTimer = setTimeout(flushOne, 24)
+      }
+      flushOne()
+    }
+
     sendAnswerStream(state.currentSession.sessionId, answerText, {
       voiceMode: state.voiceMode,
       voice: state.ttsVoice,
       onChunk(chunk) {
-        commit('APPEND_AI_CHUNK', chunk)
+        appendChunkWithTyping(chunk)
       },
 
       // ✅ 新增：处理音频数据
@@ -515,6 +537,11 @@ const actions = {
       },
       onError(err) {
         pendingAudioCount = 0
+        typingQueue = []
+        if (typingTimer) {
+          clearTimeout(typingTimer)
+          typingTimer = null
+        }
         commit('SET_AI_SPEAKING', false)
         commit('SET_LOADING', false)
         commit('MARK_STREAM_DONE')

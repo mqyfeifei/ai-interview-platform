@@ -456,7 +456,31 @@ class InterviewQAHandler:
             default_temp=0.82,
             seed=(interview.id * 1000 + interview.question_count),
         )
-        raw_reply = llm.generate_reply(messages, stream=False, temperature=temp)
+        raw_reply_stream = llm.generate_reply(messages, stream=True, temperature=temp)
+        raw_reply = ""
+        streamed_spoken_text = ""
+        for event in raw_reply_stream:
+            choices = getattr(event, 'choices', None) or []
+            if not choices:
+                continue
+            delta = getattr(choices[0], 'delta', None)
+            if not delta:
+                continue
+            piece = getattr(delta, 'content', None)
+            if not piece:
+                continue
+            raw_reply += str(piece)
+
+            # 面试过程中，实时提取 spoken_text 增量给前端显示
+            preview_spoken = InterviewResponseParser.extract_stream_spoken_text(raw_reply)
+            if preview_spoken and preview_spoken.startswith(streamed_spoken_text):
+                delta_text = preview_spoken[len(streamed_spoken_text):]
+                if delta_text:
+                    streamed_spoken_text += delta_text
+                    yield f"data: {json.dumps({'chunk': delta_text}, ensure_ascii=False)}\n\n"
+
+        if not raw_reply.strip():
+            raw_reply = llm.generate_reply(messages, stream=False, temperature=temp)
         parsed = InterviewResponseParser.parse_structured_reply(raw_reply)
         spoken_text = InterviewResponseParser.sanitize_spoken_text(
             parsed.get('spoken_text') or '',
@@ -486,8 +510,26 @@ class InterviewQAHandler:
             selected_voice = getattr(getattr(interview, 'session_config', None), 'voice_id', None)
         tts_voice = InterviewTTSHelper.get_tts_voice(prompt_config, selected_voice) if voice_mode else None
         stream_text = spoken_text.replace('[INTERVIEW_OVER]', '')
-        for payload in InterviewQAHandler._stream_spoken_text(stream_text, voice_mode=voice_mode, tts_voice=tts_voice):
-            yield f"data: {json.dumps(payload, ensure_ascii=False)}\n\n"
+
+        if voice_mode:
+            for payload in InterviewQAHandler._stream_spoken_text(stream_text, voice_mode=True, tts_voice=tts_voice):
+                # 文本已经实时流出，语音模式下仅保留音频，避免重复文字
+                if streamed_spoken_text and payload.get('chunk'):
+                    payload = dict(payload)
+                    payload['chunk'] = ''
+                    if not payload.get('audio_b64'):
+                        continue
+                yield f"data: {json.dumps(payload, ensure_ascii=False)}\n\n"
+        else:
+            # 已经实时推送过增量时，只补发尾部，避免重复整段输出
+            if stream_text.startswith(streamed_spoken_text):
+                tail = stream_text[len(streamed_spoken_text):]
+                if tail:
+                    yield f"data: {json.dumps({'chunk': tail}, ensure_ascii=False)}\n\n"
+            elif not streamed_spoken_text:
+                # 兜底：若上游未提取到增量，则按原逻辑一次性分片输出
+                for payload in InterviewQAHandler._stream_spoken_text(stream_text, voice_mode=False, tts_voice=None):
+                    yield f"data: {json.dumps(payload, ensure_ascii=False)}\n\n"
 
         if '[INTERVIEW_OVER]' in spoken_text:
             yield f"data: {json.dumps({'chunk': '[INTERVIEW_OVER]', 'interview_over': True}, ensure_ascii=False)}\n\n"

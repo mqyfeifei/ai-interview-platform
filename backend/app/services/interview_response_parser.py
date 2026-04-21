@@ -57,6 +57,60 @@ class InterviewResponseParser:
         return payload
 
     @staticmethod
+    def extract_stream_spoken_text(raw_text):
+        """
+        从流式增量的原始 JSON 文本中，尽可能提取 spoken_text 当前已生成内容。
+        说明：
+        - 支持 JSON 尚未闭合的中间态。
+        - 仅用于前端实时展示，不用于最终结构化判定。
+        """
+        raw = str(raw_text or '')
+        key_idx = raw.find('"spoken_text"')
+        if key_idx == -1:
+            return ''
+
+        colon_idx = raw.find(':', key_idx)
+        if colon_idx == -1:
+            return ''
+
+        first_quote_idx = raw.find('"', colon_idx)
+        if first_quote_idx == -1:
+            return ''
+
+        i = first_quote_idx + 1
+        buf = []
+        escaped = False
+        while i < len(raw):
+            ch = raw[i]
+            if ch == '"' and not escaped:
+                break
+            if ch == '\\' and not escaped:
+                escaped = True
+                buf.append(ch)
+                i += 1
+                continue
+            buf.append(ch)
+            escaped = False
+            i += 1
+
+        candidate = ''.join(buf)
+        if candidate.endswith('\\'):
+            candidate = candidate[:-1]
+        if not candidate:
+            return ''
+
+        try:
+            return json.loads(f'"{candidate}"')
+        except Exception:
+            return (
+                candidate
+                .replace('\\"', '"')
+                .replace('\\n', '\n')
+                .replace('\\t', '\t')
+                .replace('\\\\', '\\')
+            )
+
+    @staticmethod
     def sanitize_spoken_text(spoken_text, max_questions_per_turn=1):
         text = str(spoken_text or '').replace('[INTERVIEW_OVER]', '').strip()
         for pattern in InterviewResponseParser._LABEL_PATTERNS:
